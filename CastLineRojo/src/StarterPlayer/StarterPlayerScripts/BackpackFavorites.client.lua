@@ -1,0 +1,1 @@
+-- Backpack favorites disabled after removing animal/building gameplay.

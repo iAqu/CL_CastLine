@@ -1,0 +1,85 @@
+[2026-10-30T12:06:40Z INFO  rbxlx_to_rojo] rbxlx-to-rojo 1.0.1
+[2026-10-30T12:06:40Z INFO  rbxlx_to_rojo] Select a place file.
+[2026-10-30T12:06:40Z INFO  rbxlx_to_rojo] Opening place file
+[2026-10-30T12:06:40Z INFO  rbxlx_to_rojo] Decoding place file, this is the longest part...
+[2026-10-30T12:06:41Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property UnionOperation.CollisionGroup because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-10-30T12:06:41Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property UnionOperation.CollisionGroup because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-10-30T12:06:41Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property UnionOperation.CollisionGroup because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-10-30T12:06:41Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property UnionOperation.CollisionGroup because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-10-30T12:06:41Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property UnionOperation.CollisionGroup because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-10-30T12:06:41Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property UnionOperation.CollisionGroup because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-10-30T12:06:41Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property UnionOperation.CollisionGroup because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-10-30T12:06:41Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property UnionOperation.CollisionGroup because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-10-30T12:06:41Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property UnionOperation.CollisionGroup because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-10-30T12:06:41Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property UnionOperation.CollisionGroup because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-10-30T12:06:41Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property UnionOperation.CollisionGroup because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-10-30T12:06:41Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property UnionOperation.CollisionGroup because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-10-30T12:06:41Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property UnionOperation.CollisionGroup because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-10-30T12:06:41Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property UnionOperation.CollisionGroup because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-10-30T12:06:41Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property UnionOperation.CollisionGroup because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-10-30T12:06:41Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property UnionOperation.CollisionGroup because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-10-30T12:06:41Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property UnionOperation.CollisionGroup because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-10-30T12:06:41Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property UnionOperation.CollisionGroup because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-10-30T12:06:41Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property UnionOperation.CollisionGroup because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-10-30T12:06:41Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property UnionOperation.CollisionGroup because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-10-30T12:06:41Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property UnionOperation.CollisionGroup because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-10-30T12:06:41Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property UnionOperation.CollisionGroup because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-10-30T12:06:41Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property UnionOperation.CollisionGroup because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-10-30T12:06:41Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property UnionOperation.CollisionGroup because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-10-30T12:06:41Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property UnionOperation.CollisionGroup because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-10-30T12:06:41Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property UnionOperation.CollisionGroup because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-10-30T12:06:41Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property UnionOperation.CollisionGroup because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-10-30T12:06:41Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property UnionOperation.CollisionGroup because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-10-30T12:06:41Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property UnionOperation.CollisionGroup because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-10-30T12:06:41Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property UnionOperation.CollisionGroup because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-10-30T12:06:41Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property UnionOperation.CollisionGroup because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-10-30T12:06:41Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property UnionOperation.CollisionGroup because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-10-30T12:06:41Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property UnionOperation.CollisionGroup because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-10-30T12:06:41Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property UnionOperation.CollisionGroup because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-10-30T12:06:41Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property UnionOperation.CollisionGroup because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-10-30T12:06:41Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property Part.CollisionGroup because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-10-30T12:06:41Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property Part.CollisionGroup because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-10-30T12:06:41Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property Part.CollisionGroup because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-10-30T12:06:41Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property Part.CollisionGroup because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-10-30T12:06:42Z INFO  rbxlx_to_rojo] Select the path to put your Rojo project in.
+[2026-10-30T12:06:42Z INFO  rbxlx_to_rojo] Starting processing, please wait a bit...
+[2026-10-30T12:06:43Z INFO  rbxlx_to_rojo] Done

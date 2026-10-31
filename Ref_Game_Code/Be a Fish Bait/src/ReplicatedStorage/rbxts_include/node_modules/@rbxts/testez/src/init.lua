@@ -1,0 +1,38 @@
+-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
+
+-- https://lua.expert
+
+local Expectation = require(script.Expectation)
+local TestBootstrap = require(script.TestBootstrap)
+local TestEnum = require(script.TestEnum)
+local TestPlan = require(script.TestPlan)
+local TestPlanner = require(script.TestPlanner)
+local TestResults = require(script.TestResults)
+local TestRunner = require(script.TestRunner)
+local TestSession = require(script.TestSession)
+local TextReporter = require(script.Reporters.TextReporter)
+local TextReporterQuiet = require(script.Reporters.TextReporterQuiet)
+local TeamCityReporter = require(script.Reporters.TeamCityReporter)
+
+return {
+    run = function(p1, p2) -- run | line: 13
+        -- upvalues: TestBootstrap (copy), TestPlanner (copy), TestRunner (copy)
+        local v1 = TestBootstrap:getModules(p1)
+        local v2 = TestPlanner.createPlan(v1)
+
+        p2((TestRunner.runPlan(v2)))
+    end,
+    Expectation = Expectation,
+    TestBootstrap = TestBootstrap,
+    TestEnum = TestEnum,
+    TestPlan = TestPlan,
+    TestPlanner = TestPlanner,
+    TestResults = TestResults,
+    TestRunner = TestRunner,
+    TestSession = TestSession,
+    Reporters = {
+        TextReporter = TextReporter,
+        TextReporterQuiet = TextReporterQuiet,
+        TeamCityReporter = TeamCityReporter
+    }
+}

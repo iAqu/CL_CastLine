@@ -1,0 +1,66 @@
+-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
+
+-- https://lua.expert
+
+local RuntimeLib = require(game:GetService("ReplicatedStorage"):WaitForChild("rbxts_include"):WaitForChild("RuntimeLib"))
+local Reflect = RuntimeLib.import(script, game:GetService("ReplicatedStorage"), "rbxts_include", "node_modules", "@flamework", "core", "out").Reflect
+local t = RuntimeLib.import(script, game:GetService("ReplicatedStorage"), "rbxts_include", "node_modules", "@rbxts", "t", "lib", "ts").t
+local Component = RuntimeLib.import(script, game:GetService("ReplicatedStorage"), "rbxts_include", "node_modules", "@flamework", "components", "out").Component
+local Maid = RuntimeLib.import(script, game:GetService("ReplicatedStorage"), "rbxts_include", "node_modules", "@rbxts", "maid", "Maid")
+local WithDetectableComponent = RuntimeLib.import(script, script.Parent, "with-detectable-component").WithDetectableComponent
+local self = setmetatable({}, {
+    __tostring = function() -- __tostring | line: 12
+        return "FishingZoneComponent"
+    end,
+    __index = WithDetectableComponent
+})
+
+self.__index = self
+
+function self.new(...) -- line: 18
+    -- upvalues: self (copy)
+    local self2 = setmetatable({}, self)
+
+    return self2:constructor(...) or self2
+end
+
+function self.constructor(p1, p2) -- line: 22
+    -- upvalues: Maid (copy), WithDetectableComponent (copy)
+    WithDetectableComponent.constructor(p1, p2)
+    p1._components = p2
+    p1._maid = Maid.new()
+end
+
+function self.onStart(p3) -- line: 27
+    -- upvalues: WithDetectableComponent (copy)
+    WithDetectableComponent.onStart(p3)
+end
+
+function self.destroy(p4) -- line: 30
+    -- upvalues: WithDetectableComponent (copy)
+    WithDetectableComponent.destroy(p4)
+    p4._maid:Destroy()
+end
+
+function self._getDebugPrefix(p5) -- line: 34
+    return (("FishingZoneComponent %*:"):format((p5.instance:GetFullName())))
+end
+
+Reflect.defineMetadata(self, "identifier", "client/components/fishing-zone-component@FishingZoneComponent")
+Reflect.defineMetadata(self, "flamework:parameters", { "$c:components@Components" })
+Reflect.defineMetadata(self, "flamework:implements", { "$:flamework@OnStart" })
+Reflect.decorate(self, "$c:components@Component", Component, {
+    {
+        tag = "FishingZone",
+        defaults = {
+            ownerUserId = "-1"
+        },
+        attributes = {
+            zoneId = t.literal("common", "uncommon", "rare", "epic", "legendary", "mythic", "godly", "secret", "hacked", "cosmic", "extinct", "kaijuwu", "scifi")
+        }
+    }
+})
+
+return {
+    FishingZoneComponent = self
+}

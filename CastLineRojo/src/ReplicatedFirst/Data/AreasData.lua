@@ -1,0 +1,40 @@
+export type AreaConfig = {
+    AreaId: string,
+    Name: string,
+    Type: string,
+    Index: number,
+    WorldIndex: number,
+    LayoutOrder: number,
+    UnlockStrength: number,
+    TrophyCount: TropyCount,
+    UnlockTrophy: number,
+    UnlockRebirth: number,
+    WinsMultiplier: number,
+    TeleportTagIcon1Id: string,
+    TeleportTagIcon2Id: string,
+    TeleportBgId: string,
+    BackgroudImageId: string,
+    NextAeraImageId: string,
+}
+
+local AreasData: {[string]: AreaConfig} = {
+    Area_1 = {
+        AreaId = "Area_1",
+        Name = "🏠 HOME",
+        Type = "Normal",
+        Index = 1,
+        WorldIndex = 1,
+        LayoutOrder = 101,
+        UnlockStrength = 0,
+        TrophyCount = 1,
+        UnlockTrophy = 0,
+        UnlockRebirth = 0,
+        WinsMultiplier = 1,
+        TeleportTagIcon1Id = "16886971482",
+        TeleportTagIcon2Id = "nil",
+        TeleportBgId = "17195714806",
+        BackgroudImageId = "16762919842",
+        NextAeraImageId = "16776252604",
+    },
+}
+return AreasData

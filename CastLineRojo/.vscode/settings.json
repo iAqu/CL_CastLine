@@ -1,0 +1,38 @@
+{
+    "robloxLsp.diagnostics.disable": [
+        1000,
+        "redundant-parameter",
+        "unused-local"
+    ],
+
+    "luau-lsp.platform.type": "roblox", // 保留Roblox支持
+    "luau-lsp.plugin.enabled": true,  // 禁用 Roblox Studio Companion Plugin（可选功能）
+    "luau-lsp.plugin.maximumRequestBodySize": "104857600",
+    "files.associations": {
+        "*.lua": "luau"
+    },
+    "luau-lsp.diagnostics.strictDatamodelTypes": false,
+
+    "workbench.colorCustomizations": {
+        "activityBar.activeBackground": "#60e848",
+        "activityBar.background": "#60e848",
+        "activityBar.foreground": "#15202b",
+        "activityBar.inactiveForeground": "#15202b99",
+        "activityBarBadge.background": "#7184ed",
+        "activityBarBadge.foreground": "#15202b",
+        "commandCenter.border": "#15202b99",
+        "sash.hoverBorder": "#60e848",
+        "statusBar.background": "#3ae11c",
+        "statusBar.foreground": "#15202b",
+        "statusBarItem.hoverBackground": "#2eb416",
+        "statusBarItem.remoteBackground": "#3ae11c",
+        "statusBarItem.remoteForeground": "#15202b",
+        "titleBar.activeBackground": "#3ae11c",
+        "titleBar.activeForeground": "#15202b",
+        "titleBar.inactiveBackground": "#3ae11c99",
+        "titleBar.inactiveForeground": "#15202b99"
+    },
+    "peacock.color": "#3ae11c",
+    "editor.fontSize": 13,
+    "luau-lsp.plugin.port": 3667
+}

@@ -1,0 +1,19 @@
+{
+  "spreadsheet": "https://docs.google.com/spreadsheets/d/1yt59kSVSolbLstUCZxH78QMGaouke6QG9wFYH4s0fwY/edit?gid=1316554826#gid=1316554826",
+  "outputDir": "SeaDigRojo/src/ReplicatedFirst/Data",
+  "apiKey": "AIzaSyDH6G1Hy1Lm3KiNzDcogzGqf8DDfXs6Kl4",
+  "sheets": [
+    {
+      "sheetName": "ItemsData"
+    },
+    {
+      "sheetName": "ZonesData"
+    },
+    {
+      "sheetName": "MutationsData"
+    },
+    {
+      "sheetName": "EventsData"
+    }
+  ]
+}
