@@ -456,6 +456,11 @@ function AreaController:ChangeArea(areaId: string)
 end
 
 ResetBindable.Event:connect(function()
+    local fishingController = Knit.GetController("FishingController")
+    if fishingController:IsPreparing() then
+        fishingController:ReturnToSpawn()
+        return
+    end
     -- Implement custom reset logic here
     local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
     if character:FindFirstChild("HumanoidRootPart") then

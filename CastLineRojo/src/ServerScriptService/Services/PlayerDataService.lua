@@ -1,5 +1,4 @@
 local Players = game:GetService("Players")
-local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
@@ -10,8 +9,6 @@ local ProfileService = require(ServerScriptService.Libs.ProfileService)
 local LogHelper = require(ReplicatedStorage.Modules.LogHelper)
 local PlotPlacementUtil = require(ReplicatedStorage.Modules.PlotPlacementUtil)
 local TimeUtil = require(ReplicatedStorage.Modules.TimeUtil)
-local TutorialConfig = require(ReplicatedStorage.Modules.TutorialConfig)
-local ShovelsData = require(ReplicatedFirst.Data.ShovelsData)
 
 local DATA_BASE_NAME = "RELEASE_230724"
 local ProfileStore = ProfileService.GetProfileStore(DATA_BASE_NAME, Template)
@@ -19,7 +16,6 @@ local ProfileStore = ProfileService.GetProfileStore(DATA_BASE_NAME, Template)
 local KICK_MESSAGE = "Data issue, try again shortly. If issue persists, contact us!"
 local LOAD_PROFILE_MAX_ATTEMPTS = 5
 local LOAD_PROFILE_RETRY_BASE_DELAY = 1.5
-local DEFAULT_SHOVEL_ID = "Shovel_101"
 local EARLY_DATA_REMOTE_NAME = "RequestPlayerDataEarly"
 
 local function sanitizeHotbarLayout(playerData)
@@ -38,26 +34,6 @@ local function sanitizeHotbarLayout(playerData)
         end
     end
     playerData.HotbarLayout = sanitized
-end
-
-local function sanitizeEquippedShovel(playerData)
-    local equippedShovelId = playerData.EquippedShovelId
-    if typeof(equippedShovelId) ~= "string" or not ShovelsData[equippedShovelId] then
-        equippedShovelId = DEFAULT_SHOVEL_ID
-        playerData.EquippedShovelId = equippedShovelId
-    end
-
-    local ownedShovelIds = {}
-    if typeof(playerData.OwnedShovelIds) == "table" then
-        for shovelId, isOwned in pairs(playerData.OwnedShovelIds) do
-            if isOwned == true and typeof(shovelId) == "string" and ShovelsData[shovelId] then
-                ownedShovelIds[shovelId] = true
-            end
-        end
-    end
-    ownedShovelIds[DEFAULT_SHOVEL_ID] = true
-    ownedShovelIds[equippedShovelId] = true
-    playerData.OwnedShovelIds = ownedShovelIds
 end
 
 local function sanitizeIndexLogs(playerData)
@@ -230,34 +206,6 @@ local function migrateRemovedLegacyFields(playerData)
     for _, fieldName in REMOVED_PROFILE_FIELDS do
         playerData[fieldName] = nil
     end
-end
-
-local function migrateLegacyTutorial(playerData)
-    if playerData.TutorialVersion ~= nil then
-        return
-    end
-
-	playerData.TutorialComplete = {}
-	-- 缺少版本号的是旧存档；保留为旧版，避免 V2 上线后强制老玩家重走教程。
-	playerData.TutorialVersion = TutorialConfig.VERSION - 1
-end
-
-local function migrateTutorialReturnToDigZone(playerData)
-    if playerData.TutorialReturnedToDigZone ~= nil then
-        return
-    end
-
-    playerData.TutorialReturnedToDigZone = playerData.TutorialVersion ~= TutorialConfig.VERSION
-        or TutorialConfig.IsComplete(playerData)
-end
-
-local function migrateTutorialCashCollection(playerData)
-    if playerData.TutorialCashCollected ~= nil then
-        return
-    end
-
-    -- Existing V2 profiles predate this follow-up. Keep their current tutorial progress unchanged.
-    playerData.TutorialCashCollected = true
 end
 
 local function migratePlotHome(playerData)
@@ -580,14 +528,12 @@ function PlayerDataService:LoadProfile(player: Player)
     end
 
     profile:AddUserId(player.UserId)
-    migrateLegacyTutorial(profile.Data)
-    migrateTutorialReturnToDigZone(profile.Data)
-    migrateTutorialCashCollection(profile.Data)
+
     profile:Reconcile()
     migrateRemovedLegacyFields(profile.Data)
     migratePlotHome(profile.Data)
     sanitizeHotbarLayout(profile.Data)
-    sanitizeEquippedShovel(profile.Data)
+
     sanitizeIndexLogs(profile.Data)
     sanitizeNewItemTagSeenLog(profile.Data)
     profile:ListenToRelease(function()

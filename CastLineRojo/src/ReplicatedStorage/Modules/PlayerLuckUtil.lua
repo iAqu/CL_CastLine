@@ -48,12 +48,10 @@ end
 
 function PlayerLuckUtil.CombineRollLuck(
 	placedItemLuck: number?,
-	shovelLuck: number?,
 	discoveryLuck: number?,
 	gamePassMultiplier: number?
 ): number
 	local baseLuck = getNonNegativeNumber(placedItemLuck)
-		+ getNonNegativeNumber(shovelLuck)
 		+ getNonNegativeNumber(discoveryLuck)
 	return baseLuck * getPositiveMultiplier(gamePassMultiplier)
 end

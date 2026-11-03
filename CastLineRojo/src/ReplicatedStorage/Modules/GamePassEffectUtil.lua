@@ -32,18 +32,6 @@ function GamePassEffectUtil.GetItemLuckMultiplier(playerData): number
 	return 1 + bonus
 end
 
-function GamePassEffectUtil.GetDigSpeedMultiplier(playerData): number
-	return if ownsGamePass(playerData, Constants.GAMEPASS.DOUBLE_DIG_SPEED) then 2 else 1
-end
-
-function GamePassEffectUtil.GetDigInterval(playerData, baseInterval: number): number
-	return baseInterval / GamePassEffectUtil.GetDigSpeedMultiplier(playerData)
-end
-
-function GamePassEffectUtil.GetDigPowerMultiplier(playerData): number
-	return if ownsGamePass(playerData, Constants.GAMEPASS.DOUBLE_DIG_POWER) then 2 else 1
-end
-
 function GamePassEffectUtil.GetCarryCapacityMultiplier(playerData): number
 	return if ownsGamePass(playerData, Constants.GAMEPASS.DOUBLE_CARRY) then 2 else 1
 end

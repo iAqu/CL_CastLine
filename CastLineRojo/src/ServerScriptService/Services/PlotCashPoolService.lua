@@ -230,8 +230,7 @@ function PlotCashPoolService:_collect(
 	player: Player,
 	slot: number,
 	requireProximity: boolean,
-	enforceCooldown: boolean,
-	qualifiesForTutorial: boolean
+	enforceCooldown: boolean
 )
 	local profile = PlayerDataService:GetProfile(player)
 	if not profile then
@@ -275,9 +274,6 @@ function PlotCashPoolService:_collect(
 	if enforceCooldown then
 		lastCollectBySlot[slot] = now
 	end
-	if qualifiesForTutorial then
-		Knit.GetService("TutorialService"):OnCashCollected(player, slot, amount)
-	end
 	self.Client.CashCollected:Fire(player, slot, amount)
 	self:_pushSnapshot(player)
 	return result(true, amount)
@@ -287,7 +283,7 @@ function PlotCashPoolService:CollectForPlacementChange(player: Player, slot: num
 	if typeof(slot) ~= "number" or slot % 1 ~= 0 then
 		return result(false, 0, "Invalid pedestal")
 	end
-	return self:_collect(player, slot, false, false, false)
+	return self:_collect(player, slot, false, false)
 end
 
 function PlotCashPoolService:OnPlacementChanged(player: Player, slot: number)
@@ -312,7 +308,7 @@ function PlotCashPoolService.Client:RequestCollect(player: Player, slot: unknown
 	if typeof(slot) ~= "number" or slot % 1 ~= 0 then
 		return result(false, 0, "Invalid pedestal")
 	end
-	return PlotCashPoolService:_collect(player, slot, true, true, true)
+	return PlotCashPoolService:_collect(player, slot, true, true)
 end
 
 function PlotCashPoolService.Client:RequestSnapshot(player: Player)

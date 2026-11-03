@@ -1,0 +1,17 @@
+{
+  "vertices": 1606,
+  "faces": 720,
+  "roblox_size": [
+    2.0579986572265625,
+    3.535000801086426,
+    7.678398132324219
+  ],
+  "bones": [
+    "FishBody",
+    "FishTail"
+  ],
+  "fixed_head_vertices": 802,
+  "full_tail_vertices": 38,
+  "head_error_at_18_degrees": 0.0,
+  "tail_displacement_at_18_degrees": 1.4413993726736856
+}

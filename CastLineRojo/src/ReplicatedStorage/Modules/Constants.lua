@@ -10,7 +10,6 @@ Constants.DEBUG = false
 Constants.UPDATE_VERSION = "1.0"    -- 用于判断显示更新界面给用户
 -- Constants.RESOURCE_VERSION = "0.0.3"  -- 详细版本号, 格式为三位, 细分小版本，用于 更新界面显示 和 GA
 Constants.CODE_VERSION = "1"  -- 代码版本号，用于判断代码版本
-Constants.TUTORIAL_ENABLED = true
 Constants.PLAYER_TITLE_GUI_ENABLED = true -- 玩家头顶名牌
 Constants.RESOURCE_VERSION = Workspace:WaitForChild("Version").Value
 
@@ -250,8 +249,6 @@ Constants.GAMEPASS = {
     AUTO_OPEN_CRATE = "AutoOpenCrate",
     DOUBLE_SPEED = "DoubleSpeed",
     FAST_MOVE = "FastMove",
-    DOUBLE_DIG_SPEED = "DoubleDigSpeed",
-    DOUBLE_DIG_POWER = "DoubleDigPower",
     DOUBLE_CARRY = "DoubleCarry",
     SUPER_LUCK = "SuperLuck",
     DOUBLE_WINS_SPEED = "DoubleWinsSpeed",

@@ -13,7 +13,7 @@
 ## 参考项目
 
 - 参考项目由 Studio 与 Rojo 代码两部分组成；禁止修改参考项目文件。
-- 简称：Grow a Garden 2 = GAG2, Be a Fish Bait = FishBait, Throw Food For Animals = ThrowFood,
+- 简称：Grow a Garden 2 = GAG2, Be a Fish Bait = FishBait, Throw Food For Animals = ThrowFood, Goal Kick Simulator = GoalKick, Kick a Lucky Block = KickLuckyBlock, Fish It = FishIt,
 - 只从 `Ref_Game_Code` 分析源码；忽略 `Ref_Game_Rbxl`。
 - 需要美术、资源、实例树或布局时，优先通过 Roblox Studio MCP 查看参考 Studio 工程；找不到就提示用户打开。
 - 美术和资源尽量复用或平移参考项目。

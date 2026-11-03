@@ -68,7 +68,7 @@ function IndexService:DiscoverItem(player: Player, itemId: string): boolean
 	end
 	profile.Data.IndexDiscoveryLog[itemId] = true
 	local rewardProgress = self:GetRewardProgress(player)
-	Knit.GetService("DigItemService"):RefreshPlayerLuck(player)
+	Knit.GetService("PlayerLuckService"):RefreshPlayerLuck(player)
 	self.Client.IndexDiscovered:Fire(player, itemId, rewardProgress)
 	return true
 end

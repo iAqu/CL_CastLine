@@ -12,17 +12,13 @@ local playerDataController = read("src/StarterPlayer/StarterPlayerScripts/Contro
 
 local auxiliaryVisibilitySetup = assert(
 	serverBootstrap:find("local function hideAuxiliaryPart", 1, true),
-	"server bootstrap must centralize tide auxiliary-part visibility setup"
+	"server bootstrap must centralize world auxiliary-part visibility setup"
 )
 local earlyServerRequire = assert(
 	serverBootstrap:find("require(ServerScriptService.Services.PlayerDataService)", 1, true),
 	"server bootstrap must require PlayerDataService explicitly"
 )
-assert(auxiliaryVisibilitySetup < earlyServerRequire, "tide auxiliary parts must be hidden before services start")
-assert(
-	serverBootstrap:find('hideAuxiliaryPart(areas and areas:FindFirstChild("WaterSurfacePosition"), "Workspace.Areas.WaterSurfacePosition")', 1, true),
-	"server bootstrap must hide the high-tide marker"
-)
+assert(auxiliaryVisibilitySetup < earlyServerRequire, "world auxiliary parts must be hidden before services start")
 assert(
 	serverBootstrap:find('hideAuxiliaryPart(areas and areas:FindFirstChild("ResetPlayerBox"), "Workspace.Areas.ResetPlayerBox")', 1, true),
 	"server bootstrap must hide the reset volume"
@@ -33,7 +29,7 @@ assert(
 )
 assert(
 	serverBootstrap:find("instance.Transparency = 1", auxiliaryVisibilitySetup, true),
-	"hiding tide auxiliary parts must use transparency only"
+	"hiding world auxiliary parts must use transparency only"
 )
 
 local genericServerRequire = assert(

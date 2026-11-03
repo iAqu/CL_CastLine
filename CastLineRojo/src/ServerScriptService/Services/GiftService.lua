@@ -9,7 +9,6 @@ local ItemStatUtil = require(ReplicatedStorage.Modules.ItemStatUtil)
 local ItemToolUtil = require(ReplicatedStorage.Modules.ItemToolUtil)
 local Knit = require(ReplicatedStorage.Packages.Knit)
 local MutationDataUtil = require(ReplicatedStorage.Modules.MutationDataUtil)
-local TutorialConfig = require(ReplicatedStorage.Modules.TutorialConfig)
 local PlayerDataService = require(ServerScriptService.Services.PlayerDataService)
 
 local GIFT_DISTANCE = 12
@@ -117,23 +116,6 @@ local function hasEquippedItemTool(player: Player, instanceId: string): boolean
 	return false
 end
 
-local function isGiftBlockedForTutorial(player: Player, instanceId: string): boolean
-	if Knit.GetService("TutorialService"):IsProtectedItem(player, instanceId) then
-		return true
-	end
-	local profile = PlayerDataService:GetProfile(player)
-	if not profile or TutorialConfig.IsComplete(profile.Data) then
-		return false
-	end
-	if profile.Data.TutorialDuckInstanceId == instanceId then
-		return true
-	end
-	if profile.Data.TutorialSecondItemInstanceId == instanceId then
-		return true
-	end
-	return false
-end
-
 local function destroyItemTools(player: Player, instanceIds: { [string]: boolean })
 	for _, container in ipairs({ player:FindFirstChildOfClass("Backpack"), player.Character }) do
 		if container then
@@ -162,9 +144,6 @@ local function buildHeldItemDescriptor(player: Player, kind: any, identifier: an
 		return nil
 	end
 	if isPlacedOnPlot(profile.Data, identifier) then
-		return nil
-	end
-	if isGiftBlockedForTutorial(player, identifier) then
 		return nil
 	end
 

@@ -114,7 +114,6 @@ local function finishSale(player: Player, itemIds: { string }, totalCash: number
 	Knit.GetService("CarryCapacityService"):RefreshPlayer(player)
 	local earnedCash = math.round(totalCash * GamePassEffectUtil.GetSaleMultiplier(profile.Data))
 	PlayerDataService:AdjustWins(player, earnedCash, false)
-	Knit.GetService("TutorialService"):OnItemsSold(player, itemIds)
 
 	return {
 		success = true,

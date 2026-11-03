@@ -27,7 +27,7 @@ function GamePassService:GiveGamePass(player: Player, gamePassId: string)
 		Knit.GetService("CarryCapacityService"):RefreshPlayer(player)
 	end
 	if gamePassId == Constants.GAMEPASS.SUPER_LUCK or gamePassId == Constants.GAMEPASS.MEGA_LUCK then
-		Knit.GetService("DigItemService"):RefreshPlayerLuck(player)
+		Knit.GetService("PlayerLuckService"):RefreshPlayerLuck(player)
 	end
 
     self.Client.GiveGamePass:Fire(player, gamePassId)

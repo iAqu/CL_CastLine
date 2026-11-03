@@ -4,7 +4,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local Knit = require(ReplicatedStorage.Packages.Knit)
 local PlayerDataService = require(ServerScriptService.Services.PlayerDataService)
 
-local FIRST_ITEM_SLOT = 2
+local FIRST_ITEM_SLOT = 1
 local LAST_ITEM_SLOT = 10
 local HOTBAR_SLOT_COUNT = 10
 
@@ -45,8 +45,6 @@ local function isOwnedDescriptor(data, descriptor, usages)
 	return false
 end
 
--- Old layouts could use slot 1 or persist a shovel. Preserve valid item order
--- while migrating every usable entry into the new fixed 2-10 item range.
 local function normalizeLayout(data, layout)
 	local ordered = {}
 	for rawSlot, descriptor in pairs(layout) do

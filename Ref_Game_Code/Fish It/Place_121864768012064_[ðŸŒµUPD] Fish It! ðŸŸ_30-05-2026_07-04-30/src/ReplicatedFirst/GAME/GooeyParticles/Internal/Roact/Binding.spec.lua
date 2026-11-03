@@ -1,0 +1,194 @@
+-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
+
+-- https://lua.expert/
+return function() --[[ Line: 1 ]]
+	local createSpy = require(script.Parent.createSpy)
+	local Type = require(script.Parent.Type)
+	local GlobalConfig = require(script.Parent.GlobalConfig)
+	local Binding = require(script.Parent.Binding)
+	describe("Binding.create", function() --[[ Line: 8 | Upvalues: Binding (copy), Type (copy) ]]
+		it("should return a Binding object and an update function", function() --[[ Line: 9 | Upvalues: Binding (ref), Type (ref) ]]
+			local v1, v2 = Binding.create(1)
+			expect(Type.of(v1)).to.equal(Type.Binding)
+			expect((typeof(v2))).to.equal("function")
+		end)
+		it("should support tostring on bindings", function() --[[ Line: 16 | Upvalues: Binding (ref) ]]
+			local v1, v2 = Binding.create(1)
+			expect((tostring(v1))).to.equal("RoactBinding(1)")
+			v2("foo")
+			expect((tostring(v1))).to.equal("RoactBinding(foo)")
+		end)
+	end)
+	describe("Binding object", function() --[[ Line: 25 | Upvalues: Binding (copy), createSpy (copy) ]]
+		it("should provide a getter and setter", function() --[[ Line: 26 | Upvalues: Binding (ref) ]]
+			local v1, v2 = Binding.create(1)
+			expect(v1:getValue()).to.equal(1)
+			v2(3)
+			expect(v1:getValue()).to.equal(3)
+		end)
+		it("should let users subscribe and unsubscribe to its updates", function() --[[ Line: 36 | Upvalues: Binding (ref), createSpy (ref) ]]
+			local v1, v2 = Binding.create(1)
+			local v3 = createSpy()
+			local v4 = Binding.subscribe(v1, v3.value)
+			expect(v3.callCount).to.equal(0)
+			v2(2)
+			expect(v3.callCount).to.equal(1)
+			v3:assertCalledWith(2)
+			v4()
+			v2(3)
+			expect(v3.callCount).to.equal(1)
+		end)
+	end)
+	describe("Mapped bindings", function() --[[ Line: 56 | Upvalues: Binding (copy), createSpy (copy) ]]
+		it("should be composable", function() --[[ Line: 57 | Upvalues: Binding (ref) ]]
+			local v1, v2 = Binding.create("hi")
+			local v3 = v1:map(string.len)
+			local v4 = v3:map(function(p1) --[[ Line: 61 ]]
+				return p1 % 2 == 0
+			end)
+			expect(v1:getValue()).to.equal("hi")
+			expect(v3:getValue()).to.equal(2)
+			expect(v4:getValue()).to.equal(true)
+			v2("sup")
+			expect(v1:getValue()).to.equal("sup")
+			expect(v3:getValue()).to.equal(3)
+			expect(v4:getValue()).to.equal(false)
+		end)
+		it("should cascade updates when subscribed", function() --[[ Line: 76 | Upvalues: Binding (ref), createSpy (ref) ]]
+			local v1, v2 = Binding.create("hi")
+			local v3 = createSpy()
+			local v4 = Binding.subscribe(v1, v3.value)
+			local v5 = v1:map(string.len)
+			local v6 = createSpy()
+			local v7 = Binding.subscribe(v5, v6.value)
+			local v8 = v5:map(function(p1) --[[ Line: 90 ]]
+				return p1 % 2 == 0
+			end)
+			local v9 = createSpy()
+			local v10 = Binding.subscribe(v8, v9.value)
+			expect(v3.callCount).to.equal(0)
+			expect(v6.callCount).to.equal(0)
+			expect(v9.callCount).to.equal(0)
+			v2("nice")
+			expect(v3.callCount).to.equal(1)
+			v3:assertCalledWith("nice")
+			expect(v6.callCount).to.equal(1)
+			v6:assertCalledWith(4)
+			expect(v9.callCount).to.equal(1)
+			v9:assertCalledWith(true)
+			v4()
+			v7()
+			v10()
+			v2("goodbye")
+			expect(v3.callCount).to.equal(1)
+			expect(v9.callCount).to.equal(1)
+			expect(v6.callCount).to.equal(1)
+		end)
+		it("should throw when updated directly", function() --[[ Line: 123 | Upvalues: Binding (ref) ]]
+			local v1 = Binding.create(1):map(function(p1) --[[ Line: 125 ]]
+				return p1
+			end)
+			expect(function() --[[ Line: 129 | Upvalues: Binding (ref), v1 (copy) ]]
+				Binding.update(v1, 5)
+			end).to.throw()
+		end)
+	end)
+	describe("Binding.join", function() --[[ Line: 135 | Upvalues: Binding (copy), createSpy (copy), GlobalConfig (copy) ]]
+		it("should have getValue", function() --[[ Line: 136 | Upvalues: Binding (ref) ]]
+			local v1 = Binding.create(1)
+			local v2 = Binding.create(2)
+			local v4 = Binding.join({
+				v1,
+				v2,
+				foo = Binding.create(3)
+			}):getValue()
+			expect(v4).to.be.a("table")
+			expect(v4[1]).to.equal(1)
+			expect(v4[2]).to.equal(2)
+			expect(v4.foo).to.equal(3)
+		end)
+		it("should update when any one of the subscribed bindings updates", function() --[[ Line: 154 | Upvalues: Binding (ref), createSpy (ref) ]]
+			local v1, v2 = Binding.create(1)
+			local v3, v4 = Binding.create(2)
+			local v5, v6 = Binding.create(3)
+			local v7 = Binding.join({
+				v1,
+				v3,
+				foo = v5
+			})
+			local v8 = createSpy()
+			Binding.subscribe(v7, v8.value)
+			expect(v8.callCount).to.equal(0)
+			v2(3)
+			expect(v8.callCount).to.equal(1)
+			local v9 = v8:captureValues("value")
+			expect(v9.value).to.be.a("table")
+			expect(v9.value[1]).to.equal(3)
+			expect(v9.value[2]).to.equal(2)
+			expect(v9.value.foo).to.equal(3)
+			v4(4)
+			expect(v8.callCount).to.equal(2)
+			local v10 = v8:captureValues("value")
+			expect(v10.value).to.be.a("table")
+			expect(v10.value[1]).to.equal(3)
+			expect(v10.value[2]).to.equal(4)
+			expect(v10.value.foo).to.equal(3)
+			v6(8)
+			expect(v8.callCount).to.equal(3)
+			local v11 = v8:captureValues("value")
+			expect(v11.value).to.be.a("table")
+			expect(v11.value[1]).to.equal(3)
+			expect(v11.value[2]).to.equal(4)
+			expect(v11.value.foo).to.equal(8)
+		end)
+		it("should disconnect from all upstream bindings", function() --[[ Line: 198 | Upvalues: Binding (ref), createSpy (ref) ]]
+			local v1, v2 = Binding.create(1)
+			local v3, v4 = Binding.create(2)
+			local v5 = Binding.join({ v1, v3 })
+			local v6 = createSpy()
+			local v7 = Binding.subscribe(v5, v6.value)
+			expect(v6.callCount).to.equal(0)
+			v2(3)
+			expect(v6.callCount).to.equal(1)
+			v4(3)
+			expect(v6.callCount).to.equal(2)
+			v7()
+			v2(4)
+			expect(v6.callCount).to.equal(2)
+			v4(2)
+			expect(v6.callCount).to.equal(2)
+			local v8 = v5:getValue()
+			expect(v8[1]).to.equal(4)
+			expect(v8[2]).to.equal(2)
+		end)
+		it("should be okay with calling disconnect multiple times", function() --[[ Line: 227 | Upvalues: Binding (ref) ]]
+			local v2 = Binding.subscribe(Binding.join({}), function() --[[ Line: 230 ]] end)
+			v2()
+			v2()
+		end)
+		it("should throw if updated directly", function() --[[ Line: 236 | Upvalues: Binding (ref) ]]
+			local v1 = Binding.join({})
+			expect(function() --[[ Line: 239 | Upvalues: Binding (ref), v1 (copy) ]]
+				Binding.update(v1, 0)
+			end)
+		end)
+		it("should throw when a non-table value is passed", function() --[[ Line: 244 | Upvalues: GlobalConfig (ref), Binding (ref) ]]
+			GlobalConfig.scoped({
+				typeChecks = true
+			}, function() --[[ Line: 247 | Upvalues: Binding (ref) ]]
+				expect(function() --[[ Line: 248 | Upvalues: Binding (ref) ]]
+					Binding.join("hi")
+				end).to.throw()
+			end)
+		end)
+		it("should throw when a non-binding value is passed via table", function() --[[ Line: 254 | Upvalues: GlobalConfig (ref), Binding (ref) ]]
+			GlobalConfig.scoped({
+				typeChecks = true
+			}, function() --[[ Line: 257 | Upvalues: Binding (ref) ]]
+				expect(function() --[[ Line: 258 | Upvalues: Binding (ref) ]]
+					Binding.join({ Binding.create(123), "abcde" })
+				end).to.throw()
+			end)
+		end)
+	end)
+end

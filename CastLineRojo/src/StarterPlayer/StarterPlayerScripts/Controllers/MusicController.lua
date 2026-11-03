@@ -7,11 +7,10 @@ local PlayerDataController = require(StarterPlayer.StarterPlayerScripts.Controll
 local Constants = require(ReplicatedStorage.Modules.Constants)
 local LogHelper = require(ReplicatedStorage.Modules.LogHelper)
 
-local AMBIENT_SOUND_NAMES = { "BGM_1", "OceanSound", "Alarm" }
+local AMBIENT_SOUND_NAMES = { "BGM_1", "OceanSound" }
 
 local MusicController = Knit.CreateController {
 	Name = "MusicController",
-	_BgmPausedForDanger = false,
 	_MissingSoundWarnings = {},
 }
 
@@ -45,27 +44,8 @@ function MusicController:ResolveAmbientSounds()
 				self._Bgm = sound
 			elseif soundName == "OceanSound" then
 				self._OceanSound = sound
-				if self._OceanBaseVolume == nil then
-					self._OceanBaseVolume = sound.Volume
-					self._OceanBasePlaybackSpeed = sound.PlaybackSpeed
-				end
-			elseif soundName == "Alarm" then
-				self._Alarm = sound
 			end
 		end
-	end
-end
-
-function MusicController:RestoreOceanSound()
-	local oceanSound = self._OceanSound
-	if not oceanSound then
-		return
-	end
-	if self._OceanBaseVolume ~= nil then
-		oceanSound.Volume = self._OceanBaseVolume
-	end
-	if self._OceanBasePlaybackSpeed ~= nil then
-		oceanSound.PlaybackSpeed = self._OceanBasePlaybackSpeed
 	end
 end
 
@@ -77,66 +57,19 @@ function MusicController:StopAmbientSounds()
 
 	local oceanSound = self._OceanSound
 	if oceanSound then
-		self:RestoreOceanSound()
 		oceanSound:Stop()
 	end
-
-	local alarm = self._Alarm
-	if alarm then
-		alarm:Stop()
-	end
-
-	self._BgmPausedForDanger = false
 end
 
 function MusicController:ApplyNormalAmbientState()
 	local bgm = self._Bgm
-	if bgm then
-		if self._BgmPausedForDanger then
-			bgm:Resume()
-		elseif not bgm.IsPlaying then
-			bgm:Play()
-		end
-	end
-	self._BgmPausedForDanger = false
-
-	local oceanSound = self._OceanSound
-	if oceanSound then
-		self:RestoreOceanSound()
-		if not oceanSound.IsPlaying then
-			oceanSound:Play()
-		end
-	end
-
-	local alarm = self._Alarm
-	if alarm then
-		alarm:Stop()
-	end
-end
-
-function MusicController:ApplyDangerAmbientState()
-	local bgm = self._Bgm
-	if bgm and bgm.IsPlaying then
-		bgm:Pause()
-		self._BgmPausedForDanger = true
+	if bgm and not bgm.IsPlaying then
+		bgm:Play()
 	end
 
 	local oceanSound = self._OceanSound
-	if oceanSound then
-		if self._OceanBaseVolume ~= nil then
-			oceanSound.Volume = self._OceanBaseVolume * 4
-		end
-		if self._OceanBasePlaybackSpeed ~= nil then
-			oceanSound.PlaybackSpeed = self._OceanBasePlaybackSpeed * 1.2
-		end
-		if not oceanSound.IsPlaying then
-			oceanSound:Play()
-		end
-	end
-
-	local alarm = self._Alarm
-	if alarm and not alarm.IsPlaying then
-		alarm:Play()
+	if oceanSound and not oceanSound.IsPlaying then
+		oceanSound:Play()
 	end
 end
 
@@ -153,11 +86,7 @@ function MusicController:RefreshAmbientAudio()
 		return
 	end
 
-	if self._TideController:IsRisingProximityWarningActive() then
-		self:ApplyDangerAmbientState()
-	else
-		self:ApplyNormalAmbientState()
-	end
+	self:ApplyNormalAmbientState()
 end
 
 function MusicController:KnitInit()
@@ -165,12 +94,6 @@ function MusicController:KnitInit()
 end
 
 function MusicController:KnitStart()
-	local tideController = Knit.GetController("TideController")
-	self._TideController = tideController
-	tideController.ProximityWarningStateChanged:Connect(function()
-		self:RefreshAmbientAudio()
-	end)
-
 	local settingsGuiController = Knit.GetController("SettingsGuiController")
 	settingsGuiController.ToggleMusic:Connect(function()
 		self:RefreshAmbientAudio()

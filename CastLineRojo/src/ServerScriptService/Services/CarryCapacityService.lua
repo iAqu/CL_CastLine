@@ -50,7 +50,6 @@ function CarryCapacityService:RefreshPlayer(player: Player)
 	player:SetAttribute(CarryCapacityUtil.WEIGHT_ATTRIBUTE, snapshot.weight)
 	player:SetAttribute(CarryCapacityUtil.CAPACITY_ATTRIBUTE, snapshot.capacity)
 	player:SetAttribute(CarryCapacityUtil.VALUE_ATTRIBUTE, snapshot.value)
-	Knit.GetService("BackpackVisualService"):RefreshPlayer(player)
 	self.Client.CapacityChanged:Fire(player, snapshot)
 end
 

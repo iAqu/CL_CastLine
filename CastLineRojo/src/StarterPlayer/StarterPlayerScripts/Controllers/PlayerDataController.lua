@@ -167,16 +167,6 @@ function PlayerDataController:KnitStart()
         end
     end)
 
-    local ShovelService = Knit.GetService("ShovelService")
-    ShovelService.ShovelStateChanged:Connect(function(ownedShovelIds, equippedShovelId)
-        if typeof(ownedShovelIds) == "table" then
-            self._PlayerData.OwnedShovelIds = ownedShovelIds
-        end
-        if typeof(equippedShovelId) == "string" then
-            self._PlayerData.EquippedShovelId = equippedShovelId
-        end
-    end)
-
     local AreaService = Knit.GetService("AreaService")
     AreaService.ResetAreas:Connect(function()
         self._PlayerData.Areas = Template.DEFAULT_AREAS

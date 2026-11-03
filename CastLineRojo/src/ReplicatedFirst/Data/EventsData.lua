@@ -55,17 +55,6 @@ local data: {[string]: EventConfig} = {
 		MutationId = "nil",
 		Info = "nil",
 	},
-	Event_05 = {
-		EventID = "Event_05",
-		Index = 5,
-		DisplayName = "Big Low Tide",
-		Description = "Item number +100%",
-		EventType = "MoreItem",
-		Duration = 300,
-		EffectValue = 1,
-		MutationId = "nil",
-		Info = "nil",
-	},
 }
 
 return data

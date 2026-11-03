@@ -70,10 +70,6 @@ function RebirthService:SuperRebirth(player: Player, amount: number?): (boolean,
     local rebirthRequired = GameDataUtil.CalculateSuperRebirtRequired(profile.Data.SuperRebirths + 1)
     if profile.Data.Rebirths < rebirthRequired then return false, "Not enough rebirths!" end
 
-    if profile.Data.Wins > 0 then
-        local canSpend, message = Knit.GetService("TutorialService"):CanSpendWins(player)
-        if not canSpend then return false, message end
-    end
 
     PlayerDataService:AdjustSuperRebirths(player, 1)
     PlayerDataService:AdjustRebirths(player, -profile.Data.Rebirths)

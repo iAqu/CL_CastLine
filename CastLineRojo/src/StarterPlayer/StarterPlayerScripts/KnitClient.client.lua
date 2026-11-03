@@ -8,19 +8,14 @@ local LogHelper = require(ReplicatedStorage.Modules.LogHelper)
 local LoadingAttributes = require(ReplicatedFirst:WaitForChild("LoadingAttributes"))
 local localPlayer = Players.LocalPlayer
 local controllersFolder = StarterPlayer.StarterPlayerScripts.Controllers
-local guiControllersFolder = controllersFolder:WaitForChild("GUI")
 local PlayerDataController = require(controllersFolder:WaitForChild("PlayerDataController"))
 local EventController = require(controllersFolder:WaitForChild("EventController"))
-local TideController = require(controllersFolder:WaitForChild("TideController"))
-local PositionBarController = require(guiControllersFolder:WaitForChild("PositionBarController"))
 local FarmSignController = require(controllersFolder:WaitForChild("FarmSignController"))
 
 -- 与其余 Controller 的 require 并行等待服务端存档，避免 HomeGui 先显示模板占位值。
 PlayerDataController:BeginEarlyFetch()
 EventController:BeginEarlyState()
--- 首屏全局状态与头像不依赖 Knit 启动：先绑定复制快照和 UI，再加载其余 Controller。
-TideController:BeginEarlyState()
-PositionBarController:BeginEarlyUi()
+-- 首屏农场头像不依赖 Knit 启动，先绑定 UI，再加载其余 Controller。
 FarmSignController:BeginEarlyUi()
 
 -- Controller 顶层若用 WaitForChild 等待缺失/改名的实例，会卡死整个 require 循环，

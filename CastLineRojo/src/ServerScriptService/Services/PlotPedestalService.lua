@@ -10,7 +10,6 @@ local ItemStatUtil = require(ReplicatedStorage.Modules.ItemStatUtil)
 local ItemToolUtil = require(ReplicatedStorage.Modules.ItemToolUtil)
 local MutationDataUtil = require(ReplicatedStorage.Modules.MutationDataUtil)
 local PlotPlacementUtil = require(ReplicatedStorage.Modules.PlotPlacementUtil)
-local ShovelToolUtil = require(ReplicatedStorage.Modules.ShovelToolUtil)
 local PlayerDataService = require(ServerScriptService.Services.PlayerDataService)
 
 local PlotPedestalService = Knit.CreateService({
@@ -96,7 +95,7 @@ local function isEmptyHanded(player: Player): boolean
 		return true
 	end
 	local heldTool = character:FindFirstChildOfClass("Tool")
-	return heldTool == nil or ShovelToolUtil.IsShovelTool(heldTool)
+	return heldTool == nil
 end
 
 local DEFAULT_CONDITION_ID = "Codition_1"
@@ -241,8 +240,8 @@ function PlotPedestalService:placeItem(player: Player, slot: unknown, inventoryI
 	end
 	Knit.GetService("PlotCashPoolService"):OnPlacementChanged(player, slot)
 	Knit.GetService("CarryCapacityService"):RefreshPlayer(player)
-	Knit.GetService("TutorialService"):OnItemPlaced(player, inventoryId, slot)
-	Knit.GetService("DigItemService"):RefreshPlayerLuck(player)
+
+	Knit.GetService("PlayerLuckService"):RefreshPlayerLuck(player)
 	return result(true, if typeof(oldItemUid) == "string" then "Swapped" else "Placed")
 end
 
@@ -290,7 +289,7 @@ function PlotPedestalService:pickupItem(player: Player, slot: unknown)
 	tool.Parent = backpack
 	Knit.GetService("PlotCashPoolService"):OnPlacementChanged(player, slot)
 	Knit.GetService("CarryCapacityService"):RefreshPlayer(player)
-	Knit.GetService("DigItemService"):RefreshPlayerLuck(player)
+	Knit.GetService("PlayerLuckService"):RefreshPlayerLuck(player)
 	return result(true, "Picked up")
 end
 

@@ -6,10 +6,6 @@ local function read(path)
 end
 
 local config = read("src/ReplicatedStorage/Modules/RarityRevealConfig.lua")
-local beamUtil = read("src/ReplicatedStorage/Modules/RarityBeamUtil.lua")
-local moundEffect = read("src/ReplicatedStorage/Modules/DigMoundEffect.lua")
-local controller = read("src/StarterPlayer/StarterPlayerScripts/Controllers/DigController.lua")
-local service = read("src/ServerScriptService/Services/DigItemService.lua")
 
 local expected = {
 	Common = {
@@ -130,53 +126,5 @@ assert(
 	config:find("math.clamp((maxAxis / 2) ^ 0.6, 0.8, 2.2)", 1, true),
 	"Item size scale must use the planned clamped formula"
 )
-assert(
-	beamUtil:find("local resolvedRarity = RarityRevealConfig.ResolveRarity(rarity)", 1, true)
-		and beamUtil:find("local style = RarityRevealConfig.GetStyle(resolvedRarity)", 1, true)
-		and beamUtil:find("local sizeScale = RarityRevealConfig.GetSizeScale(itemBounds)", 1, true),
-	"Persistent pit beams must resolve rarity style and full item size"
-)
-assert(
-	beamUtil:find("local beamCount = math.random(style.minBeams, style.maxBeams)", 1, true)
-		and beamUtil:find("rootRadii: Vector2", 1, true)
-		and beamUtil:find("local radiusScale = ROOT_EDGE_RATIO * math.sqrt(math.random())", 1, true)
-		and beamUtil:find("style.maxHeight - style.minHeight", 1, true)
-		and beamUtil:find("style.maxWidth - style.minWidth", 1, true)
-		and beamUtil:find("state.beam.Width0 = strength * 0.3 * sizeScale", 1, true)
-		and beamUtil:find("state.beam.Width1 = state.width * strength * pulse", 1, true)
-		and beamUtil:find("state.beam.Brightness = style.brightness", 1, true),
-	"Pit beam count, root placement, height, width, and brightness must use the DigClean scaling model"
-)
-assert(
-	not beamUtil:find("BEAM_COUNT", 1, true)
-		and not beamUtil:find("BEAM_CONFIG", 1, true)
-		and not beamUtil:find("SIZE_SCALE", 1, true),
-	"Pit beams must not retain fixed count or size constants"
-)
-assert(moundEffect:find("sparkleBursts", 1, true), "Finish sparkles must support high-rarity bursts")
-assert(
-	service:find("bounds: Vector3", 1, true)
-		and service:find("local _, bounds = visual:GetBoundingBox()", 1, true)
-		and service:find("Bounds = roll.bounds", 1, true),
-	"Personal dig snapshots must use the scaled item's full three-dimensional bounds"
-)
-assert(
-	controller:find("resolvedBounds: Vector3?", 1, true)
-		and controller:find("else Vector3.new(footprint.X, 0, footprint.Y)", 1, true)
-		and controller:find("site.resolvedBounds", 1, true)
-		and moundEffect:find("itemBounds: Vector3?", 1, true),
-	"Pit beams must receive full bounds with a horizontal-footprint compatibility fallback"
-)
-assert(
-	controller:find("if site.mound and (footprintChanged or boundsChanged) then", 1, true),
-	"A changed item size must rebuild the persistent pit beam session"
-)
-assert(
-	controller:find("local _, resolvedBounds = resolvedVisual:GetBoundingBox()", 1, true)
-		and controller:find("local revealSizeScale = RarityRevealConfig.GetSizeScale(resolvedBounds)", 1, true)
-		and controller:find("revealSizeScale = revealSizeScale", 1, true),
-	"Reveal effects must scale from the player's resolved item rather than the conservative site proxy"
-)
-assert(not controller:find("getMoundSizing", 1, true), "Conservative site proxy bounds must not size visual effects")
 
 print("RarityRevealConfig.test.lua passed")

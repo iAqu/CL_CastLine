@@ -17,13 +17,9 @@ local activatePedestal = assert(
 )
 
 assert(
-	controller:find("local ShovelToolUtil = require(ReplicatedStorage.Modules.ShovelToolUtil)", 1, true),
-	"Pedestal prompts must use the shared shovel identification"
-)
-assert(
 	controller:find("local function isPickupHandState(heldTool: Tool?): boolean", 1, true)
-		and controller:find("return heldTool == nil or ShovelToolUtil.IsShovelTool(heldTool)", 1, true),
-	"Empty hands and held shovels must share the pickup state"
+		and controller:find("return heldTool == nil", 1, true),
+	"Empty hands must share the pickup state"
 )
 assert(
 	refreshPrompt:find("if ItemToolUtil.IsItemTool(heldTool) then", 1, true),
@@ -32,7 +28,7 @@ assert(
 assert(refreshPrompt:find('prompt.ActionText = hasDisplayedItem(pedestal) and "Swap" or "Place"', 1, true))
 assert(
 	refreshPrompt:find("if isPickupHandState(heldTool) and hasDisplayedItem(pedestal) then", 1, true),
-	"Empty hands and held shovels must expose Pick Up only when the pedestal contains an item"
+	"Empty hands must expose Pick Up only when the pedestal contains an item"
 )
 assert(
 	refreshPrompt:match("prompt%.Enabled = false%s*$"),
@@ -41,7 +37,7 @@ assert(
 
 assert(
 	activatePedestal:find("local canPickup = isPickupHandState(heldTool) and hasDisplayedItem(pedestal)", 1, true),
-	"Pedestal activation must allow pickup with empty hands or a held shovel"
+	"Pedestal activation must allow pickup with empty hands"
 )
 assert(
 	activatePedestal:find("if not heldItemTool and not canPickup then", 1, true),
@@ -57,12 +53,8 @@ assert(
 )
 
 assert(
-	service:find("local ShovelToolUtil = require(ReplicatedStorage.Modules.ShovelToolUtil)", 1, true),
-	"The server must use the shared shovel identification"
-)
-assert(
-	service:find("return heldTool == nil or ShovelToolUtil.IsShovelTool(heldTool)", 1, true),
-	"The server must permit displayed-item pickup while a shovel is equipped"
+	service:find("return heldTool == nil", 1, true),
+	"The server must permit displayed-item pickup with empty hands"
 )
 
 print("PlotPedestalPromptVisibility.test.lua passed")

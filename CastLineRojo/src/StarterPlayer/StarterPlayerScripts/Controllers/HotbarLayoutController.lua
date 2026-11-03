@@ -5,11 +5,10 @@ local Knit = require(ReplicatedStorage.Packages.Knit)
 local BackpackSlotObserver = require(ReplicatedStorage.Modules.BackpackSlotObserver)
 local ItemToolUtil = require(ReplicatedStorage.Modules.ItemToolUtil)
 local PotionToolUtil = require(ReplicatedStorage.Modules.PotionToolUtil)
-local ShovelToolUtil = require(ReplicatedStorage.Modules.ShovelToolUtil)
 
 local LOCAL_PLAYER = Players.LocalPlayer
 local HOTBAR_SLOT_COUNT = 10
-local FIRST_ITEM_SLOT = 2
+local FIRST_ITEM_SLOT = 1
 local LAST_ITEM_SLOT = 10
 local SAVE_DELAY = 0.5
 local INITIAL_RESTORE_SECONDS = 4
@@ -85,25 +84,22 @@ local function requestSave()
 	end)
 end
 
-local function gatherPersistentTools(): ({ Tool }, Tool?)
+local function gatherPersistentTools(): { Tool }
 	local result: { Tool } = {}
-	local shovel: Tool? = nil
 	local seen: { [Tool]: boolean } = {}
 	for _, container in ipairs({ getBackpack(), LOCAL_PLAYER.Character }) do
 		if container then
 			for _, child in ipairs(container:GetChildren()) do
 				if child:IsA("Tool") and not seen[child] then
 					seen[child] = true
-					if ShovelToolUtil.IsShovelTool(child) then
-						shovel = shovel or child
-					elseif getDescriptor(child) then
+					if getDescriptor(child) then
 						table.insert(result, child)
 					end
 				end
 			end
 		end
 	end
-	return result, shovel
+	return result
 end
 
 local function makePlaceholder(): Tool
@@ -123,7 +119,6 @@ end
 
 local function getNormalizedSavedLayout(savedLayout): { [string]: Descriptor }
 	local result: { [string]: Descriptor } = {}
-	local deferred: { Descriptor } = {}
 	for slot = FIRST_ITEM_SLOT, LAST_ITEM_SLOT do
 		local descriptor = savedLayout[tostring(slot)]
 		if typeof(descriptor) == "table" and (descriptor.Kind == "Item" or descriptor.Kind == "Potion")
@@ -131,22 +126,6 @@ local function getNormalizedSavedLayout(savedLayout): { [string]: Descriptor }
 		then
 			if slot >= FIRST_ITEM_SLOT and slot <= LAST_ITEM_SLOT and not result[tostring(slot)] then
 				result[tostring(slot)] = { Kind = descriptor.Kind, Id = descriptor.Id }
-			end
-		end
-	end
-	for _, slot in ipairs({ 1 }) do
-		local descriptor = savedLayout[tostring(slot)]
-		if typeof(descriptor) == "table" and (descriptor.Kind == "Item" or descriptor.Kind == "Potion")
-			and typeof(descriptor.Id) == "string"
-		then
-			table.insert(deferred, { Kind = descriptor.Kind, Id = descriptor.Id })
-		end
-	end
-	for _, descriptor in ipairs(deferred) do
-		for slot = FIRST_ITEM_SLOT, LAST_ITEM_SLOT do
-			if not result[tostring(slot)] then
-				result[tostring(slot)] = descriptor
-				break
 			end
 		end
 	end
@@ -165,8 +144,7 @@ local function restoreLayout(force: boolean?)
 	restoredForCharacter = false
 	task.wait()
 
-	local tools, shovel = gatherPersistentTools()
-	local shovelIsEquipped = shovel ~= nil and shovel.Parent == LOCAL_PLAYER.Character
+	local tools = gatherPersistentTools()
 	local available: { [string]: { Tool } } = {}
 	for _, tool in ipairs(tools) do
 		local descriptor = getDescriptor(tool)
@@ -177,11 +155,8 @@ local function restoreLayout(force: boolean?)
 			parentForRestore(tool, nil)
 		end
 	end
-	if shovel and not shovelIsEquipped then parentForRestore(shovel, nil) end
 	task.wait()
 
-	-- First parent becomes the fixed first hotbar slot. ShovelService guarantees it exists.
-	if shovel and not shovelIsEquipped then parentForRestore(shovel, backpack) end
 	local placeholders: { Tool } = {}
 	local normalized = getNormalizedSavedLayout(savedLayout)
 	for slot = FIRST_ITEM_SLOT, LAST_ITEM_SLOT do
@@ -203,7 +178,7 @@ local function restoreLayout(force: boolean?)
 	task.wait()
 	restoring = false
 	restoredForCharacter = true
-	requestSave() -- persists the one-time migration into the reserved range.
+	requestSave()
 end
 
 local function scheduleInitialRestore()
@@ -235,10 +210,9 @@ function HotbarLayoutController:KnitStart()
 	BackpackSlotObserver.new({
 		player = LOCAL_PLAYER,
 		playerGui = LOCAL_PLAYER:WaitForChild("PlayerGui"),
-		isRelevantTool = function(tool: Tool): boolean return getDescriptor(tool) ~= nil or ShovelToolUtil.IsShovelTool(tool) end,
+		isRelevantTool = function(tool: Tool): boolean return getDescriptor(tool) ~= nil end,
 		onSlotToolChanged = requestSave,
 		onToolAdded = function(tool)
-			if ShovelToolUtil.IsShovelTool(tool) then return end
 			if tool:GetAttribute(RESTORE_MOVE_ATTRIBUTE) == true then return end
 			scheduleInitialRestore()
 			requestSave()

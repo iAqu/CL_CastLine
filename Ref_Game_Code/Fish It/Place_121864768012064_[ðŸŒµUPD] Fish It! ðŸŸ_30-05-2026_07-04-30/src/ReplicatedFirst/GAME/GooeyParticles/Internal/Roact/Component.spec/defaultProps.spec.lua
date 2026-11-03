@@ -1,0 +1,82 @@
+-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
+
+-- https://lua.expert/
+return function() --[[ Line: 1 ]]
+	local assertDeepEqual = require(script.Parent.Parent.assertDeepEqual)
+	local createElement = require(script.Parent.Parent.createElement)
+	local createReconciler = require(script.Parent.Parent.createReconciler)
+	local None = require(script.Parent.Parent.None)
+	local NoopRenderer = require(script.Parent.Parent.NoopRenderer)
+	local Component = require(script.Parent.Parent.Component)
+	local v1 = createReconciler(NoopRenderer)
+	it("should fill in when mounting before init", function() --[[ Line: 12 | Upvalues: Component (copy), createElement (copy), v1 (copy), assertDeepEqual (copy) ]]
+		local t = {
+			a = 3,
+			b = 2
+		}
+		local v12 = Component:extend("Foo")
+		v12.defaultProps = t
+		local v2 = nil
+		function v12.init(p1) --[[ init | Line: 23 | Upvalues: v2 (ref) ]]
+			v2 = p1.props
+		end
+		function v12.render(p1) --[[ render | Line: 27 ]] end
+		local t2 = {
+			b = 4,
+			c = 6
+		}
+		v1.mountVirtualNode(createElement(v12, t2), nil, "Some Foo")
+		assertDeepEqual(v2, {
+			a = t.a,
+			b = t2.b,
+			c = t2.c
+		})
+	end)
+	it("should fill in when updating via props", function() --[[ Line: 49 | Upvalues: Component (copy), createElement (copy), v1 (copy), assertDeepEqual (copy) ]]
+		local t = {
+			a = 3,
+			b = 2
+		}
+		local v12 = Component:extend("Foo")
+		v12.defaultProps = t
+		local v2 = nil
+		function v12.render(p1) --[[ render | Line: 60 | Upvalues: v2 (ref) ]]
+			v2 = p1.props
+		end
+		local v4 = v1.mountVirtualNode(createElement(v12, {
+			b = 4,
+			c = 6
+		}), nil, "Some Foo")
+		local t2 = {
+			c = 5
+		}
+		v1.updateVirtualNode(v4, (createElement(v12, t2)))
+		assertDeepEqual(v2, {
+			a = t.a,
+			b = t.b,
+			c = t2.c
+		})
+	end)
+	it("should respect None to override a default prop with nil", function() --[[ Line: 91 | Upvalues: Component (copy), None (copy), createElement (copy), v1 (copy), assertDeepEqual (copy) ]]
+		local t = {
+			a = 3,
+			b = 2
+		}
+		local v12 = Component:extend("Foo")
+		v12.defaultProps = t
+		local v2 = nil
+		function v12.render(p1) --[[ render | Line: 102 | Upvalues: v2 (ref) ]]
+			v2 = p1.props
+		end
+		local t2 = {
+			c = 4,
+			b = None
+		}
+		v1.mountVirtualNode(createElement(v12, t2), nil, "Some Foo")
+		assertDeepEqual(v2, {
+			b = nil,
+			a = t.a,
+			c = t2.c
+		})
+	end)
+end

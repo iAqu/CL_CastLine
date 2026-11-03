@@ -23,7 +23,6 @@ local NumberUtil = require(ReplicatedStorage.Modules.NumberUtil)
 local PlotCashPoolUtil = require(ReplicatedStorage.Modules.PlotCashPoolUtil)
 local PlotWorkspaceUtil = require(ReplicatedStorage.Modules.PlotWorkspaceUtil)
 local PromptUtil = require(ReplicatedStorage.Modules.PromptUtil)
-local ShovelToolUtil = require(ReplicatedStorage.Modules.ShovelToolUtil)
 local WeightFormat = require(ReplicatedStorage.Modules.WeightFormat)
 
 local LOCAL_PLAYER = Players.LocalPlayer
@@ -89,7 +88,7 @@ local function getHeldTool(): Tool?
 end
 
 local function isPickupHandState(heldTool: Tool?): boolean
-	return heldTool == nil or ShovelToolUtil.IsShovelTool(heldTool)
+	return heldTool == nil
 end
 
 local function getPedestalPrompt(pedestal: Instance): ProximityPrompt?

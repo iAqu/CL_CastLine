@@ -41,7 +41,6 @@ assert(formatPrice(10_000_000) == "10M", "Ten million must stay compact without 
 assert(formatPrice(1_000_000_000) == "1B", "Higher compact suffixes must remain supported")
 
 for _, path in ipairs({
-	"src/StarterPlayer/StarterPlayerScripts/Controllers/DigController.lua",
 	"src/StarterPlayer/StarterPlayerScripts/Controllers/DrownDropController.lua",
 	"src/StarterPlayer/StarterPlayerScripts/Controllers/PlotPedestalController.lua",
 	"src/StarterPlayer/StarterPlayerScripts/Controllers/GUI/SellShopController.lua",

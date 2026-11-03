@@ -5,7 +5,6 @@ local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
 local Knit = require(ReplicatedStorage.Packages.Knit)
-local TideConfig = require(ReplicatedStorage.Modules.TideConfig)
 
 local LOCAL_PLAYER = Players.LocalPlayer
 
@@ -387,9 +386,8 @@ local function collectSurfaces(): { BasePart }
 		return surfaces
 	end
 
-	for zoneIndex = 1, TideConfig.DIG_ZONE_COUNT do
-		local zone = areas:FindFirstChild("Zone_" .. zoneIndex)
-		if zone then
+	for _, zone in areas:GetChildren() do
+		if zone.Name:match("^Zone_%d+$") then
 			for _, surfaceName in ipairs({ "MainPart", "EndPart" }) do
 				local surface = zone:FindFirstChild(surfaceName)
 				if surface and surface:IsA("BasePart") then
@@ -463,7 +461,7 @@ end
 function FootprintController:KnitStart()
 	local surfaces = collectSurfaces()
 	if #surfaces == 0 then
-		warn("FootprintController: no Zone_1 through " .. TideConfig.LOW_TIDE_ZONE_ID .. " footprint surfaces were found")
+		warn("FootprintController: no Zone_* footprint surfaces were found")
 		return
 	end
 	if not initializeTemplates() then

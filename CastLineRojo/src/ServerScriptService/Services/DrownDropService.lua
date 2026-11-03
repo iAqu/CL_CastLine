@@ -24,7 +24,7 @@ local DROP_GROUND_SEARCH_MAX_RADIUS = 128
 local DROP_SCATTER_GAP_MIN = 1
 local DROP_SCATTER_GAP_MAX = 3
 local DROP_SCATTER_ATTEMPTS = 64
-local TIDE_SUBMERGE_EPSILON = 0.01
+local WATER_SUBMERGE_EPSILON = 0.01
 local DROP_TILT_MIN_ANGLE = math.rad(5)
 local DROP_TILT_MAX_ANGLE = math.rad(10)
 local DROP_POSITION_UPDATE_INTERVAL = 0.1
@@ -56,7 +56,6 @@ type DropState = {
 	footprintRadius: number,
 	boundsRotation: CFrame,
 	boundsToPivot: CFrame,
-	hasRestedOnGround: boolean,
 	claimed: boolean,
 	promptConnection: RBXScriptConnection?,
 }
@@ -100,20 +99,6 @@ end
 
 local function getWaterSurfaceY(waterTop: BasePart): number
 	return waterTop.CFrame:PointToWorldSpace(Vector3.new(0, waterTop.Size.Y * 0.5, 0)).Y
-end
-
-local function getHighWaterSurfaceY(water: Instance?): number?
-	if not water or not water:IsA("Model") then
-		return nil
-	end
-	local waterTop = water:FindFirstChild("Top")
-	local areas = Workspace:FindFirstChild("Areas")
-	local highTideMarker = areas and areas:FindFirstChild("WaterSurfacePosition")
-	if not waterTop or not waterTop:IsA("BasePart") or not highTideMarker or not highTideMarker:IsA("BasePart") then
-		return nil
-	end
-	local surfaceOffsetY = getWaterSurfaceY(waterTop) - water:GetPivot().Position.Y
-	return highTideMarker.Position.Y + surfaceOffsetY
 end
 
 local function getItemTemplate(item): Model?
@@ -173,9 +158,6 @@ local function getCarriedCandidates(player: Player, profile): { DropCandidate }
 		for _, child in ipairs(container:GetChildren()) do
 			local instanceId = ItemToolUtil.GetInstanceId(child)
 			if not instanceId or not child:IsA("Tool") then
-				continue
-			end
-			if Knit.GetService("TutorialService"):IsProtectedItem(player, instanceId) then
 				continue
 			end
 
@@ -351,7 +333,7 @@ function DrownDropService:_resolveGroundedPosition(
 			return nil, nil
 		end
 		local groundY = self:_getGroundY(candidate, water, dropFolder, sampleLift)
-		if groundY and maxGroundY and groundY > maxGroundY + TIDE_SUBMERGE_EPSILON then
+		if groundY and maxGroundY and groundY > maxGroundY + WATER_SUBMERGE_EPSILON then
 			return nil, nil
 		end
 		if groundY then
@@ -516,7 +498,8 @@ function DrownDropService:_createDrop(
 	local groundCenterOffsetY = boundsHalfExtents.Y + FLOAT_CLEARANCE
 	local footprintRadius = Vector2.new(boundsHalfExtents.X, boundsHalfExtents.Z).Magnitude
 	local desiredPosition = getScatterPosition(dropOrigin, footprintRadius, placements, self._Random)
-	local maxGroundY = getHighWaterSurfaceY(water)
+	local waterTop = getWaterTop()
+	local maxGroundY = if waterTop then getWaterSurfaceY(waterTop) else nil
 	local position, groundY = self:_resolveGroundedPosition(
 		desiredPosition,
 		footprintRadius,
@@ -542,12 +525,10 @@ function DrownDropService:_createDrop(
 		footprintRadius = footprintRadius,
 		boundsRotation = boundsCFrame.Rotation,
 		boundsToPivot = boundsToPivot,
-		hasRestedOnGround = false,
 		claimed = false,
 	}
-	local waterTop = getWaterTop()
-	local waterY = waterTop and getWaterSurfaceY(waterTop) or groundY
-	local initialBoundsCenterY = if waterY > groundY + TIDE_SUBMERGE_EPSILON then waterY else groundY + state.groundCenterOffsetY
+	local waterY = maxGroundY or groundY
+	local initialBoundsCenterY = if waterY > groundY + WATER_SUBMERGE_EPSILON then waterY else groundY + state.groundCenterOffsetY
 	model:PivotTo(getDropPivotCFrame(state, initialBoundsCenterY))
 	self._Drops[model] = state
 	state.promptConnection = prompt.Triggered:Connect(function(player: Player)
@@ -575,14 +556,7 @@ function DrownDropService:_updateDropPositions()
 			self:_removeDrop(state)
 		else
 			local groundY = state.groundY
-			if state.hasRestedOnGround and waterY > groundY + TIDE_SUBMERGE_EPSILON then
-				self:_removeDrop(state)
-				continue
-			end
-			if waterY <= groundY + TIDE_SUBMERGE_EPSILON then
-				state.hasRestedOnGround = true
-			end
-			local targetBoundsCenterY = if waterY > groundY + TIDE_SUBMERGE_EPSILON
+			local targetBoundsCenterY = if waterY > groundY + WATER_SUBMERGE_EPSILON
 				then waterY
 				else groundY + state.groundCenterOffsetY
 			model:PivotTo(getDropPivotCFrame(state, targetBoundsCenterY))

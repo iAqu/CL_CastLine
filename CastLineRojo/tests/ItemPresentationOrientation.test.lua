@@ -5,7 +5,6 @@ local function read(path)
 	return source
 end
 
-local silhouetteUtil = read("src/ReplicatedStorage/Modules/DigSilhouetteUtil.lua")
 local itemBoundsUtil = read("src/ReplicatedStorage/Modules/ItemBoundsUtil.lua")
 local itemToolUtil = read("src/ReplicatedStorage/Modules/ItemToolUtil.lua")
 local plotPedestalController = read("src/StarterPlayer/StarterPlayerScripts/Controllers/PlotPedestalController.lua")
@@ -13,14 +12,6 @@ local backpackViewport = read("src/ReplicatedStorage/Modules/BackpackItemViewpor
 local indexViewport = read("src/ReplicatedStorage/Modules/IndexItemViewport.lua")
 local purseBackpack = read("src/StarterPlayer/StarterPlayerScripts/PurseBackpack.client.lua")
 
-assert(
-	silhouetteUtil:find("local authoredPivot = clone:GetPivot()", 1, true),
-	"Dig silhouettes must capture the authored Model pivot before assigning a PrimaryPart"
-)
-assert(
-	silhouetteUtil:find("primaryPart.PivotOffset = primaryPart.CFrame:ToObjectSpace(authoredPivot)", 1, true),
-	"Dig silhouettes must preserve the authored Model pivot on their generated PrimaryPart"
-)
 
 assert(
 	itemBoundsUtil:find("function ItemBoundsUtil.GetWorldAxisBounds", 1, true),

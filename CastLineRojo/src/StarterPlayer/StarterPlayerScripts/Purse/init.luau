@@ -449,16 +449,8 @@ local function createEquippedHighlightFrame(slotFrame)
 	return highlightFrame
 end
 
-local function isShovelSlot(index)
-	return index == 1
-end
-
-local function isReservedHotbarSlot(index)
-	return isShovelSlot(index)
-end
-
 local function FindLowestEmpty()
-	for i = 2, NumberOfHotbarSlots do
+	for i = 1, NumberOfHotbarSlots do
 		local slot = Slots[i]
 		if not slot.Tool then
 			return slot
@@ -653,10 +645,6 @@ local function MakeSlot(parent, index)
 		if not tool then
 			return self:Clear()
 		end
-		local isShovel = tool:IsA("Tool") and tool:GetAttribute("ShovelTool") == true
-		if (isShovelSlot(self.Index) and not isShovel) or (not isShovelSlot(self.Index) and isShovel) then
-			return
-		end
 
 		self.Tool = tool
 		ToolReference.Value = tool
@@ -696,7 +684,7 @@ local function MakeSlot(parent, index)
 		local hotbarSlot = (self.Index <= NumberOfHotbarSlots)
 		local inventoryOpen = InventoryFrame.Visible
 
-		if (not hotbarSlot or inventoryOpen) and not isReservedHotbarSlot(self.Index) then
+		if not hotbarSlot or inventoryOpen then
 			SlotFrame.Draggable = true
 		end
 
@@ -804,9 +792,6 @@ local function MakeSlot(parent, index)
 	end
 
 	function slot:Swap(targetSlot) --NOTE: This slot (self) must not be empty!
-		if isReservedHotbarSlot(self.Index) or isReservedHotbarSlot(targetSlot.Index) then
-			return
-		end
 		local myTool, otherTool = self.Tool, targetSlot.Tool
 		self:Clear()
 		if otherTool then -- (Target slot might be empty)
@@ -833,7 +818,7 @@ local function MakeSlot(parent, index)
 	end
 
 	function slot:SetClickability(on) -- (Happens on open/close arrow)
-		if self.Tool and not isReservedHotbarSlot(self.Index) then
+		if self.Tool then
 			SlotFrame.Draggable = not on
 			UpdateSlotFading()
 		end
@@ -974,9 +959,6 @@ local function MakeSlot(parent, index)
 		end
 
 		function slot:MoveToInventory()
-			if isReservedHotbarSlot(slot.Index) then
-				return
-			end
 			if slot.Index <= NumberOfHotbarSlots then -- From a Hotbar slot
 				local tool = slot.Tool
 				self:Clear() --NOTE: Order matters here
@@ -1013,10 +995,6 @@ local function MakeSlot(parent, index)
 			SlotNumber.Visible = false
 		end
 
-		if isShovelSlot(index) then
-			SlotFrame:SetAttribute("LockedShovelSlot", true)
-			SlotFrame.Draggable = false
-		end
 	end
 
 	do -- Dragging Logic
@@ -1262,18 +1240,6 @@ local function OnChildAdded(child) -- To Character or Backpack
 		return
 	end
 	local tool = child
-	if tool:IsA("Tool") and tool:GetAttribute("ShovelTool") == true then
-		local shovelSlot = Slots[1]
-		local existingSlot = SlotsByTool[tool]
-		if existingSlot then
-			existingSlot:UpdateEquipView()
-		elseif shovelSlot then
-			shovelSlot:Fill(tool)
-			AdjustHotbarFrames()
-		end
-		BackpackScript.BackpackItemAdded:Fire()
-		return
-	end
 
 	if tool.Parent == Character then
 		TimeOfLastToolChange = tick()
@@ -1407,6 +1373,9 @@ local function OnCharacterAdded(character)
 end
 
 local function OnInputBegan(input, isProcessed)
+	if GameplayInputGate.IsActive("Fishing") then
+		return
+	end
 	-- Pass through keyboard hotkeys when not typing into a TextBox and not disabled (except for the Drop key)
 	if
 		input.UserInputType == Enum.UserInputType.Keyboard
@@ -1850,7 +1819,7 @@ for i = 1, NumberOfHotbarSlots do
 	local slot = MakeSlot(HotbarFrame, i)
 	slot.Frame.Visible = false
 
-	if not LowestEmptySlot and not isReservedHotbarSlot(i) then
+	if not LowestEmptySlot then
 		LowestEmptySlot = slot
 	end
 end
@@ -2241,6 +2210,9 @@ do -- Make the Inventory expand/collapse arrow (unless TopBar)
 	end
 
 	local function openClose()
+		if GameplayInputGate.IsActive("Fishing") then
+			return
+		end
 		if not next(Dragging) then -- Only continue if nothing is being dragged
 			InventoryFrame.Visible = not InventoryFrame.Visible
 			local nowOpen = InventoryFrame.Visible

@@ -40,11 +40,11 @@ function GameplayInputGate.IsUiBlockingWorld(): boolean
 end
 
 function GameplayInputGate.IsWorldActionAllowed(): boolean
-	return not GameplayInputGate.IsUiBlockingWorld()
+	return not GameplayInputGate.IsUiBlockingWorld() and not GameplayInputGate.IsActive("Fishing")
 end
 
 function GameplayInputGate.IsPlacementActionAllowed(): boolean
-	return not GameplayInputGate.IsUiBlockingWorld()
+	return GameplayInputGate.IsWorldActionAllowed()
 end
 
 return GameplayInputGate

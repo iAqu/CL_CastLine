@@ -1,0 +1,8 @@
+-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
+
+-- https://lua.expert/
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+require(ReplicatedStorage.Packages.Signal)
+require(ReplicatedStorage.Packages.Trove)
+require(ReplicatedStorage.Shared.RewardInfo)
+return {}

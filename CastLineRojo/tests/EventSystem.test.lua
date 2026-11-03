@@ -10,11 +10,10 @@ local config = read("src/ReplicatedStorage/Modules/EventConfig.lua")
 local stateUtil = read("src/ReplicatedStorage/Modules/EventStateUtil.lua")
 local service = read("src/ServerScriptService/Services/EventService.lua")
 local controller = read("src/StarterPlayer/StarterPlayerScripts/Controllers/EventController.lua")
-local digService = read("src/ServerScriptService/Services/DigItemService.lua")
 local movementUtil = read("src/ReplicatedStorage/Modules/MovementSpeedUtil.lua")
 local movementService = read("src/ServerScriptService/Services/MovementSpeedService.lua")
 local debugServer = read("src/ServerScriptService/EventDebug.server.lua")
-local debugPanel = read("src/StarterPlayer/StarterPlayerScripts/TideDebugPanel.client.lua")
+local debugPanel = read("src/StarterPlayer/StarterPlayerScripts/TestDebugPanel.client.lua")
 
 assert(eventsData:find("EffectValue: number", 1, true), "EventsData must expose EffectValue")
 assert(eventsData:find("MutationId: string", 1, true), "EventsData must expose MutationId")
@@ -43,13 +42,15 @@ assert(debugServer:find("if not RunService:IsStudio() then", 1, true), "Event de
 assert(debugServer:find('typeof(eventId) ~= "string"', 1, true), "Event debug requests must validate the event id type")
 assert(debugServer:find("EventService:StartDebugEvent(eventId)", 1, true), "Event debug requests must delegate to EventService")
 
-for index = 1, 5 do
+for index = 1, 4 do
 	local eventId = string.format("Event_%02d", index)
 	local buttonName = "Start" .. eventId .. "Button"
 	assert(debugPanel:find(buttonName, 1, true), "TestGui must bind " .. buttonName)
 	assert(debugPanel:find('eventId = "' .. eventId .. '"', 1, true), "TestGui must map " .. buttonName .. " to " .. eventId)
 end
 assert(debugPanel:find("eventDebugRemote:FireServer(eventButton.eventId)", 1, true), "Event buttons must request their mapped event id")
+assert(not eventsData:find("Event_05", 1, true), "The low-tide event must be removed from the event data")
+assert(not debugPanel:find("Event_05", 1, true), "The low-tide event must not have a debug binding")
 
 assert(stateUtil:find('normalized == "mutation"', 1, true), "Mutation event types must be normalized")
 assert(stateUtil:find('normalized == "movespeed"', 1, true), "MoveSpeed event types must be normalized")
@@ -57,16 +58,7 @@ assert(stateUtil:find('normalized == "moreitem"', 1, true), "MoreItem event type
 assert(stateUtil:find("return 1 + effectValue", 1, true), "MoveSpeed EffectValue must be additive over the base multiplier")
 assert(movementUtil:find("eventMultiplier", 1, true), "Movement speed calculation must include the active event")
 assert(movementService:find("StateChangedServerEvent:Connect", 1, true), "Server character speed must refresh at activity transitions")
-assert(movementService:find('IsPlayerDigging(player)', 1, true), "Activity transitions must not unlock a player during an active dig")
-assert(digService:find("function DigItemService:IsPlayerDigging", 1, true), "Movement refreshes must be able to preserve the dig movement lock")
-assert(digService:find('GetService("MovementSpeedService"):RefreshPlayer', 1, true), "Ending a dig must restore the current activity speed")
 
-assert(digService:find('EventStateUtil.NormalizeEventType(batchEffect.EventType) == "moreitem"', 1, true), "MoreItem must be captured at tide refresh")
-assert(digService:find("zoneData.ItemCount", 1, true) and digService:find("itemCountMultiplier", 1, true), "MoreItem must multiply the generated site count")
-assert(digService:find('BATCH_MUTATION_ID_ATTRIBUTE = "BatchMutationId"', 1, true), "Mutation batches must persist their MutationId on sites")
-assert(digService:find("self._Random:NextNumber() <= batchMutationChance", 1, true), "Mutation must be decided during the resolved roll")
-assert(digService:find('GetService("EventService"):GetActiveItemEffect()', 1, true), "Only the activity active at tide refresh may affect the new batch")
-assert(digService:find("self:RefreshAllZones(false)", 1, true), "A mid-event server start must wait until the next rise before applying item effects")
 
 assert(controller:find('eventNameLabel.Text = "Next Event In"', 1, true), "Inactive UI must show Next Event In")
 assert(controller:find("not EventConfig.AUTO_SCHEDULE_ENABLED", 1, true), "Event UI must hide when auto scheduling is disabled")

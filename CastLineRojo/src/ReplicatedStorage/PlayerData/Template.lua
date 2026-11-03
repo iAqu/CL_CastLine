@@ -6,7 +6,6 @@ local PurchaseDataHelper = require(ReplicatedFirst.DataHelpers.PurchaseDataHelpe
 local Constants = require(ReplicatedStorage.Modules.Constants)
 local UpgradesDataHelper = require(ReplicatedFirst.DataHelpers.UpgradesDataHelper)
 local GiftBoxesDataHelper = require(ReplicatedFirst.DataHelpers.GiftBoxesDataHelper)
-local TutorialConfig = require(ReplicatedStorage.Modules.TutorialConfig)
 
 local DEFAULT_AREAS = {}
 local DEFAULT_AREA = "Area_1"
@@ -98,21 +97,12 @@ for giftBoxId, _ in GiftBoxesDataHelper.GetAllData() do
 end
 
 local Template = {
-    TutorialComplete = {},
-    TutorialVersion = TutorialConfig.VERSION,
-    TutorialDuckInstanceId = "",
-    TutorialReturnedToDigZone = false,
-    TutorialSecondItemInstanceId = "",
-    TutorialSecondItemPlaced = false,
-    TutorialCashPoolSlot = 0,
-    TutorialCashCollected = false,
-    TutorialBackpackUpgraded = false,
 
     FirstJoinTime = os.time(),
     LastOnlineTime = os.time(),
     UpdateReadLog = {},
     Strength = 10,
-    Wins = TutorialConfig.STARTER_CASH,
+    Wins = 0,
     Rebirths = 0,
     Diamonds = 0,
     RobuxSpent = 0,
@@ -184,10 +174,6 @@ local Template = {
     SeasonPremiumRewardsClaimLog = {},
 
     HotbarLayout = {},
-    EquippedShovelId = "Shovel_101",
-    OwnedShovelIds = {
-        Shovel_101 = true,
-    },
     Items = {},
     -- Index progress intentionally starts empty for every existing profile; it is
     -- populated only by items obtained after the Index feature is introduced.

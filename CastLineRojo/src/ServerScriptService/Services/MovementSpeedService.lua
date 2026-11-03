@@ -76,9 +76,6 @@ function MovementSpeedService:RefreshPlayer(player: Player)
 	if not humanoid then
 		return
 	end
-	if Knit.GetService("DigItemService"):IsPlayerDigging(player) then
-		return
-	end
 
 	humanoid.WalkSpeed = MovementSpeedUtil.CalculateWalkSpeed(profile.Data, percent)
 end

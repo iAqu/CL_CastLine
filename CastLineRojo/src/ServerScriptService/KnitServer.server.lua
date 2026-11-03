@@ -13,27 +13,21 @@ local function hideAuxiliaryPart(instance: Instance?, path: string)
     warn("KnitServer: " .. path .. " is missing or is not a BasePart")
 end
 
-hideAuxiliaryPart(areas and areas:FindFirstChild("WaterSurfacePosition"), "Workspace.Areas.WaterSurfacePosition")
 hideAuxiliaryPart(areas and areas:FindFirstChild("ResetPlayerBox"), "Workspace.Areas.ResetPlayerBox")
 
 local water = areas and areas:FindFirstChild("Water")
 hideAuxiliaryPart(water and water:FindFirstChild("Surface"), "Workspace.Areas.Water.Surface")
 
 local Knit = require(ReplicatedStorage.Packages.Knit)
-local DigMoundEffect = require(ReplicatedStorage.Modules.DigMoundEffect)
 local LogHelper = require(ReplicatedStorage.Modules.LogHelper)
 local EventService = require(ServerScriptService.Services.EventService)
 local PlayerDataService = require(ServerScriptService.Services.PlayerDataService)
-local TideService = require(ServerScriptService.Services.TideService)
 
 -- 尽早发起 DataStore 请求，让网络读取与其余 Service 的加载/初始化并行。
 PlayerDataService:BeginEarlyLoading()
 -- 活动同样属于首屏状态，先发布本服务器当前档位的活动快照。
 EventService:BeginEarlyState()
--- 潮水属于全局首屏状态，先通过复制属性发布当前快照，不等待其余 Knit Service。
-TideService:BeginEarlyState()
 
-DigMoundEffect.EnsureCollisionGroups()
 
 for _,v in ipairs(ServerScriptService.Services:GetDescendants()) do
     if v:IsA("ModuleScript") and v.Name:match("Service$") then

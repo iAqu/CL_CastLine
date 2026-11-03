@@ -107,13 +107,6 @@ function UpgradeService:PurchaseUpgrade(player: Player, upgradeId: unknown, amou
 	local typedAmount = amount :: number
 	local currentUpgradeLevel = UpgradeShopConfig.GetLevel(profile.Data, typedUpgradeId)
 	local price = UpgradeShopConfig.GetBundlePrice(typedUpgradeId, currentUpgradeLevel, typedAmount)
-    if price > 0 then
-        local canSpend, message = Knit.GetService("TutorialService"):CanSpendWins(player)
-        if not canSpend then
-			self._Purchasing[player] = nil
-			return result(false, message)
-        end
-    end
     if profile.Data.Wins < price then
 		self._Purchasing[player] = nil
 		return result(false, Constants.NOTIFICATION_NO_ENOUGH_WIN)
@@ -124,9 +117,6 @@ function UpgradeService:PurchaseUpgrade(player: Player, upgradeId: unknown, amou
 
 	local message = `Upgraded +{typedAmount}`
 	local purchaseResult = self:_applyUpgradeLevel(player, profile, typedUpgradeId, newUpgradeLevel, message, price)
-	if typedUpgradeId == Constants.UPGRADE_ID.CARRY_WEIGHT then
-		Knit.GetService("TutorialService"):OnBackpackUpgraded(player)
-	end
 	self._Purchasing[player] = nil
 	return purchaseResult
 end

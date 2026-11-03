@@ -46,9 +46,6 @@ local LeaderboardButton = TopFrame:WaitForChild("LeaderboardButton") :: TextButt
 
 -- local EventButton = TopFrame.EventButton -- EventButton 功能已禁用
 -- local WeaponButton = BottomFrame.WeaponButton
--- local PositionBar = BottomFrame.PositionBar
--- local OtherPositionTemplate = PositionBar.OtherPositionTemplate
--- local MyPosition = PositionBar.MyPosition
 
 -- local DashFrame = HomeGui.DashFrame
 
@@ -859,9 +856,6 @@ end
 --     end
 -- end
 
-local function promptAddFavorite()
-    game:GetService("AvatarEditorService"):PromptSetFavorite(game.PlaceId, Enum.AvatarItemType.Asset, true)
-end
 
 function HomeGuiController:UpdateStarterPackButton(visible: boolean, text: string)
     -- Temporarily disabled: never expose the starter pack entry point.
@@ -945,25 +939,6 @@ local function promptExperienceNotification()
 end
 
 function HomeGuiController:KnitInit()
-    -- for _, player in Players:GetPlayers() do
-    --     self:AddPositionBarPlayer(player)
-    --     player.CharacterAdded:Connect(function()
-    --         self:AddPositionBarPlayer(player)
-    --     end)
-    -- end
-
-    -- Players.PlayerAdded:Connect(function(player)
-    --     player.CharacterAdded:Connect(function(char)
-    --         self:AddPositionBarPlayer(player)
-    --     end)
-    -- end)
-
-    -- Players.PlayerRemoving:Connect(function(player)
-    --     if PositionBar:FindFirstChild(player.UserId) then
-    --         PositionBar:FindFirstChild(player.UserId):Destroy()s
-    --     end
-    -- end)
-
     local PurchaseService = Knit.GetService("PurchaseService")
     PurchaseService.PurchaseSuccess:Connect(function(productId: string)
         task.delay(0, function()
@@ -976,8 +951,8 @@ end
 function HomeGuiController:KnitStart()
     LogHelper.Print("HomeGuiController started")
 
-    local digItemService = Knit.GetService("DigItemService")
-    digItemService.LuckChanged:Connect(setLuckAmountText)
+    local playerLuckService = Knit.GetService("PlayerLuckService")
+    playerLuckService.LuckChanged:Connect(setLuckAmountText)
 
     HomeGui:GetPropertyChangedSignal("Enabled"):Connect(refreshBackpackPanelVisibility)
     PlayerGUI.ChildAdded:Connect(function(child)
@@ -1314,10 +1289,6 @@ function HomeGuiController:KnitStart()
         end)
     end)
 
-    local TutorialController = Knit.GetController("TutorialController")
-    TutorialController.CompleteTutorialSignal:Connect(function()
-        promptAddFavorite()
-    end)
 
     -- PlayerDataService.DiamondsChanged:Connect(function(result)
     -- end)
@@ -1370,7 +1341,7 @@ function HomeGuiController:KnitStart()
 
     local playerData = PlayerDataController:GetData()   -- just to make sure it's loaded
     self:Init()
-    digItemService:GetPlayerRollLuck():andThen(function(luck: number?)
+    playerLuckService:GetPlayerRollLuck():andThen(function(luck: number?)
         if typeof(luck) == "number" then
             setLuckAmountText(luck)
         end

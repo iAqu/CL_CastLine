@@ -1,0 +1,13 @@
+{
+  "placeId": 84106335829275,
+  "creatorGroupId": 598797612,
+  "creatorGroupName": "M101 Crew",
+  "template": "ReplicatedStorage.Models.Fish.Elder Fish",
+  "body": "polySurface5",
+  "meshId": "rbxassetid://113534672570474",
+  "textureId": "rbxassetid://100058154460562",
+  "originalMeshId": "rbxassetid://89907485320806",
+  "backup": "ServerStorage.FishRigBackups.ElderFish_BeforeRig_20261103_024804",
+  "importedModel": "ServerStorage.FishRigBackups.ElderFish_ImportedRig_20261103_024804",
+  "bones": ["FishBody", "FishTail"]
+}

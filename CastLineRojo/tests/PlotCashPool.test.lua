@@ -108,10 +108,9 @@ assert(service:find("function PlotCashPoolService.Client:RequestCollect", 1, tru
 assert(service:find("function PlotCashPoolService.Client:RequestSnapshot", 1, true), "The snapshot interface is missing")
 assert(service:find("CashPoolsUpdated = Knit.CreateSignal()", 1, true), "Snapshot signal is missing")
 assert(service:find("CashCollected = Knit.CreateSignal()", 1, true), "Confirmed collection signal is missing")
-assert(service:find('OnCashCollected(player, slot, amount)', 1, true), "Normal CashPool collection must advance the tutorial")
-assert(service:find("self:_collect(player, slot, false, false, false)", 1, true), "Placement changes must not advance the Cash tutorial")
+assert(service:find("self:_collect(player, slot, false, false)", 1, true), "Placement changes must collect without cooldown or proximity checks")
 assert(not service:find("self:_collect(player, slot, false, true, true)", 1, true), "Automatic collection must not bypass the client balance gate")
-assert(service:find("PlotCashPoolService:_collect(player, slot, true, true, true)", 1, true), "Direct CashPool collection must advance the tutorial")
+assert(service:find("PlotCashPoolService:_collect(player, slot, true, true)", 1, true), "Direct collection must enforce cooldown and proximity")
 
 local firstAutoCollect = assert(pedestalService:find('CollectForPlacementChange(player, slot)', 1, true))
 local firstPlacementWrite = assert(pedestalService:find("PlotPlacementUtil.SetItemUid(profile.Data.PlotPlacements, slot, inventoryId)", 1, true))
