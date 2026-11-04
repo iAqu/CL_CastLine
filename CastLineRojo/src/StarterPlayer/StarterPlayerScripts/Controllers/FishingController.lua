@@ -466,6 +466,9 @@ local function begin(part: BasePart, character: Model, root: BasePart, humanoid:
 					state.sequence:UpdateMeter(state.value)
 				end
 				state.sequence:Update(now, dt)
+				if not state.transition and state.sequence.phase == "Reeled" and state.sequence:CanReturn(now) then
+					FishingController:ReturnToSpawn()
+				end
 			end)
 			if not updated then
 				warnOnce(tostring(updateError))
@@ -519,6 +522,8 @@ function FishingController:KnitStart()
 			local now = os.clock()
 			if sequence.phase == "Preparing" then
 				sequence:Cast(state.value)
+			elseif sequence.phase == "Reeling" or sequence.phase == "Reeled" then
+				return
 			elseif sequence:CanReturn(now) then
 				self:ReturnToSpawn()
 			else

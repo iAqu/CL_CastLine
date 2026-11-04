@@ -8,10 +8,100 @@
   ],
   "bones": [
     "FishBody",
+    "SpineFront",
+    "SpineMid",
+    "TailBase",
     "FishTail"
   ],
-  "fixed_head_vertices": 802,
-  "full_tail_vertices": 38,
-  "head_error_at_18_degrees": 0.0,
-  "tail_displacement_at_18_degrees": 1.4413993726736856
+  "fbx_forward": "Z",
+  "fbx_up": "Y",
+  "fixed_head_vertices": 345,
+  "clips": {
+    "SwimLoop": {
+      "duration": 0.625,
+      "keyframes": 9,
+      "head_error": 0,
+      "maximum_vertex_displacement": 0.9693892901801183
+    },
+    "StruggleLeft": {
+      "duration": 0.6,
+      "loop": true,
+      "keyframes": 9,
+      "head_error": 0,
+      "maximum_vertex_displacement": 5.769920279508007,
+      "yaw_ranges": {
+        "SpineFront": [
+          22.00000059003955,
+          26.000001568734312
+        ],
+        "SpineMid": [
+          33.00000885903832,
+          39.00000636890022
+        ],
+        "TailBase": [
+          -6.000008788108172,
+          22.00000059003955
+        ],
+        "FishTail": [
+          -26.00000920474644,
+          26.00000920474644
+        ]
+      },
+      "body_yaw_range": [
+        55.000009449077865,
+        65.00000793763454
+      ],
+      "tail_delay": 0.075,
+      "seam_identical": true
+    },
+    "StruggleRight": {
+      "duration": 0.6,
+      "loop": true,
+      "keyframes": 9,
+      "head_error": 0,
+      "maximum_vertex_displacement": 5.769920279508007,
+      "yaw_ranges": {
+        "SpineFront": [
+          -26.000001568734312,
+          -22.00000059003955
+        ],
+        "SpineMid": [
+          -39.00000636890022,
+          -33.00000885903832
+        ],
+        "TailBase": [
+          -22.00000059003955,
+          6.000008788108172
+        ],
+        "FishTail": [
+          -26.00000920474644,
+          26.00000920474644
+        ]
+      },
+      "body_yaw_range": [
+        55.000009449077865,
+        65.00000793763454
+      ],
+      "tail_delay": 0.075,
+      "seam_identical": true
+    },
+    "LiftFlop": {
+      "duration": 2,
+      "keyframes": 9,
+      "head_error": 0,
+      "maximum_vertex_displacement": 4.060728407596019
+    },
+    "ShowcaseFlop": {
+      "duration": 0.9,
+      "keyframes": 9,
+      "head_error": 0,
+      "maximum_vertex_displacement": 2.4190342732389065
+    }
+  },
+  "eyes": {
+    "diameterScale": 2,
+    "validation": "eyes2x/validation.json",
+    "weightsUnchanged": true,
+    "uvsUnchanged": true
+  }
 }

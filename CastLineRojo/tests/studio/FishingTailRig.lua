@@ -1,9 +1,12 @@
--- Studio Client 回归：真实蒙皮模板、阶段摆尾、鱼嘴约束、缩放和克隆清理。
+-- Studio Client: real published Animator clips, fixed head/mouth, phase selection and cleanup.
 local storage = game:GetService("ReplicatedStorage")
 local Bite = require(storage.Modules.FishingBiteSequence)
+local ReelSpring = require(storage.Modules.FishingReelSpring)
 local settings = require(storage.Modules.FishingConfig).Bite
+local originalFishName = settings.FishName
+settings.FishName = "Elder Fish"
+local names = settings.Motion.Animation.Bones
 local template = storage.Models.Fish[settings.FishName]
-local originalTail = template.PrimaryPart.FishBody.FishTail.Transform
 local folder = Instance.new("Folder")
 folder.Name, folder.Parent = "FishingTailRigValidation", workspace
 local active
@@ -15,13 +18,18 @@ local ok, result = xpcall(function()
 		folder = folder,
 		forward = Vector3.zAxis,
 		bait = bait,
-		statusLabel = Instance.new("TextLabel"),
-		returnLabel = Instance.new("TextLabel"),
+		statusLabel = {},
+		returnLabel = {},
 		_waterTarget = function()
 			return target
 		end,
 		_presentBait = function() end,
 		_waterFeedback = function() end,
+		_playWaterVFX = function() end,
+		_playRarityVFX = function() end,
+		_nibbleRipple = function() end,
+		_nibbleFeedback = function() end,
+		_sound = function() end,
 		_impulse = function() end,
 		_setPhase = function() end,
 	}
@@ -32,72 +40,118 @@ local ok, result = xpcall(function()
 		{ "Bite", settings.HookWindow },
 		{ "Struggling", settings.StruggleTime },
 		{ "Lifting", settings.LiftTime },
-		{ "Caught", 7 },
+		{ "Caught", 10 },
 		{ "Escaped", settings.EscapeTime },
 		{ "Reeling", 1 },
 	}
-	local samples, moving = 0, {}
+	local samples, moving, clips = 0, {}, {}
 	for cycle = 1, 3 do
 		active = Bite.new(owner, 100, 100, Random.new(cycle))
-		assert(active.tailBone and active.fish.PrimaryPart.HasSkinnedMesh, "Template has no usable skin")
-		local root = active.fish.PrimaryPart.FishBody
-		local rootRest = root.Transform
-		local axis = active.tailBone.WorldCFrame:VectorToWorldSpace(active.tailAxis)
-		assert(axis:Dot(active.fish.PrimaryPart.CFrame.UpVector) > 0.99999, "Tail axis is not fish vertical")
+		active.motion.mirror = if cycle % 2 == 0 then 1 else -1
+		local animation = active.animation
+		local deadline = os.clock() + 12
+		while animation.loading and os.clock() < deadline do
+			task.wait(0.05)
+		end
+		assert(not animation.loading and not animation.failed, "Published animations did not load")
+		for name, track in pairs(animation.tracks) do
+			assert(track.Length > 0, "Animation has no real clip data: " .. name)
+			assert(
+				math.abs(track.Length - settings.Motion.Animation.Clips[name].Duration) < 0.01,
+				"Published clip duration changed: " .. name
+			)
+		end
+		local bones, parent = {}, active.fish.PrimaryPart
+		for _, name in ipairs(names) do
+			parent = assert(parent:FindFirstChild(name), "Missing bone: " .. name)
+			bones[name] = parent
+		end
 		local startedAt = 101
 		for _, entry in ipairs(phases) do
 			local phase, duration = entry[1], entry[2]
+			if phase == "Nibbling" then
+				active.timeline.nibbleIndex = 1
+				duration = active.timeline:GetNibbleTiming().duration
+			end
 			active.timeline:_enter(phase, startedAt, duration)
-			for index = 0, math.ceil(duration * 30) - 1 do
-				local elapsed = math.min(index / 30, duration - 0.0001)
+			if phase == "Reeling" then
+				active.reelFrom = CFrame.new(-target) * bait.CFrame
+				active.reelMotion = ReelSpring.new(active.reelFrom.Position, owner.baitBaseSize.Y, startedAt)
+				active.reelScale = owner.baitVisualScale or Vector3.one
+			end
+			for index = 0, math.ceil(duration * 10) - 1 do
+				local elapsed = math.min(index / 10, duration - 0.0001)
 				local now = startedAt + elapsed
 				active:Update(now)
-				local expected = active.tailRest
-					* CFrame.fromAxisAngle(active.tailAxis, active.motion:SampleTail(phase, elapsed, now))
-				assert(active.tailBone.Transform:FuzzyEq(expected, 0.0001), "Tail pose was not applied in " .. phase)
-				assert(root.Transform == rootRest, "Swimming moved the fixed head bone")
-				if math.abs(active.motion:SampleTail(phase, elapsed, now)) > 0.01 then
-					moving[phase] = true
+				task.wait()
+				assert(bones.FishBody.Transform:FuzzyEq(CFrame.identity, 0.0001), "Animation moved fixed head")
+				if animation.active then
+					clips[animation.active.name] = true
+					for _, name in ipairs(names) do
+						local _, angle = bones[name].Transform:ToAxisAngle()
+						if math.abs(angle) > 0.01 then
+							moving[name] = true
+						end
+					end
 				end
+				local body = active.fish.PrimaryPart
+				local mouth = body.CFrame:PointToWorldSpace(active.mouthOffset * active.scale)
 				if phase == "Bite" and elapsed >= settings.BiteSinkTime then
-					local body = active.fish.PrimaryPart
-					local mouth = body.CFrame:PointToWorldSpace(active.mouthOffset * active.scale)
-					assert(
-						(mouth - (bait.Position + active.contactOffset)).Magnitude < 0.001,
-						"Tail moved mouth off bait"
-					)
+					local yaw = active:_feedingState("Bite", elapsed)
+					assert((mouth - (bait.Position + active:_contactOffset(yaw, bait.Size))).Magnitude < 0.001,
+						"Actual mouth left bait")
 				end
 				if phase == "Lifting" or phase == "Caught" then
-					local mouth = active.fish.PrimaryPart.CFrame:PointToWorldSpace(active.mouthOffset * active.scale)
-					assert((mouth - active.linePosition).Magnitude < 0.001, "Scaled mouth left fishing line")
+					local anchor = mouth - Vector3.yAxis
+					assert((anchor - active.linePosition).Magnitude < 0.001, "Line is not one stud below the mouth")
 				end
 				samples += 1
 			end
 			startedAt += duration
 		end
-		local tail = active.tailBone
+		task.wait(0.2)
+		for _, bone in pairs(bones) do
+			assert(bone.Transform:FuzzyEq(CFrame.identity, 0.0001), "Stopped animation did not return to neutral")
+		end
+		local animator = animation.animator
 		active:Destroy()
 		active:Destroy()
-		assert(tail.Parent == nil and not active.fish.Parent, "Session left rig instances behind")
-		assert(template.PrimaryPart.FishBody.FishTail.Transform == originalTail, "Session changed source template")
+		assert(
+			not active.fish.Parent and animation.destroyed and not next(animation.tracks),
+			"Fish or tracks survived cleanup"
+		)
+		assert(not animator.Parent, "Animator survived fish cleanup")
 		active = nil
 		task.wait()
 	end
-	for _, phase in ipairs({ "Approaching", "Holding", "Nibbling", "Struggling", "Lifting", "Caught", "Escaped" }) do
-		assert(moving[phase], "No tail motion observed in " .. phase)
+	for _, name in ipairs(names) do
+		local bone = template.PrimaryPart:FindFirstChild(name, true)
+		assert(bone.Transform == CFrame.identity, "Session changed template pose")
+		if name ~= "FishBody" then
+			assert(moving[name], "Animator did not articulate " .. name)
+		end
 	end
-	owner.statusLabel:Destroy()
-	owner.returnLabel:Destroy()
+	for name in pairs(settings.Motion.Animation.Clips) do
+		assert(clips[name], "Missing clip playback: " .. name)
+	end
+	-- Destroy while asynchronous preload is outstanding.
+	active = Bite.new(owner, 100, 100, Random.new(10))
+	local canceled = active.animation
+	active:Destroy()
+	active = nil
+	task.wait(0.1)
+	assert(canceled.destroyed and not next(canceled.tracks), "Canceled preload created orphan tracks")
 	return {
 		passed = true,
 		cycles = 3,
 		samples = samples,
-		checks = "skin, axis, all phases, fixed head, bait/line contact, scale, showcase, clone isolation, cleanup",
+		checks = "five real clips, four independent bends, fixed head, bait/line, scale, neutral rest, template isolation, canceled load, cleanup",
 	}
 end, debug.traceback)
 if active then
 	active:Destroy()
 end
 folder:Destroy()
+settings.FishName = originalFishName
 assert(ok, result)
 return result

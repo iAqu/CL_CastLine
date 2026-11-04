@@ -1,0 +1,661 @@
+{
+  "placeId": 84106335829275,
+  "creatorGroupId": 598797612,
+  "sourceStudio": "Triathlon Star Simulator.rbxl",
+  "sourceTexture": "rbxassetid://119416312745648",
+  "texture": "rbxassetid://95576999146381",
+  "textureSize": [
+    256,
+    256
+  ],
+  "layout": "Grid2x2",
+  "template": "ReplicatedStorage.VFX.WaterVFX.Fish_Drip",
+  "fish": "ReplicatedStorage.Models.Fish.Elder Fish",
+  "mesh": "rbxassetid://123142360733957",
+  "surfaceOffset": 0.025,
+  "points": [
+    {
+      "name": "Belly01",
+      "bone": "FishBody",
+      "region": "belly",
+      "bodyPosition": [
+        -0.5697590112686157,
+        -0.1944885551929474,
+        -1.9234915971755981
+      ],
+      "surfacePosition": [
+        -0.5453929901123047,
+        -0.19850707054138184,
+        -1.9195995330810547
+      ],
+      "bodyNormal": [
+        -0.9746408462524414,
+        0.16074061393737793,
+        -0.15568462014198303
+      ]
+    },
+    {
+      "name": "Belly02",
+      "bone": "FishBody",
+      "region": "belly",
+      "bodyPosition": [
+        -0.47703245282173157,
+        -0.7917068004608154,
+        -1.9238920211791992
+      ],
+      "surfacePosition": [
+        -0.45329713821411133,
+        -0.7851333618164062,
+        -1.9195995330810547
+      ],
+      "bodyNormal": [
+        -0.9494121670722961,
+        -0.26293742656707764,
+        -0.1716989427804947
+      ]
+    },
+    {
+      "name": "Belly03",
+      "bone": "FishBody",
+      "region": "belly",
+      "bodyPosition": [
+        0.21636909246444702,
+        -1.1756172180175781,
+        -1.9242364168167114
+      ],
+      "surfacePosition": [
+        0.20359313488006592,
+        -1.1546344757080078,
+        -1.9195995330810547
+      ],
+      "bodyNormal": [
+        0.5110380053520203,
+        -0.8393084406852722,
+        -0.18547670543193817
+      ]
+    },
+    {
+      "name": "Belly04",
+      "bone": "FishBody",
+      "region": "belly",
+      "bodyPosition": [
+        0.5688170194625854,
+        -0.4639521837234497,
+        -1.9238934516906738
+      ],
+      "surfacePosition": [
+        0.5450820922851562,
+        -0.4573783874511719,
+        -1.9195995330810547
+      ],
+      "bodyNormal": [
+        0.9493975043296814,
+        -0.2629518210887909,
+        -0.17175789177417755
+      ]
+    },
+    {
+      "name": "Belly05",
+      "bone": "SpineFront",
+      "region": "belly",
+      "bodyPosition": [
+        -0.6389737129211426,
+        -0.2188059240579605,
+        -0.6146407127380371
+      ],
+      "surfacePosition": [
+        -0.6144485473632812,
+        -0.22364115715026855,
+        -0.614271879196167
+      ],
+      "bodyNormal": [
+        -0.9810072779655457,
+        0.1934092938899994,
+        -0.014752873219549656
+      ]
+    },
+    {
+      "name": "Belly06",
+      "bone": "SpineFront",
+      "region": "belly",
+      "bodyPosition": [
+        -0.49715280532836914,
+        -0.8261528611183167,
+        -0.6137281656265259
+      ],
+      "surfacePosition": [
+        -0.473085880279541,
+        -0.8194084167480469,
+        -0.614271879196167
+      ],
+      "bodyNormal": [
+        -0.9626769423484802,
+        -0.269777774810791,
+        0.021749433130025864
+      ]
+    },
+    {
+      "name": "Belly07",
+      "bone": "SpineFront",
+      "region": "belly",
+      "bodyPosition": [
+        0.22498135268688202,
+        -1.2183091640472412,
+        -0.611289918422699
+      ],
+      "surfacePosition": [
+        0.2111825942993164,
+        -1.197676658630371,
+        -0.614271879196167
+      ],
+      "bodyNormal": [
+        0.5519505739212036,
+        -0.8253021240234375,
+        0.11927767097949982
+      ]
+    },
+    {
+      "name": "Belly08",
+      "bone": "SpineFront",
+      "region": "belly",
+      "bodyPosition": [
+        0.592654824256897,
+        -0.48382139205932617,
+        -0.6139336228370667
+      ],
+      "surfacePosition": [
+        0.5685791969299316,
+        -0.4770946502685547,
+        -0.614271879196167
+      ],
+      "bodyNormal": [
+        0.9630258083343506,
+        -0.2690691351890564,
+        0.013530364260077477
+      ]
+    },
+    {
+      "name": "Belly09",
+      "bone": "SpineMid",
+      "region": "belly",
+      "bodyPosition": [
+        -0.4163329303264618,
+        -0.136792853474617,
+        0.9269914031028748
+      ],
+      "surfacePosition": [
+        -0.39275550842285156,
+        -0.14295148849487305,
+        0.9214077591896057
+      ],
+      "bodyNormal": [
+        -0.9430965185165405,
+        0.2463456243276596,
+        0.22334472835063934
+      ]
+    },
+    {
+      "name": "Belly10",
+      "bone": "SpineMid",
+      "region": "belly",
+      "bodyPosition": [
+        -0.3314809799194336,
+        -0.5401150584220886,
+        0.9271674156188965
+      ],
+      "surfacePosition": [
+        -0.30805253982543945,
+        -0.5335626602172852,
+        0.9214077591896057
+      ],
+      "bodyNormal": [
+        -0.937138020992279,
+        -0.26209577918052673,
+        0.23038692772388458
+      ]
+    },
+    {
+      "name": "Belly11",
+      "bone": "SpineMid",
+      "region": "belly",
+      "bodyPosition": [
+        0.15632714331150055,
+        -0.8081182241439819,
+        0.930777370929718
+      ],
+      "surfacePosition": [
+        0.1396540403366089,
+        -0.792017936706543,
+        0.9214077591896057
+      ],
+      "bodyNormal": [
+        0.666923999786377,
+        -0.6440107822418213,
+        0.37478339672088623
+      ]
+    },
+    {
+      "name": "Belly12",
+      "bone": "SpineMid",
+      "region": "belly",
+      "bodyPosition": [
+        0.39386820793151855,
+        -0.3173895478248596,
+        0.9272171854972839
+      ],
+      "surfacePosition": [
+        0.3704500198364258,
+        -0.31084442138671875,
+        0.9214077591896057
+      ],
+      "bodyNormal": [
+        0.9367279410362244,
+        -0.2618046998977661,
+        0.2323770821094513
+      ]
+    },
+    {
+      "name": "Belly13",
+      "bone": "TailBase",
+      "region": "belly",
+      "bodyPosition": [
+        -0.11661310493946075,
+        -0.0321820043027401,
+        2.4583823680877686
+      ],
+      "surfacePosition": [
+        -0.0916748046875,
+        -0.033367156982421875,
+        2.457087516784668
+      ],
+      "bodyNormal": [
+        -0.9975318312644958,
+        0.04740603640675545,
+        0.05179648846387863
+      ]
+    },
+    {
+      "name": "Belly14",
+      "bone": "TailBase",
+      "region": "belly",
+      "bodyPosition": [
+        -0.12310762703418732,
+        -0.16884830594062805,
+        2.4583823680877686
+      ],
+      "surfacePosition": [
+        -0.09816932678222656,
+        -0.17003345489501953,
+        2.457087516784668
+      ],
+      "bodyNormal": [
+        -0.9975318312644958,
+        0.04740603640675545,
+        0.05179648846387863
+      ]
+    },
+    {
+      "name": "Belly15",
+      "bone": "TailBase",
+      "region": "belly",
+      "bodyPosition": [
+        0.09551404416561127,
+        -0.4342031180858612,
+        2.453423500061035
+      ],
+      "surfacePosition": [
+        0.07431590557098389,
+        -0.4214668273925781,
+        2.457087516784668
+      ],
+      "bodyNormal": [
+        0.8479253649711609,
+        -0.5094518661499023,
+        -0.14656521379947662
+      ]
+    },
+    {
+      "name": "Belly16",
+      "bone": "TailBase",
+      "region": "belly",
+      "bodyPosition": [
+        0.11978161334991455,
+        -0.07840686291456223,
+        2.4582529067993164
+      ],
+      "surfacePosition": [
+        0.09483623504638672,
+        -0.07957744598388672,
+        2.457087516784668
+      ],
+      "bodyNormal": [
+        0.9978150129318237,
+        0.046823445707559586,
+        0.0466134175658226
+      ]
+    },
+    {
+      "name": "Tail01",
+      "bone": "FishTail",
+      "region": "tail",
+      "bodyPosition": [
+        -0.024941302835941315,
+        -1.3163918256759644,
+        3.6291675567626953
+      ],
+      "surfacePosition": [
+        0,
+        -1.315699577331543,
+        3.6276016235351562
+      ],
+      "bodyNormal": [
+        -0.9976521134376526,
+        -0.027688050642609596,
+        0.06263969838619232
+      ]
+    },
+    {
+      "name": "Tail02",
+      "bone": "FishTail",
+      "region": "tail",
+      "bodyPosition": [
+        -0.024940822273492813,
+        1.2257673740386963,
+        3.7786102294921875
+      ],
+      "surfacePosition": [
+        0,
+        1.225600242614746,
+        3.7768993377685547
+      ],
+      "bodyNormal": [
+        -0.9976328611373901,
+        0.006687161512672901,
+        0.06843916326761246
+      ]
+    },
+    {
+      "name": "Tail03",
+      "bone": "FishTail",
+      "region": "tail",
+      "bodyPosition": [
+        -0.02490895800292492,
+        0.5873647928237915,
+        3.841233730316162
+      ],
+      "surfacePosition": [
+        0,
+        0.5880002975463867,
+        3.8391990661621094
+      ],
+      "bodyNormal": [
+        -0.996358335018158,
+        -0.025419211015105247,
+        0.08138839155435562
+      ]
+    },
+    {
+      "name": "Tail04",
+      "bone": "FishTail",
+      "region": "tail",
+      "bodyPosition": [
+        -0.024900387972593307,
+        -0.8552692532539368,
+        3.8329055309295654
+      ],
+      "surfacePosition": [
+        0,
+        -0.8559999465942383,
+        3.830799102783203
+      ],
+      "bodyNormal": [
+        -0.9960154891014099,
+        0.0292271189391613,
+        0.08425601571798325
+      ]
+    },
+    {
+      "name": "Tail05",
+      "bone": "FishTail",
+      "region": "tail",
+      "bodyPosition": [
+        -0.024940822273492813,
+        0.9069674611091614,
+        3.809760093688965
+      ],
+      "surfacePosition": [
+        0,
+        0.9068002700805664,
+        3.808049201965332
+      ],
+      "bodyNormal": [
+        -0.9976328611373901,
+        0.006687161512672901,
+        0.06843917071819305
+      ]
+    },
+    {
+      "name": "Tail06",
+      "bone": "FishTail",
+      "region": "tail",
+      "bodyPosition": [
+        -0.024941300973296165,
+        -1.086542010307312,
+        3.7307662963867188
+      ],
+      "surfacePosition": [
+        0,
+        -1.0858497619628906,
+        3.7292003631591797
+      ],
+      "bodyNormal": [
+        -0.9976520538330078,
+        -0.027688048779964447,
+        0.06263969838619232
+      ]
+    },
+    {
+      "name": "Tail07",
+      "bone": "FishTail",
+      "region": "tail",
+      "bodyPosition": [
+        -0.024940822273492813,
+        1.0663673877716064,
+        3.794185161590576
+      ],
+      "surfacePosition": [
+        0,
+        1.0662002563476562,
+        3.7924742698669434
+      ],
+      "bodyNormal": [
+        -0.9976328611373901,
+        0.0066871619783341885,
+        0.06843917071819305
+      ]
+    },
+    {
+      "name": "Tail08",
+      "bone": "FishTail",
+      "region": "tail",
+      "bodyPosition": [
+        -0.024940822273492813,
+        0.7475674748420715,
+        3.8253350257873535
+      ],
+      "surfacePosition": [
+        0,
+        0.7474002838134766,
+        3.8236241340637207
+      ],
+      "bodyNormal": [
+        -0.9976328611373901,
+        0.006687161512672901,
+        0.06843917071819305
+      ]
+    }
+  ],
+  "generation": {
+    "tool": "image_gen",
+    "outputFile": "water-drop.png",
+    "promptFile": "prompt.txt",
+    "resizing": "sips --resampleHeightWidth 256 256 (generated RGBA preserved)"
+  },
+  "compatibility": {
+    "studioVersion": "0.745.0.7451137",
+    "tested": [
+      {
+        "size": 256,
+        "assetId": "rbxassetid://95576999146381",
+        "result": "Verified by native particle render: individual frame and animated frame change"
+      },
+      {
+        "size": 512,
+        "assetId": "rbxassetid://77275068805051",
+        "result": "Verified by side-by-side native particle render"
+      },
+      {
+        "size": 1024,
+        "assetId": "rbxassetid://138113257544035",
+        "result": "Verified by side-by-side native particle render; EditableImage confirms 1024x1024"
+      }
+    ],
+    "diagnosticNote": "FlipbookIncompatible returns the same generic text on blank emitters and is not a runtime failure indicator.",
+    "selectedSize": 256
+  },
+  "previousPoints": [
+    {
+      "name": "FrontLeft",
+      "bone": "SpineFront",
+      "bodyPosition": [
+        -0.614598751,
+        -0.095164768,
+        -0.614640713
+      ]
+    },
+    {
+      "name": "FrontRight",
+      "bone": "SpineFront",
+      "bodyPosition": [
+        0.614798427,
+        -0.095190421,
+        -0.614638031
+      ]
+    },
+    {
+      "name": "MidLeft",
+      "bone": "SpineMid",
+      "bodyPosition": [
+        -0.405112952,
+        -0.093841359,
+        0.926991403
+      ]
+    },
+    {
+      "name": "MidRight",
+      "bone": "SpineMid",
+      "bodyPosition": [
+        0.40517047,
+        -0.093840376,
+        0.927041113
+      ]
+    },
+    {
+      "name": "TailRoot",
+      "bone": "TailBase",
+      "bodyPosition": [
+        0.120740056,
+        -0.098829418,
+        2.458252907
+      ]
+    }
+  ],
+  "surfaceSampling": {
+    "source": "surface-points.json",
+    "tool": "sample_surface.py",
+    "bellyPoints": 16,
+    "tailPoints": 8,
+    "count": 24,
+    "horizontalSpan": 2.5421591997146606,
+    "fishWidth": 3.535000801086426,
+    "coverage": 0.719139638931162
+  },
+  "pointBackup": "ServerStorage.FishDripBackups.BeforeSurfaceSpread_1793769338",
+  "emission": {
+    "totalRate": [
+      20,
+      5
+    ],
+    "decaySeconds": 4,
+    "maxCatchupPerFrame": 4,
+    "selection": "Independent shuffled cycles; no repeats within 24 points",
+    "burst": {
+      "count": 10,
+      "window": [
+        0.1,
+        0.25
+      ],
+      "speed": [
+        10,
+        16
+      ],
+      "drag": 2,
+      "acceleration": [
+        0,
+        -60,
+        0
+      ],
+      "lifetime": [
+        0.45,
+        0.65
+      ],
+      "spread": 70
+    }
+  },
+  "validation": {
+    "localTests": 8,
+    "selene": {
+      "errors": 0,
+      "warnings": 0,
+      "standardLibrary": "cached Roblox API"
+    },
+    "studio": {
+      "points": 24,
+      "emitters": 48,
+      "minAnimatedCoverage": 0.7123509785776321,
+      "maxScaleError": 0,
+      "boneFollowError": 0,
+      "normalCount10Seconds": 80,
+      "catchupLimit": 4,
+      "presentationRegression": "passed",
+      "distancePreview": "Native 2/4 stud markers: visible spray reached approximately 2+ studs beyond fish outline; speed 10-16 retained",
+      "mobile": {
+        "device": "iPhone 7",
+        "resolution": [
+          667,
+          375
+        ],
+        "viewport": [
+          666,
+          374
+        ],
+        "quality": "Level01",
+        "orientation": "LandscapeLeft",
+        "trueDevicePerformanceTested": false
+      },
+      "temporaryObjectsCleaned": true,
+      "deviceAndCameraRestored": true
+    }
+  },
+  "allFish": {
+    "fish": 28,
+    "pointsPerFish": 24,
+    "manifest": "assets/fish/Processed/drip-surface-points.json",
+    "validation": "assets/fish/Processed/drip-validation.json",
+    "backup": "ServerStorage.FishDripBackups.BeforeAllFishDrip_20261104_074253",
+    "installedFolders": [
+      "ReplicatedStorage.Models.Fish",
+      "Workspace.Fish_Processed"
+    ]
+  }
+}

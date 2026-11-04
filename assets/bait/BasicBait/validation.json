@@ -1,0 +1,32 @@
+{
+  "scale": 2,
+  "eyes": {
+    "left": {
+      "diameterRatios": [
+        1.9999999999999996,
+        2.0
+      ],
+      "centerAdjustment": [
+        -0.0607532,
+        -0.026850000000003427,
+        0
+      ]
+    },
+    "right": {
+      "diameterRatios": [
+        2.0,
+        2.0
+      ],
+      "centerAdjustment": [
+        0.006248799999999992,
+        -0.026850000000003427,
+        0
+      ]
+    }
+  },
+  "vertices": 6012,
+  "triangles": 12236,
+  "boundsUnchanged": true,
+  "nonEyeVerticesUnchanged": true,
+  "sourceMeshId": "rbxassetid://114464965301610"
+}

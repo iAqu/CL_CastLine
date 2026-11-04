@@ -41,6 +41,12 @@ local environment = setmetatable({
 		end,
 	},
 }, { __index = getfenv() })
+environment.script.Parent.BaitElasticMotion = "elastic"
+local baseRequire = environment.require
+local Elastic = assert(load(read("src/ReplicatedStorage/Modules/BaitElasticMotion.lua"), "Elastic", "t", environment))()
+environment.require = function(name)
+	return if name == "elastic" then Elastic else baseRequire(name)
+end
 modules.math = assert(
 	load(read("src/ReplicatedStorage/Modules/FishingProjectileMath.lua"), "FishingProjectileMath", "t", environment)
 )()
@@ -141,11 +147,11 @@ for _, height in ipairs({ 0.8, 2 }) do
 	end
 	near(bounce:_landingOffset(0), 0)
 	near(bounce:_landingOffset(0.12), -height * 0.65)
-	near(bounce:_landingOffset(0.3), height * 0.45)
+	near(bounce:_landingOffset(0.3), height * modules.config.Landing.ReboundHeight)
 	near(bounce:_landingOffset(0.5), 0)
 	assert(bounce:_landingOffset(0.06) < 0, "Bait must sink before rebounding")
 	assert(bounce:_landingOffset(0.25) > 0, "Rebound must carry bait above its floating position")
-	assert(bounce:_landingOffset(0.4) > 0 and bounce:_landingOffset(0.4) < height * 0.45)
+	assert(bounce:_landingOffset(0.4) < 0, "Landing must cross below rest during its smaller rebound")
 	for _, boundary in ipairs({ 0.12, 0.3, 0.5 }) do
 		assert(
 			math.abs(bounce:_landingOffset(boundary - 0.0000001) - bounce:_landingOffset(boundary + 0.0000001))
@@ -250,3 +256,69 @@ local function cleanupProbe(failStop)
 end
 cleanupProbe(false)
 cleanupProbe(true)
+
+-- 独立咬钩提示沿用声音开关，静音时不创建或延迟补播。
+local plays, created = 0, 0
+environment.Instance = {
+	new = function(class)
+		assert(class == "Sound")
+		created += 1
+		return {
+			Ended = { Once = function() end },
+			Play = function()
+				plays += 1
+			end,
+		}
+	end,
+}
+enabled = false
+assert(audio:_sound("FishBite") == nil and created == 0)
+enabled = true
+local cue = audio:_sound("FishBite")
+assert(created == 1 and plays == 1 and cue.Volume == 1 and cue.PlaybackSpeed == 0.65)
+assert(cue.SoundId == modules.config.Sounds.FishBite.Id)
+
+-- 同帧先计算基础姿态和镜头，再显示透视补偿并连接鱼线。
+do
+	local order = {}
+	local position = {}
+	local resource = { Parent = true }
+	local session = setmetatable({
+		phase = "Holding",
+		bait = resource,
+		line = resource,
+		lineEnd = resource,
+		lineEndAttachment = resource,
+		lineTop = resource,
+		lineTopAttachment = resource,
+		tip = {
+			IsDescendantOf = function()
+				return true
+			end,
+		},
+		gui = resource,
+		bars = {},
+		barAmount = 0,
+		bite = {
+			Present = function(_, actualCamera)
+				assert(actualCamera == position, "Presentation used a stale camera")
+				table.insert(order, "present")
+			end,
+		},
+		_updateBait = function()
+			table.insert(order, "base")
+		end,
+		_updateCamera = function()
+			workspace.CurrentCamera = { CFrame = { Position = position } }
+			table.insert(order, "camera")
+		end,
+		_updateLine = function()
+			table.insert(order, "line")
+		end,
+		_updateWaterEffects = function() end,
+		RefreshSoundSetting = function() end,
+		_updatePresentation = function() end,
+	}, Sequence)
+	session:Update(10, 1 / 60)
+	assert(table.concat(order, ",") == "base,camera,present,line", "Camera/presentation/line order changed")
+end

@@ -1,0 +1,218 @@
+[
+  {
+    "name": "YellowfinTuna",
+    "headEyeWeight": 1,
+    "maxBodySizeErrorStuds": 2.595443725539326e-05,
+    "uvUnchanged": true,
+    "weightsNormalized": true,
+    "leftRightEyeDiameterScale": 2
+  },
+  {
+    "name": "BallinaAngelfish",
+    "headEyeWeight": 1,
+    "maxBodySizeErrorStuds": 1.0076904295885925e-05,
+    "uvUnchanged": true,
+    "weightsNormalized": true,
+    "leftRightEyeDiameterScale": 1.5
+  },
+  {
+    "name": "Azure Sturgeon",
+    "headEyeWeight": 1,
+    "maxBodySizeErrorStuds": 0.0005044784545873426,
+    "uvUnchanged": true,
+    "weightsNormalized": true,
+    "leftRightEyeDiameterScale": 1.5
+  },
+  {
+    "name": "PrettyRoseGoby",
+    "headEyeWeight": 1,
+    "maxBodySizeErrorStuds": 0.0003079299926866952,
+    "uvUnchanged": true,
+    "weightsNormalized": true,
+    "leftRightEyeDiameterScale": 2
+  },
+  {
+    "name": "AngelShark",
+    "headEyeWeight": 1,
+    "maxBodySizeErrorStuds": 5.7090759298716875e-05,
+    "uvUnchanged": true,
+    "weightsNormalized": true,
+    "leftRightEyeDiameterScale": 2
+  },
+  {
+    "name": "Jadefin",
+    "headEyeWeight": 1,
+    "maxBodySizeErrorStuds": 0.00011331939697356574,
+    "uvUnchanged": true,
+    "weightsNormalized": true,
+    "leftRightEyeDiameterScale": 1.5
+  },
+  {
+    "name": "Purplefin",
+    "headEyeWeight": 1,
+    "maxBodySizeErrorStuds": 0.00015799903869151422,
+    "uvUnchanged": true,
+    "weightsNormalized": true,
+    "leftRightEyeDiameterScale": 1.5
+  },
+  {
+    "name": "Silver Tail",
+    "headEyeWeight": 1,
+    "maxBodySizeErrorStuds": 0.00011430671619194754,
+    "uvUnchanged": true,
+    "weightsNormalized": true,
+    "leftRightEyeDiameterScale": 2
+  },
+  {
+    "name": "SaddleButterflyfish",
+    "headEyeWeight": 1,
+    "maxBodySizeErrorStuds": 4.598144531353654e-05,
+    "uvUnchanged": true,
+    "weightsNormalized": true,
+    "leftRightEyeDiameterScale": 1.5
+  },
+  {
+    "name": "QueenAngelfish",
+    "headEyeWeight": 1,
+    "maxBodySizeErrorStuds": 0.000742347717306302,
+    "uvUnchanged": true,
+    "weightsNormalized": true,
+    "leftRightEyeDiameterScale": 2
+  },
+  {
+    "name": "Chimera Perch",
+    "headEyeWeight": 1,
+    "maxBodySizeErrorStuds": 0.0004360828399683214,
+    "uvUnchanged": true,
+    "weightsNormalized": true,
+    "leftRightEyeDiameterScale": 2
+  },
+  {
+    "name": "MoorishIdol",
+    "headEyeWeight": 1,
+    "maxBodySizeErrorStuds": 3.8980102539554196e-05,
+    "uvUnchanged": true,
+    "weightsNormalized": true,
+    "leftRightEyeDiameterScale": 1.5
+  },
+  {
+    "name": "Stone Bass",
+    "headEyeWeight": 1,
+    "maxBodySizeErrorStuds": 9.902863025246234e-05,
+    "uvUnchanged": true,
+    "weightsNormalized": true,
+    "leftRightEyeDiameterScale": 2
+  },
+  {
+    "name": "ThresherShark",
+    "headEyeWeight": 1,
+    "maxBodySizeErrorStuds": 9.187316894809783e-06,
+    "uvUnchanged": true,
+    "weightsNormalized": true,
+    "leftRightEyeDiameterScale": 2
+  },
+  {
+    "name": "Venomfish",
+    "headEyeWeight": 1,
+    "maxBodySizeErrorStuds": 0.0003707656860569841,
+    "uvUnchanged": true,
+    "weightsNormalized": true,
+    "leftRightEyeDiameterScale": 2
+  },
+  {
+    "name": "TomatoClownfish",
+    "headEyeWeight": 1,
+    "maxBodySizeErrorStuds": 7.946014404680568e-06,
+    "uvUnchanged": true,
+    "weightsNormalized": true,
+    "leftRightEyeDiameterScale": 2
+  },
+  {
+    "name": "Inferno Pike",
+    "headEyeWeight": 1,
+    "maxBodySizeErrorStuds": 0.00019805145262807855,
+    "uvUnchanged": true,
+    "weightsNormalized": true,
+    "leftRightEyeDiameterScale": 2
+  },
+  {
+    "name": "GreenbandedGoby",
+    "headEyeWeight": 1,
+    "maxBodySizeErrorStuds": 1.7003631592515944e-05,
+    "uvUnchanged": true,
+    "weightsNormalized": true,
+    "leftRightEyeDiameterScale": 2
+  },
+  {
+    "name": "Clownfish",
+    "headEyeWeight": 1,
+    "maxBodySizeErrorStuds": 5.0101470947083726e-05,
+    "uvUnchanged": true,
+    "weightsNormalized": true,
+    "leftRightEyeDiameterScale": 1.5
+  },
+  {
+    "name": "AzureDamsel",
+    "headEyeWeight": 1,
+    "maxBodySizeErrorStuds": 2.207519531172153e-05,
+    "uvUnchanged": true,
+    "weightsNormalized": true,
+    "leftRightEyeDiameterScale": 1.5
+  },
+  {
+    "name": "Frosttail",
+    "headEyeWeight": 1,
+    "maxBodySizeErrorStuds": 4.059677124068628e-05,
+    "uvUnchanged": true,
+    "weightsNormalized": true,
+    "leftRightEyeDiameterScale": 2
+  },
+  {
+    "name": "Golden Carp",
+    "headEyeWeight": 1,
+    "maxBodySizeErrorStuds": 0.0005519647598362099,
+    "uvUnchanged": true,
+    "weightsNormalized": true,
+    "leftRightEyeDiameterScale": 2
+  },
+  {
+    "name": "Tropical Butterfly",
+    "headEyeWeight": 1,
+    "maxBodySizeErrorStuds": 0.0003383007049535536,
+    "uvUnchanged": true,
+    "weightsNormalized": true,
+    "leftRightEyeDiameterScale": 1.5
+  },
+  {
+    "name": "Blue Moonfish",
+    "headEyeWeight": 1,
+    "maxBodySizeErrorStuds": 0.0006995906829843079,
+    "uvUnchanged": true,
+    "weightsNormalized": true,
+    "leftRightEyeDiameterScale": 2
+  },
+  {
+    "name": "Thunderfin",
+    "headEyeWeight": 1,
+    "maxBodySizeErrorStuds": 0.00010994720457802032,
+    "uvUnchanged": true,
+    "weightsNormalized": true,
+    "leftRightEyeDiameterScale": 2
+  },
+  {
+    "name": "FrenchAngelfish",
+    "headEyeWeight": 1,
+    "maxBodySizeErrorStuds": 0.0008589916229198025,
+    "uvUnchanged": true,
+    "weightsNormalized": true,
+    "leftRightEyeDiameterScale": 1.5
+  },
+  {
+    "name": "Firetail Tilapia",
+    "headEyeWeight": 1,
+    "maxBodySizeErrorStuds": 0.00023565292357830003,
+    "uvUnchanged": true,
+    "weightsNormalized": true,
+    "leftRightEyeDiameterScale": 1.5
+  }
+]

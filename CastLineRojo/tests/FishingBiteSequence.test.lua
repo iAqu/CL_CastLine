@@ -7,27 +7,219 @@ end
 
 local config = assert(loadstring(read("src/ReplicatedStorage/Modules/FishingConfig.lua")))()
 local environment = setmetatable({
-	script = { Parent = { FishingConfig = "config" } },
+	Enum = { Material = { Glass = "glass" } },
+	script = {
+		Parent = {
+			FishingConfig = "config",
+			FishAnimationController = "fish-animation",
+			FishDripEffect = "fish-drip",
+			FishSecondaryMotion = "secondary",
+			FishRepositionPath = "reposition",
+			FishingReelSpring = "reel",
+			WaterSurfaceUtil = "water",
+		},
+	},
 	game = {
 		GetService = function()
 			return {}
 		end,
 	},
 	require = function(name)
+		if name == "fish-animation" or name == "fish-drip" or name == "secondary" or name == "reel" or name == "water" then
+			return {}
+		end
+		if name == "reposition" then
+			return require("../src/ReplicatedStorage/Modules/FishRepositionPath")
+		end
 		assert(name == "config")
 		return config
 	end,
 }, { __index = getfenv() })
+environment.script.Parent.BaitElasticMotion = "elastic"
+local baseRequire = environment.require
+local Elastic = assert(load(read("src/ReplicatedStorage/Modules/BaitElasticMotion.lua"), "Elastic", "t", environment))()
+environment.require = function(name)
+	return if name == "elastic" then Elastic else baseRequire(name)
+end
 local Bite = assert(
 	load(read("src/ReplicatedStorage/Modules/FishingBiteSequence.lua"), "FishingBiteSequence", "t", environment)
 )()
 local settings = config.Bite
 
+-- 确定性验证每个有效鱼种均可被抽到，不依赖概率容差或抽样运气。
+assert(settings.FishName == nil, "Default fish selection must be random")
+local function fishTemplate(name, className, primaryPart)
+	return {
+		Name = name,
+		PrimaryPart = primaryPart,
+		IsA = function(_, expected)
+			return className == expected
+		end,
+	}
+end
+local first = fishTemplate("First", "Model", {})
+local second = fishTemplate("Second", "Model", {})
+local invalid = fishTemplate("NoPrimaryPart", "Model", nil)
+local nested = fishTemplate("Nested", "Folder", nil)
+nested.children = { fishTemplate("NestedFish", "Model", {}) }
+local children = { nested, first, invalid, fishTemplate("Decoration", "Part", {}), second }
+local fishFolder = {
+	GetChildren = function() return children end,
+	FindFirstChild = function(_, name)
+		for _, child in ipairs(children) do
+			if child.Name == name then return child end
+		end
+		return nil
+	end,
+}
+local picks, pick = 0, 1
+local selectionRandom = {
+	NextInteger = function(_, low, high)
+		assert(low == 1 and high == 2, "Invalid instances entered the random fish pool")
+		picks += 1
+		return pick
+	end,
+}
+assert(Bite.SelectFishTemplate(fishFolder, selectionRandom) == first)
+pick = 2
+assert(Bite.SelectFishTemplate(fishFolder, selectionRandom) == second)
+assert(Bite.SelectFishTemplate(fishFolder, selectionRandom) == second, "Consecutive repeats must be allowed")
+assert(picks == 3, "Each selection must use exactly one random draw")
+
+-- 默认入口自行创建随机源，既不复用也不推进玩法/表现的随机流。
+local randomCreations = 0
+environment.Random = { new = function()
+	randomCreations += 1
+	return selectionRandom
+end }
+assert(Bite.SelectFishTemplate(fishFolder) == second)
+assert(randomCreations == 1 and picks == 4, "Default fish selection did not use an independent random source")
+environment.Random = nil
+
+children = { first }
+assert(Bite.SelectFishTemplate(fishFolder, {
+	NextInteger = function(_, low, high)
+		assert(low == 1 and high == 1, "Single-fish pool has the wrong bounds")
+		return 1
+	end,
+}) == first)
+
+local function selectionError(folder, expected)
+	local ok, err = pcall(Bite.SelectFishTemplate, folder, selectionRandom)
+	assert(not ok and string.find(tostring(err), expected, 1, true), "Missing explicit fish selection error")
+end
+children = { invalid, nested }
+selectionError(fishFolder, "no valid fish models with a PrimaryPart")
+children = {}
+selectionError(fishFolder, "no valid fish models with a PrimaryPart")
+selectionError(nil, "no valid fish models with a PrimaryPart")
+children = { first, second, invalid }
+settings.FishName = "First"
+assert(Bite.SelectFishTemplate(fishFolder, selectionRandom) == first and picks == 4,
+	"Explicit fish override must bypass random selection")
+settings.FishName = "NoPrimaryPart"
+selectionError(fishFolder, "Models.Fish.NoPrimaryPart is missing or invalid")
+settings.FishName = "Missing"
+selectionError(fishFolder, "Models.Fish.Missing is missing or invalid")
+settings.FishName = nil
+
+-- 通过正式外观入口采样，防止鱼身、填充与描边的端点和缓动脱节。
+local function appearanceProbe()
+	local part = { Transparency = 1, Color = "shadow", TextureID = "" }
+	local surface, parent = {}, {}
+	local highlightValues = { Enabled = false }
+	local highlight = setmetatable({}, {
+		__index = highlightValues,
+		__newindex = function(_, key, value)
+			if key == "Enabled" and value then
+				assert(part.Transparency < 1, "Highlight enabled before the fish appearance was applied")
+				assert(highlightValues.FillTransparency < 1, "Highlight enabled with stale transparency")
+			end
+			highlightValues[key] = value
+		end,
+	})
+	local instance = setmetatable({
+		highlight = highlight,
+		originals = {
+			[part] = {
+				transparency = 0.2,
+				color = "original",
+				texture = "fish-texture",
+				material = "plastic",
+				materialVariant = "fish-variant",
+			},
+		},
+		surfaces = { { instance = surface, parent = parent } },
+	}, Bite)
+	return instance, part, surface, parent
+end
+
+for _, rate in ipairs({ 30, 60, 144 }) do
+	local instance, part = appearanceProbe()
+	local previous = 0
+	for frame = 0, rate do
+		local fade = frame / rate
+		instance:_appearance(true, false, fade)
+		local eased = fade * fade * (3 - 2 * fade)
+		assert(math.abs(part.Transparency - (0.2 + 0.8 * eased)) < 1e-9, "Fish fade lost shared easing")
+		assert(
+			math.abs(
+				instance.highlight.FillTransparency
+					- (settings.ShadowTransparency + (1 - settings.ShadowTransparency) * eased)
+			) < 1e-9,
+			"Shadow fade lost shared easing"
+		)
+		assert(instance.highlight.OutlineTransparency == instance.highlight.FillTransparency, "Outline fade detached")
+		assert(part.Transparency >= previous, "Fade reversed")
+		assert(instance.highlight.Enabled == (fade < 1), "Fully transparent shadow is still enabled")
+		assert(part.Material == (if fade < 1 then "glass" else "plastic"), "Shadow rendering material is wrong")
+		assert(part.MaterialVariant == (if fade < 1 then "" else "fish-variant"), "Shadow retained a material override")
+		previous = part.Transparency
+		instance:_appearance(true, false, fade)
+		assert(part.Transparency == previous, "Repeated sampling changed appearance")
+	end
+	for frame = rate, 0, -1 do
+		instance:_appearance(true, false, frame / rate)
+		assert(part.Transparency <= previous, "Fade-in reversed")
+		previous = part.Transparency
+	end
+	instance:_appearance(false, false, 0)
+	assert(part.Transparency == 1 and not instance.highlight.Enabled, "Hidden fish retained geometry")
+	assert(
+		part.Material == "plastic" and part.MaterialVariant == "fish-variant",
+		"Hidden fish retained Glass rendering"
+	)
+	assert(
+		instance.highlight.FillTransparency == 1 and instance.highlight.OutlineTransparency == 1,
+		"Hidden fish retained shadow"
+	)
+	instance:_appearance(true, false, 2)
+	assert(part.Transparency == 1 and not instance.highlight.Enabled, "Fade overflow exposed fish")
+	instance:_appearance(true, false, -1)
+	assert(
+		part.Transparency == 0.2 and instance.highlight.FillTransparency == settings.ShadowTransparency,
+		"Fade underflow changed resting appearance"
+	)
+end
+do
+	local instance, part, surface, parent = appearanceProbe()
+	instance:_appearance(true, true, 0)
+	assert(part.Color == "original" and part.TextureID == "fish-texture", "Original fish appearance was not restored")
+	assert(
+		part.Material == "plastic" and part.MaterialVariant == "fish-variant",
+		"Original fish material was not restored"
+	)
+	assert(surface.Parent == parent and instance.originalShown, "Original surface was not restored")
+	assert(not instance.highlight.Enabled and instance.highlight.FillTransparency == 1, "Original fish retained shadow")
+	instance:_appearance(true, true, 0)
+	assert(part.Transparency == 0.2 and surface.Parent == parent, "Original appearance was not stable")
+end
+
 local function timeline(count, delay, startedAt, readyAt)
 	startedAt = startedAt or 10
 	return Bite.NewTimeline(startedAt, {
 		NextInteger = function(_, minimum, maximum)
-			assert(minimum == 0 and maximum == 3)
+			assert(minimum == 0 and maximum == settings.MaxNibbles)
 			return count
 		end,
 		NextNumber = function(_, minimum, maximum)
@@ -55,7 +247,7 @@ for _, delay in ipairs({ 1, 2, 3 }) do
 	assert(retry:Advance(100 + delay) == "Approaching", "Retry delay must start at rebaiting")
 end
 
-for _, count in ipairs({ 0, 3 }) do
+for _, count in ipairs({ 0, settings.MaxNibbles }) do
 	local state, nibbleCount = timeline(count), 0
 	assert(not state:TryHook(9.99) and state.phase == "Settling", "Ignore input during landing rebound")
 	state:Advance(10.5)
@@ -73,10 +265,19 @@ end
 for _, time in ipairs({ 10.5, 11, 12.1, 13.3, 14.3 }) do
 	local early = timeline(3)
 	assert(not early:TryHook(time) and early.phase == "Reeling", "A pre-bite tap must reel in and end this cast")
-	assert(early:CanReturn(time) and not early:CanRetry(time + 100), "Manual reeling must not restart fishing")
+	local duration = 1.5 -- Physical settling is supplied by the spring, not Advance.
+	assert(not early:CanReturn(time), "The initiating tap must not return before the reel animation")
+	assert(not early:TryHook(time + 0.1) and early.startedAt == time, "Repeated taps restarted reeling")
+	assert(early:Advance(time + duration) == "Reeling", "Clock alone must not finish the spring")
+	early:FinishReel(time + duration)
+	assert(early.phase == "Reeled")
+	assert(not early:CanReturn(time + duration + config.Reel.HoldTime - 0.001), "Reeled bait must settle before return")
+	assert(early:CanReturn(time + duration + config.Reel.HoldTime), "Reeled bait did not enable return")
+	assert(not early:CanRetry(time + 100), "Manual reeling must not restart fishing")
+	assert(not early:TryHook(time + 100) and early.phase == "Reeled", "Showcase input restarted reeling")
 end
 
-for _, offset in ipairs({ 0, 0.5, 0.999999 }) do
+for _, offset in ipairs({ 0, 0.5, 0.599999 }) do
 	local state = timeline(0)
 	local now = biteAt(0) + offset
 	assert(state:TryHook(now), "Input must advance the timeline even without a rendered bite frame")
@@ -96,21 +297,28 @@ for _, offset in ipairs({ 0, 0.5, 0.999999 }) do
 	assert(not state:TryHook(caught + 10) and state.phase == "Caught")
 end
 
-for _, offset in ipairs({ 1, 1.000001, 20 }) do
+for _, offset in ipairs({ 0.6, 0.600001, 20 }) do
 	local state = timeline(0)
 	assert(
 		not state:TryHook(biteAt(0) + offset) and state.phase == "Reeling",
 		"Late input must reel in without catching"
 	)
 	assert(state.baitConsumed, "A skipped bite must still consume bait")
-	assert(not state:TryHook(biteAt(0) + offset + 1) and state.phase == "Reeling")
+	local duration = 1.5 -- Physical settling is supplied by the spring, not Advance.
+	assert(not state:TryHook(biteAt(0) + offset + duration * 0.5) and state.phase == "Reeling")
+	assert(state:Advance(biteAt(0) + offset + 100) == "Reeling")
+	state:FinishReel(biteAt(0) + offset + 100)
+	assert(state.phase == "Reeled")
 end
 
 local stalled = timeline(3)
 stalled:Advance(1000)
 assert(stalled.phase == "Escaped" and stalled:CanRetry(1000), "A long frame must cross every expired phase")
 assert(not stalled:CanReturn(1000))
-assert(not stalled:TryHook(1000) and stalled:CanReturn(1000), "Reeling after a timeout must end the cast")
+assert(not stalled:TryHook(1000) and not stalled:CanReturn(1000), "Late input must wait for the reel showcase")
+assert(not stalled:CanReturn(1100), "A long frame alone cannot finish the spring")
+stalled:FinishReel(1100)
+assert(stalled:CanReturn(1100 + config.Reel.HoldTime) and stalled.phase == "Reeled")
 local retry = timeline(0, 2, 1000, 1000)
 assert(retry:Advance(1000) == "Waiting" and not retry.baitConsumed, "Retry must start from now with fresh bait")
 assert(not retry:CanRetry(1000), "Stale time must not immediately expire a new round")
@@ -140,118 +348,246 @@ assert(
 	"Destroyed sessions cannot accept input"
 )
 
--- 摆动用绝对时间采样：停留减弱、接触时收敛、隐藏/出水阶段无额外摇摆。
-local motionSettings = settings.Motion
-local function motion()
-	return Bite.NewMotion(10, {
+-- 预抽样的试探参数不随帧率、重复采样或乱序采样变化。
+for _, bound in ipairs({ "low", "high" }) do
+	local calls = 0
+	local sampled = Bite.NewMotion(10, {
 		NextNumber = function(_, low, high)
-			return (low + high) * 0.5
+			calls += 1
+			return if bound == "low" then low else high
 		end,
-		NextInteger = function(_, low)
-			return low
+		NextInteger = function(_, low, high)
+			return if bound == "low" then low else high
 		end,
 	})
-end
-local moving = motion()
-local function magnitude(phase, elapsed, now)
-	local pitch, yaw, roll = moving:Sample(phase, elapsed, now)
-	return math.abs(pitch) + math.abs(yaw) + math.abs(roll)
-end
-local swimming = magnitude("Approaching", 0.5, 12.5)
-assert(swimming > 0.01, "Swimming fish has no body motion")
-assert(
-	math.abs(magnitude("Holding", 0.5, 12.5) / swimming - motionSettings.Swim.HoldStrength) < 0.000001,
-	"Waiting fish did not reduce its motion"
-)
-assert(magnitude("Approaching", 0, 12) == 0, "Appearance starts with a motion jump")
-assert(magnitude("Nibbling", settings.NibbleTime * 0.5, 12.5) < 0.000001, "Nibble contact must settle")
-assert(magnitude("Bite", settings.BiteSinkTime, 12.5) == 0, "Hooked mouth must settle")
-for _, phase in ipairs({ "Settling", "Waiting", "Reeling", "Struggling", "Lifting" }) do
-	assert(magnitude(phase, 0.5, 12.5) == 0, "Unexpected extra motion in " .. phase)
-end
-local atBoundary = magnitude("Approaching", settings.ApproachTime, 20)
-assert(math.abs(atBoundary - magnitude("Holding", 0, 20)) < 0.000001, "Approach/holding motion jumped")
-assert(
-	math.abs(magnitude("Nibbling", settings.NibbleTime, 20) - magnitude("Holding", 0, 20)) < 0.000001,
-	"Nibble/holding motion jumped"
-)
-local p1, y1, r1 = moving:Sample("Approaching", 0.5, 12.5)
-moving:Sample("Holding", 0.3, 12.2)
-local p2, y2, r2 = moving:Sample("Approaching", 0.5, 12.5)
-assert(p1 == p2 and y1 == y2 and r1 == r2, "Render sampling accumulated motion")
-
--- 展示先静止，短促摆动后恢复；长帧跳过过期动作，不积累待播放次数。
-local idle = motion()
-local function idleAt(elapsed)
-	return idle:Sample("Caught", elapsed, 100 + elapsed)
-end
-local function still(elapsed)
-	local pitch, yaw, roll = idleAt(elapsed)
-	return pitch == 0 and yaw == 0 and roll == 0
-end
-assert(still(0) and still(3.99) and still(4), "Showcase must wait before struggling")
-local maximum = 0
-for index = 1, 89 do
-	local pitch, yaw, roll = idleAt(4 + index * 0.01)
-	maximum = math.max(maximum, math.abs(yaw))
-	assert(math.abs(pitch) <= math.rad(motionSettings.Showcase.Pitch), "Pitch exceeded its limit")
-	assert(math.abs(yaw) <= math.rad(motionSettings.Showcase.Yaw), "Yaw exceeded its limit")
-	assert(math.abs(roll) <= math.rad(motionSettings.Showcase.Roll), "Roll exceeded its limit")
-end
-assert(maximum > math.rad(4), "Showcase struggle is missing")
-assert(still(4.9) and still(5.5), "Showcase did not return to rest")
-assert(idle.nextBurst >= 104.9 + 3 and idle.nextBurst <= 104.9 + 5, "Next pause is outside 3-5 seconds")
-assert(still(1000) and idle.nextBurst == 1104, "A long frame must skip expired showcase bursts")
-assert(still(1000), "Repeated sampling restarted the showcase schedule")
-local skipped = motion()
-assert(select(2, skipped:Sample("Caught", 1000, 1100)) == 0, "Late entry replayed expired motion")
-assert(skipped.nextBurst == 1104, "Late entry must schedule from the current time")
-
--- 摆尾固定头部，切换阶段保持连续，并与展示挣动使用同一轮随机时序。
-local tailSettings = settings.Motion.Tail
-local tail = motion()
-local function tailAt(phase, elapsed, now)
-	return tail:SampleTail(phase, elapsed, now or (20 + elapsed))
-end
-assert(tailAt("Approaching", 0) == 0)
-local swimAngle = tailAt("Approaching", 0.5, 20.5)
-assert(math.abs(swimAngle) > 0.01)
-assert(math.abs(tailAt("Holding", 0.5, 20.5) / swimAngle - motionSettings.Swim.HoldStrength) < 1e-6)
-assert(math.abs(tailAt("Nibbling", settings.NibbleTime * 0.5)) < 1e-6)
-assert(tailAt("Bite", settings.BiteSinkTime) == 0)
-for _, phase in ipairs({ "Settling", "Waiting", "Reeling" }) do
-	assert(tailAt(phase, 0.5) == 0, "Hidden fish should not swim")
-end
-local boundary = tailAt("Approaching", settings.ApproachTime, 30)
-assert(math.abs(boundary - tailAt("Holding", 0, 30)) < 1e-6)
-assert(math.abs(tailAt("Nibbling", settings.NibbleTime, 30) - tailAt("Holding", 0, 30)) < 1e-6)
-tail.hookTailAngle = tailAt("Bite", 0.04, 30)
-assert(math.abs(tailAt("Struggling", 0, 30) - tail.hookTailAngle) < 1e-6, "Hook input snapped the tail")
-assert(
-	math.abs(tailAt("Struggling", settings.StruggleTime, 33) - tailAt("Lifting", 0, 33)) < 1e-6,
-	"Leaving water snapped the tail"
-)
-assert(tailAt("Lifting", settings.LiftTime, 35) == 0, "Showcase must start at rest")
-for _, rate in ipairs({ 15, 30, 60, 144 }) do
-	local sampled = motion()
-	for frame = 0, rate do
-		sampled:SampleTail("Struggling", frame / rate, 30 + frame / rate)
+	local initializedCalls = calls
+	assert(settings.Struggle.Speed == 2)
+	for index = 1, settings.MaxNibbles do
+		local entry = sampled.nibbles[index]
+		assert(entry.depth >= 0.06 and entry.depth <= 0.09)
+		assert(entry.gap >= 0.9 and entry.gap <= 1.1)
+		assert(math.abs(entry.yaw) <= math.rad(60))
+		local turn = entry.yaw - entry.beforeYaw
+		assert(math.abs(turn) >= math.rad(15) - 1e-6 and math.abs(turn) <= math.rad(45) + 1e-6)
+		assert(entry.nibbleSpeed == (if bound == "low" then 0.8 else 1.3))
+		assert(entry.returnSpeed == (if bound == "low" then 0.8 else 1.2))
+		assert(math.abs(entry.duration * entry.nibbleSpeed - settings.NibbleTime) < 1e-9)
+		assert(math.abs(entry.returnAt * entry.nibbleSpeed - 0.18) < 1e-9)
+		for _, rate in ipairs({ 15, 30, 60, 144 }) do
+			for frame = 0, math.ceil(settings.NibbleTime * rate) do
+				sampled:SampleNibble(index, frame / rate)
+			end
+			local progress, pressure = sampled:SampleNibble(index, 0.15 / entry.nibbleSpeed)
+			assert(progress == 1 and pressure == entry.depth, "Contact is not settled")
+			local _, rebounded = sampled:SampleNibble(index, entry.reboundEnd + 1e-6)
+			assert(rebounded == 0, "Bait did not rebound immediately")
+			local finished, finalPressure = sampled:SampleNibble(index, entry.duration)
+			assert(finished == 1 and finalPressure == 0, "Contact sampling tried to retreat")
+		end
 	end
-	assert(sampled:SampleTail("Struggling", 1, 31) == motion():SampleTail("Struggling", 1, 31))
+	-- 连续同向绕圈：先展开再收小；起步后所有鱼统一为 2 圈/秒。
+	local previousAngle, previousRadius = 0, 1
+	local previousSpeed = 0
+	for frame = 0, 432 do
+		local time = frame / 144
+		local angle, speed, radius, radialVelocity, strength = sampled:SampleOrbit(time)
+		assert((angle - previousAngle) * sampled.mirror >= -1e-9, "Orbit reversed")
+		if time <= settings.Struggle.BlendTime then
+			assert(radius >= previousRadius - 1e-9 and radialVelocity >= 0, "Initial orbit failed to expand")
+		elseif time - 1 / 144 >= settings.Struggle.BlendTime then
+			assert(radius <= previousRadius + 1e-9 and radialVelocity <= 0, "Orbit grew after expansion")
+		end
+		assert(strength >= 0 and strength <= 1)
+		if time >= settings.Struggle.BlendTime then
+			assert(math.abs(speed - sampled.mirror * math.pi * 4) < 1e-9, "Orbit is not a constant 2 turns/second")
+			local expectedAngle = sampled.mirror * math.pi * 4 * (time - settings.Struggle.BlendTime * 0.5)
+			assert(math.abs(angle - expectedAngle) < 1e-9, "Steady orbit angle is not linear in time")
+		else
+			assert(
+				math.abs(speed) >= previousSpeed - 1e-9 and math.abs(speed) <= math.pi * 4,
+				"Startup did not accelerate smoothly to the fixed speed"
+			)
+		end
+		previousSpeed = math.abs(speed)
+		previousAngle, previousRadius = angle, radius
+	end
+	assert(math.abs(previousRadius - sampled.orbit.endRadius) < 1e-9)
+	assert(math.abs(previousRadius - 0.8) < 1e-9)
+	for _, entry in ipairs({ { 0, 1 }, { 0.2, 1.2 }, { 3, 0.8 } }) do
+		local _, _, radius, radialVelocity = sampled:SampleOrbit(entry[1])
+		assert(
+			math.abs(radius - entry[2]) < 1e-9 and math.abs(radialVelocity) < 1e-9,
+			"Orbit radius endpoint or tangent changed"
+		)
+	end
+	for _, time in ipairs({ 0.1, 0.2, 0.7, 1.8, 2.8 }) do
+		local left = sampled:SampleOrbit(time - 1e-6)
+		local right = sampled:SampleOrbit(time + 1e-6)
+		local _, velocity = sampled:SampleOrbit(time)
+		assert(math.abs((right - left) / 2e-6 - velocity) < 1e-5, "Speed does not match integrated angle")
+		local _, _, beforeRadius = sampled:SampleOrbit(time - 1e-6)
+		local _, _, afterRadius = sampled:SampleOrbit(time + 1e-6)
+		local _, _, _, radialVelocity = sampled:SampleOrbit(time)
+		assert(
+			math.abs((afterRadius - beforeRadius) / 2e-6 - radialVelocity) < 1e-4,
+			"Radial velocity does not match radius derivative"
+		)
+	end
+	local expected = { sampled:SampleOrbit(1.37) }
+	for _, rate in ipairs({ 15, 30, 60, 144 }) do
+		for frame = 0, rate * 3 do
+			sampled:SampleOrbit(frame / rate)
+		end
+		local actual = { sampled:SampleOrbit(1.37) }
+		for index, value in ipairs(expected) do
+			assert(actual[index] == value, "Render rate changed orbit angle/radius/velocity")
+		end
+	end
+	assert(calls == initializedCalls, "Rendering sampled new random values")
+	-- 水花参数变化不能影响路径的四个采样值。
+	local feedbackOrbit = table.clone(sampled.orbit)
+	feedbackOrbit.feedbackFrequency, feedbackOrbit.feedbackPhase = 2.7, 0.7
+	local feedbackMotion = setmetatable({ orbit = feedbackOrbit, mirror = sampled.mirror }, getmetatable(sampled))
+	local original = { sampled:SampleOrbit(0.85) }
+	local changed = { feedbackMotion:SampleOrbit(0.85) }
+	for index = 1, 4 do
+		assert(original[index] == changed[index], "Water feedback changed orbit motion")
+	end
+	assert(math.abs(original[5] - changed[5]) > 0.001, "Water feedback fixture did not change effect strength")
 end
-for _, phase in ipairs({ "Approaching", "Holding", "Escaped", "Struggling", "Lifting" }) do
-	local limit =
-		math.rad(if phase == "Struggling" or phase == "Lifting" then tailSettings.StruggleYaw else tailSettings.Yaw)
-	for index = 0, 200 do
-		assert(math.abs(tailAt(phase, index * 0.01)) <= limit + 1e-6, "Tail exceeded configured amplitude")
+local sounds = 0
+local soundProbe = setmetatable(
+	{ owner = {
+		_sound = function(_, name)
+			assert(name == "FishBite")
+			sounds += 1
+		end,
+	} },
+	Bite
+)
+soundProbe:_biteSound()
+soundProbe:_biteSound()
+assert(sounds == 1, "Bite cue played twice")
+assert(config.Sounds.FishBite.Id == "rbxasset://sounds/impact_water.mp3")
+
+-- 相同种子完全复现，另一种子改变绕圈；帧采样不能推进随机序列。
+local function seeded(seed)
+	local function nextUnit()
+		seed = seed * 48271 % 2147483647
+		return seed / 2147483647
+	end
+	return {
+		NextNumber = function(_, low, high)
+			return low + (high - low) * nextUnit()
+		end,
+		NextInteger = function(_, low, high)
+			return low + math.floor(nextUnit() * (high - low + 1))
+		end,
+	}
+end
+local first, repeated, different =
+	Bite.NewMotion(0, seeded(12)), Bite.NewMotion(0, seeded(12)), Bite.NewMotion(0, seeded(13))
+for key, value in pairs(first.orbit) do
+	assert(value == repeated.orbit[key], "Seed did not reproduce orbit")
+end
+for index, entry in ipairs(first.nibbles) do
+	for key, value in pairs(entry) do
+		assert(value == repeated.nibbles[index][key], "Seed did not reproduce feeding")
 	end
 end
-local showcase = motion()
-assert(showcase:SampleTail("Caught", 0, 100) == 0)
-for index = 0, 89 do
-	local elapsed = 4 + index * 0.01
-	local angle = showcase:SampleTail("Caught", elapsed, 100 + elapsed)
-	local _, yaw = showcase:Sample("Caught", elapsed, 100 + elapsed)
-	assert(math.abs(angle - yaw * tailSettings.ShowcaseYaw / motionSettings.Showcase.Yaw) < 1e-6)
+assert(first.mirror == repeated.mirror and first.orbit.feedbackPhase ~= different.orbit.feedbackPhase)
+assert(first.nibbles[1].nibbleSpeed ~= different.nibbles[1].nibbleSpeed, "Seed did not change nibble rhythm")
+
+-- 慢假咬/快回游及相反组合共用实际时间；长帧与正常帧必须得到相同的提竿窗口。
+for _, invert in ipairs({ false, true }) do
+	local motion = Bite.NewMotion(0, {
+		NextInteger = function(_, low) return low end,
+		NextNumber = function(_, low, high)
+			if low == settings.Nibble.SpeedMin and high == settings.Nibble.SpeedMax then
+				return if invert then high else low
+			elseif low == settings.Nibble.ReturnSpeedMin and high == settings.Nibble.ReturnSpeedMax then
+				return if invert then low else high
+			end
+			return (low + high) / 2
+		end,
+	})
+	for _, count in ipairs({ 0, 3, settings.MaxNibbles }) do
+		local function create()
+			local state = timeline(count)
+			state.nibbleTimings = motion.nibbles
+			state.repositionDurations = {}
+			for index, entry in ipairs(motion.nibbles) do
+				state.repositionDurations[index] = 3 / entry.returnSpeed
+			end
+			return state
+		end
+		local reference = create()
+		while reference.phase ~= "Bite" do
+			if reference.phase == "Nibbling" then
+				local timing = reference:GetNibbleTiming()
+				local startedAt = reference.startedAt
+				assert(math.abs(reference.endsAt - startedAt - timing.duration) < 1e-9)
+				reference:Advance(reference.endsAt)
+				assert(reference.phase == "Holding")
+				local expected = startedAt + timing.returnAt
+					+ reference.repositionDurations[reference.completedNibbles] + settings.Nibble.SettleTime
+				assert(math.abs(reference.endsAt - expected) < 1e-9, "Variable return lost settling time")
+			else
+				reference:Advance(reference.endsAt)
+			end
+		end
+		local at = reference.startedAt
+		for _, step in ipairs({ 1 / 15, 1 / 30, 1 / 60, 1 / 144, at - 10 }) do
+			local state, now = create(), 10
+			while now < at do
+				state:Advance(now)
+				now = math.min(at, now + step)
+			end
+			state:Advance(at)
+			assert(state.phase == "Bite" and state.completedNibbles == count)
+			assert(state.startedAt == at and math.abs(state.endsAt - at - settings.HookWindow) < 1e-9)
+			assert(state:TryHook(at + settings.HookWindow - 0.001), "Random rhythm shrank the hook window")
+			local late = create()
+			assert(late:Advance(at + settings.HookWindow + 0.01) == "Escaped", "Long frame lost timeout")
+		end
+		if count > 0 then
+			local early = create()
+			while early.phase ~= "Nibbling" do early:Advance(early.endsAt) end
+			assert(not early:TryHook(early.startedAt + early:GetNibbleTiming().attackTime), "Fake bite became hookable")
+		end
+	end
 end
-assert(showcase:SampleTail("Caught", 1000, 1100) == 0 and showcase.nextBurst == 1104)
+
+-- 长路径延长停顿；路径从轻啄接触之后开始，已有 Nibbling 后段不能重复计时。
+local extended = timeline(3)
+extended.repositionDurations = { 4, 2, 3 }
+while extended.phase ~= "Nibbling" do
+	extended:Advance(extended.endsAt)
+end
+local contactEnd = settings.Nibble.AttackTime + settings.Nibble.ContactTime
+for index, duration in ipairs(extended.repositionDurations) do
+	local startedAt = extended.startedAt
+	extended:Advance(extended.endsAt)
+	assert(extended.phase == "Holding" and extended.completedNibbles == index)
+	local settledAt = startedAt + contactEnd + duration + settings.Nibble.SettleTime
+	assert(math.abs(extended.endsAt - settledAt) < 1e-6, "Pause cut off forward return")
+	assert(extended:Advance(settledAt - 0.001) == "Holding")
+	extended:Advance(settledAt)
+end
+assert(extended.phase == "Bite", "Final return did not lead to bite")
+
+-- 渲染帧率和跳过整个回游的长帧都不能改变最终咬钩时刻。
+local biteStartedAt = extended.startedAt
+for _, step in ipairs({ 1 / 15, 1 / 30, 1 / 60, 1 / 144, biteStartedAt - 10 }) do
+	local sampled = timeline(3)
+	sampled.repositionDurations = { 4, 2, 3 }
+	local now = 10
+	while now < biteStartedAt do
+		sampled:Advance(now)
+		now = math.min(biteStartedAt, now + step)
+	end
+	sampled:Advance(biteStartedAt)
+	assert(sampled.phase == "Bite" and sampled.completedNibbles == 3, "Frame step lost a return or bite")
+	assert(math.abs(sampled.startedAt - biteStartedAt) < 1e-6, "Frame step changed return duration")
+	assert(sampled:Advance(biteStartedAt + settings.HookWindow + 0.01) == "Escaped", "Long frame missed timeout")
+end

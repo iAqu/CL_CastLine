@@ -2,7 +2,11 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Cast = require(ReplicatedStorage.Modules.FishingCastSequence)
 local Bite = require(ReplicatedStorage.Modules.FishingBiteSequence)
-local settings = require(ReplicatedStorage.Modules.FishingConfig).Bite
+local FishAnimation = require(ReplicatedStorage.Modules.FishAnimationController)
+local config = require(ReplicatedStorage.Modules.FishingConfig)
+local settings = config.Bite
+local originalFishName = settings.FishName
+settings.FishName = "Elder Fish"
 local template = ReplicatedStorage.Models.Fish[settings.FishName]
 local originalTexture, originalColor = template.PrimaryPart.TextureID, template.PrimaryPart.Color
 local folder = Instance.new("Folder")
@@ -39,6 +43,9 @@ local ok, result = xpcall(function()
 		forward = Vector3.zAxis,
 		spin = 0,
 		landedAt = 0,
+		root = { CFrame = CFrame.identity },
+		cameraFrame = CFrame.lookAt(target - Vector3.zAxis * 18 + Vector3.yAxis * 12, target),
+		cameraFov = settings.ShowcaseFov,
 		bait = bait,
 		baitAppearance = { [bait] = 0.25 },
 		baitHighlight = baitHighlight,
@@ -61,6 +68,13 @@ local ok, result = xpcall(function()
 			return target
 		end,
 		_waterFeedback = function() end,
+		_playWaterVFX = function() end,
+		_nibbleRipple = function() end,
+		_nibbleFeedback = function() end,
+		_sound = function(self, name)
+			assert(name == "FishBite", "Unexpected bite cue")
+			self.biteCues = (self.biteCues or 0) + 1
+		end,
 	}, Cast)
 	local function round(at, nibbles, sector)
 		owner:_startBiteRound(at)
@@ -81,7 +95,24 @@ local ok, result = xpcall(function()
 	end
 	local function update(at)
 		owner:_updateBait(at, 1 / 60)
+		owner.bite:Present()
 		owner:_updateLine()
+	end
+	local function assertShowcaseLine(point)
+		assert((line.Attachment1.WorldPosition - point).Magnitude < 0.001, "Line detached from showcase anchor")
+		local delta = line.Attachment0.WorldPosition - point
+		assert(
+			line.Attachment0 == topAttachment
+				and math.abs(delta.X) < 0.001
+				and math.abs(delta.Z) < 0.001
+				and math.abs(delta.Y - settings.ShowcaseLineHeight) < 0.001,
+			"Showcase line did not stay vertically above its anchor"
+		)
+	end
+	local function assertFishShowcaseLine()
+		local bite = owner.bite
+		local mouth = bite.fish.PrimaryPart.CFrame:PointToWorldSpace(bite.mouthOffset * bite.scale)
+		assertShowcaseLine(mouth - Vector3.yAxis)
 	end
 	local function fishCount()
 		local count = 0
@@ -93,20 +124,55 @@ local ok, result = xpcall(function()
 		return count
 	end
 
-	-- 三个出现方向、透明度和尺寸渐变，同时从较深的位置上浮。
+	-- 三个出现方向保持实际尺寸，通过透明度和深度显现。
 	for sector = 1, 3 do
 		round(0, 0, sector)
+		local bite = owner.bite
+		assert(
+			not bite.highlight.Enabled
+				and bite.highlight.FillTransparency == 1
+				and bite.highlight.OutlineTransparency == 1
+				and bite.fish.PrimaryPart.Transparency == 1,
+			"New fish flashed before its first update"
+		)
+		assert(
+			bite.animation.animator.Parent:IsA("AnimationController"),
+			"Shadow rendering replaced the animation controller"
+		)
 		update(2)
 		local start = owner.bite.lastPosition
-		assert(owner.bite.spawnSector == sector and owner.bite.scale < 0.2, "Spawn sector/initial scale is wrong")
+		assert(owner.bite.spawnSector == sector and owner.bite.scale == 1, "Spawn sector/actual scale is wrong")
 		assert(owner.bite.fish.PrimaryPart.Transparency > 0.99, "Fish did not fade in")
 		local delta = (start - target) * Vector3.new(1, 0, 1)
 		local expected = if sector == 1 then owner.forward elseif sector == 2 then -owner.bite.side else owner.bite.side
 		assert(delta.Unit:Dot(expected) > 0.99, "Fish did not appear from the requested direction")
+		for _, rate in ipairs({ 30, 60 }) do
+			for frame = 0, math.ceil(settings.AppearTime * rate) do
+				local elapsed = math.min(frame / rate, settings.AppearTime)
+				update(2 + elapsed)
+				local progress = math.clamp(elapsed / settings.AppearTime, 0, 1)
+				local fade = 1 - progress * progress * (3 - 2 * progress)
+				assert(math.abs(bite.fish.PrimaryPart.Transparency - fade) < 1e-6, "Fish appearance easing is wrong")
+				assert(
+					bite.fish.PrimaryPart.Material
+						== (if elapsed > 0 then Enum.Material.Glass else template.PrimaryPart.Material),
+					"Fish shadow material is wrong"
+				)
+				assert(
+					math.abs(
+						bite.highlight.FillTransparency
+							- (settings.ShadowTransparency + (1 - settings.ShadowTransparency) * fade)
+					)
+							< 1e-6
+						and bite.highlight.OutlineTransparency == bite.highlight.FillTransparency,
+					"Fish shadow did not follow appearance easing"
+				)
+			end
+		end
 		update(2 + settings.AppearTime)
 		assert(
 			math.abs(owner.bite.scale - 1) < 0.001 and owner.bite.lastPosition.Y > start.Y,
-			"Fish did not grow and rise"
+			"Fish changed size or did not rise"
 		)
 	end
 
@@ -129,8 +195,7 @@ local ok, result = xpcall(function()
 			"Swim moved mouth pivot"
 		)
 	end
-	local swayScale = if resting.tailBone then settings.Motion.Tail.BodySwayScale else 1
-	assert(swimAngle > math.rad(1) * swayScale, "Water fish has no visible body motion")
+	assert(swimAngle < 0.001, "Whole-body procedural swim sway is still active")
 
 	-- 真咬保留鱼饵和原朝向，红色填充，鱼嘴落在进食直线的边缘交点。
 
@@ -143,7 +208,7 @@ local ok, result = xpcall(function()
 		math.abs(baitHighlight.FillTransparency - settings.BaitFillTransparency) < 0.0001,
 		"True bite did not turn bait red"
 	)
-	local contact = bait.Position + owner.bite.contactOffset
+	local contact = bait.Position + owner.bite:_contactOffset(0, bait.Size)
 	local mouthAtBite = owner.bite.fish.PrimaryPart.CFrame:PointToWorldSpace(owner.bite.mouthOffset)
 	assert((contact - mouthAtBite).Magnitude < 0.001, "Fish missed bait edge on approach line")
 	local deadline = owner.bite.timeline.endsAt
@@ -151,6 +216,22 @@ local ok, result = xpcall(function()
 	assert(owner.phase == "Escaped" and not owner:CanReturn(deadline + 10), "Failure enabled return")
 	assert(not owner.returnLabel.Visible, "Escaped fish displayed return prompt")
 	local oldFish, oldRound = owner.bite.fish, owner.round
+	for frame = 0, 42 do
+		local progress = frame / 42
+		-- 直接更新咬钩表现，保留末帧以检查，暂不触发父会话自动重试。
+		owner.bite:Update(deadline + settings.EscapeTime * progress)
+		local fade = progress * progress * (3 - 2 * progress)
+		assert(math.abs(oldFish.PrimaryPart.Transparency - fade) < 1e-6, "Escaping fish fade is wrong")
+		assert(
+			math.abs(
+				owner.bite.highlight.FillTransparency
+					- (settings.ShadowTransparency + (1 - settings.ShadowTransparency) * fade)
+			) < 1e-6,
+			"Escaping shadow fade is wrong"
+		)
+	end
+	assert(not owner.bite.highlight.Enabled, "Fully escaped shadow stayed enabled")
+	assert(oldFish.PrimaryPart.Material == template.PrimaryPart.Material, "Escaped fish retained Glass material")
 	update(deadline + settings.EscapeTime + 0.01)
 	assert(
 		owner.round == oldRound + 1 and oldFish.Parent == nil and fishCount() == 1,
@@ -182,35 +263,233 @@ local ok, result = xpcall(function()
 		assert(owner.bite.timeline.appearAt >= at + 101, "Retry reused stale time")
 	end
 
-	-- 主动提前收竿会终止重试，父控制器负责当次点击立即返回。
+	-- 已经过期的真咬不补播；当前真咬多帧更新只响一次。
+	local previousCues = owner.biteCues or 0
+	round(2600)
+	update(2600 + trueBite + settings.HookWindow + 0.1)
+	assert((owner.biteCues or 0) == previousCues, "Expired bite replayed cue")
+	round(2700)
+	update(2700 + trueBite + 0.01)
+	update(2700 + trueBite + 0.02)
+	assert(owner.biteCues == previousCues + 1, "Bite cue missing or duplicated")
+
+	-- 空钩先下潜再出水回弹；平视镜头固定焦点，停稳后再次点击才返回。
 	round(2800)
 	update(2800)
-	assert(not owner:TryHook(2800.1) and owner:CanReturn(2800.1), "Early reeling did not end the cast")
+	bait.CFrame *= CFrame.Angles(math.rad(8), math.rad(137), math.rad(-6))
+	local reelAt = 2800.1
+	local reelConfig = config.Reel
+	local initialBait = bait.CFrame
+	local beforeImpulses = owner.impulseCount
+	local feedback = 0
+	owner._waterFeedback = function(_, _, _, strength, splash)
+		assert(strength == 0.35 and splash, "Empty reel did not use a small splash")
+		feedback += 1
+	end
+	assert(not owner:TryHook(reelAt) and not owner:CanReturn(reelAt), "First reel tap returned immediately")
+	update(reelAt)
+	assert((bait.Position - initialBait.Position).Magnitude < 0.001, "Reeling snapped bait at entry")
+	local _, entryAngle = initialBait.Rotation:ToObjectSpace(bait.CFrame.Rotation):ToAxisAngle()
+	assert(math.abs(entryAngle) < 0.001, "Reeling snapped bait rotation at entry")
+	assert(not owner.returnLabel.Visible and not owner.statusLabel.Visible, "Reeling showed premature result UI")
+	local reelPeak = -math.huge
+	local reelBottom = math.huge
+	local expectedBottom = initialBait.Position.Y - owner.baitBaseSize.Y * reelConfig.SinkDepth
+	local maxSway = 0
+	-- spr 由 PreSimulation 推进；此处必须逐帧等待，不能仅跳动测试时钟。
+	local reelFrames, reelEnd = {}, nil
+	local realStart, elapsed = os.clock(), 0
+	for index = 1, 600 do
+		local at = reelAt + elapsed
+		owner:TryHook(at)
+		update(at)
+		owner:_updateCamera(at, 1 / 60)
+		if index == 1 then
+			local sway = owner.cameraFrame:ToObjectSpace(camera.CFrame)
+			-- 相同 CFrame 的往返也可能被 ToAxisAngle 算出约 0.00069 弧度，直接比较基向量。
+			assert(
+				sway.Position.Magnitude < 0.0001
+					and (owner.cameraFrame.LookVector - camera.CFrame.LookVector).Magnitude < 0.00001
+					and (owner.cameraFrame.UpVector - camera.CFrame.UpVector).Magnitude < 0.00001,
+				"Empty reel camera sway jumped at entry"
+			)
+		end
+		reelPeak = math.max(reelPeak, bait.Position.Y)
+		reelBottom = math.min(reelBottom, bait.Position.Y)
+		if elapsed > 0 and elapsed < reelConfig.SinkTime then
+			assert(bait.Position.Y < initialBait.Position.Y, "Empty reel did not sink before rising")
+		elseif math.abs(elapsed - reelConfig.SinkTime) < 0.000001 then
+			assert(math.abs(bait.Position.Y - expectedBottom) < 0.03, "Empty reel sink depth is wrong")
+		elseif elapsed > reelConfig.SinkTime + 0.05 and elapsed < reelConfig.SinkTime + 0.2 then
+			assert(bait.Position.Y > expectedBottom, "Empty reel did not rise after sinking")
+		end
+		assert(
+			(bait.CFrame.LookVector - initialBait.LookVector).Magnitude < 0.00001
+				and (bait.CFrame.UpVector - initialBait.UpVector).Magnitude < 0.00001,
+			"Empty reel changed the initial bait orientation"
+		)
+		assert(owner.bite.fish.PrimaryPart.Transparency == 1, "Empty reel showed a fish")
+		assert(
+			owner.bite.fish.PrimaryPart.Material == template.PrimaryPart.Material,
+			"Empty reel retained Glass material"
+		)
+		assert(
+			not owner.bite.highlight.Enabled
+				and owner.bite.highlight.FillTransparency == 1
+				and owner.bite.highlight.OutlineTransparency == 1,
+			"Empty reel retained a fish shadow"
+		)
+		assert(
+			bait.Transparency == 0.25 and baitHighlight.Enabled and baitHighlight.FillTransparency == 1,
+			"Empty reel lost bait appearance"
+		)
+		assertShowcaseLine(bait.Position)
+		if elapsed >= reelConfig.CameraTime then
+			assert(math.abs(owner.cameraFrame.LookVector.Y) < 0.0001, "Empty reel base camera did not stay level")
+			assert(
+				owner.cameraFrame.LookVector:Dot(owner.forward) > 0.9999,
+				"Empty reel camera did not retain the cast direction"
+			)
+			local sway = owner.cameraFrame:ToObjectSpace(camera.CFrame)
+			local pitch, yaw, roll = sway:ToOrientation()
+			maxSway = math.max(maxSway, sway.Position.Magnitude)
+			assert(
+				sway.Position.Magnitude < 0.05
+					and math.max(math.abs(pitch), math.abs(yaw), math.abs(roll)) < math.rad(0.4),
+				"Empty reel sway exceeded its gentle limits"
+			)
+			assert(math.abs(camera.FieldOfView - settings.ShowcaseFov) < 0.001, "Empty reel sway changed FOV")
+			assert(
+				(camera.Focus.Position - target - Vector3.yAxis * settings.ShowcaseHeight).Magnitude < 0.001,
+				"Empty reel camera followed the bounce"
+			)
+		end
+		table.insert(reelFrames, { frame = bait.CFrame, size = bait.Size })
+		if owner.phase == "Reeled" then
+			reelEnd = owner.bite.timeline.startedAt
+			break
+		end
+		task.wait()
+		elapsed = os.clock() - realStart
+		assert(elapsed < 4, "Reel spring did not settle before the deadline")
+	end
+	assert(
+		reelPeak > target.Y + settings.ShowcaseHeight + 0.9
+			and reelPeak < target.Y + settings.ShowcaseHeight + owner.bite.reelMotion.reboundAllowance,
+		"Empty reel used the sky arc or missed its bounce"
+	)
+	assert(math.abs(reelBottom - expectedBottom) < 0.05, "Empty reel did not approach its sink depth")
+	assert(
+		feedback == 1 and owner.impulseCount == beforeImpulses,
+		"Empty reel repeated splash or used fish camera impact"
+	)
+	assert(maxSway > 0.0001, "Empty reel camera has no sway")
+	owner._waterFeedback = function() end
+	assert(owner.phase == "Reeled" and owner.folder:GetAttribute("Phase") == "Reeled", "Reel phase was not published")
+	assert(reelEnd, "Spring did not report physical settling")
+	update(reelEnd + reelConfig.HoldTime - 0.01)
+	assert(
+		not owner:CanReturn(reelEnd + reelConfig.HoldTime - 0.01) and not owner.returnLabel.Visible,
+		"Empty reel did not wait to settle"
+	)
+	update(reelEnd + reelConfig.HoldTime)
+	assert(
+		owner:CanReturn(reelEnd + reelConfig.HoldTime)
+			and not owner.returnLabel.Visible
+			and not owner.statusLabel.Visible,
+		"Empty reel showed a manual return prompt"
+	)
+	local firstSway
+	local sustainedSway = 0
+	for index = 0, 50 do
+		local at = reelEnd + reelConfig.HoldTime + index * 0.1
+		update(at)
+		owner:_updateCamera(at, 1 / 60)
+		local sway = owner.cameraFrame:ToObjectSpace(camera.CFrame)
+		firstSway = firstSway or sway
+		assertShowcaseLine(bait.Position)
+		sustainedSway = math.max(sustainedSway, (sway.Position - firstSway.Position).Magnitude)
+		assert(
+			math.abs(owner.cameraFrame.LookVector.Y) < 0.0001 and sway.Position.Magnitude < 0.05,
+			"Reeled showcase sway tilted the base camera or grew too strong"
+		)
+		assert(
+			(camera.Focus.Position - target - Vector3.yAxis * settings.ShowcaseHeight).Magnitude < 0.001,
+			"Reeled showcase sway moved its focus"
+		)
+	end
+	assert(sustainedSway > 0.0001, "Reeled showcase stopped swaying while waiting for return")
+	local restingBait = bait.CFrame
+	local restingEye = owner.cameraFrame.Position
+	target += Vector3.yAxis * 2
+	update(reelEnd + 2)
+	owner:_updateCamera(reelEnd + 2, 1 / 60)
+	assertShowcaseLine(bait.Position)
+	assert(
+		(bait.Position - restingBait.Position - Vector3.yAxis * 2).Magnitude < 0.001
+			and (owner.cameraFrame.Position - restingEye - Vector3.yAxis * 2).Magnitude < 0.001,
+		"Empty reel did not follow the water level"
+	)
+	target -= Vector3.yAxis * 2
+	for _, size in ipairs({ Vector2.new(390, 844), Vector2.new(844, 390), Vector2.new(1877, 1240) }) do
+		local view, focus = owner:_reelCamera(target, size)
+		local tanY = math.tan(math.rad(settings.ShowcaseFov * 0.5))
+		for _, sample in ipairs(reelFrames) do
+			local pose = sample.frame
+			for _, x in ipairs({ -1, 1 }) do
+				for _, y in ipairs({ -1, 1 }) do
+					for _, z in ipairs({ -1, 1 }) do
+						local point =
+							view:PointToObjectSpace(pose:PointToWorldSpace(sample.size * Vector3.new(x, y, z) * 0.5))
+						assert(
+							point.Z < 0
+								and math.abs(point.Y) < -point.Z * tanY
+								and math.abs(point.X) < -point.Z * tanY * size.X / size.Y,
+							"Empty reel clipped bait"
+						)
+					end
+				end
+			end
+		end
+		assert(math.abs(view.Position.Y - focus.Y) < 0.001, "Portrait empty reel camera tilted")
+		assert(
+			(view.Position - focus):Dot(owner.forward) < 0 and view.LookVector:Dot(owner.forward) > 0.9999,
+			"Portrait empty reel camera did not retain the cast direction"
+		)
+	end
+	local savedForward = owner.forward
+	for _, forward in ipairs({ Vector3.xAxis, -Vector3.zAxis }) do
+		owner.forward = forward
+		local view, focus = owner:_reelCamera(target, camera.ViewportSize)
+		assert(
+			(view.Position - focus):Dot(forward) < 0 and view.LookVector:Dot(forward) > 0.9999,
+			"Empty reel camera uses a fixed world direction"
+		)
+	end
+	owner.forward = savedForward
 	local endedRound = owner.round
 	update(2900)
 	assert(owner.round == endedRound and not owner.bite:CanRetry(2900), "Reeled cast automatically retried")
 
-	-- 加速后每秒一圈；鱼线末端直接落在鱼嘴。
+	-- 连续随机变速缩圈；鱼线末端始终跟随鱼饵。
 	round(3000)
 	local hookAt = 3000 + trueBite + 0.2
 	assert(owner:TryHook(hookAt), "True bite did not accept hook input")
-	update(hookAt + 0.5)
-	local first = owner.bite.fish.PrimaryPart.Position - target
-	update(hookAt + 0.75)
-	local second = owner.bite.fish.PrimaryPart.Position - target
-	first, second = Vector3.new(first.X, 0, first.Z).Unit, Vector3.new(second.X, 0, second.Z).Unit
-	assert(math.abs(first:Dot(second)) < 0.001, "Struggle did not cover a quarter turn in 0.25 seconds")
+	update(hookAt + 0.82)
+	local first = owner.bite.fish.PrimaryPart.Position
+	update(hookAt + 1.03)
+	assert((first - owner.bite.fish.PrimaryPart.Position).Magnitude > 0.1, "Orbit paused")
+	update(hookAt + 1.35)
+	assert((first - owner.bite.fish.PrimaryPart.Position).Magnitude > 0.5, "Orbit stopped moving")
 	local body = owner.bite.fish.PrimaryPart
 	local mouth = body.CFrame:PointToWorldSpace(owner.bite.mouthOffset)
 	assert(
-		(line.Attachment1.WorldPosition - bait.CFrame:PointToWorldSpace(Vector3.new(0, bait.Size.Y * 0.35, 0))).Magnitude
-				< 0.001
-			and bait.Transparency == 0.25,
+		(line.Attachment1.WorldPosition - bait.Position).Magnitude < 0.001 and bait.Transparency == 0.25,
 		"Line detached from visible bait"
 	)
 	local sideContact = bait.CFrame:PointToWorldSpace(Vector3.new(bait.Size.X * 0.5, 0, 0))
 	assert((sideContact - mouth).Magnitude < 0.001, "Struggling fish lost side contact")
-	assert(owner.bite.timeline.endsAt == hookAt + 3, "Speed change shortened struggle")
+	assert(owner.bite.timeline.endsAt == hookAt + 3, "Orbit changed struggle duration")
 	owner.root = { CFrame = CFrame.identity }
 	owner.cameraFrame = CFrame.lookAt(target - Vector3.zAxis * 18 + Vector3.yAxis * 12, target)
 	owner.cameraFov, owner.shotMode, owner.shotDuration = 60, "Landing", 0
@@ -222,6 +501,7 @@ local ok, result = xpcall(function()
 	-- 出水保持竖线，完全出水才恢复彩色；最终鱼头朝上。
 	local liftingAt = owner.bite.timeline.endsAt
 	update(liftingAt)
+	assertFishShowcaseLine()
 	assert(
 		line.Attachment0 == topAttachment and body.TextureID == "" and bait.Transparency == 1,
 		"Lift did not switch the upper anchor or colored fish too early"
@@ -242,12 +522,18 @@ local ok, result = xpcall(function()
 			assert(camera.CFrame.LookVector.Y > 0.3, "Camera did not tilt up to follow fish")
 		end
 		highest = math.max(highest, body.Position.Y)
-		local delta = line.Attachment0.WorldPosition - line.Attachment1.WorldPosition
-		assert(math.abs(delta.X) < 0.001 and math.abs(delta.Z) < 0.001 and delta.Y > 0, "Lift line is not vertical")
+		assertFishShowcaseLine()
 	end
 	update(caughtAt + settings.ShowcaseHold)
+	assertFishShowcaseLine()
+	local baseCaught = owner.bite:_basePose("Caught", settings.ShowcaseHold, target)
+	local showcaseMotion = settings.Motion.Secondary.Showcase
+	local maxTilt = showcaseMotion.IdleAngles[1] + showcaseMotion.BurstAngles[1]
+		+ showcaseMotion.IdleAngles[3] + showcaseMotion.BurstAngles[3]
 	assert(
-		body.CFrame.LookVector:Dot(Vector3.yAxis) > 0.9999 and body.TextureID == originalTexture,
+		baseCaught.LookVector:Dot(Vector3.yAxis) > 0.99999
+			and body.CFrame.LookVector:Dot(Vector3.yAxis) > math.cos(math.rad(maxTilt))
+			and body.TextureID == originalTexture,
 		"Caught fish is not upright and colored"
 	)
 	assert(highest > target.Y + settings.LiftPeakHeight - 0.01, "Fish did not rise into the sky")
@@ -289,13 +575,17 @@ local ok, result = xpcall(function()
 		assert(top.Y / (-top.Z * tanY) > 1, "Line top is visible inside showcase")
 	end
 
-	local previousBody = body.Position
+	local previousMouth = body.CFrame:PointToWorldSpace(owner.bite.mouthOffset)
 	target += Vector3.yAxis * 4
 	update(caughtAt + 1)
-	assert((body.Position - previousBody - Vector3.yAxis * 4).Magnitude < 0.001, "Fish did not follow water")
+	assertFishShowcaseLine()
+	assert(
+		(body.CFrame:PointToWorldSpace(owner.bite.mouthOffset) - previousMouth - Vector3.yAxis * 4).Magnitude < 0.001,
+		"Suspended mouth did not follow water"
+	)
 
 	-- 三轮展示挣动：固定嘴部和构图中心，含镜头晃动的横竖屏构图均留有余量。
-	owner.bite.motion = Bite.NewMotion(caughtAt, {
+	owner.bite.animation.state = FishAnimation.NewState(caughtAt, {
 		NextNumber = function(_, low, high)
 			return (low + high) * 0.5
 		end,
@@ -305,11 +595,14 @@ local ok, result = xpcall(function()
 	})
 	update(caughtAt + 1)
 	local restingFrame = body.CFrame
+	local baseRestingFrame = owner.bite:_basePose("Caught", 1, target)
 	local suspendedMouth = restingFrame:PointToWorldSpace(owner.bite.mouthOffset)
-	local swaySettings = settings.Motion.Showcase
+	local restingLine = line.Attachment1.WorldPosition
+	local maxLineDrift = 0
+	local swaySettings = { Duration = settings.Motion.Animation.Clips.ShowcaseFlop.Duration }
 	local impulseCount = owner.impulseCount
 	for _ = 1, 3 do
-		local start = owner.bite.motion.nextBurst
+		local start = owner.bite.animation.state.nextBurst
 		assert(start, "Showcase did not schedule a burst")
 		local maximum = 0
 		for index = 0, 60 do
@@ -320,21 +613,14 @@ local ok, result = xpcall(function()
 			maximum = math.max(maximum, math.abs(angle))
 			local actualMouth = body.CFrame:PointToWorldSpace(owner.bite.mouthOffset)
 			assert((actualMouth - suspendedMouth).Magnitude < 0.001, "Showcase mouth pivot drifted")
-			assert(
-				(line.Attachment1.WorldPosition - actualMouth).Magnitude < 0.001,
-				"Showcase line detached from mouth"
-			)
-			local lineDelta = line.Attachment0.WorldPosition - actualMouth
-			assert(
-				math.abs(lineDelta.X) < 0.001 and math.abs(lineDelta.Z) < 0.001,
-				"Showcase line stopped being vertical"
-			)
+			assertFishShowcaseLine()
+			maxLineDrift = math.max(maxLineDrift, (line.Attachment1.WorldPosition - restingLine).Magnitude)
 			assert(
 				(owner.cameraFrame.Position - owner:_showcaseCamera(target, camera.ViewportSize).Position).Magnitude
 					< 0.001,
 				"Showcase camera chased fish"
 			)
-			assert((camera.Focus.Position - restingFrame.Position).Magnitude < 0.001, "Showcase focus chased fish")
+			assert((camera.Focus.Position - baseRestingFrame.Position).Magnitude < 0.001, "Showcase focus chased fish")
 			local cameraSway = owner.cameraFrame:ToObjectSpace(camera.CFrame)
 			assert(
 				cameraSway.Position.Magnitude < 0.1 and camera.FieldOfView == settings.ShowcaseFov,
@@ -362,14 +648,19 @@ local ok, result = xpcall(function()
 				end
 			end
 		end
-		assert(maximum > math.rad(4), "Showcase burst did not visibly move fish")
+		assert(maximum > math.rad(2) and maximum < math.rad(15), "Showcase procedural accent missing or excessive")
 		update(start + swaySettings.Duration + 0.01)
 		assert(
-			(body.Position - restingFrame.Position).Magnitude < 0.001
-				and body.CFrame.LookVector:Dot(Vector3.yAxis) > 0.9999,
-			"Showcase did not recover upright rest"
+			(body.CFrame:PointToWorldSpace(owner.bite.mouthOffset) - suspendedMouth).Magnitude < 0.001
+				and body.CFrame.LookVector:Dot(Vector3.yAxis) > math.cos(math.rad(3)),
+			"Showcase did not recover gentle idle sway"
 		)
 	end
+	assert(maxLineDrift < 0.001, "Showcase line anchor drifted while the mouth stayed fixed")
+	assert(
+		body.Material == template.PrimaryPart.Material and body.MaterialVariant == template.PrimaryPart.MaterialVariant,
+		"Caught fish did not restore its original material"
+	)
 	assert(owner.impulseCount == impulseCount and fishCount() == 1, "Showcase burst created extra effects or fish")
 	assert(
 		template.PrimaryPart.TextureID == originalTexture and template.PrimaryPart.Color == originalColor,
@@ -383,7 +674,7 @@ local ok, result = xpcall(function()
 	)
 	return {
 		passed = true,
-		checks = "three spawn sectors, water body sway, grow/fade/rise, bait outline/red fill, side contact, timeout retry, manual reel, struggle shake, single exit impulse, sky spin/fall/bounce, camera tracking, three idle bursts, fixed mouth/line/focus, landscape/portrait sway framing, cleanup",
+		checks = "three spawn sectors, Glass shadow render support and original material restoration, shared 30/60 fps appearance easing, escape fade endpoints, keyframe animation, actual size/fade/rise, bait outline/red fill, side contact, timeout retry, spr reel with continuous retargeting and physical settling, struggle shake, single exit impulse, sky spin/fall/bounce, camera tracking, three idle bursts, fixed mouth/focus/line, centered bait anchor, fish anchor one world stud below scaled mouth, landscape/portrait animation framing, cleanup",
 	}
 end, debug.traceback)
 
@@ -393,5 +684,6 @@ end
 folder:Destroy()
 camera.CFrame, camera.Focus, camera.FieldOfView, camera.CameraType =
 	savedCamera.frame, savedCamera.focus, savedCamera.fov, savedCamera.mode
+settings.FishName = originalFishName
 assert(ok, result)
 return result

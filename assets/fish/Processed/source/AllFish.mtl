@@ -1,0 +1,372 @@
+newmtl Firetailtilapia1group1polysurface121Mtl
+Material Color
+Ka 0.487765 0.320382 0.230998
+Kd 0.487765 0.320382 0.230998
+Ks 0.0439945 0.0288972 0.0208351 
+
+d 1
+
+Ns 0
+
+newmtl Firetailtilapia4group1polysurface381Mtl
+Material Color
+Ka 0.383775 0.0846415 0.0846415
+Kd 0.383775 0.0846415 0.0846415
+Ks 0.034615 0.00763433 0.00763433 
+
+d 1
+
+Ns 0
+
+newmtl Tropicalbutterfly17sxyu001Mtl
+Material Color
+Ka 0.2468 0.0384727 0.383775
+Kd 0.2468 0.0384727 0.383775
+Ks 0.0222604 0.00347009 0.034615 
+
+d 1
+
+Ns 0
+
+newmtl Azuresturgeon63pcone12group11Mtl
+Material Color
+Ka 0.373615 0.368591 0.383775
+Kd 0.373615 0.368591 0.383775
+Ks 0.0234425 0.0231273 0.02408 
+
+d 1
+
+Ns 0
+
+map_Ka Azuresturgeon63pcone12group11_diff.png
+map_Kd Azuresturgeon63pcone12group11_diff.png
+map_d Azuresturgeon63pcone12group11_diff.png
+
+newmtl Venomfish45group1pcone121Mtl
+Material Color
+Ka 0.0563741 0.701169 0.176774
+Kd 0.0563741 0.701169 0.176774
+Ks 0.00508472 0.0632427 0.0159444 
+
+d 1
+
+Ns 0
+
+newmtl Tropicalbutterfly19sxyu041Mtl
+Material Color
+Ka 0.170138 0.0461488 0.383775
+Kd 0.170138 0.0461488 0.383775
+Ks 0.0673881 0.0182786 0.152005 
+
+d 1
+
+Ns 0
+
+map_Ka Tropicalbutterfly31sxyu131_diff.png
+map_Kd Tropicalbutterfly31sxyu131_diff.png
+map_d Tropicalbutterfly31sxyu131_diff.png
+
+map_Bump Tropicalbutterfly31sxyu131_nmap.png
+
+newmtl Jadefin59yu022pplane41Mtl
+Material Color
+Ka 0.673049 0.173439 0.042987
+Kd 0.673049 0.173439 0.042987
+Ks 0.0607064 0.0156435 0.00387726 
+
+d 1
+
+Ns 0
+
+newmtl Tropicalbutterfly20sxyu061Mtl
+Material Color
+Ka 0.0717615 0.0563741 0.383775
+Kd 0.0717615 0.0563741 0.383775
+Ks 0.0284232 0.0223286 0.152005 
+
+d 1
+
+Ns 0
+
+map_Ka Tropicalbutterfly31sxyu131_diff.png
+map_Kd Tropicalbutterfly31sxyu131_diff.png
+map_d Tropicalbutterfly31sxyu131_diff.png
+
+map_Bump Tropicalbutterfly31sxyu131_nmap.png
+
+newmtl Firetailtilapia3group1polysurface371Mtl
+Material Color
+Ka 0.409826 0.0619075 0.0619075
+Kd 0.409826 0.0619075 0.0619075
+Ks 0.0369647 0.00558381 0.00558381 
+
+d 1
+
+Ns 0
+
+newmtl Yellowfintuna65yu010yellowfintuna11Mtl
+Material Color
+Ka 0.373615 0.368591 0.383775
+Kd 0.373615 0.368591 0.383775
+Ks 0.0234425 0.0231273 0.02408 
+
+d 1
+
+Ns 0
+
+map_Ka Yellowfintuna65yu010yellowfintuna11_diff.png
+map_Kd Yellowfintuna65yu010yellowfintuna11_diff.png
+map_d Yellowfintuna65yu010yellowfintuna11_diff.png
+
+newmtl Tropicalbutterfly24sxyu141Mtl
+Material Color
+Ka 0.215764 0.0986892 0.383775
+Kd 0.215764 0.0986892 0.383775
+Ks 0.0854596 0.0390887 0.152005 
+
+d 1
+
+Ns 0
+
+map_Ka Tropicalbutterfly31sxyu131_diff.png
+map_Kd Tropicalbutterfly31sxyu131_diff.png
+map_d Tropicalbutterfly31sxyu131_diff.png
+
+map_Bump Tropicalbutterfly31sxyu131_nmap.png
+
+newmtl Tropicalbutterfly25sxyu011Mtl
+Material Color
+Ka 0.12753 0.0199178 0.383775
+Kd 0.12753 0.0199178 0.383775
+Ks 0.0115027 0.00179651 0.034615 
+
+d 1
+
+Ns 0
+
+newmtl Venomfish44part1Mtl
+Material Color
+Ka 0 1 1
+Kd 0 1 1
+Ks 0 0.0901961 0.0901961 
+
+d 1
+
+Ns 0
+
+newmtl Tropicalbutterfly28sxyu071Mtl
+Material Color
+Ka 0.116576 0.0477758 0.383775
+Kd 0.116576 0.0477758 0.383775
+Ks 0.0105147 0.00430919 0.034615 
+
+d 1
+
+Ns 0
+
+newmtl Tropicalbutterfly29sxyu091Mtl
+Material Color
+Ka 0.43134 0.119264 0.708298
+Kd 0.43134 0.119264 0.708298
+Ks 0.0389052 0.0107571 0.0638857 
+
+d 1
+
+Ns 0
+
+newmtl Infernopike39polysurface61Mtl
+Material Color
+Ka 0.420508 0.242796 0.0738278
+Kd 0.420508 0.242796 0.0738278
+Ks 0.0379282 0.0218993 0.00665898 
+
+d 1
+
+Ns 0
+
+newmtl Tropicalbutterfly22sxyu101Mtl
+Material Color
+Ka 0.0511221 0.0445526 0.383775
+Kd 0.0511221 0.0445526 0.383775
+Ks 0.00461101 0.00401847 0.034615 
+
+d 1
+
+Ns 0
+
+newmtl Tropicalbutterfly23sxyu121Mtl
+Material Color
+Ka 0.0445526 0.0445526 0.383775
+Kd 0.0445526 0.0445526 0.383775
+Ks 0.0176463 0.0176463 0.152005 
+
+d 1
+
+Ns 0
+
+map_Ka Tropicalbutterfly31sxyu131_diff.png
+map_Kd Tropicalbutterfly31sxyu131_diff.png
+map_d Tropicalbutterfly31sxyu131_diff.png
+
+map_Bump Tropicalbutterfly31sxyu131_nmap.png
+
+newmtl Tropicalbutterfly27sxyu051Mtl
+Material Color
+Ka 0.160444 0.0780566 0.383775
+Kd 0.160444 0.0780566 0.383775
+Ks 0.0144714 0.0070404 0.034615 
+
+d 1
+
+Ns 0
+
+newmtl Tropicalbutterfly21sxyu081Mtl
+Material Color
+Ka 0.425905 0.116576 0.875138
+Kd 0.425905 0.116576 0.875138
+Ks 0.038415 0.0105147 0.078934 
+
+d 1
+
+Ns 0
+
+newmtl Firetailtilapia6polysurface34group11Mtl
+Material Color
+Ka 0.447871 0.14198 0.14198
+Kd 0.447871 0.14198 0.14198
+Ks 0.0403962 0.0128061 0.0128061 
+
+d 1
+
+Ns 0
+
+newmtl Threshershark46yu015commonthreshershark11Mtl
+Material Color
+Ka 0.373615 0.368591 0.383775
+Kd 0.373615 0.368591 0.383775
+Ks 0.0234425 0.0231273 0.02408 
+
+d 1
+
+Ns 0
+
+map_Ka Threshershark46yu015commonthreshershark11_diff.png
+map_Kd Threshershark46yu015commonthreshershark11_diff.png
+map_d Threshershark46yu015commonthreshershark11_diff.png
+
+newmtl Tropicalbutterfly30sxyu111Mtl
+Material Color
+Ka 0.0370285 0.0824142 0.383775
+Kd 0.0370285 0.0824142 0.383775
+Ks 0.00333983 0.00743344 0.034615 
+
+d 1
+
+Ns 0
+
+newmtl Bluemoonfish14group1pcylinder21Mtl
+Material Color
+Ka 0.00293232 0.859174 0.666117
+Kd 0.00293232 0.859174 0.666117
+Ks 0.000264484 0.0774941 0.0600811 
+
+d 1
+
+Ns 0
+
+newmtl Purplefin55part1Mtl
+Material Color
+Ka 1 0 0
+Kd 1 0 0
+Ks 0.0901961 0 0 
+
+d 1
+
+Ns 0
+
+newmtl Jadefin58part1Mtl
+Material Color
+Ka 0.940601 0.701169 0.154152
+Kd 0.940601 0.701169 0.154152
+Ks 0.0848385 0.0632427 0.0139039 
+
+d 1
+
+Ns 0
+
+newmtl Tropicalbutterfly31sxyu131Mtl
+Material Color
+Ka 0.0802193 0.0638149 0.234895
+Kd 0.0802193 0.0638149 0.234895
+Ks 0.0317731 0.0252757 0.093037 
+
+d 1
+
+Ns 0
+
+map_Ka Tropicalbutterfly31sxyu131_diff.png
+map_Kd Tropicalbutterfly31sxyu131_diff.png
+map_d Tropicalbutterfly31sxyu131_diff.png
+
+map_Bump Tropicalbutterfly31sxyu131_nmap.png
+
+newmtl Firetailtilapia2group1polysurface331Mtl
+Material Color
+Ka 0.529523 0.119264 0.119264
+Kd 0.529523 0.119264 0.119264
+Ks 0.0477609 0.0107571 0.0107571 
+
+d 1
+
+Ns 0
+
+newmtl Thunderfin12polysurface111Mtl
+Material Color
+Ka 0.173439 0.447871 0.420508
+Kd 0.173439 0.447871 0.420508
+Ks 0.0156435 0.0403962 0.0379282 
+
+d 1
+
+Ns 0
+
+newmtl Tropicalbutterfly26sxyu031Mtl
+Material Color
+Ka 0.157281 0.0846415 0.383775
+Kd 0.157281 0.0846415 0.383775
+Ks 0.0141861 0.00763433 0.034615 
+
+d 1
+
+Ns 0
+
+newmtl Thunderfin10part1Mtl
+Material Color
+Ka 0.447871 0.436813 0.297653
+Kd 0.447871 0.436813 0.297653
+Ks 0.0403962 0.0393988 0.0268471 
+
+d 1
+
+Ns 0
+
+newmtl Tropicalbutterfly18sxyu021Mtl
+Material Color
+Ka 0.154152 0.0619075 0.383775
+Kd 0.154152 0.0619075 0.383775
+Ks 0.0139039 0.00558381 0.034615 
+
+d 1
+
+Ns 0
+
+newmtl Azuresturgeon62group1polysurface61Mtl
+Material Color
+Ka 0.415148 0.344026 0.22331
+Kd 0.415148 0.344026 0.22331
+Ks 0.0374447 0.0310298 0.0201417 
+
+d 1
+
+Ns 0
+

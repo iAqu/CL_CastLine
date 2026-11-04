@@ -1,0 +1,68 @@
+newmtl Race003p0031Mtl
+Material Color
+Ka 0.373615 0.368591 0.383775
+Kd 0.373615 0.368591 0.383775
+Ks 0.0234425 0.0231273 0.02408 
+
+d 1
+
+Ns 0
+
+map_Ka Race016p0161_diff.png
+map_Kd Race016p0161_diff.png
+map_d Race016p0161_diff.png
+
+map_Bump Race016p0161_nmap.png
+
+newmtl Race016p0051Mtl
+Material Color
+Ka 0.0891935 0.133209 0.227137
+Kd 0.0891935 0.133209 0.227137
+Ks 0.0353276 0.052761 0.0899639 
+
+d 1
+
+Ns 0
+
+map_Ka Race016p0161_diff.png
+map_Kd Race016p0161_diff.png
+map_d Race016p0161_diff.png
+
+map_Bump Race016p0161_nmap.png
+
+newmtl Race016p0061Mtl
+Material Color
+Ka 0.116576 0.108711 0.447871
+Kd 0.116576 0.108711 0.447871
+Ks 0.0105147 0.00980532 0.0403962 
+
+d 1
+
+Ns 0
+
+newmtl Race016p0101Mtl
+Material Color
+Ka 0.0717615 0.827726 0.363604
+Kd 0.0717615 0.827726 0.363604
+Ks 0.0064726 0.0746576 0.0327956 
+
+d 1
+
+Ns 0
+
+newmtl Race016p0161Mtl
+Material Color
+Ka 0.373615 0.368591 0.383775
+Kd 0.373615 0.368591 0.383775
+Ks 0.147981 0.145991 0.152005 
+
+d 1
+
+Ns 0
+
+map_Ka Race016p0161_diff.png
+map_Kd Race016p0161_diff.png
+map_d Race016p0161_diff.png
+
+map_Bump Race016p0161_nmap.png
+

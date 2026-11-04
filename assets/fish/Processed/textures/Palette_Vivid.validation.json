@@ -1,0 +1,12 @@
+{
+  "source": "assets/fish/ElderFish/Polysurface51_diff.png",
+  "output": "assets/fish/Processed/textures/Palette_Vivid.png",
+  "width": 1536,
+  "height": 1920,
+  "method": "HSV saturation +35% with gamut taper; value soft contrast +20%",
+  "layoutUnchanged": true,
+  "alphaUnchanged": true,
+  "changedPixels": 1362877,
+  "sourceSha256": "ca54b3154432695a500e8056b7c9b4973571d18f65ca99b3ae0c3c23638eebac",
+  "outputSha256": "e3ca23c0e9fc7547a87429305bb1f785e9bdd4eb32ff8f9db6f48c73fd71dac4"
+}

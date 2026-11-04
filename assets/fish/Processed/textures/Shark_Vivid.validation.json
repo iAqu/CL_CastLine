@@ -1,0 +1,12 @@
+{
+  "source": "assets/fish/Processed/source/Threshershark46yu015commonthreshershark11_diff.png",
+  "output": "assets/fish/Processed/textures/Shark_Vivid.png",
+  "width": 64,
+  "height": 64,
+  "method": "HSV saturation +35% with gamut taper; value soft contrast +20%",
+  "layoutUnchanged": true,
+  "alphaUnchanged": true,
+  "changedPixels": 3537,
+  "sourceSha256": "01164f445d3e004b204561dc8c3e976ddba7093450cb43423af12f0dcc45bd6a",
+  "outputSha256": "23e0f9751af312f77417e6dfb4f4830ac87a855aeba2a2fc3cdd37405f02ed80"
+}

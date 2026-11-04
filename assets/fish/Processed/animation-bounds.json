@@ -1,0 +1,164 @@
+{
+  "AngelShark": {
+    "measuredRadius": 6.29523476945348,
+    "presentationRadius": 6.924758246398829,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Azure Sturgeon": {
+    "measuredRadius": 6.759932054412375,
+    "presentationRadius": 7.435925259853613,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "AzureDamsel": {
+    "measuredRadius": 3.134247346619512,
+    "presentationRadius": 3.4476720812814636,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "BallinaAngelfish": {
+    "measuredRadius": 2.555029743350622,
+    "presentationRadius": 2.8105327176856845,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Blue Moonfish": {
+    "measuredRadius": 6.684773317073029,
+    "presentationRadius": 7.353250648780333,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Chimera Perch": {
+    "measuredRadius": 4.9119908889222375,
+    "presentationRadius": 5.403189977814462,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Clownfish": {
+    "measuredRadius": 2.6732112794383767,
+    "presentationRadius": 2.9405324073822148,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Firetail Tilapia": {
+    "measuredRadius": 7.031457138984034,
+    "presentationRadius": 7.734602852882437,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "FrenchAngelfish": {
+    "measuredRadius": 3.0023351257492186,
+    "presentationRadius": 3.3025686383241406,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Frosttail": {
+    "measuredRadius": 3.8090335963651127,
+    "presentationRadius": 4.189936956001624,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Golden Carp": {
+    "measuredRadius": 3.9015927608815146,
+    "presentationRadius": 4.291752036969666,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "GreenbandedGoby": {
+    "measuredRadius": 2.644476311027059,
+    "presentationRadius": 2.908923942129765,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Inferno Pike": {
+    "measuredRadius": 6.559939039168071,
+    "presentationRadius": 7.215932943084879,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Jadefin": {
+    "measuredRadius": 5.35208345797066,
+    "presentationRadius": 5.887291803767726,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "MoorishIdol": {
+    "measuredRadius": 3.155635136493398,
+    "presentationRadius": 3.471198650142738,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "PrettyRoseGoby": {
+    "measuredRadius": 4.510089391797286,
+    "presentationRadius": 4.961098330977015,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Purplefin": {
+    "measuredRadius": 4.02431976866971,
+    "presentationRadius": 4.426751745536682,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "QueenAngelfish": {
+    "measuredRadius": 4.575929922691448,
+    "presentationRadius": 5.033522914960593,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "SaddleButterflyfish": {
+    "measuredRadius": 3.4553297489246675,
+    "presentationRadius": 3.8008627238171346,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Silver Tail": {
+    "measuredRadius": 3.796120333141792,
+    "presentationRadius": 4.175732366455971,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Stone Bass": {
+    "measuredRadius": 3.487642631297381,
+    "presentationRadius": 3.8364068944271197,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "ThresherShark": {
+    "measuredRadius": 10.630035230378823,
+    "presentationRadius": 11.693038753416706,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Thunderfin": {
+    "measuredRadius": 6.166254652173515,
+    "presentationRadius": 6.782880117390866,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "TomatoClownfish": {
+    "measuredRadius": 3.1271031502755067,
+    "presentationRadius": 3.4398134653030574,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Tropical Butterfly": {
+    "measuredRadius": 8.912641453790805,
+    "presentationRadius": 9.803905599169886,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Venomfish": {
+    "measuredRadius": 7.112708196961713,
+    "presentationRadius": 7.823979016657885,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "YellowfinTuna": {
+    "measuredRadius": 4.158602378674302,
+    "presentationRadius": 4.574462616541733,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  }
+}

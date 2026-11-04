@@ -1,0 +1,44 @@
+{
+  "passed": true,
+  "placeId": 84106335829275,
+  "fishMeshId": 123142360733957,
+  "baitMeshId": 71052844521154,
+  "diameterScale": 2,
+  "static": {
+    "fishLandmarks": 14,
+    "maximumNormalizedError": 3.870307409670204e-06,
+    "fiveBoneHierarchy": true,
+    "normalizedAdjacentWeights": true,
+    "fixedMouth": true,
+    "weightedTail": true,
+    "bodyBoundsUnchanged": true,
+    "nonEyeVerticesUnchanged": true
+  },
+  "runtime": {
+    "fivePublishedClips": true,
+    "animationCycles": 3,
+    "animationSamples": 615,
+    "presentationSuite": true,
+    "actualCastPhases": [
+      "Preparing",
+      "Casting",
+      "Flying",
+      "Waiting",
+      "Approaching",
+      "Holding",
+      "Nibbling",
+      "Bite",
+      "Struggling",
+      "Lifting",
+      "Caught"
+    ],
+    "realCastBaitMeshVerified": true,
+    "realCaughtFishMeshVerified": true
+  },
+  "selene": {
+    "errors": 0,
+    "warnings": 0,
+    "parseErrors": 0
+  },
+  "backup": "ServerStorage.EyeScaleBackups.BeforeEyes2x_20261103_040431"
+}

@@ -1,0 +1,8 @@
+[2026-11-03T11:22:26Z INFO  rbxlx_to_rojo] rbxlx-to-rojo 1.0.1
+[2026-11-03T11:22:26Z INFO  rbxlx_to_rojo] Select a place file.
+[2026-11-03T11:22:26Z INFO  rbxlx_to_rojo] Opening place file
+[2026-11-03T11:22:26Z INFO  rbxlx_to_rojo] Decoding place file, this is the longest part...
+[2026-11-03T11:22:26Z WARN  rbx_binary::deserializer::state] Unknown value type ID 0x23 (35) in Roblox binary model file. Found in property Terrain.VoxelGridAssetContentMap.
+[2026-11-03T11:22:26Z INFO  rbxlx_to_rojo] Select the path to put your Rojo project in.
+[2026-11-03T11:22:26Z INFO  rbxlx_to_rojo] Starting processing, please wait a bit...
+[2026-11-03T11:22:26Z INFO  rbxlx_to_rojo] Done

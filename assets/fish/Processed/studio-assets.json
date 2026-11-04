@@ -1,0 +1,1574 @@
+{
+  "creatorGroup": "M101 Crew",
+  "fish": [
+    {
+      "cameraPart": true,
+      "presentationRadius": 6.924758246398829,
+      "rigVariant": "fins",
+      "status": "Validated",
+      "mouth": [
+        0,
+        -0.4375999867916107,
+        -5.535394668579102
+      ],
+      "name": "AngelShark",
+      "eyeDiameterScale": 2,
+      "logicalBones": 7,
+      "boneInstances": 7,
+      "animations": {
+        "StruggleLeft": "rbxassetid://121166993085346",
+        "ShowcaseFlop": "rbxassetid://130514023815551",
+        "StruggleRight": "rbxassetid://126567681691786",
+        "LiftFlop": "rbxassetid://103559424196151",
+        "SwimLoop": "rbxassetid://87262770878415"
+      },
+      "parts": [
+        {
+          "name": "polySurface5",
+          "size": [
+            7.935999870300293,
+            2.9405999183654785,
+            11.125900268554688
+          ],
+          "material": "Plastic",
+          "meshId": "rbxassetid://77775623696935",
+          "originalName": "yu013:Angelshark1",
+          "textureId": "rbxassetid://107659492385621"
+        }
+      ],
+      "dripPoints": 24,
+      "dripSurfaceCoverage": 1.0114409587403217
+    },
+    {
+      "cameraPart": true,
+      "presentationRadius": 7.435925259853613,
+      "rigVariant": "standard",
+      "status": "Validated",
+      "mouth": [
+        -0.0005000000237487257,
+        0.22770000994205475,
+        -5.365400314331055
+      ],
+      "name": "Azure Sturgeon",
+      "eyeDiameterScale": 1.5,
+      "logicalBones": 5,
+      "boneInstances": 10,
+      "animations": {
+        "StruggleLeft": "rbxassetid://97026641022678",
+        "ShowcaseFlop": "rbxassetid://118119646715033",
+        "StruggleRight": "rbxassetid://132200893707806",
+        "LiftFlop": "rbxassetid://95963478104076",
+        "SwimLoop": "rbxassetid://80864845357658"
+      },
+      "parts": [
+        {
+          "name": "polySurface5",
+          "size": [
+            5.559000015258789,
+            5.837800025939941,
+            10.743599891662598
+          ],
+          "material": "Plastic",
+          "meshId": "rbxassetid://78496104080781",
+          "originalName": "pCone12_group1",
+          "textureId": "rbxassetid://127837620888950"
+        },
+        {
+          "name": "FishMesh02",
+          "size": [
+            5.001999855041504,
+            4.432300090789795,
+            7.5447998046875
+          ],
+          "material": "Neon",
+          "meshId": "rbxassetid://128490115948513",
+          "originalName": "group1_polySurface6",
+          "textureId": ""
+        }
+      ],
+      "dripPoints": 24,
+      "dripSurfaceCoverage": 0.8263289897805914
+    },
+    {
+      "cameraPart": true,
+      "presentationRadius": 3.4476720812814636,
+      "rigVariant": "standard",
+      "status": "Validated",
+      "mouth": [
+        -0.0005000000237487257,
+        -0.2837499976158142,
+        -2.6369900703430176
+      ],
+      "name": "AzureDamsel",
+      "eyeDiameterScale": 1.5,
+      "logicalBones": 5,
+      "boneInstances": 5,
+      "animations": {
+        "StruggleLeft": "rbxassetid://97026641022678",
+        "ShowcaseFlop": "rbxassetid://118119646715033",
+        "StruggleRight": "rbxassetid://132200893707806",
+        "LiftFlop": "rbxassetid://95963478104076",
+        "SwimLoop": "rbxassetid://80864845357658"
+      },
+      "parts": [
+        {
+          "name": "polySurface5",
+          "size": [
+            1.7289999723434448,
+            2.825700044631958,
+            5.273980140686035
+          ],
+          "material": "Plastic",
+          "meshId": "rbxassetid://74589371618118",
+          "originalName": "yu07:Azuredamsel1",
+          "textureId": "rbxassetid://107659492385621"
+        }
+      ],
+      "dripPoints": 24,
+      "dripSurfaceCoverage": 0.5211125016866371
+    },
+    {
+      "cameraPart": true,
+      "presentationRadius": 2.8105327176856845,
+      "rigVariant": "standard",
+      "status": "Validated",
+      "mouth": [
+        0,
+        -0.359499990940094,
+        -2.1475000381469727
+      ],
+      "name": "BallinaAngelfish",
+      "eyeDiameterScale": 1.5,
+      "logicalBones": 5,
+      "boneInstances": 5,
+      "animations": {
+        "StruggleLeft": "rbxassetid://97026641022678",
+        "ShowcaseFlop": "rbxassetid://118119646715033",
+        "StruggleRight": "rbxassetid://132200893707806",
+        "LiftFlop": "rbxassetid://95963478104076",
+        "SwimLoop": "rbxassetid://80864845357658"
+      },
+      "parts": [
+        {
+          "name": "polySurface5",
+          "size": [
+            1.3700000047683716,
+            2.6863999366760254,
+            4.328999996185303
+          ],
+          "material": "Plastic",
+          "meshId": "rbxassetid://106611154544387",
+          "originalName": "yu04:Ballinaangelfish1",
+          "textureId": "rbxassetid://107659492385621"
+        }
+      ],
+      "dripPoints": 24,
+      "dripSurfaceCoverage": 0.5267835829568948
+    },
+    {
+      "cameraPart": true,
+      "presentationRadius": 7.353250648780333,
+      "rigVariant": "standard",
+      "status": "Validated",
+      "mouth": [
+        0.0729999989271164,
+        0.027571428567171097,
+        -5.570901870727539
+      ],
+      "name": "Blue Moonfish",
+      "eyeDiameterScale": 2,
+      "logicalBones": 5,
+      "boneInstances": 20,
+      "animations": {
+        "StruggleLeft": "rbxassetid://97026641022678",
+        "ShowcaseFlop": "rbxassetid://118119646715033",
+        "StruggleRight": "rbxassetid://132200893707806",
+        "LiftFlop": "rbxassetid://95963478104076",
+        "SwimLoop": "rbxassetid://80864845357658"
+      },
+      "parts": [
+        {
+          "name": "polySurface5",
+          "size": [
+            2.7739999294281006,
+            3.400399923324585,
+            11.150375366210938
+          ],
+          "material": "Plastic",
+          "meshId": "rbxassetid://135058443802441",
+          "originalName": "group2_pCylinder1",
+          "textureId": "rbxassetid://127837620888950"
+        },
+        {
+          "name": "FishMesh02",
+          "size": [
+            0.5740000009536743,
+            0.5738000273704529,
+            0.5735999941825867
+          ],
+          "material": "Neon",
+          "meshId": "rbxassetid://140151816769666",
+          "originalName": "Part",
+          "textureId": ""
+        },
+        {
+          "name": "FishMesh03",
+          "size": [
+            2.86899995803833,
+            2.0957999229431152,
+            6.599370002746582
+          ],
+          "material": "Neon",
+          "meshId": "rbxassetid://119386601015498",
+          "originalName": "group1_pCylinder2",
+          "textureId": ""
+        },
+        {
+          "name": "FishMesh04",
+          "size": [
+            0.5740000009536743,
+            0.5738000273704529,
+            0.5735999941825867
+          ],
+          "material": "Neon",
+          "meshId": "rbxassetid://128143814968848",
+          "originalName": "Part",
+          "textureId": ""
+        }
+      ],
+      "dripPoints": 24,
+      "dripSurfaceCoverage": 0.8224673571831728
+    },
+    {
+      "cameraPart": true,
+      "presentationRadius": 5.403189977814462,
+      "rigVariant": "standard",
+      "status": "Validated",
+      "mouth": [
+        -0.0004999999655410647,
+        0.16110000014305115,
+        -4.102349758148193
+      ],
+      "name": "Chimera Perch",
+      "eyeDiameterScale": 2,
+      "logicalBones": 5,
+      "boneInstances": 5,
+      "animations": {
+        "StruggleLeft": "rbxassetid://97026641022678",
+        "ShowcaseFlop": "rbxassetid://118119646715033",
+        "StruggleRight": "rbxassetid://132200893707806",
+        "LiftFlop": "rbxassetid://95963478104076",
+        "SwimLoop": "rbxassetid://80864845357658"
+      },
+      "parts": [
+        {
+          "name": "polySurface5",
+          "size": [
+            1.940999984741211,
+            4.347799777984619,
+            8.204700469970703
+          ],
+          "material": "Plastic",
+          "meshId": "rbxassetid://100852194328114",
+          "originalName": "yu010:Yellowfintuna2",
+          "textureId": "rbxassetid://127837620888950"
+        }
+      ],
+      "dripPoints": 24,
+      "dripSurfaceCoverage": 0.675077589484168
+    },
+    {
+      "cameraPart": true,
+      "presentationRadius": 2.9405324073822148,
+      "rigVariant": "standard",
+      "status": "Validated",
+      "mouth": [
+        0,
+        -0.3424000144004822,
+        -2.256500005722046
+      ],
+      "name": "Clownfish",
+      "eyeDiameterScale": 1.5,
+      "logicalBones": 5,
+      "boneInstances": 5,
+      "animations": {
+        "StruggleLeft": "rbxassetid://97026641022678",
+        "ShowcaseFlop": "rbxassetid://118119646715033",
+        "StruggleRight": "rbxassetid://132200893707806",
+        "LiftFlop": "rbxassetid://95963478104076",
+        "SwimLoop": "rbxassetid://80864845357658"
+      },
+      "parts": [
+        {
+          "name": "polySurface5",
+          "size": [
+            1.7860000133514404,
+            2.804800033569336,
+            4.513000011444092
+          ],
+          "material": "Plastic",
+          "meshId": "rbxassetid://88602439155881",
+          "originalName": "yu05:Clownfish1",
+          "textureId": "rbxassetid://107659492385621"
+        }
+      ],
+      "dripPoints": 24,
+      "dripSurfaceCoverage": 0.5714379089496099
+    },
+    {
+      "cameraPart": true,
+      "rigVariant": "elder",
+      "status": "Validated",
+      "mouth": [
+        0,
+        -0.4754035174846649,
+        -3.8392412662506104
+      ],
+      "name": "Elder Fish",
+      "eyeDiameterScale": 2,
+      "logicalBones": 5,
+      "boneInstances": 5,
+      "animations": {
+        "StruggleLeft": "rbxassetid://89750144915761",
+        "ShowcaseFlop": "rbxassetid://80610507328189",
+        "StruggleRight": "rbxassetid://97164203030284",
+        "LiftFlop": "rbxassetid://125603144317245",
+        "SwimLoop": "rbxassetid://70913216656088"
+      },
+      "parts": [
+        {
+          "name": "polySurface5",
+          "size": [
+            2.0581541061401367,
+            3.535027265548706,
+            7.678482532501221
+          ],
+          "material": "Plastic",
+          "meshId": "rbxassetid://123142360733957",
+          "textureId": "rbxassetid://127837620888950"
+        }
+      ],
+      "dripPoints": 24,
+      "dripSurfaceCoverage": 0.719139638931162
+    },
+    {
+      "cameraPart": true,
+      "presentationRadius": 7.734602852882437,
+      "rigVariant": "standard",
+      "status": "Validated",
+      "mouth": [
+        0.0004999999655410647,
+        0.05009999871253967,
+        -4.823800086975098
+      ],
+      "name": "Firetail Tilapia",
+      "eyeDiameterScale": 1.5,
+      "logicalBones": 5,
+      "boneInstances": 30,
+      "animations": {
+        "StruggleLeft": "rbxassetid://97026641022678",
+        "ShowcaseFlop": "rbxassetid://118119646715033",
+        "StruggleRight": "rbxassetid://132200893707806",
+        "LiftFlop": "rbxassetid://95963478104076",
+        "SwimLoop": "rbxassetid://80864845357658"
+      },
+      "parts": [
+        {
+          "name": "polySurface5",
+          "size": [
+            4.974999904632568,
+            5.171000003814697,
+            9.647600173950195
+          ],
+          "material": "Plastic",
+          "meshId": "rbxassetid://130012800323909",
+          "originalName": "group1_yu022:Clownfish2",
+          "textureId": "rbxassetid://127837620888950"
+        },
+        {
+          "name": "FishMesh02",
+          "size": [
+            2.86899995803833,
+            2.752700090408325,
+            7.168499946594238
+          ],
+          "material": "Neon",
+          "meshId": "rbxassetid://108881201540077",
+          "originalName": "group1_polySurface12",
+          "textureId": ""
+        },
+        {
+          "name": "FishMesh03",
+          "size": [
+            6.129000186920166,
+            7.500899791717529,
+            8.38599967956543
+          ],
+          "material": "Neon",
+          "meshId": "rbxassetid://90655239819420",
+          "originalName": "group1_polySurface33",
+          "textureId": ""
+        },
+        {
+          "name": "FishMesh04",
+          "size": [
+            4.591000080108643,
+            5.1803998947143555,
+            7.21750020980835
+          ],
+          "material": "Neon",
+          "meshId": "rbxassetid://110181794751149",
+          "originalName": "group1_polySurface37",
+          "textureId": ""
+        },
+        {
+          "name": "FishMesh05",
+          "size": [
+            2.1600000858306885,
+            2.447499990463257,
+            6.173999786376953
+          ],
+          "material": "Neon",
+          "meshId": "rbxassetid://75837338762968",
+          "originalName": "group1_polySurface38",
+          "textureId": ""
+        },
+        {
+          "name": "FishMesh06",
+          "size": [
+            2.2136354446411133,
+            1.1686500310897827,
+            1.3447500467300415
+          ],
+          "material": "Neon",
+          "meshId": "rbxassetid://80698584974577",
+          "originalName": "polySurface34_group1",
+          "textureId": ""
+        }
+      ],
+      "dripPoints": 24,
+      "dripSurfaceCoverage": 0.5403359193125031
+    },
+    {
+      "cameraPart": true,
+      "presentationRadius": 3.3025686383241406,
+      "rigVariant": "standard",
+      "status": "Validated",
+      "mouth": [
+        0.02449999935925007,
+        -0.5419000387191772,
+        -2.0569000244140625
+      ],
+      "name": "FrenchAngelfish",
+      "eyeDiameterScale": 1.5,
+      "logicalBones": 5,
+      "boneInstances": 5,
+      "animations": {
+        "StruggleLeft": "rbxassetid://97026641022678",
+        "ShowcaseFlop": "rbxassetid://118119646715033",
+        "StruggleRight": "rbxassetid://132200893707806",
+        "LiftFlop": "rbxassetid://95963478104076",
+        "SwimLoop": "rbxassetid://80864845357658"
+      },
+      "parts": [
+        {
+          "name": "polySurface5",
+          "size": [
+            1.5069999694824219,
+            3.4960999488830566,
+            4.143799781799316
+          ],
+          "material": "Plastic",
+          "meshId": "rbxassetid://72009592162987",
+          "originalName": "yu017:Frenchangelfish1",
+          "textureId": "rbxassetid://107659492385621"
+        }
+      ],
+      "dripPoints": 24,
+      "dripSurfaceCoverage": 0.9929780566458105
+    },
+    {
+      "cameraPart": true,
+      "presentationRadius": 4.189936956001624,
+      "rigVariant": "standard",
+      "status": "Validated",
+      "mouth": [
+        0,
+        0.009399999864399433,
+        -3.1827549934387207
+      ],
+      "name": "Frosttail",
+      "eyeDiameterScale": 2,
+      "logicalBones": 5,
+      "boneInstances": 15,
+      "animations": {
+        "StruggleLeft": "rbxassetid://97026641022678",
+        "ShowcaseFlop": "rbxassetid://118119646715033",
+        "StruggleRight": "rbxassetid://132200893707806",
+        "LiftFlop": "rbxassetid://95963478104076",
+        "SwimLoop": "rbxassetid://80864845357658"
+      },
+      "parts": [
+        {
+          "name": "polySurface5",
+          "size": [
+            2.3580000400543213,
+            3.546299934387207,
+            6.3657097816467285
+          ],
+          "material": "Plastic",
+          "meshId": "rbxassetid://109244898881191",
+          "originalName": "polySurface3",
+          "textureId": "rbxassetid://127837620888950"
+        },
+        {
+          "name": "FishMesh02",
+          "size": [
+            0.5600000023841858,
+            0.5609999895095825,
+            0.5609599947929382
+          ],
+          "material": "Neon",
+          "meshId": "rbxassetid://81164045077497",
+          "originalName": "Part",
+          "textureId": ""
+        },
+        {
+          "name": "FishMesh03",
+          "size": [
+            0.5600000023841858,
+            0.5609999895095825,
+            0.5609599947929382
+          ],
+          "material": "Neon",
+          "meshId": "rbxassetid://113901883652205",
+          "originalName": "Part",
+          "textureId": ""
+        }
+      ],
+      "dripPoints": 24,
+      "dripSurfaceCoverage": 0.48302183551130545
+    },
+    {
+      "cameraPart": true,
+      "presentationRadius": 4.291752036969666,
+      "rigVariant": "standard",
+      "status": "Validated",
+      "mouth": [
+        0.0004999999655410647,
+        -0.004871428478509188,
+        -3.225742816925049
+      ],
+      "name": "Golden Carp",
+      "eyeDiameterScale": 2,
+      "logicalBones": 5,
+      "boneInstances": 5,
+      "animations": {
+        "StruggleLeft": "rbxassetid://97026641022678",
+        "ShowcaseFlop": "rbxassetid://118119646715033",
+        "StruggleRight": "rbxassetid://132200893707806",
+        "LiftFlop": "rbxassetid://95963478104076",
+        "SwimLoop": "rbxassetid://80864845357658"
+      },
+      "parts": [
+        {
+          "name": "polySurface5",
+          "size": [
+            1.1230000257492065,
+            2.9851999282836914,
+            6.463200092315674
+          ],
+          "material": "Plastic",
+          "meshId": "rbxassetid://79973114866063",
+          "originalName": "polySurface2",
+          "textureId": "rbxassetid://127837620888950"
+        }
+      ],
+      "dripPoints": 24,
+      "dripSurfaceCoverage": 0.6638853867507947
+    },
+    {
+      "cameraPart": true,
+      "presentationRadius": 2.908923942129765,
+      "rigVariant": "standard",
+      "status": "Validated",
+      "mouth": [
+        0,
+        -0.2838500142097473,
+        -2.2179999351501465
+      ],
+      "name": "GreenbandedGoby",
+      "eyeDiameterScale": 2,
+      "logicalBones": 5,
+      "boneInstances": 5,
+      "animations": {
+        "StruggleLeft": "rbxassetid://97026641022678",
+        "ShowcaseFlop": "rbxassetid://118119646715033",
+        "StruggleRight": "rbxassetid://132200893707806",
+        "LiftFlop": "rbxassetid://95963478104076",
+        "SwimLoop": "rbxassetid://80864845357658"
+      },
+      "parts": [
+        {
+          "name": "polySurface5",
+          "size": [
+            1.3279999494552612,
+            1.802899956703186,
+            4.435999870300293
+          ],
+          "material": "Plastic",
+          "meshId": "rbxassetid://77181546258475",
+          "originalName": "yu011:yu2",
+          "textureId": "rbxassetid://107659492385621"
+        }
+      ],
+      "dripPoints": 24,
+      "dripSurfaceCoverage": 0.7419666452358646
+    },
+    {
+      "cameraPart": true,
+      "presentationRadius": 7.215932943084879,
+      "rigVariant": "standard",
+      "status": "Validated",
+      "mouth": [
+        0,
+        0.20629000663757324,
+        -5.4999098777771
+      ],
+      "name": "Inferno Pike",
+      "eyeDiameterScale": 2,
+      "logicalBones": 5,
+      "boneInstances": 10,
+      "animations": {
+        "StruggleLeft": "rbxassetid://97026641022678",
+        "ShowcaseFlop": "rbxassetid://118119646715033",
+        "StruggleRight": "rbxassetid://132200893707806",
+        "LiftFlop": "rbxassetid://95963478104076",
+        "SwimLoop": "rbxassetid://80864845357658"
+      },
+      "parts": [
+        {
+          "name": "polySurface5",
+          "size": [
+            2.9779999256134033,
+            4.902299880981445,
+            11.000300407409668
+          ],
+          "material": "Plastic",
+          "meshId": "rbxassetid://96514036120199",
+          "originalName": "yu026:polySurface6",
+          "textureId": "rbxassetid://127837620888950"
+        },
+        {
+          "name": "FishMesh02",
+          "size": [
+            1.809999942779541,
+            3.998800039291382,
+            7.231599807739258
+          ],
+          "material": "Neon",
+          "meshId": "rbxassetid://85046179417635",
+          "originalName": "polySurface6",
+          "textureId": ""
+        }
+      ],
+      "dripPoints": 24,
+      "dripSurfaceCoverage": 0.8022922091547001
+    },
+    {
+      "cameraPart": true,
+      "presentationRadius": 5.887291803767726,
+      "rigVariant": "standard",
+      "status": "Validated",
+      "mouth": [
+        0,
+        -0.41769999265670776,
+        -4.454470157623291
+      ],
+      "name": "Jadefin",
+      "eyeDiameterScale": 1.5,
+      "logicalBones": 5,
+      "boneInstances": 20,
+      "animations": {
+        "StruggleLeft": "rbxassetid://97026641022678",
+        "ShowcaseFlop": "rbxassetid://118119646715033",
+        "StruggleRight": "rbxassetid://132200893707806",
+        "LiftFlop": "rbxassetid://95963478104076",
+        "SwimLoop": "rbxassetid://80864845357658"
+      },
+      "parts": [
+        {
+          "name": "polySurface5",
+          "size": [
+            5.22599983215332,
+            4.118000030517578,
+            8.908940315246582
+          ],
+          "material": "Plastic",
+          "meshId": "rbxassetid://99068371512232",
+          "originalName": "yu022:Clownfish1",
+          "textureId": "rbxassetid://127837620888950"
+        },
+        {
+          "name": "FishMesh02",
+          "size": [
+            1.0889999866485596,
+            1.0878000259399414,
+            1.0878000259399414
+          ],
+          "material": "Neon",
+          "meshId": "rbxassetid://105972683625427",
+          "originalName": "Part",
+          "textureId": ""
+        },
+        {
+          "name": "FishMesh03",
+          "size": [
+            1.087499976158142,
+            1.0878000259399414,
+            1.0878000259399414
+          ],
+          "material": "Neon",
+          "meshId": "rbxassetid://124114491722500",
+          "originalName": "Part",
+          "textureId": ""
+        },
+        {
+          "name": "FishMesh04",
+          "size": [
+            0.5139999985694885,
+            5.0960001945495605,
+            6.040800094604492
+          ],
+          "material": "Neon",
+          "meshId": "rbxassetid://104908856231565",
+          "originalName": "yu022:pPlane4",
+          "textureId": ""
+        }
+      ],
+      "dripPoints": 24,
+      "dripSurfaceCoverage": 0.7288176322110713
+    },
+    {
+      "cameraPart": true,
+      "presentationRadius": 3.471198650142738,
+      "rigVariant": "standard",
+      "status": "Validated",
+      "mouth": [
+        -0.0005000000237487257,
+        -0.6779000163078308,
+        -2.306500196456909
+      ],
+      "name": "MoorishIdol",
+      "eyeDiameterScale": 1.5,
+      "logicalBones": 5,
+      "boneInstances": 5,
+      "animations": {
+        "StruggleLeft": "rbxassetid://97026641022678",
+        "ShowcaseFlop": "rbxassetid://118119646715033",
+        "StruggleRight": "rbxassetid://132200893707806",
+        "LiftFlop": "rbxassetid://95963478104076",
+        "SwimLoop": "rbxassetid://80864845357658"
+      },
+      "parts": [
+        {
+          "name": "polySurface5",
+          "size": [
+            1.246999979019165,
+            3.1214001178741455,
+            4.644000053405762
+          ],
+          "material": "Plastic",
+          "meshId": "rbxassetid://133669065460126",
+          "originalName": "yu02:Moorishidol1",
+          "textureId": "rbxassetid://107659492385621"
+        }
+      ],
+      "dripPoints": 24,
+      "dripSurfaceCoverage": 1.0037227788145344
+    },
+    {
+      "cameraPart": true,
+      "presentationRadius": 4.961098330977015,
+      "rigVariant": "standard",
+      "status": "Validated",
+      "mouth": [
+        0,
+        -1.059499979019165,
+        -3.6326398849487305
+      ],
+      "name": "PrettyRoseGoby",
+      "eyeDiameterScale": 2,
+      "logicalBones": 5,
+      "boneInstances": 5,
+      "animations": {
+        "StruggleLeft": "rbxassetid://97026641022678",
+        "ShowcaseFlop": "rbxassetid://118119646715033",
+        "StruggleRight": "rbxassetid://132200893707806",
+        "LiftFlop": "rbxassetid://95963478104076",
+        "SwimLoop": "rbxassetid://80864845357658"
+      },
+      "parts": [
+        {
+          "name": "polySurface5",
+          "size": [
+            2.2880001068115234,
+            4.244800090789795,
+            7.322179794311523
+          ],
+          "material": "Plastic",
+          "meshId": "rbxassetid://119633363108278",
+          "originalName": "yu06:Prettyrosegoby1",
+          "textureId": "rbxassetid://107659492385621"
+        }
+      ],
+      "dripPoints": 24,
+      "dripSurfaceCoverage": 0.42393129941004415
+    },
+    {
+      "cameraPart": true,
+      "presentationRadius": 4.426751745536682,
+      "rigVariant": "standard",
+      "status": "Validated",
+      "mouth": [
+        0,
+        -0.19298000633716583,
+        -3.218980073928833
+      ],
+      "name": "Purplefin",
+      "eyeDiameterScale": 1.5,
+      "logicalBones": 5,
+      "boneInstances": 15,
+      "animations": {
+        "StruggleLeft": "rbxassetid://97026641022678",
+        "ShowcaseFlop": "rbxassetid://118119646715033",
+        "StruggleRight": "rbxassetid://132200893707806",
+        "LiftFlop": "rbxassetid://95963478104076",
+        "SwimLoop": "rbxassetid://80864845357658"
+      },
+      "parts": [
+        {
+          "name": "polySurface5",
+          "size": [
+            1.8760000467300415,
+            7.332200050354004,
+            6.4629998207092285
+          ],
+          "material": "Plastic",
+          "meshId": "rbxassetid://114657808930145",
+          "originalName": "yu05:yu20",
+          "textureId": "rbxassetid://127837620888950"
+        },
+        {
+          "name": "FishMesh02",
+          "size": [
+            0.5565000176429749,
+            0.5563499927520752,
+            0.5563499927520752
+          ],
+          "material": "Neon",
+          "meshId": "rbxassetid://133345255219542",
+          "originalName": "Part",
+          "textureId": ""
+        },
+        {
+          "name": "FishMesh03",
+          "size": [
+            0.5565000176429749,
+            0.5563499927520752,
+            0.5565000176429749
+          ],
+          "material": "Neon",
+          "meshId": "rbxassetid://73436408179490",
+          "originalName": "Part",
+          "textureId": ""
+        }
+      ],
+      "dripPoints": 24,
+      "dripSurfaceCoverage": 0.2606137608450058
+    },
+    {
+      "cameraPart": true,
+      "presentationRadius": 5.033522914960593,
+      "rigVariant": "standard",
+      "status": "Validated",
+      "mouth": [
+        0.0004999999655410647,
+        -0.5331000089645386,
+        -3.495149850845337
+      ],
+      "name": "QueenAngelfish",
+      "eyeDiameterScale": 2,
+      "logicalBones": 5,
+      "boneInstances": 5,
+      "animations": {
+        "StruggleLeft": "rbxassetid://97026641022678",
+        "ShowcaseFlop": "rbxassetid://118119646715033",
+        "StruggleRight": "rbxassetid://132200893707806",
+        "LiftFlop": "rbxassetid://95963478104076",
+        "SwimLoop": "rbxassetid://80864845357658"
+      },
+      "parts": [
+        {
+          "name": "polySurface5",
+          "size": [
+            2.066999912261963,
+            4.046199798583984,
+            7.037799835205078
+          ],
+          "material": "Plastic",
+          "meshId": "rbxassetid://103498030832158",
+          "originalName": "yu09:yu1",
+          "textureId": "rbxassetid://107659492385621"
+        }
+      ],
+      "dripPoints": 24,
+      "dripSurfaceCoverage": 0.930290534229853
+    },
+    {
+      "cameraPart": true,
+      "presentationRadius": 3.8008627238171346,
+      "rigVariant": "standard",
+      "status": "Validated",
+      "mouth": [
+        0,
+        -0.5149000287055969,
+        -2.668020009994507
+      ],
+      "name": "SaddleButterflyfish",
+      "eyeDiameterScale": 1.5,
+      "logicalBones": 5,
+      "boneInstances": 5,
+      "animations": {
+        "StruggleLeft": "rbxassetid://97026641022678",
+        "ShowcaseFlop": "rbxassetid://118119646715033",
+        "StruggleRight": "rbxassetid://132200893707806",
+        "LiftFlop": "rbxassetid://95963478104076",
+        "SwimLoop": "rbxassetid://80864845357658"
+      },
+      "parts": [
+        {
+          "name": "polySurface5",
+          "size": [
+            1.753999948501587,
+            3.784899950027466,
+            5.372039794921875
+          ],
+          "material": "Plastic",
+          "meshId": "rbxassetid://99397979319364",
+          "originalName": "yu01:Saddlebutterflyfish1",
+          "textureId": "rbxassetid://107659492385621"
+        }
+      ],
+      "dripPoints": 24,
+      "dripSurfaceCoverage": 0.6113107738168826
+    },
+    {
+      "cameraPart": true,
+      "presentationRadius": 4.175732366455971,
+      "rigVariant": "standard",
+      "status": "Validated",
+      "mouth": [
+        1.7454752878620639e-06,
+        -0.2269214242696762,
+        -3.2001428604125977
+      ],
+      "name": "Silver Tail",
+      "eyeDiameterScale": 2,
+      "logicalBones": 5,
+      "boneInstances": 5,
+      "animations": {
+        "StruggleLeft": "rbxassetid://97026641022678",
+        "ShowcaseFlop": "rbxassetid://118119646715033",
+        "StruggleRight": "rbxassetid://132200893707806",
+        "LiftFlop": "rbxassetid://95963478104076",
+        "SwimLoop": "rbxassetid://80864845357658"
+      },
+      "parts": [
+        {
+          "name": "polySurface5",
+          "size": [
+            1.3256200551986694,
+            1.873900055885315,
+            6.406000137329102
+          ],
+          "material": "Plastic",
+          "meshId": "rbxassetid://87976178132453",
+          "originalName": "polySurface8",
+          "textureId": "rbxassetid://127837620888950"
+        }
+      ],
+      "dripPoints": 24,
+      "dripSurfaceCoverage": 0.883138219856887
+    },
+    {
+      "cameraPart": true,
+      "presentationRadius": 3.8364068944271197,
+      "rigVariant": "standard",
+      "status": "Validated",
+      "mouth": [
+        5.3030794333608355e-06,
+        -0.026335714384913445,
+        -2.8650712966918945
+      ],
+      "name": "Stone Bass",
+      "eyeDiameterScale": 2,
+      "logicalBones": 5,
+      "boneInstances": 5,
+      "animations": {
+        "StruggleLeft": "rbxassetid://97026641022678",
+        "ShowcaseFlop": "rbxassetid://118119646715033",
+        "StruggleRight": "rbxassetid://132200893707806",
+        "LiftFlop": "rbxassetid://95963478104076",
+        "SwimLoop": "rbxassetid://80864845357658"
+      },
+      "parts": [
+        {
+          "name": "polySurface5",
+          "size": [
+            1.3859299421310425,
+            2.2167000770568848,
+            5.761000156402588
+          ],
+          "material": "Plastic",
+          "meshId": "rbxassetid://123475804208756",
+          "originalName": "yu0",
+          "textureId": "rbxassetid://127837620888950"
+        }
+      ],
+      "dripPoints": 24,
+      "dripSurfaceCoverage": 0.8107682883876607
+    },
+    {
+      "cameraPart": true,
+      "presentationRadius": 11.693038753416706,
+      "rigVariant": "longtail",
+      "status": "Validated",
+      "mouth": [
+        0,
+        -0.29565000534057617,
+        -7.468888759613037
+      ],
+      "name": "ThresherShark",
+      "eyeDiameterScale": 2,
+      "logicalBones": 7,
+      "boneInstances": 7,
+      "animations": {
+        "StruggleLeft": "rbxassetid://89927017851760",
+        "ShowcaseFlop": "rbxassetid://104247802254247",
+        "StruggleRight": "rbxassetid://103460252054379",
+        "LiftFlop": "rbxassetid://94501805907925",
+        "SwimLoop": "rbxassetid://118690432610237"
+      },
+      "parts": [
+        {
+          "name": "polySurface5",
+          "size": [
+            5.420000076293945,
+            4.076099872589111,
+            15.083999633789062
+          ],
+          "material": "Plastic",
+          "meshId": "rbxassetid://82014038381358",
+          "originalName": "yu015:Commonthreshershark1",
+          "textureId": "rbxassetid://107659492385621"
+        }
+      ],
+      "dripPoints": 24,
+      "dripSurfaceCoverage": 0.8586029996933013
+    },
+    {
+      "cameraPart": true,
+      "presentationRadius": 6.782880117390866,
+      "rigVariant": "standard",
+      "status": "Validated",
+      "mouth": [
+        0.0004999999655410647,
+        0.5933499932289124,
+        -4.9388298988342285
+      ],
+      "name": "Thunderfin",
+      "eyeDiameterScale": 2,
+      "logicalBones": 5,
+      "boneInstances": 20,
+      "animations": {
+        "StruggleLeft": "rbxassetid://97026641022678",
+        "ShowcaseFlop": "rbxassetid://118119646715033",
+        "StruggleRight": "rbxassetid://132200893707806",
+        "LiftFlop": "rbxassetid://95963478104076",
+        "SwimLoop": "rbxassetid://80864845357658"
+      },
+      "parts": [
+        {
+          "name": "polySurface5",
+          "size": [
+            3.812999963760376,
+            5.385300159454346,
+            9.877659797668457
+          ],
+          "material": "Plastic",
+          "meshId": "rbxassetid://137344839083039",
+          "originalName": "pCone12",
+          "textureId": "rbxassetid://127837620888950"
+        },
+        {
+          "name": "FishMesh02",
+          "size": [
+            0.656000018119812,
+            0.6565999984741211,
+            0.6565999984741211
+          ],
+          "material": "Neon",
+          "meshId": "rbxassetid://74352830286283",
+          "originalName": "Part",
+          "textureId": ""
+        },
+        {
+          "name": "FishMesh03",
+          "size": [
+            3.0989999771118164,
+            4.22760009765625,
+            2.70632004737854
+          ],
+          "material": "Neon",
+          "meshId": "rbxassetid://76964455236997",
+          "originalName": "polySurface11",
+          "textureId": ""
+        },
+        {
+          "name": "FishMesh04",
+          "size": [
+            0.656000018119812,
+            0.6565999984741211,
+            0.6565999984741211
+          ],
+          "material": "Neon",
+          "meshId": "rbxassetid://137435497946227",
+          "originalName": "Part",
+          "textureId": ""
+        }
+      ],
+      "dripPoints": 24,
+      "dripSurfaceCoverage": 0.6477934797124525
+    },
+    {
+      "cameraPart": true,
+      "presentationRadius": 3.4398134653030574,
+      "rigVariant": "standard",
+      "status": "Validated",
+      "mouth": [
+        0.0004999999655410647,
+        -0.2475000023841858,
+        -2.6535000801086426
+      ],
+      "name": "TomatoClownfish",
+      "eyeDiameterScale": 2,
+      "logicalBones": 5,
+      "boneInstances": 5,
+      "animations": {
+        "StruggleLeft": "rbxassetid://97026641022678",
+        "ShowcaseFlop": "rbxassetid://118119646715033",
+        "StruggleRight": "rbxassetid://132200893707806",
+        "LiftFlop": "rbxassetid://95963478104076",
+        "SwimLoop": "rbxassetid://80864845357658"
+      },
+      "parts": [
+        {
+          "name": "polySurface5",
+          "size": [
+            2.0490000247955322,
+            2.9274001121520996,
+            5.307000160217285
+          ],
+          "material": "Plastic",
+          "meshId": "rbxassetid://122437257498123",
+          "originalName": "yu08:Tomatoclownfish1",
+          "textureId": "rbxassetid://107659492385621"
+        }
+      ],
+      "dripPoints": 24,
+      "dripSurfaceCoverage": 0.5319002727394653
+    },
+    {
+      "cameraPart": true,
+      "presentationRadius": 9.803905599169886,
+      "rigVariant": "fins",
+      "status": "Validated",
+      "mouth": [
+        -0.0001875000016298145,
+        -0.8805375099182129,
+        -5.158299922943115
+      ],
+      "name": "Tropical Butterfly",
+      "eyeDiameterScale": 1.5,
+      "logicalBones": 7,
+      "boneInstances": 105,
+      "animations": {
+        "StruggleLeft": "rbxassetid://121166993085346",
+        "ShowcaseFlop": "rbxassetid://130514023815551",
+        "StruggleRight": "rbxassetid://126567681691786",
+        "LiftFlop": "rbxassetid://103559424196151",
+        "SwimLoop": "rbxassetid://87262770878415"
+      },
+      "parts": [
+        {
+          "name": "polySurface5",
+          "size": [
+            2.690999984741211,
+            4.085599899291992,
+            10.347800254821777
+          ],
+          "material": "SmoothPlastic",
+          "meshId": "rbxassetid://72968386932975",
+          "originalName": "SXYu_13",
+          "textureId": ""
+        },
+        {
+          "name": "FishMesh02",
+          "size": [
+            0.8939999938011169,
+            0.8894000053405762,
+            0.9610000252723694
+          ],
+          "material": "Neon",
+          "meshId": "rbxassetid://102922562891358",
+          "originalName": "SXYu_00",
+          "textureId": ""
+        },
+        {
+          "name": "FishMesh03",
+          "size": [
+            2.7810871601104736,
+            0.8007000088691711,
+            0.7789499759674072
+          ],
+          "material": "Neon",
+          "meshId": "rbxassetid://118148981924398",
+          "originalName": "SXYu_02",
+          "textureId": ""
+        },
+        {
+          "name": "FishMesh04",
+          "size": [
+            0.4300000071525574,
+            1.323699951171875,
+            2.4314000606536865
+          ],
+          "material": "SmoothPlastic",
+          "meshId": "rbxassetid://104245033436887",
+          "originalName": "SXYu_04",
+          "textureId": ""
+        },
+        {
+          "name": "FishMesh05",
+          "size": [
+            0.125,
+            1.8414000272750854,
+            3.7291998863220215
+          ],
+          "material": "SmoothPlastic",
+          "meshId": "rbxassetid://71562052339449",
+          "originalName": "SXYu_06",
+          "textureId": ""
+        },
+        {
+          "name": "FishMesh06",
+          "size": [
+            7.764999866485596,
+            4.383200168609619,
+            6.548399925231934
+          ],
+          "material": "Neon",
+          "meshId": "rbxassetid://81012698362996",
+          "originalName": "SXYu_08",
+          "textureId": ""
+        },
+        {
+          "name": "FishMesh07",
+          "size": [
+            3.6510000228881836,
+            4.48199987411499,
+            5.498000144958496
+          ],
+          "material": "Neon",
+          "meshId": "rbxassetid://134853521752270",
+          "originalName": "SXYu_10",
+          "textureId": ""
+        },
+        {
+          "name": "FishMesh08",
+          "size": [
+            7.989999771118164,
+            1.8724000453948975,
+            2.544600009918213
+          ],
+          "material": "SmoothPlastic",
+          "meshId": "rbxassetid://82753069431052",
+          "originalName": "SXYu_12",
+          "textureId": ""
+        },
+        {
+          "name": "FishMesh09",
+          "size": [
+            2.690999984741211,
+            3.011899948120117,
+            6.054200172424316
+          ],
+          "material": "SmoothPlastic",
+          "meshId": "rbxassetid://104484805314145",
+          "originalName": "SXYu_14",
+          "textureId": ""
+        },
+        {
+          "name": "FishMesh10",
+          "size": [
+            2.072999954223633,
+            1.9305000305175781,
+            1.5443999767303467
+          ],
+          "material": "Neon",
+          "meshId": "rbxassetid://79652286662596",
+          "originalName": "SXYu_01",
+          "textureId": ""
+        },
+        {
+          "name": "FishMesh11",
+          "size": [
+            2.6730871200561523,
+            1.0768500566482544,
+            1.0474499464035034
+          ],
+          "material": "Neon",
+          "meshId": "rbxassetid://115455560215009",
+          "originalName": "SXYu_03",
+          "textureId": ""
+        },
+        {
+          "name": "FishMesh12",
+          "size": [
+            4.7129998207092285,
+            2.3557000160217285,
+            6.0258002281188965
+          ],
+          "material": "Neon",
+          "meshId": "rbxassetid://80295905658102",
+          "originalName": "SXYu_05",
+          "textureId": ""
+        },
+        {
+          "name": "FishMesh13",
+          "size": [
+            2.252000093460083,
+            1.718000054359436,
+            1.652999997138977
+          ],
+          "material": "Neon",
+          "meshId": "rbxassetid://82798818541481",
+          "originalName": "SXYu_07",
+          "textureId": ""
+        },
+        {
+          "name": "FishMesh14",
+          "size": [
+            7.257999897003174,
+            2.605600118637085,
+            11.224499702453613
+          ],
+          "material": "Neon",
+          "meshId": "rbxassetid://75966756161349",
+          "originalName": "SXYu_09",
+          "textureId": ""
+        },
+        {
+          "name": "FishMesh15",
+          "size": [
+            1.1610000133514404,
+            4.088900089263916,
+            4.032400131225586
+          ],
+          "material": "Neon",
+          "meshId": "rbxassetid://136341688370338",
+          "originalName": "SXYu_11",
+          "textureId": ""
+        }
+      ],
+      "dripPoints": 24,
+      "dripSurfaceCoverage": 0.9956036805406299
+    },
+    {
+      "cameraPart": true,
+      "presentationRadius": 7.823979016657885,
+      "rigVariant": "standard",
+      "status": "Validated",
+      "mouth": [
+        0,
+        0.2842499911785126,
+        -5.680049896240234
+      ],
+      "name": "Venomfish",
+      "eyeDiameterScale": 2,
+      "logicalBones": 5,
+      "boneInstances": 20,
+      "animations": {
+        "StruggleLeft": "rbxassetid://97026641022678",
+        "ShowcaseFlop": "rbxassetid://118119646715033",
+        "StruggleRight": "rbxassetid://132200893707806",
+        "LiftFlop": "rbxassetid://95963478104076",
+        "SwimLoop": "rbxassetid://80864845357658"
+      },
+      "parts": [
+        {
+          "name": "polySurface5",
+          "size": [
+            2.6740000247955322,
+            5.686100006103516,
+            11.397600173950195
+          ],
+          "material": "Plastic",
+          "meshId": "rbxassetid://122714828789700",
+          "originalName": "pPlane2_group1",
+          "textureId": "rbxassetid://127837620888950"
+        },
+        {
+          "name": "FishMesh02",
+          "size": [
+            0.7879999876022339,
+            0.7882000207901001,
+            0.7879999876022339
+          ],
+          "material": "Neon",
+          "meshId": "rbxassetid://114582699209174",
+          "originalName": "Part",
+          "textureId": ""
+        },
+        {
+          "name": "FishMesh03",
+          "size": [
+            0.7879999876022339,
+            0.7882000207901001,
+            0.7879999876022339
+          ],
+          "material": "Neon",
+          "meshId": "rbxassetid://128645338834861",
+          "originalName": "Part",
+          "textureId": ""
+        },
+        {
+          "name": "FishMesh04",
+          "size": [
+            0.25699999928474426,
+            4.392099857330322,
+            8.011899948120117
+          ],
+          "material": "Neon",
+          "meshId": "rbxassetid://77227199143830",
+          "originalName": "group1_pCone12",
+          "textureId": ""
+        }
+      ],
+      "dripPoints": 24,
+      "dripSurfaceCoverage": 0.8026564973055739
+    },
+    {
+      "cameraPart": true,
+      "presentationRadius": 4.574462616541733,
+      "rigVariant": "standard",
+      "status": "Validated",
+      "mouth": [
+        0,
+        -0.2028714269399643,
+        -3.3327856063842773
+      ],
+      "name": "YellowfinTuna",
+      "eyeDiameterScale": 2,
+      "logicalBones": 5,
+      "boneInstances": 5,
+      "animations": {
+        "StruggleLeft": "rbxassetid://97026641022678",
+        "ShowcaseFlop": "rbxassetid://118119646715033",
+        "StruggleRight": "rbxassetid://132200893707806",
+        "LiftFlop": "rbxassetid://95963478104076",
+        "SwimLoop": "rbxassetid://80864845357658"
+      },
+      "parts": [
+        {
+          "name": "polySurface5",
+          "size": [
+            2.0959999561309814,
+            3.624799966812134,
+            6.704999923706055
+          ],
+          "material": "Plastic",
+          "meshId": "rbxassetid://110268173719009",
+          "originalName": "yu010:Yellowfintuna1",
+          "textureId": "rbxassetid://107659492385621"
+        }
+      ],
+      "dripPoints": 24,
+      "dripSurfaceCoverage": 0.7966160774230956
+    }
+  ],
+  "creatorGroupId": 598797612,
+  "placeId": 84106335829275,
+  "exports": {
+    "current": "Fish_SourceOriginals.rbxm",
+    "done": true,
+    "errors": [],
+    "results": [
+      {
+        "bytes": 307037,
+        "roundTripDescendants": 1457,
+        "roundTripMeshes": 65,
+        "roundTripAnimations": 140,
+        "roundTripPoints": 672,
+        "file": "Fish_Processed.rbxm",
+        "sha256": "7a0b5634baae2ae83bd270c7563b0ea779fd01d600d3f105d15aa9c97add83d8",
+        "previousFile": "Fish_Processed.BeforeDrip_20261104_074648_151815.rbxm"
+      },
+      {
+        "bytes": 304583,
+        "roundTripDescendants": 1457,
+        "roundTripMeshes": 65,
+        "roundTripAnimations": 140,
+        "roundTripPoints": 672,
+        "file": "Fish_GameTemplates.rbxm",
+        "sha256": "a6cef0791c1470b6efc214a64af08a504ea5452617e9e3a65a3de3f056581253",
+        "previousFile": "Fish_GameTemplates.BeforeDrip_20261104_074648_183808.rbxm"
+      },
+      {
+        "bytes": 243141,
+        "file": "Fish_Templates_Before_20261104_062102.rbxm",
+        "sha256": "63cd01335c3c5973654ae93825b6c3f2d43f5dda31e1945d47e036a174368566",
+        "roundTripDescendants": 268
+      },
+      {
+        "bytes": 70094,
+        "file": "Fish_AnimationSources.rbxm",
+        "sha256": "e072a4116c8f0ae4d713bc37326ea0790d6220b7aabc6b112df3f9b93ddc9002",
+        "roundTripDescendants": 22818
+      },
+      {
+        "bytes": 239730,
+        "file": "Fish_SourceOriginals.rbxm",
+        "sha256": "880924baf5c4e4b2fb28df69d17b375367cd7f541b0b3631e24110b6f1b6e760",
+        "roundTripDescendants": 239
+      }
+    ]
+  },
+  "install": {
+    "installed": 28,
+    "templateCount": 28,
+    "defaultFish": "Elder Fish",
+    "sourceCount": 28,
+    "processedCount": 28,
+    "backup": "ServerStorage.FishUpgradeBackups.BeforeTemplateInstall_20261104_065839",
+    "originalBackup": "ServerStorage.FishUpgradeBackups.BeforeProcessed_20261104_062102"
+  },
+  "drip": {
+    "manifest": "drip-surface-points.json",
+    "validation": "drip-validation.json",
+    "fish": 28,
+    "pointsPerFish": 24,
+    "backup": "ServerStorage.FishDripBackups.BeforeAllFishDrip_20261104_074253"
+  }
+}

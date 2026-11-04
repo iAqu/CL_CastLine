@@ -32,6 +32,7 @@ def main():
         if missing:
             raise SystemExit("Unknown tests: " + ", ".join(sorted(missing)))
     sources = sorted(path for path in (ROOT / "src").rglob("*") if path.suffix in {".lua", ".luau"})
+    sources += sorted((ROOT / "tests" / "helpers").rglob("*.lua"))
     bundle = ["local sources = {"]
     bundle.extend(
         "[ " + luau_string(str(path.relative_to(ROOT))) + " ] = " + luau_string(path.read_text()) + ","
@@ -61,7 +62,10 @@ local function testEnvironment()
  env.dofile = function(path) return assert(env.loadstring(sources[path], path))() end
  local cache = {}
  env.require = function(path)
-  local normalized = string.gsub(path, "^../", "") .. ".lua"
+  local normalized = path
+  if string.sub(path, 1, 3) == "../" then normalized = string.sub(path, 4)
+  elseif string.sub(path, 1, 2) == "./" then normalized = "tests/" .. string.sub(path, 3) end
+  normalized ..= ".lua"
   if cache[normalized] == nil then cache[normalized] = env.dofile(normalized) end
   return cache[normalized]
  end

@@ -1,0 +1,32 @@
+{
+  "geometry_unchanged": true,
+  "geometry_sha256": "3ce8c2adb630eea42f881563220e5162d6046eee3abb00decaab89fb0448e4ef",
+  "clips": {
+    "StruggleLeft": {
+      "duration": 0.6,
+      "samples": 49,
+      "authored_keyframes": 9,
+      "sample_rate": 80,
+      "interpolation": "Linear",
+      "body_yaw_range": [
+        55.00001517735549,
+        65.00000793763454
+      ],
+      "head_error": 0,
+      "seam_identical": true
+    },
+    "StruggleRight": {
+      "duration": 0.6,
+      "samples": 49,
+      "authored_keyframes": 9,
+      "sample_rate": 80,
+      "interpolation": "Linear",
+      "body_yaw_range": [
+        55.00001517735549,
+        65.00000793763454
+      ],
+      "head_error": 0,
+      "seam_identical": true
+    }
+  }
+}

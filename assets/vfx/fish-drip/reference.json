@@ -1,0 +1,232 @@
+{
+  "sourcePath": "ReplicatedStorage.ModelRes.Effect.流汗特效.流汗特效",
+  "properties": {
+    "ShapeStyle": {
+      "enum": "ParticleEmitterShapeStyle",
+      "name": "Volume",
+      "type": "EnumItem"
+    },
+    "FlipbookFramerate": {
+      "max": 1,
+      "type": "NumberRange",
+      "min": 1
+    },
+    "LightInfluence": 0,
+    "Lifetime": {
+      "max": 0.6000000238418579,
+      "type": "NumberRange",
+      "min": 0.25
+    },
+    "FlipbookLayout": {
+      "enum": "ParticleFlipbookLayout",
+      "name": "Grid2x2",
+      "type": "EnumItem"
+    },
+    "Texture": "rbxassetid://119416312745648",
+    "LockedToPart": false,
+    "FlipbookBlendFrames": true,
+    "Transparency": {
+      "keypoints": [
+        {
+          "envelope": 0,
+          "time": 0,
+          "value": 1
+        },
+        {
+          "envelope": 0,
+          "time": 0.22246499359607697,
+          "value": 0
+        },
+        {
+          "envelope": 0,
+          "time": 0.6338440179824829,
+          "value": 0.4625000059604645
+        },
+        {
+          "envelope": 0,
+          "time": 1,
+          "value": 1
+        }
+      ],
+      "type": "NumberSequence"
+    },
+    "LightEmission": 0.5,
+    "WindAffectsDrag": false,
+    "Color": {
+      "keypoints": [
+        {
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "time": 0
+        },
+        {
+          "color": [
+            1,
+            1,
+            1
+          ],
+          "time": 1
+        }
+      ],
+      "type": "ColorSequence"
+    },
+    "Drag": 10,
+    "FlipbookStartRandom": true,
+    "TimeScale": 0.5,
+    "Squash": {
+      "keypoints": [
+        {
+          "envelope": 0,
+          "time": 0,
+          "value": 0.5
+        },
+        {
+          "envelope": 0,
+          "time": 1,
+          "value": 0.5
+        }
+      ],
+      "type": "NumberSequence"
+    },
+    "Speed": {
+      "max": 18,
+      "type": "NumberRange",
+      "min": 7
+    },
+    "Brightness": 1.5,
+    "Size": {
+      "keypoints": [
+        {
+          "envelope": 0,
+          "time": 0,
+          "value": 0
+        },
+        {
+          "envelope": 0.025484343990683556,
+          "time": 0.07509386539459229,
+          "value": 0.08657991886138916
+        },
+        {
+          "envelope": 0.03950073570013046,
+          "time": 0.1163954958319664,
+          "value": 0.04329025745391846
+        },
+        {
+          "envelope": 0.054791342467069626,
+          "time": 0.1614518165588379,
+          "value": 0.12987017631530762
+        },
+        {
+          "envelope": 0.07432933896780014,
+          "time": 0.21902377903461456,
+          "value": 0.08657991886138916
+        },
+        {
+          "envelope": 0.08657991886138916,
+          "time": 0.262828528881073,
+          "value": 0.08657991886138916
+        },
+        {
+          "envelope": 0.17299999296665192,
+          "time": 0.3149999976158142,
+          "value": 0.17299999296665192
+        },
+        {
+          "envelope": 0.12999999523162842,
+          "time": 0.675000011920929,
+          "value": 0.12999999523162842
+        },
+        {
+          "envelope": 0.11414267867803574,
+          "time": 0.7146432995796204,
+          "value": 0.12987017631530762
+        },
+        {
+          "envelope": 0.04329025745391846,
+          "time": 0.7647058963775635,
+          "value": 0.04329025745391846
+        },
+        {
+          "envelope": 0,
+          "time": 0.822277843952179,
+          "value": 0.08657991886138916
+        },
+        {
+          "envelope": 0,
+          "time": 0.8710888624191284,
+          "value": 0
+        },
+        {
+          "envelope": 0,
+          "time": 0.9261577129364014,
+          "value": 0
+        },
+        {
+          "envelope": 0,
+          "time": 0.9524405598640442,
+          "value": 0
+        },
+        {
+          "envelope": 0,
+          "time": 1,
+          "value": 0
+        }
+      ],
+      "type": "NumberSequence"
+    },
+    "Enabled": true,
+    "Acceleration": {
+      "y": -150,
+      "type": "Vector3",
+      "x": 0,
+      "z": 0
+    },
+    "RotSpeed": {
+      "max": 0,
+      "type": "NumberRange",
+      "min": 0
+    },
+    "ShapeInOut": {
+      "enum": "ParticleEmitterShapeInOut",
+      "name": "Outward",
+      "type": "EnumItem"
+    },
+    "Rate": 60,
+    "VelocityInheritance": 1,
+    "EmissionDirection": {
+      "enum": "NormalId",
+      "name": "Top",
+      "type": "EnumItem"
+    },
+    "ShapePartial": 1,
+    "Orientation": {
+      "enum": "ParticleOrientation",
+      "name": "VelocityParallel",
+      "type": "EnumItem"
+    },
+    "ZOffset": 0.30000001192092896,
+    "SpreadAngle": {
+      "y": 360,
+      "type": "Vector2",
+      "x": 360
+    },
+    "FlipbookMode": {
+      "enum": "ParticleFlipbookMode",
+      "name": "PingPong",
+      "type": "EnumItem"
+    },
+    "Shape": {
+      "enum": "ParticleEmitterShape",
+      "name": "Box",
+      "type": "EnumItem"
+    },
+    "Rotation": {
+      "max": 90,
+      "type": "NumberRange",
+      "min": 90
+    }
+  }
+}

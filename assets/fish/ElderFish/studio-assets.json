@@ -4,10 +4,88 @@
   "creatorGroupName": "M101 Crew",
   "template": "ReplicatedStorage.Models.Fish.Elder Fish",
   "body": "polySurface5",
-  "meshId": "rbxassetid://113534672570474",
+  "meshId": "rbxassetid://123142360733957",
+  "previousReversedMeshId": "rbxassetid://113534672570474",
   "textureId": "rbxassetid://100058154460562",
   "originalMeshId": "rbxassetid://89907485320806",
   "backup": "ServerStorage.FishRigBackups.ElderFish_BeforeRig_20261103_024804",
+  "facingFixBackup": "ServerStorage.FishRigBackups.ElderFish_BeforeFacingFix_20261103_025947",
   "importedModel": "ServerStorage.FishRigBackups.ElderFish_ImportedRig_20261103_024804",
-  "bones": ["FishBody", "FishTail"]
+  "bones": [
+    "FishBody",
+    "SpineFront",
+    "SpineMid",
+    "TailBase",
+    "FishTail"
+  ],
+  "fbxForward": "Z",
+  "fbxUp": "Y",
+  "twoBoneMeshId": "rbxassetid://84615964971990",
+  "twoBoneBackup": "ServerStorage.FishRigBackups.ElderFish_TwoBone_20261103_031405",
+  "animations": {
+    "SwimLoop": {
+      "assetId": 70913216656088,
+      "duration": 0.625,
+      "path": "ReplicatedStorage.Animation.Fishing.Fish.SwimLoop"
+    },
+    "StruggleLeft": {
+      "assetId": 89750144915761,
+      "duration": 0.6,
+      "path": "ReplicatedStorage.Animation.Fishing.Fish.StruggleLeft",
+      "previousAssetId": 139157814697468,
+      "looped": true,
+      "behavior": "constant same-side body bend with delayed tail loop",
+      "sourceBackupPrefix": "ServerStorage.FishAnimationSources.StruggleLeft_Previous_",
+      "previousAssetIds": [
+        102468571595350,
+        121409396240046,
+        87210182530392,
+        139157814697468
+      ],
+      "bodyBendDegrees": [
+        55,
+        65
+      ],
+      "sampleRate": 80,
+      "poseSamples": 49,
+      "interpolation": "Linear",
+      "sparseBaselineAssetId": 87210182530392
+    },
+    "StruggleRight": {
+      "assetId": 97164203030284,
+      "duration": 0.6,
+      "path": "ReplicatedStorage.Animation.Fishing.Fish.StruggleRight",
+      "previousAssetId": 72744222524952,
+      "looped": true,
+      "behavior": "constant same-side body bend with delayed tail loop",
+      "sourceBackupPrefix": "ServerStorage.FishAnimationSources.StruggleRight_Previous_",
+      "previousAssetIds": [
+        133713247560189,
+        115875279749888,
+        89967444018635,
+        72744222524952
+      ],
+      "bodyBendDegrees": [
+        55,
+        65
+      ],
+      "sampleRate": 80,
+      "poseSamples": 49,
+      "interpolation": "Linear",
+      "sparseBaselineAssetId": 89967444018635
+    },
+    "LiftFlop": {
+      "assetId": 125603144317245,
+      "duration": 2,
+      "path": "ReplicatedStorage.Animation.Fishing.Fish.LiftFlop"
+    },
+    "ShowcaseFlop": {
+      "assetId": 80610507328189,
+      "duration": 0.9,
+      "path": "ReplicatedStorage.Animation.Fishing.Fish.ShowcaseFlop"
+    }
+  },
+  "beforeEyeScaleMeshId": "rbxassetid://99085213011199",
+  "eyeDiameterScale": 2,
+  "eyeScaleBackup": "ServerStorage.EyeScaleBackups.BeforeEyes2x_20261103_040431.Elder Fish"
 }

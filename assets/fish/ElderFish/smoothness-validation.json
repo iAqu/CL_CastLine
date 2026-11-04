@@ -1,0 +1,55 @@
+{
+  "cameraAB": {
+    "samples": 360,
+    "verticalSpan": 0,
+    "shakeOnRms": 0.09942374072109225,
+    "shakeOffRms": 0.01696823089247349,
+    "restoredShake": 0.7
+  },
+  "finalInterpolation": {
+    "midPlayCorrections": 0,
+    "profiles": {
+      "StruggleLeft": {
+        "previous": {
+          "midSegmentSpeed": 159.68115531903314,
+          "seamLeftSpeed": 0.00422732692850758,
+          "seamRightSpeed": 0,
+          "nearKeySpeed": 0.06560648141729075
+        },
+        "current": {
+          "midSegmentSpeed": 55.950989226264625,
+          "seamLeftSpeed": 146.0341329621917,
+          "seamRightSpeed": 145.53160452211776,
+          "nearKeySpeed": 103.17563005012964
+        }
+      },
+      "StruggleRight": {
+        "previous": {
+          "midSegmentSpeed": -159.68115531903314,
+          "seamLeftSpeed": -0.00422732692850758,
+          "seamRightSpeed": 0,
+          "nearKeySpeed": -0.06560648141729075
+        },
+        "current": {
+          "midSegmentSpeed": -55.950989226264625,
+          "seamLeftSpeed": -146.0341329621917,
+          "seamRightSpeed": -145.53160452211776,
+          "nearKeySpeed": -103.17563005012964
+        }
+      }
+    },
+    "passed": true,
+    "frames": 45,
+    "maxFrameMs": 67.55166500806808,
+    "fps": 15.00071297994507
+  },
+  "additionalTimingSample": {
+    "fps": 56.69938912118541,
+    "maxFrameMs": 108.7016686797142,
+    "midPlayCorrections": 4
+  },
+  "timingNote": "Studio frame-rate conditions varied; timing samples are diagnostics, not before/after performance benchmarks. No global frame-rate settings changed.",
+  "geometryUnchanged": true,
+  "otherThreeAnimationsUnchanged": true,
+  "temporaryProbesCleaned": true
+}

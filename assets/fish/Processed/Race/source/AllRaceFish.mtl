@@ -1,0 +1,2692 @@
+newmtl Race001p0071Mtl
+Material Color
+Ka 0.176774 0.306635 0.383775
+Kd 0.176774 0.306635 0.383775
+Ks 0.0700165 0.121451 0.152005 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race001p0081Mtl
+Material Color
+Ka 0.00226295 0.0384727 0.0780566
+Kd 0.00226295 0.0384727 0.0780566
+Ks 0.000896307 0.0152382 0.0309165 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race002p0041Mtl
+Material Color
+Ka 0.042987 0.12753 0.499505
+Kd 0.042987 0.12753 0.499505
+Ks 0.00269722 0.00800187 0.0313415 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race002p0061Mtl
+Material Color
+Ka 0.0891935 0.383775 0.320382
+Kd 0.0891935 0.383775 0.320382
+Ks 0.00559646 0.02408 0.0201024 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race002p0101Mtl
+Material Color
+Ka 0.0265487 0.0697271 0.151058
+Kd 0.0265487 0.0697271 0.151058
+Ks 0.0016658 0.00437503 0.00947815 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race003p0061Mtl
+Material Color
+Ka 0.383775 0.0738278 0.0528416
+Kd 0.383775 0.0738278 0.0528416
+Ks 0.02408 0.00463233 0.00331555 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race003p0081Mtl
+Material Color
+Ka 0.0209511 0.0619075 0.0780566
+Kd 0.0209511 0.0619075 0.0780566
+Ks 0.00131458 0.00388439 0.00489767 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race003p0101Mtl
+Material Color
+Ka 0.0209511 0.0619075 0.0780566
+Kd 0.0209511 0.0619075 0.0780566
+Ks 0.00829829 0.0245202 0.0309165 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race001p0111Mtl
+Material Color
+Ka 0.0160677 0.0160677 0.0169881
+Kd 0.0160677 0.0160677 0.0169881
+Ks 0.00636407 0.00636407 0.0067286 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race004p0111Mtl
+Material Color
+Ka 0.0328759 0.0528416 0.0581872
+Kd 0.0328759 0.0528416 0.0581872
+Ks 0.0130214 0.0209294 0.0230467 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race004p0121Mtl
+Material Color
+Ka 0.0328759 0.0528416 0.0581872
+Kd 0.0328759 0.0528416 0.0581872
+Ks 0.0020628 0.00331555 0.00365096 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race005p0081Mtl
+Material Color
+Ka 0.234895 0.383775 0.154152
+Kd 0.234895 0.383775 0.154152
+Ks 0.0147385 0.02408 0.0096723 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race006p0011Mtl
+Material Color
+Ka 0.394083 0.111299 0.334458
+Kd 0.394083 0.111299 0.334458
+Ks 0.0355448 0.0100388 0.0301668 
+
+d 1
+
+Ns 0
+
+newmtl Race006p0031Mtl
+Material Color
+Ka 1 0 0
+Kd 1 0 0
+Ks 0.0901961 0 0 
+
+d 1
+
+Ns 0
+
+newmtl Race006p0041Mtl
+Material Color
+Ka 0 1 0.827726
+Kd 0 1 0.827726
+Ks 0 0.396078 0.327844 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race006p0061Mtl
+Material Color
+Ka 0.00658496 0.737205 0.812241
+Kd 0.00658496 0.737205 0.812241
+Ks 0.00260816 0.291991 0.321711 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race006p0081Mtl
+Material Color
+Ka 0.0265487 0.14198 0.383775
+Kd 0.0265487 0.14198 0.383775
+Ks 0.00239459 0.0128061 0.034615 
+
+d 1
+
+Ns 0
+
+newmtl Race007p0021Mtl
+Material Color
+Ka 0.0780566 0.344026 0.789314
+Kd 0.0780566 0.344026 0.789314
+Ks 0.0070404 0.0310298 0.071193 
+
+d 1
+
+Ns 0
+
+newmtl Race007p0051Mtl
+Material Color
+Ka 0 0.409826 0.215764
+Kd 0 0.409826 0.215764
+Ks 0 0.0257146 0.0135382 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race007p0101Mtl
+Material Color
+Ka 0.00715504 0.348865 0.383775
+Kd 0.00715504 0.348865 0.383775
+Ks 0.000645356 0.0314662 0.034615 
+
+d 1
+
+Ns 0
+
+newmtl Race005p0051Mtl
+Material Color
+Ka 0.000804658 5.69218e-05 0.00455975
+Kd 0.000804658 5.69218e-05 0.00455975
+Ks 5.04884e-05 3.57156e-06 0.000286102 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race008p0031Mtl
+Material Color
+Ka 0.0179364 0.14198 0.383775
+Kd 0.0179364 0.14198 0.383775
+Ks 0.00710423 0.0562353 0.152005 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race008p0041Mtl
+Material Color
+Ka 0.0891935 1 1
+Kd 0.0891935 1 1
+Ks 0.00804491 0.0901961 0.0901961 
+
+d 1
+
+Ns 0
+
+newmtl Race008p0051Mtl
+Material Color
+Ka 0.0231036 0.517401 1
+Kd 0.0231036 0.517401 1
+Ks 0.00915082 0.204932 0.396078 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race008p0081Mtl
+Material Color
+Ka 1 0.409826 1
+Kd 1 0.409826 1
+Ks 0.396078 0.162323 0.396078 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race008p0111Mtl
+Material Color
+Ka 0.43134 0.119264 0.708298
+Kd 0.43134 0.119264 0.708298
+Ks 0.170845 0.0472379 0.280542 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race008p0131Mtl
+Material Color
+Ka 0.0780566 0.163641 0.383775
+Kd 0.0780566 0.163641 0.383775
+Ks 0.0309165 0.0648145 0.152005 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race008p0151Mtl
+Material Color
+Ka 0.151058 1 0.804559
+Kd 0.151058 1 0.804559
+Ks 0.0136248 0.0901961 0.0725681 
+
+d 1
+
+Ns 0
+
+newmtl Race009p0011Mtl
+Material Color
+Ka 0.20836 0.0151752 0.511398
+Kd 0.20836 0.0151752 0.511398
+Ks 0.0187932 0.00136875 0.0461261 
+
+d 1
+
+Ns 0
+
+newmtl Race009p0031Mtl
+Material Color
+Ka 0.505432 0.119264 0.579547
+Kd 0.505432 0.119264 0.579547
+Ks 0.045588 0.0107571 0.0522728 
+
+d 1
+
+Ns 0
+
+newmtl Race009p0061Mtl
+Material Color
+Ka 0.00837312 0.284452 0.25084
+Kd 0.00837312 0.284452 0.25084
+Ks 0.000755222 0.0256565 0.0226248 
+
+d 1
+
+Ns 0
+
+newmtl Race009p0111Mtl
+Material Color
+Ka 0.383775 0.157281 0.383775
+Kd 0.383775 0.157281 0.383775
+Ks 0.034615 0.0141861 0.034615 
+
+d 1
+
+Ns 0
+
+map_Ka Race009p0121_diff.png
+map_Kd Race009p0121_diff.png
+map_d Race009p0121_diff.png
+
+newmtl Race010p0011Mtl
+Material Color
+Ka 0.2468 0.0384727 0.383775
+Kd 0.2468 0.0384727 0.383775
+Ks 0.0222604 0.00347009 0.034615 
+
+d 1
+
+Ns 0
+
+newmtl Race010p0041Mtl
+Material Color
+Ka 0.157281 0.0846415 0.383775
+Kd 0.157281 0.0846415 0.383775
+Ks 0.0141861 0.00763433 0.034615 
+
+d 1
+
+Ns 0
+
+newmtl Race010p0051Mtl
+Material Color
+Ka 0.170138 0.0461488 0.383775
+Kd 0.170138 0.0461488 0.383775
+Ks 0.0673881 0.0182786 0.152005 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race010p0061Mtl
+Material Color
+Ka 0.160444 0.0780566 0.383775
+Kd 0.160444 0.0780566 0.383775
+Ks 0.0144714 0.0070404 0.034615 
+
+d 1
+
+Ns 0
+
+newmtl Race010p0081Mtl
+Material Color
+Ka 0.116576 0.0477758 0.383775
+Kd 0.116576 0.0477758 0.383775
+Ks 0.0105147 0.00430919 0.034615 
+
+d 1
+
+Ns 0
+
+newmtl Race005p0021Mtl
+Material Color
+Ka 5.07705e-06 1 0.147998
+Kd 5.07705e-06 1 0.147998
+Ks 4.5793e-07 0.0901961 0.0133488 
+
+d 1
+
+Ns 0
+
+newmtl Race010p0091Mtl
+Material Color
+Ka 0.425905 0.116576 0.875138
+Kd 0.425905 0.116576 0.875138
+Ks 0.038415 0.0105147 0.078934 
+
+d 1
+
+Ns 0
+
+newmtl Race010p0101Mtl
+Material Color
+Ka 0.43134 0.119264 0.708298
+Kd 0.43134 0.119264 0.708298
+Ks 0.0389052 0.0107571 0.0638857 
+
+d 1
+
+Ns 0
+
+newmtl Race008p0121Mtl
+Material Color
+Ka 0.383775 0.12753 0.12753
+Kd 0.383775 0.12753 0.12753
+Ks 0.152005 0.0505118 0.0505118 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race010p0111Mtl
+Material Color
+Ka 0.0511221 0.0445526 0.383775
+Kd 0.0511221 0.0445526 0.383775
+Ks 0.00461101 0.00401847 0.034615 
+
+d 1
+
+Ns 0
+
+newmtl Race010p0121Mtl
+Material Color
+Ka 0.0370285 0.0824142 0.383775
+Kd 0.0370285 0.0824142 0.383775
+Ks 0.00333983 0.00743344 0.034615 
+
+d 1
+
+Ns 0
+
+newmtl Race010p0141Mtl
+Material Color
+Ka 0.0802193 0.0638149 0.234895
+Kd 0.0802193 0.0638149 0.234895
+Ks 0.0317731 0.0252757 0.093037 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race007p0011Mtl
+Material Color
+Ka 0.00258583 0.0846415 0.215764
+Kd 0.00258583 0.0846415 0.215764
+Ks 0.00102419 0.0335247 0.0854596 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race011p0031Mtl
+Material Color
+Ka 0.121986 0.43134 0.632043
+Kd 0.121986 0.43134 0.632043
+Ks 0.0110026 0.0389052 0.0570078 
+
+d 1
+
+Ns 0
+
+newmtl Race011p0041Mtl
+Material Color
+Ka 0.0938759 0.170138 0.383775
+Kd 0.0938759 0.170138 0.383775
+Ks 0.0371822 0.0673881 0.152005 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race001p0091Mtl
+Material Color
+Ka 0.00969633 0.0111261 0.042987
+Kd 0.00969633 0.0111261 0.042987
+Ks 0.00384051 0.0044068 0.0170262 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race010p0151Mtl
+Material Color
+Ka 0.215764 0.0986892 0.383775
+Kd 0.215764 0.0986892 0.383775
+Ks 0.0854596 0.0390887 0.152005 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race011p0061Mtl
+Material Color
+Ka 0.383775 0.197516 0.0869013
+Kd 0.383775 0.197516 0.0869013
+Ks 0.152005 0.078232 0.0344197 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race011p0081Mtl
+Material Color
+Ka 0.383775 0.230998 0.133209
+Kd 0.383775 0.230998 0.133209
+Ks 0.152005 0.0914934 0.052761 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race011p0091Mtl
+Material Color
+Ka 0.0328759 0.108711 0.383775
+Kd 0.0328759 0.108711 0.383775
+Ks 0.0130214 0.0430581 0.152005 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race012p0011Mtl
+Material Color
+Ka 0.0445526 0.280124 0.383775
+Kd 0.0445526 0.280124 0.383775
+Ks 0.0176463 0.110951 0.152005 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race012p0041Mtl
+Material Color
+Ka 0.147998 0.383775 0.334458
+Kd 0.147998 0.383775 0.334458
+Ks 0.0133488 0.034615 0.0301668 
+
+d 1
+
+Ns 0
+
+newmtl Race012p0061Mtl
+Material Color
+Ka 0.0657539 0.383775 0.368591
+Kd 0.0657539 0.383775 0.368591
+Ks 0.00593074 0.034615 0.0332455 
+
+d 1
+
+Ns 0
+
+newmtl Race012p0071Mtl
+Material Color
+Ka 0.121986 0.383775 0.302126
+Kd 0.121986 0.383775 0.302126
+Ks 0.0110026 0.034615 0.0272505 
+
+d 1
+
+Ns 0
+
+newmtl Race020p0041Mtl
+Material Color
+Ka 0.315763 0 0
+Kd 0.315763 0 0
+Ks 0.0284806 0 0 
+
+d 1
+
+Ns 0
+
+newmtl Race013p0041Mtl
+Material Color
+Ka 0.0581872 0.383775 0.284452
+Kd 0.0581872 0.383775 0.284452
+Ks 0.00524826 0.034615 0.0256565 
+
+d 1
+
+Ns 0
+
+newmtl Race004p0081Mtl
+Material Color
+Ka 0.0869013 0.320382 0.383775
+Kd 0.0869013 0.320382 0.383775
+Ks 0.00545263 0.0201024 0.02408 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race009p0091Mtl
+Material Color
+Ka 0.383775 0.0846415 0.383775
+Kd 0.383775 0.0846415 0.383775
+Ks 0.02408 0.00531084 0.02408 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race013p0071Mtl
+Material Color
+Ka 0.20836 0.0581872 0.383775
+Kd 0.20836 0.0581872 0.383775
+Ks 0.0130735 0.00365096 0.02408 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race025p0071Mtl
+Material Color
+Ka 0.275833 0.0869013 0.383775
+Kd 0.275833 0.0869013 0.383775
+Ks 0.0173072 0.00545263 0.02408 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race013p0101Mtl
+Material Color
+Ka 0.0528416 0.275833 0.383775
+Kd 0.0528416 0.275833 0.383775
+Ks 0.00476611 0.024879 0.034615 
+
+d 1
+
+Ns 0
+
+newmtl Race014p0041Mtl
+Material Color
+Ka 0.0265487 0.311181 0.383775
+Kd 0.0265487 0.311181 0.383775
+Ks 0.00239459 0.0280673 0.034615 
+
+d 1
+
+Ns 0
+
+newmtl Race014p0091Mtl
+Material Color
+Ka 0.383775 0.101145 0.0242229
+Kd 0.383775 0.101145 0.0242229
+Ks 0.034615 0.0091229 0.00218481 
+
+d 1
+
+Ns 0
+
+newmtl Race007p0081Mtl
+Material Color
+Ka 0.409826 0 1
+Kd 0.409826 0 1
+Ks 0.0369647 0 0.0901961 
+
+d 1
+
+Ns 0
+
+rbx_doublesided 1
+
+newmtl Race013p0061Mtl
+Material Color
+Ka 0.166872 0.12753 0.383775
+Kd 0.166872 0.12753 0.383775
+Ks 0.0104704 0.00800187 0.02408 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race006p0071Mtl
+Material Color
+Ka 0.0265487 0.284452 0.383775
+Kd 0.0265487 0.284452 0.383775
+Ks 0.0016658 0.017848 0.02408 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race014p0101Mtl
+Material Color
+Ka 0.329729 0.560499 0.605484
+Kd 0.329729 0.560499 0.605484
+Ks 0.0206889 0.0351686 0.0379912 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race001p0101Mtl
+Material Color
+Ka 0.14198 0.230998 0.383775
+Kd 0.14198 0.230998 0.383775
+Ks 0.0562353 0.0914934 0.152005 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race015p0051Mtl
+Material Color
+Ka 0.383775 0.0802193 0.0581872
+Kd 0.383775 0.0802193 0.0581872
+Ks 0.034615 0.00723546 0.00524826 
+
+d 1
+
+Ns 0
+
+newmtl Race015p0091Mtl
+Material Color
+Ka 0.0780566 0.259027 0.383775
+Kd 0.0780566 0.259027 0.383775
+Ks 0.0309165 0.102595 0.152005 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race002p0081Mtl
+Material Color
+Ka 0.0563741 0.284452 0.383775
+Kd 0.0563741 0.284452 0.383775
+Ks 0.0035372 0.017848 0.02408 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race016p0021Mtl
+Material Color
+Ka 0.0780566 0.344026 0.789314
+Kd 0.0780566 0.344026 0.789314
+Ks 0.0309165 0.136261 0.31263 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race012p0091Mtl
+Material Color
+Ka 0.0289912 0.186989 0.383775
+Kd 0.0289912 0.186989 0.383775
+Ks 0.0114828 0.0740621 0.152005 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race018p0061Mtl
+Material Color
+Ka 0.306635 0.383775 0.358654
+Kd 0.306635 0.383775 0.358654
+Ks 0.0192398 0.02408 0.0225038 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race019p0111Mtl
+Material Color
+Ka 0.0370285 0.0780566 0.383775
+Kd 0.0370285 0.0780566 0.383775
+Ks 0.0146662 0.0309165 0.152005 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race016p0111Mtl
+Material Color
+Ka 0.0445526 0.315763 0.835528
+Kd 0.0445526 0.315763 0.835528
+Ks 0.00401847 0.0284806 0.0753613 
+
+d 1
+
+Ns 0
+
+newmtl Race016p0131Mtl
+Material Color
+Ka 0.136099 0.0494335 1
+Kd 0.136099 0.0494335 1
+Ks 0.0122756 0.0044587 0.0901961 
+
+d 1
+
+Ns 0
+
+newmtl Race019p0031Mtl
+Material Color
+Ka 0.0802193 0.151058 0.383775
+Kd 0.0802193 0.151058 0.383775
+Ks 0.0317731 0.0598308 0.152005 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race015p0011Mtl
+Material Color
+Ka 0.0545923 0.2468 0.288816
+Kd 0.0545923 0.2468 0.288816
+Ks 0.0216228 0.0977523 0.114394 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race016p0141Mtl
+Material Color
+Ka 0.383775 0.108711 0.108711
+Kd 0.383775 0.108711 0.108711
+Ks 0.152005 0.0430581 0.0430581 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race004p0061Mtl
+Material Color
+Ka 0.0986892 0.320382 0.383775
+Kd 0.0986892 0.320382 0.383775
+Ks 0.00619226 0.0201024 0.02408 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race015p0041Mtl
+Material Color
+Ka 0.0384727 0.288816 0.383775
+Kd 0.0384727 0.288816 0.383775
+Ks 0.0152382 0.114394 0.152005 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race017p0081Mtl
+Material Color
+Ka 0.0563741 0.383775 0.383775
+Kd 0.0563741 0.383775 0.383775
+Ks 0.00508472 0.034615 0.034615 
+
+d 0.552941
+
+Ns 0
+
+newmtl Race016p0171Mtl
+Material Color
+Ka 0.00120174 0.442323 0.673049
+Kd 0.00120174 0.442323 0.673049
+Ks 0.000475983 0.175195 0.26658 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race006p0051Mtl
+Material Color
+Ka 0.0050282 0.373615 0.383775
+Kd 0.0050282 0.373615 0.383775
+Ks 0.000453524 0.0336986 0.034615 
+
+d 1
+
+Ns 0
+
+newmtl Race013p0081Mtl
+Material Color
+Ka 0.215764 0.113921 0.56681
+Kd 0.215764 0.113921 0.56681
+Ks 0.0194611 0.0102752 0.051124 
+
+d 1
+
+Ns 0
+
+rbx_doublesided 1
+
+newmtl Race011p0071Mtl
+Material Color
+Ka 0.0657539 0.383775 0.263175
+Kd 0.0657539 0.383775 0.263175
+Ks 0.0260437 0.152005 0.104238 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race016p0181Mtl
+Material Color
+Ka 0.0209511 0.0938759 0.20836
+Kd 0.0209511 0.0938759 0.20836
+Ks 0.00829829 0.0371822 0.0825268 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race013p0011Mtl
+Material Color
+Ka 0.139022 0.0986892 0.383775
+Kd 0.139022 0.0986892 0.383775
+Ks 0.00872298 0.00619226 0.02408 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race016p0201Mtl
+Material Color
+Ka 0.0717615 0.827726 0.363604
+Kd 0.0717615 0.827726 0.363604
+Ks 0.0064726 0.0746576 0.0327956 
+
+d 1
+
+Ns 0
+
+newmtl Race016p0211Mtl
+Material Color
+Ka 0.0111261 0.0511221 0.111299
+Kd 0.0111261 0.0511221 0.111299
+Ks 0.0044068 0.0202483 0.0440833 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race008p0071Mtl
+Material Color
+Ka 0.00604059 0.21952 0.383775
+Kd 0.00604059 0.21952 0.383775
+Ks 0.00239255 0.086947 0.152005 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race021p0111Mtl
+Material Color
+Ka 0.00552174 0.0302565 0.0697271
+Kd 0.00552174 0.0302565 0.0697271
+Ks 0.00218704 0.011984 0.0276174 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race016p0091Mtl
+Material Color
+Ka 0.147998 0.409826 0.215764
+Kd 0.147998 0.409826 0.215764
+Ks 0.0133488 0.0369647 0.0194611 
+
+d 1
+
+Ns 0
+
+newmtl Race016p0231Mtl
+Material Color
+Ka 0.0289912 0.130352 0.288816
+Kd 0.0289912 0.130352 0.288816
+Ks 0.0114828 0.0516297 0.114394 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race018p0081Mtl
+Material Color
+Ka 0.0697271 0.0846415 0.12753
+Kd 0.0697271 0.0846415 0.12753
+Ks 0.00437503 0.00531084 0.00800187 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race017p0031Mtl
+Material Color
+Ka 0.0384727 0.275833 0.383775
+Kd 0.0384727 0.275833 0.383775
+Ks 0.0152382 0.109251 0.152005 
+
+d 0.552941
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race019p0071Mtl
+Material Color
+Ka 0.0494335 0.311181 0.517401
+Kd 0.0494335 0.311181 0.517401
+Ks 0.0195795 0.123252 0.204932 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race015p0071Mtl
+Material Color
+Ka 0.0143105 0.383775 0.22331
+Kd 0.0143105 0.383775 0.22331
+Ks 0.00566809 0.152005 0.0884484 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race004p0091Mtl
+Material Color
+Ka 0.0938759 0.147998 0.163641
+Kd 0.0938759 0.147998 0.163641
+Ks 0.0371822 0.0586188 0.0648145 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+rbx_doublesided 1
+
+newmtl Race023p0011Mtl
+Material Color
+Ka 0.0370285 0.124741 0.259027
+Kd 0.0370285 0.124741 0.259027
+Ks 0.00232336 0.00782688 0.0162527 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race017p0041Mtl
+Material Color
+Ka 0.0445526 0.136099 0.383775
+Kd 0.0445526 0.136099 0.383775
+Ks 0.0176463 0.0539057 0.152005 
+
+d 0.552941
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race009p0021Mtl
+Material Color
+Ka 0.493616 0.201096 0.493616
+Kd 0.493616 0.201096 0.493616
+Ks 0.0445222 0.018138 0.0445222 
+
+d 1
+
+Ns 0
+
+newmtl Race009p0051Mtl
+Material Color
+Ka 0.133209 0.325037 0.325037
+Kd 0.133209 0.325037 0.325037
+Ks 0.0120149 0.0293171 0.0293171 
+
+d 1
+
+Ns 0
+
+newmtl Race017p0061Mtl
+Material Color
+Ka 0.00969633 0.163641 0.476177
+Kd 0.00969633 0.163641 0.476177
+Ks 0.000874571 0.0147597 0.0429493 
+
+d 1
+
+Ns 0
+
+newmtl Race008p0021Mtl
+Material Color
+Ka 0.0545923 0.383775 0.353741
+Kd 0.0545923 0.383775 0.353741
+Ks 0.0216228 0.152005 0.140109 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race017p0071Mtl
+Material Color
+Ka 0.0738278 0.383775 0.368591
+Kd 0.0738278 0.383775 0.368591
+Ks 0.00665898 0.034615 0.0332455 
+
+d 0.552941
+
+Ns 0
+
+newmtl Race016p0121Mtl
+Material Color
+Ka 0.297653 0.186989 0.84337
+Kd 0.297653 0.186989 0.84337
+Ks 0.0268471 0.0168656 0.0760686 
+
+d 1
+
+Ns 0
+
+newmtl Race008p0141Mtl
+Material Color
+Ka 0 0.409826 1
+Kd 0 0.409826 1
+Ks 0 0.162323 0.396078 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race024p0041Mtl
+Material Color
+Ka 0.108711 0.383775 0.344026
+Kd 0.108711 0.383775 0.344026
+Ks 0.00682109 0.02408 0.0215859 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race019p0041Mtl
+Material Color
+Ka 0.0528416 0.284452 0.383775
+Kd 0.0528416 0.284452 0.383775
+Ks 0.0209294 0.112665 0.152005 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race017p0091Mtl
+Material Color
+Ka 0.0265487 0.173439 0.383775
+Kd 0.0265487 0.173439 0.383775
+Ks 0.0105154 0.0686955 0.152005 
+
+d 0.552941
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race005p0041Mtl
+Material Color
+Ka 0.103634 0.329729 0.0697271
+Kd 0.103634 0.329729 0.0697271
+Ks 0.00650253 0.0206889 0.00437503 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race008p0091Mtl
+Material Color
+Ka 0.000804658 0.368591 0.383775
+Kd 0.000804658 0.368591 0.383775
+Ks 7.2577e-05 0.0332455 0.034615 
+
+d 1
+
+Ns 0
+
+newmtl Race014p0021Mtl
+Material Color
+Ka 0.383775 0.108711 0.0289912
+Kd 0.383775 0.108711 0.0289912
+Ks 0.034615 0.00980532 0.00261489 
+
+d 1
+
+Ns 0
+
+newmtl Race025p0031Mtl
+Material Color
+Ka 0.311181 0.111299 0.383775
+Kd 0.311181 0.111299 0.383775
+Ks 0.0195251 0.00698349 0.02408 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race016p0031Mtl
+Material Color
+Ka 0.116576 0.108711 0.447871
+Kd 0.116576 0.108711 0.447871
+Ks 0.0105147 0.00980532 0.0403962 
+
+d 1
+
+Ns 0
+
+newmtl Race017p0111Mtl
+Material Color
+Ka 0.383775 0.0619075 0.0563741
+Kd 0.383775 0.0619075 0.0563741
+Ks 0.152005 0.0245202 0.0223286 
+
+d 0.552941
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race009p0071Mtl
+Material Color
+Ka 0.0231036 0.358654 0.368591
+Kd 0.0231036 0.358654 0.368591
+Ks 0.00208385 0.0323492 0.0332455 
+
+d 1
+
+Ns 0
+
+newmtl Race017p0051Mtl
+Material Color
+Ka 0.0199178 0.358654 1
+Kd 0.0199178 0.358654 1
+Ks 0.00179651 0.0323492 0.0901961 
+
+d 1
+
+Ns 0
+
+newmtl Race018p0021Mtl
+Material Color
+Ka 0.383775 0.0697271 0.0697271
+Kd 0.383775 0.0697271 0.0697271
+Ks 0.02408 0.00437503 0.00437503 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race021p0061Mtl
+Material Color
+Ka 0.373615 0.368591 0.383775
+Kd 0.373615 0.368591 0.383775
+Ks 0.147981 0.145991 0.152005 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race012p0101Mtl
+Material Color
+Ka 0.0370285 0.373615 0.383775
+Kd 0.0370285 0.373615 0.383775
+Ks 0.0146662 0.147981 0.152005 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race002p0051Mtl
+Material Color
+Ka 0.0846415 0.315763 0.383775
+Kd 0.0846415 0.315763 0.383775
+Ks 0.00531084 0.0198126 0.02408 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race021p0081Mtl
+Material Color
+Ka 0.00902149 0.042987 0.0802193
+Kd 0.00902149 0.042987 0.0802193
+Ks 0.00357322 0.0170262 0.0317731 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race013p0031Mtl
+Material Color
+Ka 0.0717615 0.136099 0.383775
+Kd 0.0717615 0.136099 0.383775
+Ks 0.00450268 0.00853952 0.02408 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race015p0021Mtl
+Material Color
+Ka 0.45908 0.14198 0.0600316
+Kd 0.45908 0.14198 0.0600316
+Ks 0.0414072 0.0128061 0.00541462 
+
+d 1
+
+Ns 0
+
+newmtl Race019p0061Mtl
+Material Color
+Ka 0.113921 0.215764 0.383775
+Kd 0.113921 0.215764 0.383775
+Ks 0.0451216 0.0854596 0.152005 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race010p0021Mtl
+Material Color
+Ka 0.12753 0.0199178 0.383775
+Kd 0.12753 0.0199178 0.383775
+Ks 0.0115027 0.00179651 0.034615 
+
+d 1
+
+Ns 0
+
+newmtl Race013p0091Mtl
+Material Color
+Ka 0.0869013 0.297653 0.383775
+Kd 0.0869013 0.297653 0.383775
+Ks 0.00545263 0.0186762 0.02408 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race010p0031Mtl
+Material Color
+Ka 0.154152 0.0619075 0.383775
+Kd 0.154152 0.0619075 0.383775
+Ks 0.0139039 0.00558381 0.034615 
+
+d 1
+
+Ns 0
+
+newmtl Race015p0081Mtl
+Material Color
+Ka 0.0179364 0.133209 0.176774
+Kd 0.0179364 0.133209 0.176774
+Ks 0.00710423 0.052761 0.0700165 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race005p0061Mtl
+Material Color
+Ka 0.234895 0.383775 0.154152
+Kd 0.234895 0.383775 0.154152
+Ks 0.0147385 0.02408 0.0096723 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+rbx_doublesided 1
+
+newmtl Race019p0101Mtl
+Material Color
+Ka 0.0563741 0.151058 0.383775
+Kd 0.0563741 0.151058 0.383775
+Ks 0.0223286 0.0598308 0.152005 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race019p0121Mtl
+Material Color
+Ka 0.0846415 0.38891 0.394083
+Kd 0.0846415 0.38891 0.394083
+Ks 0.00763433 0.0350782 0.0355448 
+
+d 1
+
+Ns 0
+
+newmtl Race019p0151Mtl
+Material Color
+Ka 0.0169881 0.12753 0.383775
+Kd 0.0169881 0.12753 0.383775
+Ks 0.0067286 0.0505118 0.152005 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race022p0021Mtl
+Material Color
+Ka 0.0638149 0.0962661 0.111299
+Kd 0.0638149 0.0962661 0.111299
+Ks 0.00400407 0.00604023 0.00698349 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race020p0031Mtl
+Material Color
+Ka 0.0169881 0.0581872 0.108711
+Kd 0.0169881 0.0581872 0.108711
+Ks 0.0067286 0.0230467 0.0430581 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race008p0011Mtl
+Material Color
+Ka 0.00196342 0.0759261 0.12753
+Kd 0.00196342 0.0759261 0.12753
+Ks 0.000777667 0.0300727 0.0505118 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race020p0061Mtl
+Material Color
+Ka 0.22331 0.22331 0.230998
+Kd 0.22331 0.22331 0.230998
+Ks 0.0884484 0.0884484 0.0914934 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race020p0081Mtl
+Material Color
+Ka 0.363604 0.0342302 0.0342302
+Kd 0.363604 0.0342302 0.0342302
+Ks 0.0327956 0.00308743 0.00308743 
+
+d 1
+
+Ns 0
+
+newmtl Race009p0041Mtl
+Material Color
+Ka 0.554227 0.227137 0.554227
+Kd 0.554227 0.227137 0.554227
+Ks 0.0499891 0.0204868 0.0499891 
+
+d 1
+
+Ns 0
+
+newmtl Race010p0071Mtl
+Material Color
+Ka 0.0717615 0.0563741 0.383775
+Kd 0.0717615 0.0563741 0.383775
+Ks 0.0284232 0.0223286 0.152005 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race013p0051Mtl
+Material Color
+Ka 0.373615 0.368591 0.383775
+Kd 0.373615 0.368591 0.383775
+Ks 0.0336986 0.0332455 0.034615 
+
+d 1
+
+Ns 0
+
+newmtl Race016p0071Mtl
+Material Color
+Ka 0.0315514 0.353741 0.383775
+Kd 0.0315514 0.353741 0.383775
+Ks 0.0124968 0.140109 0.152005 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race002p0091Mtl
+Material Color
+Ka 0.0265487 0.0697271 0.151058
+Kd 0.0265487 0.0697271 0.151058
+Ks 0.0105154 0.0276174 0.0598308 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+rbx_doublesided 1
+
+newmtl Race020p0121Mtl
+Material Color
+Ka 0.144972 0.144972 0.151058
+Kd 0.144972 0.144972 0.151058
+Ks 0.0574203 0.0574203 0.0598308 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race021p0051Mtl
+Material Color
+Ka 0.0619075 0.280124 0.383775
+Kd 0.0619075 0.280124 0.383775
+Ks 0.0245202 0.110951 0.152005 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race014p0111Mtl
+Material Color
+Ka 0.0545923 0.133209 0.383775
+Kd 0.0545923 0.133209 0.383775
+Ks 0.0034254 0.00835818 0.02408 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race020p0141Mtl
+Material Color
+Ka 0.0342302 0.0657539 0.139022
+Kd 0.0342302 0.0657539 0.139022
+Ks 0.0135578 0.0260437 0.0550638 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race016p0191Mtl
+Material Color
+Ka 0.0118813 0.154152 0.20471
+Kd 0.0118813 0.154152 0.20471
+Ks 0.00470594 0.0610564 0.0810813 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race016p0041Mtl
+Material Color
+Ka 0.111299 0.84337 0.144972
+Kd 0.111299 0.84337 0.144972
+Ks 0.0100388 0.0760686 0.0130759 
+
+d 1
+
+Ns 0
+
+newmtl Race004p0011Mtl
+Material Color
+Ka 0.0384727 0.0414519 0.0759261
+Kd 0.0384727 0.0414519 0.0759261
+Ks 0.00241398 0.0026009 0.00476399 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race009p0121Mtl
+Material Color
+Ka 0.638779 0.230998 0.632043
+Kd 0.638779 0.230998 0.632043
+Ks 0.253007 0.0914934 0.250338 
+
+d 1
+
+Ns 0
+
+map_Ka Race009p0121_diff.png
+map_Kd Race009p0121_diff.png
+map_d Race009p0121_diff.png
+
+newmtl Race017p0021Mtl
+Material Color
+Ka 0.0342302 0.383775 0.348865
+Kd 0.0342302 0.383775 0.348865
+Ks 0.00308743 0.034615 0.0314662 
+
+d 0.552941
+
+Ns 0
+
+newmtl Race024p0011Mtl
+Material Color
+Ka 0.22331 0.329729 0.383775
+Kd 0.22331 0.329729 0.383775
+Ks 0.0140116 0.0206889 0.02408 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race005p0011Mtl
+Material Color
+Ka 0.0242229 0.383775 0.0600316
+Kd 0.0242229 0.383775 0.0600316
+Ks 0.00151987 0.02408 0.00376669 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race019p0081Mtl
+Material Color
+Ka 0.113921 0.383775 0.373615
+Kd 0.113921 0.383775 0.373615
+Ks 0.0451216 0.152005 0.147981 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race012p0081Mtl
+Material Color
+Ka 0.0581872 0.2468 0.383775
+Kd 0.0581872 0.2468 0.383775
+Ks 0.0230467 0.0977523 0.152005 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race020p0161Mtl
+Material Color
+Ka 0.0445526 0.0445526 0.0461488
+Kd 0.0445526 0.0445526 0.0461488
+Ks 0.0176463 0.0176463 0.0182786 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race004p0021Mtl
+Material Color
+Ka 0.0938759 0.147998 0.163641
+Kd 0.0938759 0.147998 0.163641
+Ks 0.0371822 0.0586188 0.0648145 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race020p0101Mtl
+Material Color
+Ka 0.673049 0.0697271 0.0461488
+Kd 0.673049 0.0697271 0.0461488
+Ks 0.0607064 0.00628911 0.00416244 
+
+d 1
+
+Ns 0
+
+newmtl Race004p0071Mtl
+Material Color
+Ka 0.0461488 0.215764 0.499505
+Kd 0.0461488 0.215764 0.499505
+Ks 0.00289561 0.0135382 0.0313415 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race008p0101Mtl
+Material Color
+Ka 0.0342302 0.0545923 0.215764
+Kd 0.0342302 0.0545923 0.215764
+Ks 0.0135578 0.0216228 0.0854596 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race020p0131Mtl
+Material Color
+Ka 0.673049 0.0657539 0.0445526
+Kd 0.673049 0.0657539 0.0445526
+Ks 0.0607064 0.00593074 0.00401847 
+
+d 1
+
+Ns 0
+
+newmtl Race003p0111Mtl
+Material Color
+Ka 0.197516 0.363604 0.383775
+Kd 0.197516 0.363604 0.383775
+Ks 0.0123932 0.0228144 0.02408 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race021p0121Mtl
+Material Color
+Ka 0.0209511 0.0545923 0.0677246
+Kd 0.0209511 0.0545923 0.0677246
+Ks 0.00829829 0.0216228 0.0268243 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race019p0131Mtl
+Material Color
+Ka 0.0384727 0.0846415 0.383775
+Kd 0.0384727 0.0846415 0.383775
+Ks 0.0152382 0.0335247 0.152005 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race015p0031Mtl
+Material Color
+Ka 0.133209 0.383775 0.284452
+Kd 0.133209 0.383775 0.284452
+Ks 0.052761 0.152005 0.112665 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race020p0091Mtl
+Material Color
+Ka 0.573159 0.0302565 0.0302565
+Kd 0.573159 0.0302565 0.0302565
+Ks 0.0516967 0.00272902 0.00272902 
+
+d 1
+
+Ns 0
+
+newmtl Race009p0101Mtl
+Material Color
+Ka 0.415148 0.133209 0.523443
+Kd 0.415148 0.133209 0.523443
+Ks 0.0374447 0.0120149 0.0472125 
+
+d 1
+
+Ns 0
+
+newmtl Race020p0051Mtl
+Material Color
+Ka 0.701169 0.0315514 0.0315514
+Kd 0.701169 0.0315514 0.0315514
+Ks 0.0632427 0.00284581 0.00284581 
+
+d 1
+
+Ns 0
+
+newmtl Race012p0031Mtl
+Material Color
+Ka 0.116576 0.311181 0.383775
+Kd 0.116576 0.311181 0.383775
+Ks 0.0105147 0.0280673 0.034615 
+
+d 1
+
+Ns 0
+
+newmtl Race024p0051Mtl
+Material Color
+Ka 0.0315514 0.121986 0.383775
+Kd 0.0315514 0.121986 0.383775
+Ks 0.0019797 0.00765401 0.02408 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race022p0061Mtl
+Material Color
+Ka 0.0638149 0.0962661 0.111299
+Kd 0.0638149 0.0962661 0.111299
+Ks 0.0252757 0.0381289 0.0440833 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race019p0141Mtl
+Material Color
+Ka 0.0445526 0.113921 0.383775
+Kd 0.0445526 0.113921 0.383775
+Ks 0.0176463 0.0451216 0.152005 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race010p0131Mtl
+Material Color
+Ka 0.0445526 0.0445526 0.383775
+Kd 0.0445526 0.0445526 0.383775
+Ks 0.0176463 0.0176463 0.152005 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race022p0051Mtl
+Material Color
+Ka 0.0915184 0.227137 0.306635
+Kd 0.0915184 0.227137 0.306635
+Ks 0.00574233 0.0142517 0.0192398 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race005p0071Mtl
+Material Color
+Ka 0.00775103 0.20836 0.447871
+Kd 0.00775103 0.20836 0.447871
+Ks 0.000699112 0.0187932 0.0403962 
+
+d 1
+
+Ns 0
+
+newmtl Race023p0031Mtl
+Material Color
+Ka 0.0938759 0.383775 0.197516
+Kd 0.0938759 0.383775 0.197516
+Ks 0.00589025 0.02408 0.0123932 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race025p0041Mtl
+Material Color
+Ka 0.373615 0.368591 0.383775
+Kd 0.373615 0.368591 0.383775
+Ks 0.0234425 0.0231273 0.02408 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race005p0031Mtl
+Material Color
+Ka 0.215764 0.275833 0.12753
+Kd 0.215764 0.275833 0.12753
+Ks 0.0135382 0.0173072 0.00800187 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race023p0051Mtl
+Material Color
+Ka 0.0461488 0.373615 0.383775
+Kd 0.0461488 0.373615 0.383775
+Ks 0.0182786 0.147981 0.152005 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race018p0111Mtl
+Material Color
+Ka 0.383775 0.0891935 0.0891935
+Kd 0.383775 0.0891935 0.0891935
+Ks 0.034615 0.00804491 0.00804491 
+
+d 1
+
+Ns 0
+
+newmtl Race018p0101Mtl
+Material Color
+Ka 0.673049 0.0869013 0.0869013
+Kd 0.673049 0.0869013 0.0869013
+Ks 0.0607064 0.00783815 0.00783815 
+
+d 1
+
+Ns 0
+
+newmtl Race025p0051Mtl
+Material Color
+Ka 0.625345 0.329729 0.0494335
+Kd 0.625345 0.329729 0.0494335
+Ks 0.0392373 0.0206889 0.00310171 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race019p0091Mtl
+Material Color
+Ka 0.0915184 0.579547 0.737205
+Kd 0.0915184 0.579547 0.737205
+Ks 0.0082546 0.0522728 0.066493 
+
+d 1
+
+Ns 0
+
+newmtl Race023p0041Mtl
+Material Color
+Ka 0.0461488 0.373615 0.383775
+Kd 0.0461488 0.373615 0.383775
+Ks 0.00289561 0.0234425 0.02408 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race003p0091Mtl
+Material Color
+Ka 0.0134734 0.0445526 0.0657539
+Kd 0.0134734 0.0445526 0.0657539
+Ks 0.00084539 0.00279546 0.00412573 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+
+newmtl Race009p0081Mtl
+Material Color
+Ka 0.329729 0.201096 0.383775
+Kd 0.329729 0.201096 0.383775
+Ks 0.0297403 0.018138 0.034615 
+
+d 1
+
+Ns 0
+
+newmtl Race015p0061Mtl
+Material Color
+Ka 0.0356144 1 0.737205
+Kd 0.0356144 1 0.737205
+Ks 0.0141061 0.396078 0.291991 
+
+d 1
+
+Ns 0
+
+map_Ka Race025p0071_diff.png
+map_Kd Race025p0071_diff.png
+map_d Race025p0071_diff.png
+
+map_Bump Race025p0071_nmap.png
+

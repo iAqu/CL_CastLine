@@ -5,6 +5,7 @@ local function read(path)
 	return result
 end
 local config = assert(loadstring(read("src/ReplicatedStorage/Modules/FishingConfig.lua")))()
+local reelDuration = 1.5 -- Fixture-reported settling time; real spr is tested separately.
 local source = read("src/StarterPlayer/StarterPlayerScripts/Controllers/FishingController.lua")
 local function fixture()
 	local now, render, locked, movement = 0, nil, false, false
@@ -198,7 +199,11 @@ local function fixture()
 					gui = object("ScreenGui"),
 					UpdateMeter = function() end,
 					RefreshSoundSetting = function() end,
-					Update = function() end,
+					Update = function(self, now)
+						if self.phase == "Reeling" and now >= self.reelStarted + reelDuration then
+							self.phase, self.readyAt = "Reeled", now + config.Reel.HoldTime
+						end
+					end,
 					Destroy = function(self)
 						self.destroyCount = (self.destroyCount or 0) + 1
 					end,
@@ -207,12 +212,13 @@ local function fixture()
 						self.casts = (self.casts or 0) + 1
 					end,
 					CanReturn = function(self, now)
-						return self.phase == "Reeling" or (self.phase == "Caught" and now >= self.readyAt)
+						return (self.phase == "Reeled" or self.phase == "Caught") and now >= self.readyAt
 					end,
-					TryHook = function(self)
+					TryHook = function(self, at)
 						self.hooks = (self.hooks or 0) + 1
 						if self.phase == "Waiting" or self.phase == "Escaped" then
 							self.phase = "Reeling"
+							self.reelStarted, self.readyAt = at, math.huge
 						end
 					end,
 				}
@@ -416,10 +422,34 @@ for _, phase in ipairs({ "Waiting", "Escaped" }) do
 	reeled.advance(0.36)
 	reeled.sequence().phase = phase
 	reeled.tap()
-	reeled.advance(0.31)
-	assert(reeled.sequence().destroyCount == 1, "A single reel-in tap must end an unsuccessful cast")
+	local startedAt = reeled.sequence().reelStarted
+	assert(reeled.sequence().phase == "Reeling" and reeled.covered() == 0, "First tap skipped reel showcase")
+	reeled.tap()
+	assert(reeled.sequence().reelStarted == startedAt, "Repeated tap restarted reeling")
+	reeled.advance(reelDuration + 0.1)
+	reeled.tap()
+	assert(reeled.covered() == 0 and not reeled.sequence().destroyCount, "Reel showcase returned before settling")
+	reeled.advance(config.Reel.HoldTime - 0.01)
+	assert(reeled.covered() == 0 and not reeled.sequence().destroyCount, "Auto-return shortened the showcase")
+	reeled.advance(0.011)
+	reeled.advance(0.15)
+	assert(reeled.covered() > 0 and not reeled.sequence().destroyCount, "Empty reel did not auto-return")
+	reeled.tap()
+	reeled.advance(0.16)
+	assert(reeled.sequence().destroyCount == 1 and reeled.character.teleports == 1, "Auto-return must finish once")
 	reeled.advance(0.36)
 	assert(not reeled.controller:IsPreparing() and not reeled.root.Anchored)
+end
+for _, delay in ipairs({ 0.1, reelDuration + 0.1 }) do
+	local cancelled = fixture()
+	cancelled.advance(0.31)
+	cancelled.advance(0.36)
+	cancelled.sequence().phase = "Waiting"
+	cancelled.tap()
+	cancelled.advance(delay)
+	cancelled.abort()
+	cancelled.advance(10)
+	assert(cancelled.sequence().destroyCount == 1 and not cancelled.controller:IsPreparing(), "Cancelled reel returned again")
 end
 for _, elapsed in ipairs({ 0.15, 0.31, 0.67 }) do
 	local interrupted = fixture()

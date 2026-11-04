@@ -1,0 +1,69 @@
+{
+  "geometry_unchanged": true,
+  "geometry_sha256": "3ce8c2adb630eea42f881563220e5162d6046eee3abb00decaab89fb0448e4ef",
+  "backup_action_suffix": "_Previous_20261103_061947",
+  "clips": {
+    "StruggleLeft": {
+      "duration": 0.6,
+      "loop": true,
+      "keyframes": 9,
+      "head_error": 0,
+      "maximum_vertex_displacement": 5.769920279508007,
+      "yaw_ranges": {
+        "SpineFront": [
+          22.00000059003955,
+          26.000001568734312
+        ],
+        "SpineMid": [
+          33.00000885903832,
+          39.00000636890022
+        ],
+        "TailBase": [
+          -6.000008788108172,
+          22.00000059003955
+        ],
+        "FishTail": [
+          -26.00000920474644,
+          26.00000920474644
+        ]
+      },
+      "body_yaw_range": [
+        55.000009449077865,
+        65.00000793763454
+      ],
+      "tail_delay": 0.075,
+      "seam_identical": true
+    },
+    "StruggleRight": {
+      "duration": 0.6,
+      "loop": true,
+      "keyframes": 9,
+      "head_error": 0,
+      "maximum_vertex_displacement": 5.769920279508007,
+      "yaw_ranges": {
+        "SpineFront": [
+          -26.000001568734312,
+          -22.00000059003955
+        ],
+        "SpineMid": [
+          -39.00000636890022,
+          -33.00000885903832
+        ],
+        "TailBase": [
+          -22.00000059003955,
+          6.000008788108172
+        ],
+        "FishTail": [
+          -26.00000920474644,
+          26.00000920474644
+        ]
+      },
+      "body_yaw_range": [
+        55.000009449077865,
+        65.00000793763454
+      ],
+      "tail_delay": 0.075,
+      "seam_identical": true
+    }
+  }
+}

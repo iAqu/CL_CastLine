@@ -1,0 +1,55 @@
+[2026-11-04T01:56:31Z INFO  rbxlx_to_rojo] rbxlx-to-rojo 1.0.1
+[2026-11-04T01:56:31Z INFO  rbxlx_to_rojo] Select a place file.
+[2026-11-04T01:56:31Z INFO  rbxlx_to_rojo] Opening place file
+[2026-11-04T01:56:31Z INFO  rbxlx_to_rojo] Decoding place file, this is the longest part...
+[2026-11-04T01:56:31Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property MeshPart.Name because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-11-04T01:56:31Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property MeshPart.Name because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-11-04T01:56:31Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property MeshPart.Name because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-11-04T01:56:31Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property MeshPart.Name because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-11-04T01:56:31Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property MeshPart.Name because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-11-04T01:56:31Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property MeshPart.Name because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-11-04T01:56:31Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property MeshPart.Name because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-11-04T01:56:31Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property MeshPart.Name because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-11-04T01:56:31Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property MeshPart.Name because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-11-04T01:56:31Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property MeshPart.Name because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-11-04T01:56:31Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property MeshPart.Name because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-11-04T01:56:31Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property MeshPart.Name because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-11-04T01:56:31Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property MeshPart.Name because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-11-04T01:56:31Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property MeshPart.Name because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-11-04T01:56:31Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property MeshPart.Name because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-11-04T01:56:31Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property MeshPart.Name because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-11-04T01:56:31Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property MeshPart.Name because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-11-04T01:56:31Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property MeshPart.Name because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-11-04T01:56:31Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property MeshPart.Name because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-11-04T01:56:31Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property MeshPart.Name because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-11-04T01:56:31Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property MeshPart.Name because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-11-04T01:56:31Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property MeshPart.Name because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-11-04T01:56:31Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property MeshPart.Name because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-11-04T01:56:31Z WARN  rbx_binary::deserializer::state] Performing lossy string conversion on property MeshPart.Name because it did not contain UTF-8.
+This may cause unexpected or broken behavior in your final results if you rely on this property being non UTF-8.
+[2026-11-04T01:56:32Z INFO  rbxlx_to_rojo] Select the path to put your Rojo project in.
+[2026-11-04T01:56:32Z INFO  rbxlx_to_rojo] Starting processing, please wait a bit...
+[2026-11-04T01:56:32Z INFO  rbxlx_to_rojo] Done

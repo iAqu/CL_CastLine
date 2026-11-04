@@ -1,0 +1,1405 @@
+{
+  "bones": [
+    "FishBody",
+    "SpineFront",
+    "SpineMid",
+    "TailBase",
+    "FishTail"
+  ],
+  "pivotFractions": [
+    null,
+    0.28,
+    0.48,
+    0.7,
+    0.88
+  ],
+  "weightAnchors": [
+    0.25,
+    0.42,
+    0.62,
+    0.82,
+    0.97
+  ],
+  "clips": {
+    "SwimLoop": {
+      "duration": 0.625,
+      "loop": true,
+      "frames": [
+        {
+          "time": 0,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              0,
+              0,
+              0
+            ],
+            "SpineMid": [
+              0,
+              -2,
+              0
+            ],
+            "TailBase": [
+              0,
+              -8,
+              0
+            ],
+            "FishTail": [
+              0,
+              -10,
+              0
+            ]
+          }
+        },
+        {
+          "time": 0.078125,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              0,
+              2,
+              0
+            ],
+            "SpineMid": [
+              0,
+              0,
+              0
+            ],
+            "TailBase": [
+              0,
+              -4,
+              0
+            ],
+            "FishTail": [
+              0,
+              -10,
+              0
+            ]
+          }
+        },
+        {
+          "time": 0.15625,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              0,
+              3,
+              0
+            ],
+            "SpineMid": [
+              0,
+              4,
+              0
+            ],
+            "TailBase": [
+              0,
+              0,
+              0
+            ],
+            "FishTail": [
+              0,
+              -4,
+              0
+            ]
+          }
+        },
+        {
+          "time": 0.234375,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              0,
+              2,
+              0
+            ],
+            "SpineMid": [
+              0,
+              6,
+              0
+            ],
+            "TailBase": [
+              0,
+              9,
+              0
+            ],
+            "FishTail": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "time": 0.3125,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              0,
+              0,
+              0
+            ],
+            "SpineMid": [
+              0,
+              2,
+              0
+            ],
+            "TailBase": [
+              0,
+              8,
+              0
+            ],
+            "FishTail": [
+              0,
+              10,
+              0
+            ]
+          }
+        },
+        {
+          "time": 0.390625,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              0,
+              -2,
+              0
+            ],
+            "SpineMid": [
+              0,
+              0,
+              0
+            ],
+            "TailBase": [
+              0,
+              4,
+              0
+            ],
+            "FishTail": [
+              0,
+              10,
+              0
+            ]
+          }
+        },
+        {
+          "time": 0.46875,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              0,
+              -3,
+              0
+            ],
+            "SpineMid": [
+              0,
+              -4,
+              0
+            ],
+            "TailBase": [
+              0,
+              0,
+              0
+            ],
+            "FishTail": [
+              0,
+              4,
+              0
+            ]
+          }
+        },
+        {
+          "time": 0.546875,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              0,
+              -2,
+              0
+            ],
+            "SpineMid": [
+              0,
+              -6,
+              0
+            ],
+            "TailBase": [
+              0,
+              -9,
+              0
+            ],
+            "FishTail": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "time": 0.625,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              0,
+              0,
+              0
+            ],
+            "SpineMid": [
+              0,
+              -2,
+              0
+            ],
+            "TailBase": [
+              0,
+              -8,
+              0
+            ],
+            "FishTail": [
+              0,
+              -10,
+              0
+            ]
+          }
+        }
+      ]
+    },
+    "StruggleLeft": {
+      "duration": 0.6,
+      "loop": true,
+      "frames": [
+        {
+          "time": 0,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              0,
+              24,
+              0
+            ],
+            "SpineMid": [
+              -1,
+              36,
+              0
+            ],
+            "TailBase": [
+              0,
+              8,
+              0
+            ],
+            "FishTail": [
+              -1.414214,
+              -18.384776,
+              0
+            ]
+          }
+        },
+        {
+          "time": 0.075,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              0.707107,
+              25.414214,
+              0
+            ],
+            "SpineMid": [
+              -0.707107,
+              38.12132,
+              0
+            ],
+            "TailBase": [
+              1.414214,
+              17.899495,
+              0
+            ],
+            "FishTail": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "time": 0.15,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              1,
+              26,
+              0
+            ],
+            "SpineMid": [
+              0,
+              39,
+              0
+            ],
+            "TailBase": [
+              2,
+              22,
+              0
+            ],
+            "FishTail": [
+              1.414214,
+              18.384776,
+              0
+            ]
+          }
+        },
+        {
+          "time": 0.225,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              0.707107,
+              25.414214,
+              0
+            ],
+            "SpineMid": [
+              0.707107,
+              38.12132,
+              0
+            ],
+            "TailBase": [
+              1.414214,
+              17.899495,
+              0
+            ],
+            "FishTail": [
+              2,
+              26,
+              0
+            ]
+          }
+        },
+        {
+          "time": 0.3,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              0,
+              24,
+              0
+            ],
+            "SpineMid": [
+              1,
+              36,
+              0
+            ],
+            "TailBase": [
+              0,
+              8,
+              0
+            ],
+            "FishTail": [
+              1.414214,
+              18.384776,
+              0
+            ]
+          }
+        },
+        {
+          "time": 0.375,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              -0.707107,
+              22.585786,
+              0
+            ],
+            "SpineMid": [
+              0.707107,
+              33.87868,
+              0
+            ],
+            "TailBase": [
+              -1.414214,
+              -1.899495,
+              0
+            ],
+            "FishTail": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "time": 0.45,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              -1,
+              22,
+              0
+            ],
+            "SpineMid": [
+              0,
+              33,
+              0
+            ],
+            "TailBase": [
+              -2,
+              -6,
+              0
+            ],
+            "FishTail": [
+              -1.414214,
+              -18.384776,
+              0
+            ]
+          }
+        },
+        {
+          "time": 0.525,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              -0.707107,
+              22.585786,
+              0
+            ],
+            "SpineMid": [
+              -0.707107,
+              33.87868,
+              0
+            ],
+            "TailBase": [
+              -1.414214,
+              -1.899495,
+              0
+            ],
+            "FishTail": [
+              -2,
+              -26,
+              0
+            ]
+          }
+        },
+        {
+          "time": 0.6,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              0,
+              24,
+              0
+            ],
+            "SpineMid": [
+              -1,
+              36,
+              0
+            ],
+            "TailBase": [
+              0,
+              8,
+              0
+            ],
+            "FishTail": [
+              -1.414214,
+              -18.384776,
+              0
+            ]
+          }
+        }
+      ]
+    },
+    "StruggleRight": {
+      "duration": 0.6,
+      "loop": true,
+      "frames": [
+        {
+          "time": 0,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              0,
+              -24,
+              0
+            ],
+            "SpineMid": [
+              -1,
+              -36,
+              0
+            ],
+            "TailBase": [
+              0,
+              -8,
+              0
+            ],
+            "FishTail": [
+              -1.414214,
+              18.384776,
+              0
+            ]
+          }
+        },
+        {
+          "time": 0.075,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              0.707107,
+              -25.414214,
+              0
+            ],
+            "SpineMid": [
+              -0.707107,
+              -38.12132,
+              0
+            ],
+            "TailBase": [
+              1.414214,
+              -17.899495,
+              0
+            ],
+            "FishTail": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "time": 0.15,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              1,
+              -26,
+              0
+            ],
+            "SpineMid": [
+              0,
+              -39,
+              0
+            ],
+            "TailBase": [
+              2,
+              -22,
+              0
+            ],
+            "FishTail": [
+              1.414214,
+              -18.384776,
+              0
+            ]
+          }
+        },
+        {
+          "time": 0.225,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              0.707107,
+              -25.414214,
+              0
+            ],
+            "SpineMid": [
+              0.707107,
+              -38.12132,
+              0
+            ],
+            "TailBase": [
+              1.414214,
+              -17.899495,
+              0
+            ],
+            "FishTail": [
+              2,
+              -26,
+              0
+            ]
+          }
+        },
+        {
+          "time": 0.3,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              0,
+              -24,
+              0
+            ],
+            "SpineMid": [
+              1,
+              -36,
+              0
+            ],
+            "TailBase": [
+              0,
+              -8,
+              0
+            ],
+            "FishTail": [
+              1.414214,
+              -18.384776,
+              0
+            ]
+          }
+        },
+        {
+          "time": 0.375,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              -0.707107,
+              -22.585786,
+              0
+            ],
+            "SpineMid": [
+              0.707107,
+              -33.87868,
+              0
+            ],
+            "TailBase": [
+              -1.414214,
+              1.899495,
+              0
+            ],
+            "FishTail": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "time": 0.45,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              -1,
+              -22,
+              0
+            ],
+            "SpineMid": [
+              0,
+              -33,
+              0
+            ],
+            "TailBase": [
+              -2,
+              6,
+              0
+            ],
+            "FishTail": [
+              -1.414214,
+              18.384776,
+              0
+            ]
+          }
+        },
+        {
+          "time": 0.525,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              -0.707107,
+              -22.585786,
+              0
+            ],
+            "SpineMid": [
+              -0.707107,
+              -33.87868,
+              0
+            ],
+            "TailBase": [
+              -1.414214,
+              1.899495,
+              0
+            ],
+            "FishTail": [
+              -2,
+              26,
+              0
+            ]
+          }
+        },
+        {
+          "time": 0.6,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              0,
+              -24,
+              0
+            ],
+            "SpineMid": [
+              -1,
+              -36,
+              0
+            ],
+            "TailBase": [
+              0,
+              -8,
+              0
+            ],
+            "FishTail": [
+              -1.414214,
+              18.384776,
+              0
+            ]
+          }
+        }
+      ]
+    },
+    "LiftFlop": {
+      "duration": 2,
+      "loop": false,
+      "frames": [
+        {
+          "time": 0,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              0,
+              0,
+              0
+            ],
+            "SpineMid": [
+              0,
+              0,
+              0
+            ],
+            "TailBase": [
+              0,
+              0,
+              0
+            ],
+            "FishTail": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "time": 0.15,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              2,
+              10,
+              0
+            ],
+            "SpineMid": [
+              0,
+              5,
+              0
+            ],
+            "TailBase": [
+              -3,
+              -6,
+              0
+            ],
+            "FishTail": [
+              -4,
+              -10,
+              0
+            ]
+          }
+        },
+        {
+          "time": 0.3,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              3,
+              18,
+              0
+            ],
+            "SpineMid": [
+              4,
+              22,
+              0
+            ],
+            "TailBase": [
+              2,
+              20,
+              0
+            ],
+            "FishTail": [
+              0,
+              8,
+              0
+            ]
+          }
+        },
+        {
+          "time": 0.5,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              -2,
+              -12,
+              0
+            ],
+            "SpineMid": [
+              2,
+              4,
+              0
+            ],
+            "TailBase": [
+              5,
+              24,
+              0
+            ],
+            "FishTail": [
+              6,
+              28,
+              0
+            ]
+          }
+        },
+        {
+          "time": 0.7,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              0,
+              -10,
+              0
+            ],
+            "SpineMid": [
+              -4,
+              -18,
+              0
+            ],
+            "TailBase": [
+              -2,
+              -16,
+              0
+            ],
+            "FishTail": [
+              2,
+              -6,
+              0
+            ]
+          }
+        },
+        {
+          "time": 1,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              1,
+              6,
+              0
+            ],
+            "SpineMid": [
+              2,
+              12,
+              0
+            ],
+            "TailBase": [
+              3,
+              18,
+              0
+            ],
+            "FishTail": [
+              -3,
+              20,
+              0
+            ]
+          }
+        },
+        {
+          "time": 1.3,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              -1,
+              -4,
+              0
+            ],
+            "SpineMid": [
+              -1,
+              -6,
+              0
+            ],
+            "TailBase": [
+              -2,
+              -10,
+              0
+            ],
+            "FishTail": [
+              -2,
+              -12,
+              0
+            ]
+          }
+        },
+        {
+          "time": 1.6,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              0,
+              0,
+              0
+            ],
+            "SpineMid": [
+              0,
+              0,
+              0
+            ],
+            "TailBase": [
+              0,
+              0,
+              0
+            ],
+            "FishTail": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "time": 2,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              0,
+              0,
+              0
+            ],
+            "SpineMid": [
+              0,
+              0,
+              0
+            ],
+            "TailBase": [
+              0,
+              0,
+              0
+            ],
+            "FishTail": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      ]
+    },
+    "ShowcaseFlop": {
+      "duration": 0.9,
+      "loop": false,
+      "frames": [
+        {
+          "time": 0,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              0,
+              0,
+              0
+            ],
+            "SpineMid": [
+              0,
+              0,
+              0
+            ],
+            "TailBase": [
+              0,
+              0,
+              0
+            ],
+            "FishTail": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "time": 0.1,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              1,
+              5,
+              0
+            ],
+            "SpineMid": [
+              0,
+              0,
+              0
+            ],
+            "TailBase": [
+              -1,
+              -4,
+              0
+            ],
+            "FishTail": [
+              -2,
+              -8,
+              0
+            ]
+          }
+        },
+        {
+          "time": 0.2,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              2,
+              10,
+              0
+            ],
+            "SpineMid": [
+              3,
+              14,
+              0
+            ],
+            "TailBase": [
+              2,
+              10,
+              0
+            ],
+            "FishTail": [
+              0,
+              4,
+              0
+            ]
+          }
+        },
+        {
+          "time": 0.32,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              -1,
+              -8,
+              0
+            ],
+            "SpineMid": [
+              1,
+              -2,
+              0
+            ],
+            "TailBase": [
+              3,
+              12,
+              0
+            ],
+            "FishTail": [
+              4,
+              16,
+              0
+            ]
+          }
+        },
+        {
+          "time": 0.45,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              0,
+              0,
+              0
+            ],
+            "SpineMid": [
+              -2,
+              -8,
+              0
+            ],
+            "TailBase": [
+              -3,
+              -12,
+              0
+            ],
+            "FishTail": [
+              -2,
+              -8,
+              0
+            ]
+          }
+        },
+        {
+          "time": 0.55,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              1,
+              8,
+              0
+            ],
+            "SpineMid": [
+              2,
+              10,
+              0
+            ],
+            "TailBase": [
+              0,
+              6,
+              0
+            ],
+            "FishTail": [
+              -1,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "time": 0.65,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              -2,
+              -10,
+              0
+            ],
+            "SpineMid": [
+              1,
+              -4,
+              0
+            ],
+            "TailBase": [
+              3,
+              10,
+              0
+            ],
+            "FishTail": [
+              4,
+              16,
+              0
+            ]
+          }
+        },
+        {
+          "time": 0.76,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              0,
+              -3,
+              0
+            ],
+            "SpineMid": [
+              -2,
+              -6,
+              0
+            ],
+            "TailBase": [
+              -2,
+              -12,
+              0
+            ],
+            "FishTail": [
+              -3,
+              -10,
+              0
+            ]
+          }
+        },
+        {
+          "time": 0.9,
+          "rotations": {
+            "FishBody": [
+              0,
+              0,
+              0
+            ],
+            "SpineFront": [
+              0,
+              0,
+              0
+            ],
+            "SpineMid": [
+              0,
+              0,
+              0
+            ],
+            "TailBase": [
+              0,
+              0,
+              0
+            ],
+            "FishTail": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

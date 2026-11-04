@@ -1,0 +1,413 @@
+{
+  "complete": true,
+  "rootCause": "27 processed fish had no FishDrip_* attachments; only Elder Fish had the required surface points.",
+  "baseline": {
+    "1": {
+      "path": "ReplicatedStorage.Models.Fish",
+      "failed": 27,
+      "checked": 28
+    },
+    "2": {
+      "path": "Workspace.Fish_Processed",
+      "failed": 27,
+      "checked": 28
+    }
+  },
+  "installation": {
+    "changedPoints": 1296,
+    "fishModels": 56,
+    "backup": "ServerStorage.FishDripBackups.BeforeAllFishDrip_20261104_074253"
+  },
+  "assetAudit": {
+    "folders": {
+      "1": {
+        "path": "ReplicatedStorage.Models.Fish",
+        "failed": 0,
+        "checked": 28
+      },
+      "2": {
+        "path": "Workspace.Fish_Processed",
+        "failed": 0,
+        "checked": 28
+      }
+    },
+    "failures": [],
+    "passed": true
+  },
+  "geometry": {
+    "maxNormalError": 1.4600097131278744e-7,
+    "points": 1344,
+    "maxRestError": 0.00001526623782410752,
+    "idempotencePass": true
+  },
+  "gameplay": {
+    "fish": 28,
+    "passed": true,
+    "results": [
+      {
+        "catchupLimit": 4,
+        "passed": true,
+        "boneFollowError": 0,
+        "minCoverage": 0.9998569374976183,
+        "name": "AngelShark",
+        "normalCount10Seconds": 80,
+        "emitters": 48,
+        "points": 24,
+        "maxScaleError": 0
+      },
+      {
+        "catchupLimit": 4,
+        "passed": true,
+        "boneFollowError": 0,
+        "minCoverage": 0.8179677750610688,
+        "name": "Azure Sturgeon",
+        "normalCount10Seconds": 80,
+        "emitters": 48,
+        "points": 24,
+        "maxScaleError": 0
+      },
+      {
+        "catchupLimit": 4,
+        "passed": true,
+        "boneFollowError": 0,
+        "minCoverage": 0.46150315098619665,
+        "name": "AzureDamsel",
+        "normalCount10Seconds": 80,
+        "emitters": 48,
+        "points": 24,
+        "maxScaleError": 0
+      },
+      {
+        "catchupLimit": 4,
+        "passed": true,
+        "boneFollowError": 0,
+        "minCoverage": 0.5012882205031108,
+        "name": "BallinaAngelfish",
+        "normalCount10Seconds": 80,
+        "emitters": 48,
+        "points": 24,
+        "maxScaleError": 0
+      },
+      {
+        "catchupLimit": 4,
+        "passed": true,
+        "boneFollowError": 0,
+        "minCoverage": 0.817228217783219,
+        "name": "Blue Moonfish",
+        "normalCount10Seconds": 80,
+        "emitters": 48,
+        "points": 24,
+        "maxScaleError": 0
+      },
+      {
+        "catchupLimit": 4,
+        "passed": true,
+        "boneFollowError": 0,
+        "minCoverage": 0.6530333909958513,
+        "name": "Chimera Perch",
+        "normalCount10Seconds": 80,
+        "emitters": 48,
+        "points": 24,
+        "maxScaleError": 0
+      },
+      {
+        "catchupLimit": 4,
+        "passed": true,
+        "boneFollowError": 0,
+        "minCoverage": 0.5412898750563575,
+        "name": "Clownfish",
+        "normalCount10Seconds": 80,
+        "emitters": 48,
+        "points": 24,
+        "maxScaleError": 0
+      },
+      {
+        "catchupLimit": 4,
+        "passed": true,
+        "boneFollowError": 0,
+        "minCoverage": 0.7123104949430359,
+        "name": "Elder Fish",
+        "normalCount10Seconds": 80,
+        "emitters": 48,
+        "points": 24,
+        "maxScaleError": 0
+      },
+      {
+        "catchupLimit": 4,
+        "passed": true,
+        "boneFollowError": 0,
+        "minCoverage": 0.46040425758132814,
+        "name": "Firetail Tilapia",
+        "normalCount10Seconds": 80,
+        "emitters": 48,
+        "points": 24,
+        "maxScaleError": 0
+      },
+      {
+        "catchupLimit": 4,
+        "passed": true,
+        "boneFollowError": 0,
+        "minCoverage": 0.9873030392180531,
+        "name": "FrenchAngelfish",
+        "normalCount10Seconds": 80,
+        "emitters": 48,
+        "points": 24,
+        "maxScaleError": 0
+      },
+      {
+        "catchupLimit": 4,
+        "passed": true,
+        "boneFollowError": 0,
+        "minCoverage": 0.4815137526169369,
+        "name": "Frosttail",
+        "normalCount10Seconds": 80,
+        "emitters": 48,
+        "points": 24,
+        "maxScaleError": 0
+      },
+      {
+        "catchupLimit": 4,
+        "passed": true,
+        "boneFollowError": 0,
+        "minCoverage": 0.6590710875855255,
+        "name": "Golden Carp",
+        "normalCount10Seconds": 80,
+        "emitters": 48,
+        "points": 24,
+        "maxScaleError": 0
+      },
+      {
+        "catchupLimit": 4,
+        "passed": true,
+        "boneFollowError": 0,
+        "minCoverage": 0.7343710627096155,
+        "name": "GreenbandedGoby",
+        "normalCount10Seconds": 80,
+        "emitters": 48,
+        "points": 24,
+        "maxScaleError": 0
+      },
+      {
+        "catchupLimit": 4,
+        "passed": true,
+        "boneFollowError": 0,
+        "minCoverage": 0.7971931941933308,
+        "name": "Inferno Pike",
+        "normalCount10Seconds": 80,
+        "emitters": 48,
+        "points": 24,
+        "maxScaleError": 0
+      },
+      {
+        "catchupLimit": 4,
+        "passed": true,
+        "boneFollowError": 0,
+        "minCoverage": 0.6969261604118169,
+        "name": "Jadefin",
+        "normalCount10Seconds": 80,
+        "emitters": 48,
+        "points": 24,
+        "maxScaleError": 0
+      },
+      {
+        "catchupLimit": 4,
+        "passed": true,
+        "boneFollowError": 0,
+        "minCoverage": 0.9708820990611057,
+        "name": "MoorishIdol",
+        "normalCount10Seconds": 80,
+        "emitters": 48,
+        "points": 24,
+        "maxScaleError": 0
+      },
+      {
+        "catchupLimit": 4,
+        "passed": true,
+        "boneFollowError": 0,
+        "minCoverage": 0.4053039932302785,
+        "name": "PrettyRoseGoby",
+        "normalCount10Seconds": 80,
+        "emitters": 48,
+        "points": 24,
+        "maxScaleError": 0
+      },
+      {
+        "catchupLimit": 4,
+        "passed": true,
+        "boneFollowError": 0,
+        "minCoverage": 0.23726765878432735,
+        "name": "Purplefin",
+        "normalCount10Seconds": 80,
+        "emitters": 48,
+        "points": 24,
+        "maxScaleError": 0
+      },
+      {
+        "catchupLimit": 4,
+        "passed": true,
+        "boneFollowError": 0,
+        "minCoverage": 0.9235274520193044,
+        "name": "QueenAngelfish",
+        "normalCount10Seconds": 80,
+        "emitters": 48,
+        "points": 24,
+        "maxScaleError": 0
+      },
+      {
+        "catchupLimit": 4,
+        "passed": true,
+        "boneFollowError": 0,
+        "minCoverage": 0.5847380611339034,
+        "name": "SaddleButterflyfish",
+        "normalCount10Seconds": 80,
+        "emitters": 48,
+        "points": 24,
+        "maxScaleError": 0
+      },
+      {
+        "catchupLimit": 4,
+        "passed": true,
+        "boneFollowError": 0,
+        "minCoverage": 0.8767264401030751,
+        "name": "Silver Tail",
+        "normalCount10Seconds": 80,
+        "emitters": 48,
+        "points": 24,
+        "maxScaleError": 0
+      },
+      {
+        "catchupLimit": 4,
+        "passed": true,
+        "boneFollowError": 0,
+        "minCoverage": 0.8055773295958468,
+        "name": "Stone Bass",
+        "normalCount10Seconds": 80,
+        "emitters": 48,
+        "points": 24,
+        "maxScaleError": 0
+      },
+      {
+        "catchupLimit": 4,
+        "passed": true,
+        "boneFollowError": 0,
+        "minCoverage": 0.7627030822040801,
+        "name": "ThresherShark",
+        "normalCount10Seconds": 80,
+        "emitters": 48,
+        "points": 24,
+        "maxScaleError": 0
+      },
+      {
+        "catchupLimit": 4,
+        "passed": true,
+        "boneFollowError": 0,
+        "minCoverage": 0.5889699102861191,
+        "name": "Thunderfin",
+        "normalCount10Seconds": 80,
+        "emitters": 48,
+        "points": 24,
+        "maxScaleError": 0
+      },
+      {
+        "catchupLimit": 4,
+        "passed": true,
+        "boneFollowError": 0,
+        "minCoverage": 0.45326905626023445,
+        "name": "TomatoClownfish",
+        "normalCount10Seconds": 80,
+        "emitters": 48,
+        "points": 24,
+        "maxScaleError": 0
+      },
+      {
+        "catchupLimit": 4,
+        "passed": true,
+        "boneFollowError": 0,
+        "minCoverage": 0.9841797340934841,
+        "name": "Tropical Butterfly",
+        "normalCount10Seconds": 80,
+        "emitters": 48,
+        "points": 24,
+        "maxScaleError": 0
+      },
+      {
+        "catchupLimit": 4,
+        "passed": true,
+        "boneFollowError": 0,
+        "minCoverage": 0.798163857016444,
+        "name": "Venomfish",
+        "normalCount10Seconds": 80,
+        "emitters": 48,
+        "points": 24,
+        "maxScaleError": 0
+      },
+      {
+        "catchupLimit": 4,
+        "passed": true,
+        "boneFollowError": 0,
+        "minCoverage": 0.7910543438217207,
+        "name": "YellowfinTuna",
+        "normalCount10Seconds": 80,
+        "emitters": 48,
+        "points": 24,
+        "maxScaleError": 0
+      }
+    ]
+  },
+  "randomRegression": {
+    "randomSpecies": 11,
+    "randomRounds": 12,
+    "samples": 840,
+    "passed": true,
+    "templates": 28
+  },
+  "exports": [
+    {
+      "bytes": 307037,
+      "roundTripDescendants": 1457,
+      "roundTripMeshes": 65,
+      "roundTripAnimations": 140,
+      "roundTripPoints": 672,
+      "file": "Fish_Processed.rbxm",
+      "sha256": "7a0b5634baae2ae83bd270c7563b0ea779fd01d600d3f105d15aa9c97add83d8",
+      "previousFile": "Fish_Processed.BeforeDrip_20261104_074648_151815.rbxm"
+    },
+    {
+      "bytes": 304583,
+      "roundTripDescendants": 1457,
+      "roundTripMeshes": 65,
+      "roundTripAnimations": 140,
+      "roundTripPoints": 672,
+      "file": "Fish_GameTemplates.rbxm",
+      "sha256": "a6cef0791c1470b6efc214a64af08a504ea5452617e9e3a65a3de3f056581253",
+      "previousFile": "Fish_GameTemplates.BeforeDrip_20261104_074648_183808.rbxm"
+    }
+  ],
+  "visualChecks": [
+    "Clownfish",
+    "AngelShark",
+    "ThresherShark"
+  ],
+  "logs": {
+    "errors": 0,
+    "dripWarnings": 0
+  },
+  "localTests": {
+    "suites": [
+      "FishDripEffect",
+      "FishAnimationController",
+      "FishingBiteSequence",
+      "FishingReelSequence",
+      "FishingCastLifecycle",
+      "FishingInputGate",
+      "FishingProjectileMath",
+      "FishingTransition"
+    ],
+    "failures": 0
+  },
+  "staticChecks": {
+    "seleneErrors": 0,
+    "seleneWarnings": 0,
+    "stdlib": "cached Roblox API dump"
+  }
+}

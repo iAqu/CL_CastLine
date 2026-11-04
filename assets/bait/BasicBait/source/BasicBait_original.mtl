@@ -1,0 +1,28 @@
+newmtl Baitoriginal2Mtl
+Material Color
+Ka 0.0511221 0.0511221 0.0511221
+Kd 0.0511221 0.0511221 0.0511221
+Ks 0.00320766 0.00320766 0.00320766 
+
+d 0.301961
+
+Ns 0
+
+map_Ka Baitoriginal2_diff.png
+map_Kd Baitoriginal2_diff.png
+map_d Baitoriginal2_diff.png
+
+newmtl Baitoriginal1Mtl
+Material Color
+Ka 0.373615 0.368591 0.383775
+Kd 0.373615 0.368591 0.383775
+Ks 0.0234425 0.0231273 0.02408 
+
+d 1
+
+Ns 0
+
+map_Ka Baitoriginal1_diff.png
+map_Kd Baitoriginal1_diff.png
+map_d Baitoriginal1_diff.png
+

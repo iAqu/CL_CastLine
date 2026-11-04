@@ -1,0 +1,24 @@
+{
+  "placeId": 84106335829275,
+  "creatorGroupId": 598797612,
+  "template": "ReplicatedStorage.Models.FishBait.1.1",
+  "meshId": "rbxassetid://71052844521154",
+  "beforeEyeScaleMeshId": "rbxassetid://114464965301610",
+  "textureId": "rbxassetid://100058154460562",
+  "eyeDiameterScale": 2,
+  "backup": "ServerStorage.EyeScaleBackups.BeforeEyes2x_20261103_040431.FishBait_1_1",
+  "sourceFile": "source/BasicBait_original.obj",
+  "sourceWorldPosition": [
+    0,
+    50,
+    0
+  ],
+  "sourceMethod": "Studio native ExportSelection; base mesh only, Texture overlay groups excluded",
+  "meshPayload": "BasicBait_Eyes2x.mesh.json",
+  "meshUvOrigin": "OBJ bottom-left; publisher converts V to 1-V",
+  "bodySize": [
+    0.622302770614624,
+    1.3970999717712402,
+    1.9989919662475586
+  ]
+}
