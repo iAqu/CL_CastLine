@@ -1,0 +1,79 @@
+-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
+
+-- Bytecode (Base64):
+-- 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
+
+-- https://lua.expert/
+local TweenService = game:GetService("TweenService")
+local Maid = require(game.ReplicatedStorage.Packages.Maid)
+local t = {}
+local v1 = Color3.new(0.168627, 1, 0.305882)
+local v2 = Color3.new(1, 0.231373, 0.203922)
+
+return function(p1) --[[ Line: 11 | Upvalues: t (copy), TweenService (copy), v1 (copy), v2 (copy), Maid (copy) ]]
+	function p1.SetToggleButton(p1, p2, p3) --[[ SetToggleButton | Line: 13 | Upvalues: t (ref), TweenService (ref), v1 (ref), v2 (ref) ]]
+		if not t[p2] then
+			return
+		end
+
+		if t[p2].currentState == p3 then
+			return
+		end
+
+		t[p2].currentState = p3
+
+		if t[p2].moveTween then
+			t[p2].moveTween:Cancel()
+		end
+
+		if t[p2].colorTween then
+			t[p2].colorTween:Cancel()
+		end
+
+		if p3 == true then
+			t[p2].moveTween = TweenService:Create(p2.ToggleCircle, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				Position = UDim2.new(0.75, 0, 0.5, 0)
+			})
+			t[p2].colorTween = TweenService:Create(p2, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				BackgroundColor3 = v1
+			})
+		else
+			t[p2].moveTween = TweenService:Create(p2.ToggleCircle, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				Position = UDim2.new(0.25, 0, 0.5, 0)
+			})
+			t[p2].colorTween = TweenService:Create(p2, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+				BackgroundColor3 = v2
+			})
+		end
+
+		t[p2].moveTween:Play()
+		t[p2].colorTween:Play()
+	end
+	function p1.AddToggleButton(p1, p2) --[[ AddToggleButton | Line: 58 | Upvalues: t (ref), Maid (ref) ]]
+		t[p2] = {}
+		t[p2].maid = Maid.new()
+		t[p2].moveTween = nil
+		t[p2].colorTween = nil
+		t[p2].currentState = true
+		t[p2].maid:GiveTask(p2.MouseButton1Down:Connect(function() --[[ Line: 67 | Upvalues: t (ref), p2 (copy) ]]
+			t[p2].switchSignal:Fire()
+		end))
+
+		return t[p2]
+	end
+	function p1.GetToggleState(p1, p2) --[[ GetToggleState | Line: 77 | Upvalues: t (ref) ]]
+		if t[p2] then
+			return t[p2].currentState
+		end
+
+		return nil
+	end
+	function p1.RemoveToggleButton(p1, p2) --[[ RemoveToggleButton | Line: 83 | Upvalues: t (ref) ]]
+		if not t[p2] then
+			return
+		end
+
+		t[p2].maid:Destroy()
+		t[p2] = nil
+	end
+end

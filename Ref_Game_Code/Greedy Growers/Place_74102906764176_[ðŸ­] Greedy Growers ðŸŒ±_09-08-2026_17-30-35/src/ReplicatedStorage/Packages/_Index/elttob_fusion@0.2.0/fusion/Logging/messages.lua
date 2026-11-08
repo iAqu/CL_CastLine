@@ -1,0 +1,45 @@
+-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
+
+-- Bytecode (Base64):
+-- CQNJNFRoZSBjbGFzcyB0eXBlICclcycgaGFzIG5vIGFzc2lnbmFibGUgcHJvcGVydHkgJyVzJy4UY2Fubm90QXNzaWduUHJvcGVydHkxVGhlICVzIGNsYXNzIGRvZXNuJ3QgaGF2ZSBhIHByb3BlcnR5IGNhbGxlZCAnJXMnLhNjYW5ub3RDb25uZWN0Q2hhbmdlL1RoZSAlcyBjbGFzcyBkb2Vzbid0IGhhdmUgYW4gZXZlbnQgY2FsbGVkICclcycuEmNhbm5vdENvbm5lY3RFdmVudCpDYW4ndCBjcmVhdGUgYSBuZXcgaW5zdGFuY2Ugb2YgY2xhc3MgJyVzJy4RY2Fubm90Q3JlYXRlQ2xhc3MmQ29tcHV0ZWQgY2FsbGJhY2sgZXJyb3I6IEVSUk9SX01FU1NBR0UVY29tcHV0ZWRDYWxsYmFja0Vycm9yeVRvIHNhdmUgaW5zdGFuY2VzIGludG8gVmFsdWVzLCBwcm92aWRlIGEgZGVzdHJ1Y3RvciBmdW5jdGlvbi4gVGhpcyB3aWxsIGJlIGFuIGVycm9yIHNvb24gLSBzZWUgZGlzY3Vzc2lvbiAjMTgzIG9uIEdpdEh1Yi4VZGVzdHJ1Y3Rvck5lZWRlZFZhbHVlflRvIHJldHVybiBpbnN0YW5jZXMgZnJvbSBDb21wdXRlZHMsIHByb3ZpZGUgYSBkZXN0cnVjdG9yIGZ1bmN0aW9uLiBUaGlzIHdpbGwgYmUgYW4gZXJyb3Igc29vbiAtIHNlZSBkaXNjdXNzaW9uICMxODMgb24gR2l0SHViLhhkZXN0cnVjdG9yTmVlZGVkQ29tcHV0ZWR3UmV0dXJuaW5nIG11bHRpcGxlIHZhbHVlcyBmcm9tIENvbXB1dGVkcyBpcyBkaXNjb3VyYWdlZCwgYXMgYmVoYXZpb3VyIHdpbGwgY2hhbmdlIHNvb24gLSBzZWUgZGlzY3Vzc2lvbiAjMTg5IG9uIEdpdEh1Yi4TbXVsdGlSZXR1cm5Db21wdXRlZHxUbyByZXR1cm4gaW5zdGFuY2VzIGZyb20gRm9yS2V5cywgcHJvdmlkZSBhIGRlc3RydWN0b3IgZnVuY3Rpb24uIFRoaXMgd2lsbCBiZSBhbiBlcnJvciBzb29uIC0gc2VlIGRpc2N1c3Npb24gIzE4MyBvbiBHaXRIdWIuF2Rlc3RydWN0b3JOZWVkZWRGb3JLZXlzflRvIHJldHVybiBpbnN0YW5jZXMgZnJvbSBGb3JWYWx1ZXMsIHByb3ZpZGUgYSBkZXN0cnVjdG9yIGZ1bmN0aW9uLiBUaGlzIHdpbGwgYmUgYW4gZXJyb3Igc29vbiAtIHNlZSBkaXNjdXNzaW9uICMxODMgb24gR2l0SHViLhlkZXN0cnVjdG9yTmVlZGVkRm9yVmFsdWVzfVRvIHJldHVybiBpbnN0YW5jZXMgZnJvbSBGb3JQYWlycywgcHJvdmlkZSBhIGRlc3RydWN0b3IgZnVuY3Rpb24uIFRoaXMgd2lsbCBiZSBhbiBlcnJvciBzb29uIC0gc2VlIGRpc2N1c3Npb24gIzE4MyBvbiBHaXRIdWIuGGRlc3RydWN0b3JOZWVkZWRGb3JQYWlycwAUZHVwbGljYXRlUHJvcGVydHlLZXklRm9yS2V5cyBjYWxsYmFjayBlcnJvcjogRVJST1JfTUVTU0FHRRVmb3JLZXlzUHJvY2Vzc29yRXJyb3KYAUZvcktleXMgc2hvdWxkIG9ubHkgd3JpdGUgdG8gb3V0cHV0IGtleSAnJXMnIG9uY2Ugd2hlbiBwcm9jZXNzaW5nIGtleSBjaGFuZ2VzLCBidXQgaXQgd3JvdGUgdG8gaXQgdHdpY2UuIFByZXZpb3VzbHkgaW5wdXQga2V5OiAnJXMnOyBOZXcgaW5wdXQga2V5OiAnJXMnE2ZvcktleXNLZXlDb2xsaXNpb24nRm9yS2V5cyBkZXN0cnVjdG9yIGVycm9yOiBFUlJPUl9NRVNTQUdFFmZvcktleXNEZXN0cnVjdG9yRXJyb3IoRm9yUGFpcnMgZGVzdHJ1Y3RvciBlcnJvcjogRVJST1JfTUVTU0FHRRdmb3JQYWlyc0Rlc3RydWN0b3JFcnJvcqcBRm9yUGFpcnMgc2hvdWxkIG9ubHkgd3JpdGUgdG8gb3V0cHV0IGtleSAnJXMnIG9uY2Ugd2hlbiBwcm9jZXNzaW5nIGtleSBjaGFuZ2VzLCBidXQgaXQgd3JvdGUgdG8gaXQgdHdpY2UuIFByZXZpb3VzIGlucHV0IHBhaXI6ICdbJXNdID0gJXMnOyBOZXcgaW5wdXQgcGFpcjogJ1slc10gPSAlcycUZm9yUGFpcnNLZXlDb2xsaXNpb24mRm9yUGFpcnMgY2FsbGJhY2sgZXJyb3I6IEVSUk9SX01FU1NBR0UWZm9yUGFpcnNQcm9jZXNzb3JFcnJvcidGb3JWYWx1ZXMgY2FsbGJhY2sgZXJyb3I6IEVSUk9SX01FU1NBR0UXZm9yVmFsdWVzUHJvY2Vzc29yRXJyb3IpRm9yVmFsdWVzIGRlc3RydWN0b3IgZXJyb3I6IEVSUk9SX01FU1NBR0UYZm9yVmFsdWVzRGVzdHJ1Y3RvckVycm9yPFRoZSBjaGFuZ2UgaGFuZGxlciBmb3IgdGhlICclcycgcHJvcGVydHkgbXVzdCBiZSBhIGZ1bmN0aW9uLhRpbnZhbGlkQ2hhbmdlSGFuZGxlcjJUaGUgaGFuZGxlciBmb3IgdGhlICclcycgZXZlbnQgbXVzdCBiZSBhIGZ1bmN0aW9uLhNpbnZhbGlkRXZlbnRIYW5kbGVyMiclcy4lcycgZXhwZWN0ZWQgYSAnJXMnIHR5cGUsIGJ1dCBnb3QgYSAnJXMnIHR5cGUuE2ludmFsaWRQcm9wZXJ0eVR5cGUkSW5zdGFuY2UgcmVmcyBtdXN0IGJlIFZhbHVlIG9iamVjdHMuDmludmFsaWRSZWZUeXBlLVtPdXRdIHByb3BlcnRpZXMgbXVzdCBiZSBnaXZlbiBWYWx1ZSBvYmplY3RzLg5pbnZhbGlkT3V0VHlwZRJpbnZhbGlkT3V0UHJvcGVydHk/VGhlIGRhbXBpbmcgcmF0aW8gZm9yIGEgc3ByaW5nIG11c3QgYmUgPj0gMC4gKGRhbXBpbmcgd2FzICUuMmYpFGludmFsaWRTcHJpbmdEYW1waW5nNFRoZSBzcGVlZCBvZiBhIHNwcmluZyBtdXN0IGJlID49IDAuIChzcGVlZCB3YXMgJS4yZikSaW52YWxpZFNwcmluZ1NwZWVkO1RoZSBkYW1waW5nIHJhdGlvIGZvciBhIHNwcmluZyBtdXN0IGJlIGEgbnVtYmVyLiAoZ290IGEgJXMpFW1pc3R5cGVkU3ByaW5nRGFtcGluZzJUaGUgc3BlZWQgb2YgYSBzcHJpbmcgbXVzdCBiZSBhIG51bWJlci4gKGdvdCBhICVzKRNtaXN0eXBlZFNwcmluZ1NwZWVkOVRoZSB0d2VlbiBpbmZvIG9mIGEgdHdlZW4gbXVzdCBiZSBhIFR3ZWVuSW5mby4gKGdvdCBhICVzKRFtaXN0eXBlZFR3ZWVuSW5mbzNUaGUgdHlwZSAnJXMnIGRvZXNuJ3QgbWF0Y2ggdGhlIHNwcmluZydzIHR5cGUgJyVzJy4Sc3ByaW5nVHlwZU1pc21hdGNoIyclcycgaXMgbm90IGEgdmFsaWQgbWVtYmVyIG9mICclcycuD3N0cmljdFJlYWRFcnJvchxVbmtub3duIGVycm9yOiBFUlJPUl9NRVNTQUdFDnVua25vd25NZXNzYWdlMyclcycgdHlwZSBjaGlsZHJlbiBhcmVuJ3QgYWNjZXB0ZWQgYnkgYFtDaGlsZHJlbl1gLhV1bnJlY29nbmlzZWRDaGlsZFR5cGUtJyVzJyBrZXlzIGFyZW4ndCBhY2NlcHRlZCBpbiBwcm9wZXJ0eSB0YWJsZXMuF3VucmVjb2duaXNlZFByb3BlcnR5S2V5PCclcycgaXNuJ3QgYSB2YWxpZCBzdGFnZSBmb3IgYSBzcGVjaWFsIGtleSB0byBiZSBhcHBsaWVkIGF0Lhl1bnJlY29nbmlzZWRQcm9wZXJ0eVN0YWdlAAECAAABAgBzowAAAP8ABwAAAAAAbwEAADABADMBAAAAbwECADABANEDAAAAbwEEADABAEQFAAAAbwEGADABAJUHAAAAbwEIADABANEJAAAAbwEKADABAGsLAAAAbwEMADABAOMNAAAAbwEOADABALcPAAAAbwEQADABALERAAAAbwESADABAHcTAAAAbwEUADABAGEVAAAAbwEWADABAMcXAAAAbwEYADABAHcZAAAAbwEaADABAKkbAAAAbwEcADABAFwdAAAAbwEeADABAP8fAAAAbwEgADABAIMhAAAAbwEiADABALYjAAAAbwEkADABALYlAAAAbwEmADABAOMnAAAAbwEoADABAF0pAAAAbwEqADABAPIrAAAAbwEsADABAKItAAAAbwEuADABANovAAAAbwEwADABAGkxAAAAbwECADABAFMyAAAAbwEzADABAGs0AAAAbwE1ADABACQ2AAAAbwE3ADABACo4AAAAbwE5ADABAKk6AAAAbwE7ADABAMU8AAAAbwE9ADABAFE+AAAAbwE/ADABAHFAAAAAbwFBADABADZCAAAAbwFDADABAK9EAAAAbwFFADABAF9GAAAAbwFHADABADxIAAAAggACAEkDAQMCAwMDBAMFAwYDBwMIAwkDCgMLAwwDDQMOAw8DEAMRAxIDEwMUAxUDFgMXAxgDGQMaAxsDHAMdAx4DHwMgAyEDIgMjAyQDJQMmAycDKAMpAyoDKwMsAy0DLgMvAzADMQMyAzMDNAM1AzYDNwM4AzkDOgM7AzwDPQM+Az8DQANBA0IDQwNEA0UDRgNHA0gDSQABAAEYAAYAAQAAAQAAAQAAAQAAAQAAAQAAAQAAAQAAAQAAAQAAAQAAAQAAAQAAAQAAAQAAAQAAAQAAAQAAAQAAAQAAAQAAAQAAAQAAAQAAAQAAAQAAAQAAAQAAAQAAAQAAAQAAAQAAAQAAAQAAAQAAAQAAAQAAAAEAAAAAANmObFo6ruajrBX1UuxQy3iplnsu60oGWw==
+
+-- https://lua.expert/
+return {
+	cannotAssignProperty = "The class type \'%s\' has no assignable property \'%s\'.",
+	cannotConnectChange = "The %s class doesn\'t have a property called \'%s\'.",
+	cannotConnectEvent = "The %s class doesn\'t have an event called \'%s\'.",
+	cannotCreateClass = "Can\'t create a new instance of class \'%s\'.",
+	computedCallbackError = "Computed callback error: ERROR_MESSAGE",
+	destructorNeededValue = "To save instances into Values, provide a destructor function. This will be an error soon - see discussion #183 on GitHub.",
+	destructorNeededComputed = "To return instances from Computeds, provide a destructor function. This will be an error soon - see discussion #183 on GitHub.",
+	multiReturnComputed = "Returning multiple values from Computeds is discouraged, as behaviour will change soon - see discussion #189 on GitHub.",
+	destructorNeededForKeys = "To return instances from ForKeys, provide a destructor function. This will be an error soon - see discussion #183 on GitHub.",
+	destructorNeededForValues = "To return instances from ForValues, provide a destructor function. This will be an error soon - see discussion #183 on GitHub.",
+	destructorNeededForPairs = "To return instances from ForPairs, provide a destructor function. This will be an error soon - see discussion #183 on GitHub.",
+	duplicatePropertyKey = "",
+	forKeysProcessorError = "ForKeys callback error: ERROR_MESSAGE",
+	forKeysKeyCollision = "ForKeys should only write to output key \'%s\' once when processing key changes, but it wrote to it twice. Previously input key: \'%s\'; New input key: \'%s\'",
+	forKeysDestructorError = "ForKeys destructor error: ERROR_MESSAGE",
+	forPairsDestructorError = "ForPairs destructor error: ERROR_MESSAGE",
+	forPairsKeyCollision = "ForPairs should only write to output key \'%s\' once when processing key changes, but it wrote to it twice. Previous input pair: \'[%s] = %s\'; New input pair: \'[%s] = %s\'",
+	forPairsProcessorError = "ForPairs callback error: ERROR_MESSAGE",
+	forValuesProcessorError = "ForValues callback error: ERROR_MESSAGE",
+	forValuesDestructorError = "ForValues destructor error: ERROR_MESSAGE",
+	invalidChangeHandler = "The change handler for the \'%s\' property must be a function.",
+	invalidEventHandler = "The handler for the \'%s\' event must be a function.",
+	invalidPropertyType = "\'%s.%s\' expected a \'%s\' type, but got a \'%s\' type.",
+	invalidRefType = "Instance refs must be Value objects.",
+	invalidOutType = "[Out] properties must be given Value objects.",
+	invalidOutProperty = "The %s class doesn\'t have a property called \'%s\'.",
+	invalidSpringDamping = "The damping ratio for a spring must be >= 0. (damping was %.2f)",
+	invalidSpringSpeed = "The speed of a spring must be >= 0. (speed was %.2f)",
+	mistypedSpringDamping = "The damping ratio for a spring must be a number. (got a %s)",
+	mistypedSpringSpeed = "The speed of a spring must be a number. (got a %s)",
+	mistypedTweenInfo = "The tween info of a tween must be a TweenInfo. (got a %s)",
+	springTypeMismatch = "The type \'%s\' doesn\'t match the spring\'s type \'%s\'.",
+	strictReadError = "\'%s\' is not a valid member of \'%s\'.",
+	unknownMessage = "Unknown error: ERROR_MESSAGE",
+	unrecognisedChildType = "\'%s\' type children aren\'t accepted by `[Children]`.",
+	unrecognisedPropertyKey = "\'%s\' keys aren\'t accepted in property tables.",
+	unrecognisedPropertyStage = "\'%s\' isn\'t a valid stage for a special key to be applied at."
+}

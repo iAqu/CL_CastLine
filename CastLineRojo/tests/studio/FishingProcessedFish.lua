@@ -34,6 +34,12 @@ local originals = Instance.new("Folder")
 originals.Name = "OriginalTemplates"
 originals.Parent = folder
 local variants = workspace.Fish_Processed:GetChildren()
+local staged = workspace:FindFirstChild("_FishRace_Staging")
+if staged then
+	for _, fish in staged:GetChildren() do
+		table.insert(variants, fish)
+	end
+end
 table.sort(variants, function(a, b)
 	return a.Name < b.Name
 end)
@@ -138,6 +144,8 @@ task.spawn(function()
 			}, Cast)
 			active = Bite.new(owner, 100, 100, Random.new(index))
 			owner.bite = active
+			local bodySize = template:GetAttribute("FishBodySize") or template.PrimaryPart.Size
+			assert(math.abs(active.halfLength - bodySize.Z * 0.5) < 0.0001, "Whole-fish length ignored")
 			assert(
 				(active.mouthOffset - template.PrimaryPart.MouthAttachment.Position).Magnitude < 0.0001,
 				"MouthAttachment ignored"
@@ -294,4 +302,4 @@ task.spawn(function()
 	camera.CFrame, camera.FieldOfView, camera.CameraType, camera.Focus = table.unpack(savedCamera)
 	job.done = true
 end)
-return "Started 28-fish gameplay, mouth, appearance, all clips and skinned-vertex camera validation"
+return "Started " .. #variants .. "-fish gameplay, mouth, appearance, all clips and skinned-vertex camera validation"

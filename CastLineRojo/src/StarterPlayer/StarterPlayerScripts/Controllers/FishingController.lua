@@ -11,6 +11,7 @@ local Workspace = game:GetService("Workspace")
 local Knit = require(ReplicatedStorage.Packages.Knit)
 local FishingRigUtil = require(ReplicatedStorage.Modules.FishingRigUtil)
 local FishingCastSequence = require(ReplicatedStorage.Modules.FishingCastSequence)
+local FishingAudio = require(ReplicatedStorage.Modules.FishingAudio)
 local Config = require(ReplicatedStorage.Modules.FishingConfig)
 local Constants = require(ReplicatedStorage.Modules.Constants)
 local GameplayInputGate = require(ReplicatedStorage.Modules.GameplayInputGate)
@@ -163,11 +164,14 @@ local function restore(state, returnToSpawn: boolean)
 		return
 	end
 	state.restored = true
+	Knit.GetController("MusicController"):SetFishingActive(false)
 	for _, connection in ipairs(state.connections) do
 		connection:Disconnect()
 	end
 	if state.sequence then
-		state.sequence:Destroy()
+		state.sequence:Destroy(returnToSpawn)
+	elseif state.audio then
+		state.audio:Destroy(false)
 	end
 	if state.rig then
 		state.rig:Destroy()
@@ -225,7 +229,10 @@ local function restore(state, returnToSpawn: boolean)
 	end
 end
 
-local function finish(returnToSpawn: boolean)
+local function finish(returnToSpawn: boolean, completedReturn: boolean?)
+	if not completedReturn then
+		FishingAudio.ClearTails()
+	end
 	local state = session
 	if not state then
 		return
@@ -272,7 +279,7 @@ local function updateTransition(state, now)
 			state.transition = nil
 			state.coverGui.Enabled = false
 			if state.restored then
-				finish(false)
+				finish(false, true)
 			else
 				state.readyAt = now
 			end
@@ -342,6 +349,7 @@ local function begin(part: BasePart, character: Model, root: BasePart, humanoid:
 		},
 	}
 	session = state
+	FishingAudio.ClearTails()
 	local ok, err = xpcall(function()
 		local playerGui = assert(localPlayer:FindFirstChildOfClass("PlayerGui"))
 		state.coverGui = Instance.new("ScreenGui")
@@ -378,20 +386,15 @@ local function begin(part: BasePart, character: Model, root: BasePart, humanoid:
 			rig:PivotTo(CFrame.lookAt(position, position + Vector3.zAxis))
 			rig.Parent = Workspace
 			local dataController = Knit.GetController("PlayerDataController")
+			local function isSoundEnabled()
+				local data = dataController:GetData()
+				return data ~= nil and data.Settings[Constants.SETTINGS_ID.SOUND] ~= false
+			end
+			state.audio = FishingAudio.new(isSoundEnabled)
 			state.sequence = FishingCastSequence.new(rig, playerGui, meter, animation, bait, {
-				isSoundEnabled = function()
-					local data = dataController:GetData()
-					return data ~= nil and data.Settings[Constants.SETTINGS_ID.SOUND] ~= false
-				end,
+				isSoundEnabled = isSoundEnabled,
+				audio = state.audio,
 			})
-			table.insert(
-				state.connections,
-				Knit.GetController("SettingsGuiController").ToggleSound:Connect(function()
-					if session == state and not state.restored then
-						state.sequence:RefreshSoundSetting()
-					end
-				end)
-			)
 			-- 真实角色留在进入处，演出角色独立居中，避免多人在中心发生物理挤压。
 			for _, player in ipairs(Players:GetPlayers()) do
 				hidePlayer(state, player)
@@ -428,6 +431,7 @@ local function begin(part: BasePart, character: Model, root: BasePart, humanoid:
 			pcall(function()
 				StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
 			end)
+			Knit.GetController("MusicController"):SetFishingActive(true)
 		end
 		startTransition(state, "Entering")
 		RunService:BindToRenderStep(CAMERA_BINDING, Enum.RenderPriority.Camera.Value + 2, function(dt)
@@ -491,6 +495,12 @@ function FishingController:KnitInit()
 end
 
 function FishingController:KnitStart()
+	Knit.GetController("SettingsGuiController").ToggleSound:Connect(function()
+		FishingAudio.RefreshTails()
+		if session and not session.restored and session.sequence then
+			session.sequence:RefreshSoundSetting()
+		end
+	end)
 	localPlayer.CharacterRemoving:Connect(function()
 		finish(false)
 	end)
@@ -551,6 +561,7 @@ function FishingController:KnitStart()
 			return
 		end
 		if not (root and root:IsA("BasePart") and humanoid and humanoid.Health > 0) then
+			FishingAudio.ClearTails()
 			return
 		end
 		local part = getStartPart()

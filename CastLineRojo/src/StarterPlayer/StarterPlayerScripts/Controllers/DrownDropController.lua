@@ -8,6 +8,7 @@ local ConditionsData = require(ReplicatedFirst.Data.ConditionsData)
 local ItemsData = require(ReplicatedFirst.Data.ItemsData)
 local ConditionLabelUtil = require(ReplicatedStorage.Modules.ConditionLabelUtil)
 local GuiUtil = require(ReplicatedStorage.Modules.GuiUtil)
+local RarityConfig = require(ReplicatedStorage.Modules.RarityConfig)
 local ItemStatUtil = require(ReplicatedStorage.Modules.ItemStatUtil)
 local ItemTitlePositionUtil = require(ReplicatedStorage.Modules.ItemTitlePositionUtil)
 local Knit = require(ReplicatedStorage.Packages.Knit)
@@ -88,7 +89,7 @@ local function createTitle(model: Model, promptPart: BasePart): (BillboardGui?, 
 	end
 	local rarityLabel = findLabel(title, "RarityLabel")
 	if rarityLabel then
-		rarityLabel.Text = item.Rarity
+		rarityLabel.Text = RarityConfig.Normalize(item.Rarity)
 		GuiUtil.SetRarityGradient(rarityLabel, item.Rarity)
 	end
 	local priceLabel = findLabel(title, "PriceLabel")

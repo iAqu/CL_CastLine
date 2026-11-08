@@ -12,9 +12,15 @@ local function validate(template)
 	local bait = storage.Models.FishBait["1"]["1"]:Clone()
 	bait.Anchored, bait.Parent = true, folder
 	local owner = {
-		folder = folder, bait = bait, forward = Vector3.zAxis, spin = 0,
-		statusLabel = {}, returnLabel = {},
-		_waterTarget = function() return target end,
+		folder = folder,
+		bait = bait,
+		forward = Vector3.zAxis,
+		spin = 0,
+		statusLabel = {},
+		returnLabel = {},
+		_waterTarget = function()
+			return target
+		end,
 		_presentBait = function() end,
 		_setPhase = function() end,
 	}
@@ -39,17 +45,28 @@ local function validate(template)
 			assert(not emitter.Enabled and emitter.Rate == 0, "Automatic emission is still enabled")
 			assert(not emitter.LockedToPart and emitter.VelocityInheritance == 0, "Droplets remain attached")
 			assert(emitter.Parent.Parent:IsA("Bone"), "Emitter is not bone-attached")
-			table.insert(proxies, setmetatable({
-				Emit = function(_, count)
-					table.insert(records, { point = emitter.Parent, count = count, token = effect.lastBurst })
-					emitter:Emit(count)
-				end,
-				Clear = function() emitter:Clear() end,
-				Destroy = function() emitter:Destroy() end,
-			}, {
-				__index = function(_, key) return emitter[key] end,
-				__newindex = function(_, key, value) emitter[key] = value end,
-			}))
+			table.insert(
+				proxies,
+				setmetatable({
+					Emit = function(_, count)
+						table.insert(records, { point = emitter.Parent, count = count, token = effect.lastBurst })
+						emitter:Emit(count)
+					end,
+					Clear = function()
+						emitter:Clear()
+					end,
+					Destroy = function()
+						emitter:Destroy()
+					end,
+				}, {
+					__index = function(_, key)
+						return emitter[key]
+					end,
+					__newindex = function(_, key, value)
+						emitter[key] = value
+					end,
+				})
+			)
 		end
 		return proxies
 	end
@@ -137,9 +154,15 @@ local function validate(template)
 	sequence = nil
 	bait:Destroy()
 	return {
-		name = template.Name, passed = true, points = 24, emitters = #actuals, minCoverage = minCoverage,
-		maxScaleError = maxScaleError, boneFollowError = followError,
-		normalCount10Seconds = 80, catchupLimit = 4,
+		name = template.Name,
+		passed = true,
+		points = 24,
+		emitters = #actuals,
+		minCoverage = minCoverage,
+		maxScaleError = maxScaleError,
+		boneFollowError = followError,
+		normalCount10Seconds = 80,
+		catchupLimit = 4,
 	}
 end
 local ok, result = xpcall(function()
@@ -154,7 +177,7 @@ local ok, result = xpcall(function()
 			task.wait()
 		end
 	end
-	assert(#results == 28, "Expected all 28 fish in drip regression")
+	assert(#results == #templates and #results > 0, "Expected every fish in drip regression")
 	return { passed = true, fish = #results, results = results }
 end, debug.traceback)
 if sequence then

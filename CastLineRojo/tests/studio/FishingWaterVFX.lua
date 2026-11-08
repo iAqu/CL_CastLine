@@ -3,6 +3,7 @@ local storage = game:GetService("ReplicatedStorage")
 local Cast = require(storage.Modules.FishingCastSequence)
 local Bite = require(storage.Modules.FishingBiteSequence)
 local Elastic = require(storage.Modules.BaitElasticMotion)
+local Audio = require(storage.Modules.FishingAudio)
 local config = require(storage.Modules.FishingConfig)
 local vfx = config.WaterVFX
 local ripplesEnabled = config.WaterRipple.Enabled
@@ -104,6 +105,13 @@ local function create()
 			return effect
 		end,
 	}, Cast)
+	owner.fishAudio = setmetatable({
+		Play = function(_, name) owner:_sound(name) end,
+		StartLoop = function() end,
+		StopLoop = function() end,
+		UpdateFlap = function() end,
+		Destroy = function() end,
+	}, Audio)
 	table.insert(owners, owner)
 	return owner, target
 end
@@ -213,7 +221,7 @@ local ok, result = xpcall(function()
 		owner.bite:Update(hookAt)
 		assert(count(owner, vfx.Heavy) == 1 and count(owner, vfx.Struggle) == 1, "Heavy/struggle duplicated")
 		assert(
-			owner.soundsPlayed.FishBite == 1 and owner.legacySplashes == 0,
+			owner.soundsPlayed.FishBiteHeavey == 1 and owner.legacySplashes == 0,
 			"True bite kept old splash or duplicate audio"
 		)
 		owner:Destroy()
@@ -306,7 +314,7 @@ local ok, result = xpcall(function()
 		timeline:Advance(timeline.endsAt)
 	end
 	expired.bite:Update(timeline.endsAt + 0.01)
-	assert(#expired.events == 0 and not expired.soundsPlayed.FishBite, "Expired true bite replayed effects")
+	assert(#expired.events == 0 and not expired.soundsPlayed.FishBiteHeavey, "Expired true bite replayed effects")
 	expired:Destroy()
 
 	-- 换轮和退出会取消尚未到点的发射，而不是留下后台定时回调。

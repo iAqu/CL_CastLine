@@ -1,0 +1,3582 @@
+[
+  {
+    "name": "1_鲨鱼_01_00",
+    "key": "Race001",
+    "family": "shark",
+    "variant": "race_shark",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            0.35600000000000165,
+            0.23899999999999988,
+            -5.65325
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 240,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "center": [
+            -0.35649999999999693,
+            0.23899999999999988,
+            -5.65325
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 240,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "mirroredMissingEye": false
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -2.9876180000000003
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.8125466399999999
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          1.75799224
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          4.526264880000001
+        ]
+      }
+    ],
+    "mouth": [
+      0,
+      -0.09792323943661962,
+      -5.592517605633796
+    ],
+    "presentationRadius": 8.94458459126776,
+    "bodySize": [
+      3.266999999999996,
+      3.8142999999999994,
+      13.0088
+    ],
+    "sourceOrigin": [
+      -107.4705,
+      14.42225,
+      -48.19965
+    ],
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.24,
+      0.4072,
+      0.6048,
+      0.8176,
+      0.9848
+    ],
+    "headEnd": 0.24,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 11,
+      "vertices": 12780,
+      "shellParts": [],
+      "planarRepairs": []
+    }
+  },
+  {
+    "name": "1_鲨鱼_02_00",
+    "key": "Race002",
+    "family": "shark",
+    "variant": "race_shark",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            0.6279000000000039,
+            -0.4075500000000005,
+            -3.4625999999999983
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 212,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "center": [
+            -0.6257499999999894,
+            -0.4075500000000005,
+            -3.4625999999999983
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 212,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "mirroredMissingEye": false
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -2.2657995
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.65370726
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          1.2514926600000003
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          3.3032464200000007
+        ]
+      }
+    ],
+    "mouth": [
+      0,
+      -1.4876375,
+      -3.295481249999998
+    ],
+    "presentationRadius": 6.80780203056469,
+    "bodySize": [
+      5.548100000000005,
+      3.674100000000001,
+      9.6417
+    ],
+    "sourceOrigin": [
+      -100.63075,
+      16.0548,
+      -50.24195
+    ],
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.24,
+      0.4072,
+      0.6048,
+      0.8176,
+      0.9848
+    ],
+    "headEnd": 0.24,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 11,
+      "vertices": 6384,
+      "shellParts": [],
+      "planarRepairs": []
+    }
+  },
+  {
+    "name": "1_鲨鱼_03_00",
+    "key": "Race003",
+    "family": "shark",
+    "variant": "race_shark",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            1.9921000000000006,
+            -1.4851999999999999,
+            -3.8795
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 220,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "center": [
+            -1.9921000000000006,
+            -1.4851999999999999,
+            -3.8795
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 220,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "mirroredMissingEye": false
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -1.3569565000000012
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          0.7778363799999992
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          3.3007734200000005
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          6.017782540000001
+        ]
+      }
+    ],
+    "mouth": [
+      0,
+      -1.8267514285714286,
+      -3.632372857142857
+    ],
+    "presentationRadius": 9.143427256215949,
+    "bodySize": [
+      4.286000000000001,
+      4.640000000000001,
+      12.767900000000004
+    ],
+    "sourceOrigin": [
+      -90.5664,
+      15.5555,
+      -49.65755
+    ],
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.24,
+      0.4072,
+      0.6048,
+      0.8176,
+      0.9848
+    ],
+    "headEnd": 0.24,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 11,
+      "vertices": 10212,
+      "shellParts": [],
+      "planarRepairs": []
+    }
+  },
+  {
+    "name": "1_鲨鱼_04_00",
+    "key": "Race004",
+    "family": "shark",
+    "variant": "race_shark",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            1.606749999999991,
+            -0.2867000000000015,
+            -2.1270000000000024
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 216,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "center": [
+            -1.606800000000007,
+            -0.2867000000000015,
+            -2.1270000000000024
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 248,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "mirroredMissingEye": false
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          0.6695175000000004
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          3.311193900000001
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          6.4331751000000015
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          9.795308700000001
+        ]
+      }
+    ],
+    "mouth": [
+      0,
+      -0.12865609756097707,
+      -3.4742158536585364
+    ],
+    "presentationRadius": 13.690534274687275,
+    "bodySize": [
+      5.134,
+      4.261700000000001,
+      15.799500000000002
+    ],
+    "sourceOrigin": [
+      -81.4801,
+      14.412600000000001,
+      -51.90985
+    ],
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.24,
+      0.4072,
+      0.6048,
+      0.8176,
+      0.9848
+    ],
+    "headEnd": 0.24,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 12,
+      "vertices": 8668,
+      "shellParts": [],
+      "planarRepairs": []
+    }
+  },
+  {
+    "name": "HaiGui_01_00",
+    "key": "Race005",
+    "family": "turtle",
+    "variant": "race_turtle",
+    "eye": {
+      "scale": 1.5,
+      "eyes": [
+        {
+          "center": [
+            0.49324999999999974,
+            -0.038399999999999324,
+            -6.43185
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5000000000000038
+          ],
+          "vertices": 62,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "center": [
+            -0.49324999999999974,
+            -0.038399999999999324,
+            -6.43185
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5000000000000038
+          ],
+          "vertices": 62,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "mirroredMissingEye": false
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -5.433895
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -2.847911599999999
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          0.20825060000000128
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          3.4995022000000002
+        ]
+      },
+      {
+        "name": "FlipperLeft",
+        "parent": 2,
+        "position": [
+          -2.305056,
+          0,
+          -1.7525499999999994
+        ]
+      },
+      {
+        "name": "FlipperRight",
+        "parent": 2,
+        "position": [
+          2.305056,
+          0,
+          -1.7525499999999994
+        ]
+      },
+      {
+        "name": "RearFlippers",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          3.02674
+        ]
+      }
+    ],
+    "mouth": [
+      0,
+      -0.2891599999999997,
+      -6.880549999999998
+    ],
+    "presentationRadius": 9.650270014267626,
+    "bodySize": [
+      14.406600000000001,
+      2.9395000000000007,
+      12.917
+    ],
+    "sourceOrigin": [
+      -38.6229,
+      14.5633,
+      19.66115
+    ],
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.09,
+      0.2902,
+      0.5268,
+      0.7816,
+      0.9818
+    ],
+    "headEnd": 0.09,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 8,
+      "parts": 8,
+      "vertices": 4230,
+      "shellParts": [
+        "Race005_P001",
+        "Race005_P007"
+      ],
+      "planarRepairs": []
+    }
+  },
+  {
+    "name": "HaiGui_02_00",
+    "key": "Race006",
+    "family": "turtle",
+    "variant": "race_turtle",
+    "eye": {
+      "scale": 1.5,
+      "eyes": [
+        {
+          "center": [
+            0.5098999999999982,
+            -0.1438000000000006,
+            -6.580700000000001
+          ],
+          "diameterRatios": [
+            1.5,
+            1.500000000000003
+          ],
+          "vertices": 60,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "center": [
+            -0.5099000000000018,
+            -0.1438000000000006,
+            -6.580700000000001
+          ],
+          "diameterRatios": [
+            1.5,
+            1.500000000000003
+          ],
+          "vertices": 60,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "mirroredMissingEye": false
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -5.583344
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -2.992083020000001
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          0.07031631999999988
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          3.3682848399999994
+        ]
+      },
+      {
+        "name": "FlipperLeft",
+        "parent": 2,
+        "position": [
+          -2.3054240000000004,
+          0,
+          -1.9627600000000003
+        ]
+      },
+      {
+        "name": "FlipperRight",
+        "parent": 2,
+        "position": [
+          2.3054240000000004,
+          0,
+          -1.9627600000000003
+        ]
+      },
+      {
+        "name": "RearFlippers",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          2.866702
+        ]
+      }
+    ],
+    "mouth": [
+      0,
+      -0.41185000000000027,
+      -7.159225000000002
+    ],
+    "presentationRadius": 9.840162730023362,
+    "bodySize": [
+      14.408900000000001,
+      3.1205999999999996,
+      13.052600000000002
+    ],
+    "sourceOrigin": [
+      -18.6303,
+      14.6646,
+      19.3045
+    ],
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.09761587729647742,
+      0.29614038429125233,
+      0.5307602561941682,
+      0.7834278105511545,
+      0.9819523175459295
+    ],
+    "headEnd": 0.09761587729647742,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 8,
+      "parts": 8,
+      "vertices": 5482,
+      "shellParts": [
+        "Race006_P004",
+        "Race006_P005",
+        "Race006_P007",
+        "Race006_P008"
+      ],
+      "planarRepairs": []
+    }
+  },
+  {
+    "name": "HaiGui_03_00",
+    "key": "Race007",
+    "family": "turtle",
+    "variant": "race_turtle",
+    "eye": {
+      "scale": 1.5,
+      "eyes": [
+        {
+          "center": [
+            0.4932565,
+            -0.7435,
+            -6.3405
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5000000000000038
+          ],
+          "vertices": 79,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "center": [
+            -0.49325130000000006,
+            -0.7435,
+            -6.3405
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5000000000000038
+          ],
+          "vertices": 79,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "mirroredMissingEye": false
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -5.377619999999999
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -2.7830071
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          0.283353599999999
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          3.5855882
+        ]
+      },
+      {
+        "name": "FlipperLeft",
+        "parent": 2,
+        "position": [
+          -2.4627088,
+          0,
+          -1.7607999999999997
+        ]
+      },
+      {
+        "name": "FlipperRight",
+        "parent": 2,
+        "position": [
+          2.4627088,
+          0,
+          -1.7607999999999997
+        ]
+      },
+      {
+        "name": "RearFlippers",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          3.07991
+        ]
+      }
+    ],
+    "mouth": [
+      0,
+      -0.8787999999999997,
+      -6.811180000000002
+    ],
+    "presentationRadius": 9.81147106378412,
+    "bodySize": [
+      15.39193,
+      4.655799999999999,
+      13.082999999999998
+    ],
+    "sourceOrigin": [
+      0.43208,
+      15.2644,
+      18.5931
+    ],
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.09854811587556375,
+      0.2968675303829397,
+      0.5312450202552931,
+      0.7836515478101354,
+      0.9819709623175112
+    ],
+    "headEnd": 0.09854811587556375,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 8,
+      "parts": 10,
+      "vertices": 5504,
+      "shellParts": [
+        "Race007_P001",
+        "Race007_P004",
+        "Race007_P005",
+        "Race007_P006"
+      ],
+      "planarRepairs": []
+    }
+  },
+  {
+    "name": "HaiGui_04_00",
+    "key": "Race008",
+    "family": "turtle",
+    "variant": "race_turtle",
+    "eye": {
+      "scale": 1.5,
+      "eyes": [
+        {
+          "center": [
+            0.4932500000000033,
+            0.2378499999999999,
+            -6.37845
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5000000000000038
+          ],
+          "vertices": 79,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "center": [
+            -0.4932499999999962,
+            0.2378499999999999,
+            -6.37845
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5000000000000038
+          ],
+          "vertices": 79,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "mirroredMissingEye": false
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -4.974137000000001
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -1.425351759999999
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          2.7686671600000015
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          7.285302920000001
+        ]
+      },
+      {
+        "name": "FlipperLeft",
+        "parent": 2,
+        "position": [
+          -2.4627200000000005,
+          0,
+          0.07783000000000051
+        ]
+      },
+      {
+        "name": "FlipperRight",
+        "parent": 2,
+        "position": [
+          2.4627200000000005,
+          0,
+          0.07783000000000051
+        ]
+      },
+      {
+        "name": "RearFlippers",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          6.636524000000001
+        ]
+      }
+    ],
+    "mouth": [
+      0,
+      0.10928333333333384,
+      -6.9094566666666655
+    ],
+    "presentationRadius": 11.83572245963366,
+    "bodySize": [
+      15.392000000000001,
+      6.183900000000001,
+      17.726200000000002
+    ],
+    "sourceOrigin": [
+      20.923699999999997,
+      14.28295,
+      18.15005
+    ],
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.09,
+      0.2902,
+      0.5268,
+      0.7816,
+      0.9818
+    ],
+    "headEnd": 0.09,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 8,
+      "parts": 15,
+      "vertices": 21927,
+      "shellParts": [
+        "Race008_P002",
+        "Race008_P004",
+        "Race008_P012",
+        "Race008_P013",
+        "Race008_P014"
+      ],
+      "planarRepairs": []
+    }
+  },
+  {
+    "name": "HaiMan_01_00",
+    "key": "Race009",
+    "family": "eel",
+    "variant": "race_eel",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            0.556599999999996,
+            0.40280000000000094,
+            -8.663745000000002
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 9,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "center": [
+            -0.5567000000000064,
+            0.40280000000000094,
+            -8.663745000000002
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 9,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "mirroredMissingEye": false
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -1.7784819200000044
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          0.925585051428568
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          3.6296520228571385
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          6.333718994285709
+        ]
+      },
+      {
+        "name": "TailExtra1",
+        "parent": 4,
+        "position": [
+          0,
+          0,
+          9.037785965714283
+        ]
+      },
+      {
+        "name": "TailExtra2",
+        "parent": 5,
+        "position": [
+          0,
+          0,
+          11.741852937142854
+        ]
+      },
+      {
+        "name": "TailExtra3",
+        "parent": 6,
+        "position": [
+          0,
+          0,
+          14.445919908571424
+        ]
+      }
+    ],
+    "mouth": [
+      0,
+      -0.8380166666666664,
+      -9.201280000000002
+    ],
+    "presentationRadius": 17.96708590024876,
+    "bodySize": [
+      3.2708000000000013,
+      8.4969,
+      24.905879999999996
+    ],
+    "sourceOrigin": [
+      44.993300000000005,
+      14.56335,
+      17.32926
+    ],
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.24,
+      0.34857142857142853,
+      0.45714285714285713,
+      0.5657142857142857,
+      0.6742857142857143,
+      0.7828571428571428,
+      0.8914285714285715,
+      1.0
+    ],
+    "headEnd": 0.24,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 8,
+      "parts": 12,
+      "vertices": 7816,
+      "shellParts": [],
+      "planarRepairs": []
+    }
+  },
+  {
+    "name": "SXYu_01_00",
+    "key": "Race010",
+    "family": "ornate",
+    "variant": "race_ornate",
+    "eye": {
+      "scale": 1.5,
+      "eyes": [
+        {
+          "center": [
+            1.1266999999999854,
+            0.33889999999999887,
+            -3.973300000000002
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 552,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "center": [
+            -1.1266500000000121,
+            0.33889999999999887,
+            -3.973300000000002
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 552,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "mirroredMissingEye": false
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -2.527813
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.16509428999999987
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          2.6272096400000002
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          5.634306180000001
+        ]
+      },
+      {
+        "name": "FinLeft",
+        "parent": 1,
+        "position": [
+          -1.1929960000000002,
+          0,
+          -0.7317160000000014
+        ]
+      },
+      {
+        "name": "FinRight",
+        "parent": 1,
+        "position": [
+          1.1929960000000002,
+          0,
+          -0.7317160000000014
+        ]
+      }
+    ],
+    "mouth": [
+      0,
+      -0.9391187500000011,
+      -5.5013375
+    ],
+    "presentationRadius": 10.150263026662946,
+    "bodySize": [
+      8.5214,
+      6.738199999999999,
+      14.782700000000002
+    ],
+    "sourceOrigin": [
+      -65.63964999999999,
+      15.3716,
+      26.044150000000002
+    ],
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.2735000710289731,
+      0.43333005540259906,
+      0.622220036935066,
+      0.8256400170469536,
+      0.9854700014205795
+    ],
+    "headEnd": 0.2735000710289731,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 7,
+      "parts": 15,
+      "vertices": 9381,
+      "shellParts": [],
+      "planarRepairs": []
+    }
+  },
+  {
+    "name": "YaoYu_01_00",
+    "key": "Race011",
+    "family": "ray",
+    "variant": "race_ray",
+    "eye": {
+      "scale": 1.5,
+      "eyes": [
+        {
+          "center": [
+            -0.7358499999999992,
+            0.35130000000000194,
+            -2.241949999999999
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 303,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "center": [
+            0.735949999999999,
+            0.35130000000000194,
+            -2.241949999999999
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 301,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "mirroredMissingEye": false
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -0.48106139999999975
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          1.3506547280000003
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          3.5154101520000003
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          5.846685224
+        ]
+      },
+      {
+        "name": "FinLeft",
+        "parent": 1,
+        "position": [
+          -0.7938980000000001,
+          0,
+          1.2170008
+        ]
+      },
+      {
+        "name": "FinRight",
+        "parent": 1,
+        "position": [
+          0.7938980000000001,
+          0,
+          1.2170008
+        ]
+      }
+    ],
+    "mouth": [
+      0,
+      -0.3026285999999974,
+      -3.3842
+    ],
+    "presentationRadius": 8.332490221369353,
+    "bodySize": [
+      5.6707,
+      0.9207999999999981,
+      10.95524
+    ],
+    "sourceOrigin": [
+      -20.03725,
+      16.211199999999998,
+      -16.6877
+    ],
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.24,
+      0.4072,
+      0.6048,
+      0.8176,
+      0.9848
+    ],
+    "headEnd": 0.24,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 7,
+      "parts": 9,
+      "vertices": 4372,
+      "shellParts": [],
+      "planarRepairs": []
+    }
+  },
+  {
+    "name": "YaoYu_02_00",
+    "key": "Race012",
+    "family": "ray",
+    "variant": "race_ray",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            -1.7090599999999996,
+            0.650500000000001,
+            -0.9247499999999977
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 75,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "center": [
+            1.7091000000000003,
+            0.650500000000001,
+            -0.9247499999999977
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 75,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "mirroredMissingEye": false
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          0.28445925000000116
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          2.2083376900000014
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          4.4820122100000015
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          6.930584770000001
+        ]
+      },
+      {
+        "name": "FinLeft",
+        "parent": 1,
+        "position": [
+          -2.0941452,
+          0,
+          2.067959000000001
+        ]
+      },
+      {
+        "name": "FinRight",
+        "parent": 1,
+        "position": [
+          2.0941452,
+          0,
+          2.067959000000001
+        ]
+      }
+    ],
+    "mouth": [
+      0,
+      -0.4597356388888894,
+      -2.7375277777777764
+    ],
+    "presentationRadius": 9.629352113607021,
+    "bodySize": [
+      14.958179999999999,
+      2.402899999999999,
+      11.506450000000001
+    ],
+    "sourceOrigin": [
+      3.7504099999999996,
+      15.52735,
+      -18.60385
+    ],
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.24,
+      0.4072,
+      0.6048,
+      0.8176,
+      0.9848
+    ],
+    "headEnd": 0.24,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 7,
+      "parts": 10,
+      "vertices": 5810,
+      "shellParts": [],
+      "planarRepairs": []
+    }
+  },
+  {
+    "name": "YaoYu_03_00",
+    "key": "Race013",
+    "family": "ray",
+    "variant": "race_ray",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            -1.1425500000000017,
+            0.2137999999999991,
+            -0.8385499999999997
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 68,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "center": [
+            1.1418499999999998,
+            0.2137999999999991,
+            -0.8385499999999997
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 68,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "mirroredMissingEye": false
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          1.1370065000000014
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          3.2574536200000015
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          5.763436580000001
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          8.46218746
+        ]
+      },
+      {
+        "name": "FinLeft",
+        "parent": 1,
+        "position": [
+          -1.951782,
+          0,
+          3.1027320000000005
+        ]
+      },
+      {
+        "name": "FinRight",
+        "parent": 1,
+        "position": [
+          1.951782,
+          0,
+          3.1027320000000005
+        ]
+      }
+    ],
+    "mouth": [
+      0,
+      -0.22242950000000106,
+      -2.1992499999999975
+    ],
+    "presentationRadius": 11.51023197297297,
+    "bodySize": [
+      13.941299999999998,
+      3.4047,
+      12.6821
+    ],
+    "sourceOrigin": [
+      30.61025,
+      13.366150000000001,
+      -21.63915
+    ],
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.24,
+      0.4072,
+      0.6048,
+      0.8176,
+      0.9848
+    ],
+    "headEnd": 0.24,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 7,
+      "parts": 10,
+      "vertices": 6082,
+      "shellParts": [],
+      "planarRepairs": []
+    }
+  },
+  {
+    "name": "YaoYu_04_00",
+    "key": "Race014",
+    "family": "ray",
+    "variant": "race_ray",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            -1.2382500000000007,
+            -0.10815000000000019,
+            -1.4936500000000006
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 83,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "center": [
+            1.2382500000000007,
+            -0.10815000000000019,
+            -1.4936500000000006
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 83,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "mirroredMissingEye": true
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          0.18291200000000174
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          3.1524842100000026
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          6.661978640000001
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          10.441434180000002
+        ]
+      },
+      {
+        "name": "FinLeft",
+        "parent": 1,
+        "position": [
+          -1.5489320000000002,
+          0,
+          -0.048116000000002046
+        ]
+      },
+      {
+        "name": "FinRight",
+        "parent": 1,
+        "position": [
+          1.5489320000000002,
+          0,
+          -0.048116000000002046
+        ]
+      }
+    ],
+    "mouth": [
+      0,
+      -0.35542049999999964,
+      -2.27031
+    ],
+    "presentationRadius": 14.477311364751579,
+    "bodySize": [
+      11.0638,
+      4.876400000000002,
+      22.692700000000002
+    ],
+    "sourceOrigin": [
+      56.2453,
+      14.1831,
+      -28.24615
+    ],
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.4051807189096054,
+      0.5360409607494923,
+      0.6906939738329948,
+      0.8572433725383053,
+      0.988103614378192
+    ],
+    "headEnd": 0.4051807189096054,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 7,
+      "parts": 11,
+      "vertices": 7370,
+      "shellParts": [],
+      "planarRepairs": []
+    }
+  },
+  {
+    "name": "YouYu_01_00",
+    "key": "Race015",
+    "family": "squid",
+    "variant": "race_squid",
+    "eye": {
+      "scale": 1.5,
+      "eyes": [
+        {
+          "center": [
+            0.5846999999999909,
+            -0.03699999999999726,
+            -2.5364499999999985
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 70,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "center": [
+            -0.5846500000000034,
+            -0.03699999999999726,
+            -2.5364499999999985
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 70,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "mirroredMissingEye": false
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -3.9367370399999997
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -5.7348624599999996
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          -7.6021465500000005
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          -9.19279596
+        ]
+      },
+      {
+        "name": "TentacleLeft",
+        "parent": 1,
+        "position": [
+          -0.41333599999999965,
+          0,
+          -4.83579975
+        ]
+      },
+      {
+        "name": "TentacleMid",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          -6.21897315
+        ]
+      },
+      {
+        "name": "TentacleRight",
+        "parent": 1,
+        "position": [
+          0.41333599999999965,
+          0,
+          -4.83579975
+        ]
+      }
+    ],
+    "mouth": [
+      0,
+      -0.3925849999999976,
+      -2.7098440857142867
+    ],
+    "presentationRadius": 11.166543838187375,
+    "bodySize": [
+      2.9523999999999972,
+      2.087900000000001,
+      14.1904
+    ],
+    "sourceOrigin": [
+      -76.99510000000001,
+      16.195349999999998,
+      24.3211
+    ],
+    "sourceFlipped": true,
+    "weightAnchors": [
+      0.5827523537039128,
+      0.674546835889052,
+      0.7830312239260346,
+      0.8998605648889391,
+      0.9916550470740783
+    ],
+    "headEnd": 0.5827523537039128,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 8,
+      "parts": 9,
+      "vertices": 5700,
+      "shellParts": [],
+      "planarRepairs": []
+    }
+  },
+  {
+    "name": "YouYu_02_00",
+    "key": "Race016",
+    "family": "squid",
+    "variant": "race_squid",
+    "eye": {
+      "scale": 1.5,
+      "eyes": [
+        {
+          "center": [
+            0.779999999999994,
+            -0.14425000000000043,
+            -4.733905
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 132,
+          "reposition": [
+            0,
+            0.024024999999999963,
+            0.10090833333333338
+          ]
+        },
+        {
+          "center": [
+            -0.7809999999999988,
+            -0.14425000000000043,
+            -4.733905
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 132,
+          "reposition": [
+            0,
+            0.024024999999999963,
+            0.10090833333333338
+          ]
+        },
+        {
+          "center": [
+            0.7204999999999941,
+            -0.4048500000000006,
+            -4.982505
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 132,
+          "reposition": [
+            0,
+            -0.10627500000000012,
+            -0.023391666666666477
+          ]
+        },
+        {
+          "center": [
+            -0.7205000000000013,
+            -0.4048500000000006,
+            -4.982505
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 132,
+          "reposition": [
+            0,
+            -0.10627500000000012,
+            -0.023391666666666477
+          ]
+        },
+        {
+          "center": [
+            0.7239999999999966,
+            -0.027800000000000047,
+            -5.090755000000001
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5000000000000027
+          ],
+          "vertices": 133,
+          "reposition": [
+            0,
+            0.08225000000000016,
+            -0.0775166666666669
+          ]
+        },
+        {
+          "center": [
+            -0.7245000000000061,
+            -0.027800000000000047,
+            -5.090755000000001
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5000000000000027
+          ],
+          "vertices": 133,
+          "reposition": [
+            0,
+            0.08225000000000016,
+            -0.0775166666666669
+          ]
+        }
+      ],
+      "mirroredMissingEye": false
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -6.919401010666667
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -9.301327189333335
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          -11.774865913333334
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          -13.881954456000003
+        ]
+      },
+      {
+        "name": "TentacleLeft",
+        "parent": 1,
+        "position": [
+          -1.11874,
+          0,
+          -8.110364100000002
+        ]
+      },
+      {
+        "name": "TentacleMid",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          -9.942615006666667
+        ]
+      },
+      {
+        "name": "TentacleRight",
+        "parent": 1,
+        "position": [
+          1.11874,
+          0,
+          -8.110364100000002
+        ]
+      }
+    ],
+    "mouth": [
+      0,
+      -0.6959122122166246,
+      -5.19023194414777
+    ],
+    "presentationRadius": 16.559432812106408,
+    "bodySize": [
+      7.991,
+      2.8500999999999994,
+      20.48769
+    ],
+    "sourceOrigin": [
+      -108.322,
+      14.29415,
+      10.704395
+    ],
+    "sourceFlipped": true,
+    "weightAnchors": [
+      0.5517619352564069,
+      0.6503743094999974,
+      0.7669162063333316,
+      0.8924228644615377,
+      0.9910352387051281
+    ],
+    "headEnd": 0.5517619352564069,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 8,
+      "parts": 23,
+      "vertices": 15872,
+      "shellParts": [],
+      "planarRepairs": [
+        {
+          "part": "Race016_P003",
+          "axis": 1,
+          "maximumOffset": 0.0005
+        },
+        {
+          "part": "Race016_P012",
+          "axis": 1,
+          "maximumOffset": 0.0005
+        }
+      ]
+    }
+  },
+  {
+    "name": "付费_01_00",
+    "key": "Race017",
+    "family": "shark",
+    "variant": "race_shark",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            0.7288500000000013,
+            -0.5790000000000006,
+            -4.2858
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 220,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "center": [
+            -0.7288500000000013,
+            -0.5790000000000006,
+            -4.2858
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 220,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "mirroredMissingEye": false
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -2.633363000000001
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.7597532400000011
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          1.4545128399999996
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          3.83910708
+        ]
+      }
+    ],
+    "mouth": [
+      0,
+      -1.511860000000001,
+      -4.769680000000001
+    ],
+    "presentationRadius": 7.919588940657217,
+    "bodySize": [
+      6.935599999999994,
+      4.351299999999998,
+      11.205800000000002
+    ],
+    "sourceOrigin": [
+      -62.0886,
+      15.002600000000001,
+      -16.9225
+    ],
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.24,
+      0.4072,
+      0.6048,
+      0.8176,
+      0.9848
+    ],
+    "headEnd": 0.24,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 11,
+      "vertices": 13149,
+      "shellParts": [],
+      "planarRepairs": []
+    }
+  },
+  {
+    "name": "付费_02_00",
+    "key": "Race018",
+    "family": "shark",
+    "variant": "race_shark",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            0.7288500000000084,
+            -0.6599500000000003,
+            -4.137499999999999
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 61,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "center": [
+            -0.7288499999999942,
+            -0.6599500000000003,
+            -4.137499999999999
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 61,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "mirroredMissingEye": false
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -2.7030874999999988
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.7798694999999984
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          1.4930245000000015
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          3.940756500000001
+        ]
+      }
+    ],
+    "mouth": [
+      0,
+      -1.589690000000001,
+      -4.62133
+    ],
+    "presentationRadius": 8.09426729148344,
+    "bodySize": [
+      6.570499999999996,
+      4.525499999999997,
+      11.5025
+    ],
+    "sourceOrigin": [
+      -76.53745,
+      15.08045,
+      -17.07085
+    ],
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.24,
+      0.4072,
+      0.6048,
+      0.8176,
+      0.9848
+    ],
+    "headEnd": 0.24,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 11,
+      "vertices": 6309,
+      "shellParts": [],
+      "planarRepairs": []
+    }
+  },
+  {
+    "name": "付费_03_00",
+    "key": "Race019",
+    "family": "shark",
+    "variant": "race_shark",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            0.6746999999999943,
+            -0.11070000000000135,
+            -4.327849999999998
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 476,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "center": [
+            -0.6716000000000051,
+            -0.11070000000000135,
+            -4.327849999999998
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 476,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "mirroredMissingEye": false
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -1.9079022999999986
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          0.31755979600000117
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          2.9476513640000004
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          5.780057668000001
+        ]
+      }
+    ],
+    "mouth": [
+      0,
+      -0.6269611111111119,
+      -4.120766666666666
+    ],
+    "presentationRadius": 9.791772604565388,
+    "bodySize": [
+      7.375,
+      5.611800000000001,
+      13.310179999999999
+    ],
+    "sourceOrigin": [
+      -91.4425,
+      14.499500000000001,
+      -16.6824
+    ],
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.24,
+      0.4072,
+      0.6048,
+      0.8176,
+      0.9848
+    ],
+    "headEnd": 0.24,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 15,
+      "vertices": 7975,
+      "shellParts": [],
+      "planarRepairs": []
+    }
+  },
+  {
+    "name": "付费_04_00",
+    "key": "Race020",
+    "family": "shark",
+    "variant": "race_shark",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            -1.3548499999999954,
+            -0.9996999999999998,
+            -2.7357000000000014
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 56,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "center": [
+            1.3548500000000026,
+            -0.9996999999999998,
+            -2.7357000000000014
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 56,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "mirroredMissingEye": false
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -1.8296279999999996
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.08236974000000075
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          1.9825718400000003
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          4.20635508
+        ]
+      }
+    ],
+    "mouth": [
+      0,
+      -0.9071799999999997,
+      -5.552890000000002
+    ],
+    "presentationRadius": 9.382684485792193,
+    "bodySize": [
+      6.9084,
+      4.348899999999999,
+      14.276200000000001
+    ],
+    "sourceOrigin": [
+      -42.99325,
+      14.9778,
+      -15.910149999999998
+    ],
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.44368368333310004,
+      0.566073272999818,
+      0.7107155153332121,
+      0.866484083999944,
+      0.988873673666662
+    ],
+    "headEnd": 0.44368368333310004,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 16,
+      "vertices": 11372,
+      "shellParts": [],
+      "planarRepairs": []
+    }
+  },
+  {
+    "name": "初始_00_00",
+    "key": "Race021",
+    "family": "shark",
+    "variant": "race_shark",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            0.5655000000000001,
+            -0.37870000000000026,
+            -4.05495
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 217,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "center": [
+            -0.5659999999999954,
+            -0.37870000000000026,
+            -4.05495
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 217,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "mirroredMissingEye": false
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -1.8733655000000002
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          0.10248705999999963
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          2.4375855400000006
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          4.9523069799999995
+        ]
+      }
+    ],
+    "mouth": [
+      0,
+      -1.1116400000000002,
+      -4.279736000000001
+    ],
+    "presentationRadius": 8.290763612401571,
+    "bodySize": [
+      7.138999999999996,
+      5.161899999999999,
+      11.817300000000001
+    ],
+    "sourceOrigin": [
+      -107.8375,
+      15.44565,
+      -17.37585
+    ],
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.24,
+      0.4072,
+      0.6048,
+      0.8176,
+      0.9848
+    ],
+    "headEnd": 0.24,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 12,
+      "vertices": 5046,
+      "shellParts": [],
+      "planarRepairs": []
+    }
+  },
+  {
+    "name": "海豚1-0",
+    "key": "Race022",
+    "family": "dolphin",
+    "variant": "race_dolphin",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            0.7000500000000045,
+            -1.2581500000000005,
+            -3.216850000000001
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 124,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "center": [
+            -0.7001499999999936,
+            -1.2581500000000005,
+            -3.216850000000001
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 122,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "mirroredMissingEye": false
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -2.237301999999998
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.0489131599999979
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          2.5373645600000003
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          5.322586720000002
+        ]
+      }
+    ],
+    "mouth": [
+      0,
+      -1.3647166666666672,
+      -6.003996078431373
+    ],
+    "presentationRadius": 9.235732111343612,
+    "bodySize": [
+      4.405799999999999,
+      4.187100000000001,
+      13.4208
+    ],
+    "sourceOrigin": [
+      -76.7292,
+      16.32195,
+      -50.9914
+    ],
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25882048760133525,
+      0.4218799803290415,
+      0.6145866535526943,
+      0.8221169170243204,
+      0.9851764097520267
+    ],
+    "headEnd": 0.25882048760133525,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 6,
+      "vertices": 2334,
+      "shellParts": [],
+      "planarRepairs": []
+    }
+  },
+  {
+    "name": "海豚2-0",
+    "key": "Race023",
+    "family": "dolphin",
+    "variant": "race_dolphin",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            0.5599999999999952,
+            0.09544999999999959,
+            -4.4177
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 98,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "center": [
+            -0.5491000000000028,
+            0.09544999999999959,
+            -4.4177
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 100,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "mirroredMissingEye": false
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -3.578674
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -1.5355281699999992
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          0.8790987200000009
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          3.4794661400000013
+        ]
+      }
+    ],
+    "mouth": [
+      0,
+      0.3712730769230762,
+      -6.889926923076926
+    ],
+    "presentationRadius": 7.734667214966401,
+    "bodySize": [
+      4.163000000000011,
+      2.6052,
+      12.332100000000004
+    ],
+    "sourceOrigin": [
+      -68.71395,
+      14.95935,
+      -49.07915
+    ],
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.24692254360571217,
+      0.4125995840124555,
+      0.6083997226749703,
+      0.8192614104653709,
+      0.9849384508721142
+    ],
+    "headEnd": 0.24692254360571217,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 5,
+      "vertices": 3694,
+      "shellParts": [],
+      "planarRepairs": []
+    }
+  },
+  {
+    "name": "海豚3-0",
+    "key": "Race024",
+    "family": "dolphin",
+    "variant": "race_dolphin",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            0.6751499999999986,
+            -0.18840000000000057,
+            -5.264249999999997
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 120,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "center": [
+            -0.6729500000000037,
+            -0.18840000000000057,
+            -5.264249999999993
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 98,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "mirroredMissingEye": false
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -3.849210999999996
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -1.927648279999996
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          0.3432894800000028
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          2.7889147600000026
+        ]
+      }
+    ],
+    "mouth": [
+      0,
+      -0.5815666666666668,
+      -6.86086666666666
+    ],
+    "presentationRadius": 7.609494821892631,
+    "bodySize": [
+      4.2926,
+      3.6865000000000006,
+      11.492599999999996
+    ],
+    "sourceOrigin": [
+      -60.95455,
+      14.8635,
+      -48.552350000000004
+    ],
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.24,
+      0.4072,
+      0.6048,
+      0.8176,
+      0.9848
+    ],
+    "headEnd": 0.24,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 5,
+      "vertices": 1716,
+      "shellParts": [],
+      "planarRepairs": []
+    }
+  },
+  {
+    "name": "海豚4-0",
+    "key": "Race025",
+    "family": "dolphin",
+    "variant": "race_dolphin",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            0.9495500000000057,
+            0.1122500000000004,
+            -4.752950000000006
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 130,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "center": [
+            -0.949549999999995,
+            0.1122500000000004,
+            -4.752950000000006
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 130,
+          "reposition": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "mirroredMissingEye": false
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -3.2940425000000086
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -1.248266900000008
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          1.169467899999992
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          3.773182299999993
+        ]
+      }
+    ],
+    "mouth": [
+      0,
+      -0.5353176470588231,
+      -6.146250000000009
+    ],
+    "presentationRadius": 7.8241188113400035,
+    "bodySize": [
+      4.781699999999994,
+      4.784099999999999,
+      12.235500000000002
+    ],
+    "sourceOrigin": [
+      -52.557100000000005,
+      14.6899,
+      -49.087149999999994
+    ],
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.24,
+      0.4072,
+      0.6048,
+      0.8176,
+      0.9848
+    ],
+    "headEnd": 0.24,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 7,
+      "vertices": 2530,
+      "shellParts": [],
+      "planarRepairs": []
+    }
+  }
+]

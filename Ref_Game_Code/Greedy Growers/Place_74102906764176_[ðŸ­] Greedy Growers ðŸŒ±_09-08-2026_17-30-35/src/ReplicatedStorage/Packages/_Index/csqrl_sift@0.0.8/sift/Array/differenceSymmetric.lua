@@ -1,0 +1,24 @@
+-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
+
+-- Bytecode (Base64):
+-- CQMMBnR5cGVvZgV0YWJsZQZpbnNlcnQGdW5wYWNrE2RpZmZlcmVuY2VTeW1tZXRyaWMHcmVxdWlyZQZzY3JpcHQGUGFyZW50BVR5cGVzBXRvU2V0A1NldAd0b0FycmF5AAIMAQMBAAArowEAAPsBAABSAgAAnwECAv8CAAAAAAAA/wMAAAAAAADdBgAAxQMGAAEAAADGBAAAxgUAAGQDDwC7LAcDUgkHAKQIAQAAAABAnwgCAvAICQACAACAUgkCAPsKAABSCwcAnwoCAEw0AAKkCAQAAAwggJ8IAAFuA/D/AgAAAPsDAQBSBAEAuzUCA1IGAgCkBQYAAABQQJ8FAgCfAwAC+wQCAFIFAwCfBAIAggQAAAcDAQQAAABAAwIDAwQADCCAAwQEAABQQAAZBQEYAAEAAAEAAgAAAAAAAAABAAAAAAAABAAAAAAAAAD7AAgAAAAAAAAAAgAAABkAAAAABQAAAQIANKMAAACkAAEAAAAAQKQBAwAAACBATQEBJAQAAABNAQEkBAAAAE0BAe8FAAAAnwACAqQBAQAAAABApAIDAAAAIEBNAgIkBAAAAE0CAr4GAAAAnwECAqQCAQAAAABApAMDAAAAIEBNAwMkBAAAAE0DAyQEAAAATQMDcwcAAABNAwMZCAAAAJ8CAgKkAwEAAAAAQKQEAwAAACBATQQEJAQAAABNBAQkBAAAAE0EBHMHAAAATQQEEwkAAACfAwICwAQKABIAAQASAAMAEgACAIIEAgALAwYEAAAAQAMHBAAAIEADCAMJAwoDCwMMAwUGAAEAAQABGAABAAAAAAAAAAAAAAIAAAAAAAAAAAEAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAEwAAABEBAAAAAAECugyt8ADXAlzaxToULPCtcqIb2TB+Zqw=
+
+-- https://lua.expert/
+require(script.Parent.Parent.Types)
+
+local toSet = require(script.Parent.toSet)
+local toArray = require(script.Parent.Parent.Set.toArray)
+local differenceSymmetric = require(script.Parent.Parent.Set.differenceSymmetric)
+
+return function(p1, ...) --[[ differenceSymmetric | Line: 25 | Upvalues: toSet (copy), differenceSymmetric (copy), toArray (copy) ]]
+	local v1 = toSet(p1)
+	local t = {}
+
+	for v2, v3 in { ... } do
+		if typeof(v3) == "table" then
+			table.insert(t, toSet(v3))
+		end
+	end
+
+	return toArray((differenceSymmetric(v1, unpack(t))))
+end

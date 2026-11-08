@@ -1,0 +1,87 @@
+-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
+
+-- Bytecode (Base64):
+-- CQMnBGdhbWURUmVwbGljYXRlZFN0b3JhZ2UKR2V0U2VydmljZQZTaGFyZWQMV2FpdEZvckNoaWxkBEluZm8HcmVxdWlyZQZJbWFnZXMORU1PVEVfQ09PTERPV04ORU1PVEVTX1BFUl9ST1cCSGkFQ2hlZXIFTGF1Z2gDQ3J5CEFwcGxhdXNlBUFuZ3J5BkFtYXplZAZTY3JlYW0FVGhpbmsIQ29uZnVzZWQJRXZpbExhdWdoCUxpZ2h0bmluZwJpZAVpbWFnZQd2aXBPbmx5BW9yZGVyBUVNX0hJCEVNX0NIRUVSCEVNX0xBVUdIBkVNX0NSWQtFTV9BUFBMQVVTRQhFTV9BTkdSWQlFTV9BTUFaRUQJRU1fU0NSRUFNCEVNX1RISU5LC0VNX0NPTkZVU0VEDUVNX0VWSUxfTEFVR0gMRU1fTElHSFROSU5HBkVtb3RlcwABBwAAAQIAdqMAAACkAAEAAAAAQG8CAgC8AAAWAwAAAJ8AAwJvAwQAvAEA0wUAAACfAQMCbwMGALwBAdMFAAAAnwEDAqQCCAAAAHBAbwUJALwDAdMFAAAAnwMDAJ8CAAL/AwMAAAAAAG8ECgAwBAP2CwAAAIwEBAAwBAOkDAAAAOIEGQDiBSAATQYC4iEAAAAwBgXJGwAAADAFBHkNAAAA4gUjAE0GArckAAAAMAYFyRsAAAAwBQTkDgAAAOIFJgBNBgI1JwAAADAGBckbAAAAMAUEUA8AAADiBSkATQYCJSoAAAAwBgXJGwAAADAFBH0QAAAA4gUtAE0GAnEuAAAAMAYFyRsAAAAwBQQnEQAAAOIFMABNBgI3MQAAADAGBckbAAAAMAUEHxIAAADiBTMATQYCxDQAAAAwBgXJGwAAADAFBB4TAAAA4gU2AE0GAuI3AAAAMAYFyRsAAAAwBQQEFAAAAOIFOQBNBgJ7OgAAADAGBckbAAAAMAUE6hUAAADiBTwATQYCiD0AAAAwBgXJGwAAADAFBEoWAAAA4gU/AE0GAilAAAAAMAYFyRsAAAAwBQSAFwAAAOIFQgBNBgJEQwAAADAGBckbAAAAMAUEqRgAAAAwBAOrRAAAAIIDAgBFAwEEAAAAQAMCAwMDBAMFAwYDBwQAAHBAAwgCmpmZmZmZyT8DCQMKAwsDDAMNAw4DDwMQAxEDEgMTAxQDFQMWBQwNDg8QERITFBUWFxgDFwMYAxkBAAMaAgAAAAAAAPA/CAQaDQAAABv/////HB0AAAAeHwAAAAMbAgAAAAAAAABACAQaDgAAABv/////HB0AAAAeIgAAAAMcAgAAAAAAAAhACAQaDwAAABv/////HB0AAAAeJQAAAAMdAgAAAAAAABBACAQaEAAAABv/////HB0AAAAeKAAAAAMeAQECAAAAAAAAFEAIBBoRAAAAG/////8cKwAAAB4sAAAAAx8CAAAAAAAAGEAIBBoSAAAAG/////8cKwAAAB4vAAAAAyACAAAAAAAAHEAIBBoTAAAAG/////8cKwAAAB4yAAAAAyECAAAAAAAAIEAIBBoUAAAAG/////8cKwAAAB41AAAAAyICAAAAAAAAIkAIBBoVAAAAG/////8cKwAAAB44AAAAAyMCAAAAAAAAJEAIBBoWAAAAG/////8cKwAAAB47AAAAAyQCAAAAAAAAJkAIBBoXAAAAG/////8cKwAAAB4+AAAAAyUCAAAAAAAAKEAIBBoYAAAAG/////8cKwAAAB5BAAAAAyYDJwABAAEYAAAAAAAAAAEAAAAAAAAAAgAAAAAAAAIAAgAAAQAAAgMCAAAA/gAGAgAAAP4ABgIAAAD+AAYCAAAA/gAHAgAAAP4ABgIAAAD+AAYCAAAA/gAGAgAAAP4ABgIAAAD+AAYCAAAA/gAGAgAAAP4ABgIAAAD+ALoATwEAAAAAAMIe2XqA/S9JY4X6ofYSZgCyBs4O8Nqzew==
+
+-- https://lua.expert/
+local Info = game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Info")
+local Images = require(Info:WaitForChild("Images"))
+
+return {
+	EMOTE_COOLDOWN = 0.2,
+	EMOTES_PER_ROW = 4,
+	Emotes = {
+		Hi = {
+			id = "Hi",
+			vipOnly = false,
+			order = 1,
+			image = Images.EM_HI
+		},
+		Cheer = {
+			id = "Cheer",
+			vipOnly = false,
+			order = 2,
+			image = Images.EM_CHEER
+		},
+		Laugh = {
+			id = "Laugh",
+			vipOnly = false,
+			order = 3,
+			image = Images.EM_LAUGH
+		},
+		Cry = {
+			id = "Cry",
+			vipOnly = false,
+			order = 4,
+			image = Images.EM_CRY
+		},
+		Applause = {
+			id = "Applause",
+			vipOnly = true,
+			order = 5,
+			image = Images.EM_APPLAUSE
+		},
+		Angry = {
+			id = "Angry",
+			vipOnly = true,
+			order = 6,
+			image = Images.EM_ANGRY
+		},
+		Amazed = {
+			id = "Amazed",
+			vipOnly = true,
+			order = 7,
+			image = Images.EM_AMAZED
+		},
+		Scream = {
+			id = "Scream",
+			vipOnly = true,
+			order = 8,
+			image = Images.EM_SCREAM
+		},
+		Think = {
+			id = "Think",
+			vipOnly = true,
+			order = 9,
+			image = Images.EM_THINK
+		},
+		Confused = {
+			id = "Confused",
+			vipOnly = true,
+			order = 10,
+			image = Images.EM_CONFUSED
+		},
+		EvilLaugh = {
+			id = "EvilLaugh",
+			vipOnly = true,
+			order = 11,
+			image = Images.EM_EVIL_LAUGH
+		},
+		Lightning = {
+			id = "Lightning",
+			vipOnly = true,
+			order = 12,
+			image = Images.EM_LIGHTNING
+		}
+	}
+}

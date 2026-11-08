@@ -1,3 +1,5 @@
+local RarityConfig = require(script.Parent.RarityConfig)
+
 local ItemRollUtil = {}
 
 export type ItemConfig = {
@@ -18,16 +20,6 @@ export type ConditionConfig = {
 	LayoutOrder: number,
 	ChanceWeight: number,
 	ValueMult: number,
-}
-
-local RARITIES = {
-	"Common",
-	"Uncommon",
-	"Rare",
-	"Epic",
-	"Legendary",
-	"Mythical",
-	"Secret",
 }
 
 local ITEM_LUCK_MAX_INFLUENCE = 0.70
@@ -60,16 +52,16 @@ local function chooseWeighted<T>(entries: { { value: T, weight: number } }, rand
 end
 
 function ItemRollUtil.GetRarities(): { string }
-	return table.clone(RARITIES)
+	local rarities = {}
+	for _, entry in ipairs(RarityConfig.List) do
+		table.insert(rarities, entry.Name)
+	end
+	return rarities
 end
 
 function ItemRollUtil.GetRarityRank(rarity: string): number
-	for index, value in ipairs(RARITIES) do
-		if value == rarity then
-			return index
-		end
-	end
-	return math.huge
+	local entry = RarityConfig.ByName[RarityConfig.Normalize(rarity)]
+	return if entry then entry.Index else math.huge
 end
 
 function ItemRollUtil.IsAllowedInZone(item: ItemConfig, zoneId: string): boolean
@@ -83,8 +75,10 @@ function ItemRollUtil.GetCandidates(
 	isModelAvailable: (item: ItemConfig) -> boolean
 ): { ItemConfig }
 	local candidates = {}
+	local normalizedRarity = RarityConfig.Normalize(rarity)
 	for _, item in pairs(itemsData) do
-		if item.Rarity == rarity and ItemRollUtil.IsAllowedInZone(item, zoneId) and isModelAvailable(item) then
+		if RarityConfig.Normalize(item.Rarity) == normalizedRarity
+			and ItemRollUtil.IsAllowedInZone(item, zoneId) and isModelAvailable(item) then
 			table.insert(candidates, item)
 		end
 	end
@@ -121,9 +115,14 @@ function ItemRollUtil.RollRarity(
 	random: Random?
 ): string?
 	local rarityEntries = {}
-	for _, rarity in ipairs(RARITIES) do
+	for _, entry in ipairs(RarityConfig.List) do
+		local rarity = entry.Name
 		local candidates = ItemRollUtil.GetCandidates(itemsData, rarity, zoneId, isModelAvailable)
-		local weight = getWeight(zoneData["Chance_" .. rarity])
+		local configuredWeight = zoneData["Chance_" .. rarity]
+		if rarity == "Mythic" and configuredWeight == nil then
+			configuredWeight = zoneData.Chance_Mythical
+		end
+		local weight = getWeight(configuredWeight)
 		local hasRollableCandidate = false
 		for _, item in ipairs(candidates) do
 			if getWeight(item.RollChance) > 0 then

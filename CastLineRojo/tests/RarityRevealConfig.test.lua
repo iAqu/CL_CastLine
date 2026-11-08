@@ -73,7 +73,7 @@ local expected = {
 		"sparkleBursts = 2",
 		"soundPlaybackSpeed = 1.17",
 	},
-	Mythical = {
+	Mythic = {
 		"minBeams = 7",
 		"maxBeams = 9",
 		"minHeight = 17",
@@ -113,11 +113,12 @@ end
 for _, unsupportedRarity in ipairs({ "Unique", "Supreme", "Exclusive" }) do
 	assert(
 		not config:find("\n\t" .. unsupportedRarity .. " = {", 1, true),
-		"Reveal styles must only include the seven dig rarities"
+		"Special categories must not have regular rarity reveal styles"
 	)
 end
 
 assert(config:find('then candidate else "Common"', 1, true), "Unknown rarities must resolve to Common")
+assert(config:find("local candidate = RarityConfig.Normalize(rarity)", 1, true), "Reveal lookup must normalize legacy names")
 assert(
 	config:find("STYLES[RarityRevealConfig.ResolveRarity(rarity)]", 1, true),
 	"Style lookup must use the safe rarity"

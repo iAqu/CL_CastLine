@@ -57,20 +57,10 @@ local function lineAnchor(parent, name)
 	return part, attachment
 end
 
-local function label(parent, name, position, size, text)
-	local object = Instance.new("TextLabel")
-	object.Name = name
-	object.AnchorPoint = Vector2.new(0.5, 0.5)
-	object.Position, object.Size = position, size
-	object.BackgroundTransparency = 1
-	object.AutoLocalize = false
-	object.Font = Enum.Font.GothamBold
-	object.TextColor3 = Color3.new(1, 1, 1)
-	object.TextStrokeTransparency = 0.2
-	object.TextScaled = true
-	object.Text = text
-	object.Parent = parent
-	return object
+local function guiChild(parent, name, className)
+	local child = parent:FindFirstChild(name)
+	assert(child and child:IsA(className), parent:GetFullName() .. "." .. name .. " must be a " .. className)
+	return child
 end
 
 function FishingCastSequence:_setPhase(phase)
@@ -79,6 +69,9 @@ function FishingCastSequence:_setPhase(phase)
 	end
 	self.phase = phase
 	self.folder:SetAttribute("Phase", phase)
+	if self.fishAudio then
+		self.fishAudio:SetPhase(phase)
+	end
 end
 
 function FishingCastSequence:_audioEnabled()
@@ -109,6 +102,9 @@ function FishingCastSequence:_sound(name, volume, pitch)
 end
 
 function FishingCastSequence:RefreshSoundSetting()
+	if self.fishAudio then
+		self.fishAudio:RefreshSoundSetting()
+	end
 	if not self:_audioEnabled() then
 		for sound in pairs(self.sounds) do
 			sound:Stop()
@@ -189,10 +185,45 @@ function FishingCastSequence:_scale(object)
 	return scale
 end
 
+function FishingCastSequence:_bindGui(playerGui)
+	self.gui = guiChild(playerGui, "FishingSequenceGui", "ScreenGui")
+	self.gui.Enabled = false
+	self.flash = guiChild(self.gui, "PerfectFlash", "Frame")
+	self.bars = { guiChild(self.gui, "TopBar", "Frame"), guiChild(self.gui, "BottomBar", "Frame") }
+	self.distanceLabel = guiChild(self.gui, "Distance", "TextLabel")
+	self.returnLabel = guiChild(self.gui, "ReturnPrompt", "TextLabel")
+	self.statusLabel = guiChild(self.gui, "CatchStatus", "TextLabel")
+	self.popup = guiChild(self.gui, "PowerPopup", "TextLabel")
+	self.popupStroke = guiChild(self.popup, "UIStroke", "UIStroke")
+	self.popupScale = guiChild(self.popup, "UIScale", "UIScale")
+
+	-- 只接管演出状态；退出后还原，保留 Studio 中调整的布局和样式。
+	self:_save(self.flash, { "BackgroundColor3", "BackgroundTransparency" })
+	for _, bar in ipairs(self.bars) do
+		self:_save(bar, { "Size" })
+		bar.Size = UDim2.fromScale(1, 0)
+	end
+	self:_save(self.distanceLabel, { "Text", "Visible" })
+	self:_save(self.returnLabel, { "Text", "Visible", "TextTransparency", "TextColor3" })
+	self:_save(self.statusLabel, { "Text", "Visible" })
+	self:_save(self.popup, { "Text", "TextColor3", "Visible", "Position", "TextTransparency" })
+	self:_save(self.popupStroke, { "Transparency" })
+	self:_save(self.popupScale, { "Scale" })
+	self.flash.BackgroundTransparency = 1
+	self.barAmount = 0
+	self.distanceLabel.Text, self.returnLabel.Text, self.statusLabel.Text = "0 STUDS", Config.Bite.Text.Return, ""
+	self.distanceLabel.Visible, self.returnLabel.Visible, self.statusLabel.Visible = false, false, false
+	self.returnLabel.TextTransparency = 0
+	self.popup.Text, self.popup.Visible, self.popup.TextTransparency = "", false, 0
+	self.popupStroke.Transparency, self.popupScale.Scale = 0, 1
+end
+
 function FishingCastSequence:_init(rig, playerGui, meter, animation, baitTemplate, options)
 	self.options, self.sounds = options or {}, {}
+	self.fishAudio = self.options.audio
 	self.originals, self.createdScales = {}, {}
 	self.rig, self.root, self.meter = rig, rig.PrimaryPart, meter
+	self:_bindGui(playerGui)
 	local rod = assert(rig:FindFirstChild("HeldFishingRod"), "HeldFishingRod is missing")
 	local tip = rod:FindFirstChild("Top", true)
 	assert(tip and tip:IsA("Attachment"), "HeldFishingRod.yugan.Top is missing")
@@ -260,46 +291,6 @@ function FishingCastSequence:_init(rig, playerGui, meter, animation, baitTemplat
 	trail.Parent = bait
 	self.trail, self.trailA, self.trailB = trail, trailA, trailB
 
-	self.gui = Instance.new("ScreenGui")
-	-- 进度条为 150；闪屏和黑边在其后，判定文字保持清晰。
-	self.gui.Name, self.gui.DisplayOrder = "FishingSequenceGui", 140
-	self.gui.IgnoreGuiInset, self.gui.ResetOnSpawn = true, false
-	self.gui.Parent = playerGui
-	self.flash = Instance.new("Frame")
-	self.flash.Name, self.flash.BorderSizePixel = "PerfectFlash", 0
-	self.flash.Size, self.flash.BackgroundTransparency = UDim2.fromScale(1, 1), 1
-	self.flash.ZIndex, self.flash.Parent = 0, self.gui
-	self.bars = {}
-	for index = 1, 2 do
-		local bar = Instance.new("Frame")
-		bar.Name = if index == 1 then "TopBar" else "BottomBar"
-		bar.BackgroundColor3, bar.BorderSizePixel = Color3.new(0, 0, 0), 0
-		bar.Size = UDim2.fromScale(1, 0)
-		bar.AnchorPoint = Vector2.new(0, index - 1)
-		bar.Position = UDim2.fromScale(0, index - 1)
-		bar.Parent = self.gui
-		table.insert(self.bars, bar)
-	end
-	self.barAmount = 0
-	self.distanceLabel = label(self.gui, "Distance", UDim2.fromScale(0.5, 0.12), UDim2.fromScale(0.3, 0.045), "0 STUDS")
-	self.returnLabel = label(
-		self.gui,
-		"ReturnPrompt",
-		UDim2.fromScale(0.5, 0.87),
-		UDim2.fromScale(0.85, 0.045),
-		Config.Bite.Text.Return
-	)
-	self.statusLabel = label(self.gui, "CatchStatus", UDim2.fromScale(0.5, 0.78), UDim2.fromScale(0.85, 0.055), "")
-	self.statusLabel.Visible = false
-	self.distanceLabel.Visible, self.returnLabel.Visible = false, false
-	self.popup = label(self.gui, "PowerPopup", UDim2.fromScale(0.62, 0.5), UDim2.fromScale(0.2, 0.07), "")
-	self.popup.FontFace, self.popup.ZIndex, self.popup.Visible = meter.prompt.FontFace, 10, false
-	self.popup.TextStrokeTransparency = 1
-	self.popupStroke = Instance.new("UIStroke")
-	self.popupStroke.Color, self.popupStroke.Thickness = Color3.new(0, 0, 0), 4
-	self.popupStroke.Parent = self.popup
-	self.popupScale = Instance.new("UIScale")
-	self.popupScale.Parent = self.popup
 	self:_save(meter.holder, { "Visible" })
 	self:_save(meter.marker, { "Position", "BackgroundColor3" })
 	self:_save(meter.label, { "Text" })
@@ -324,6 +315,7 @@ function FishingCastSequence:_init(rig, playerGui, meter, animation, baitTemplat
 	self.impulses = {}
 	self.cameraFrame, self.cameraFov = Workspace.CurrentCamera.CFrame, Workspace.CurrentCamera.FieldOfView
 	self:_shot("Behind", 0, os.clock())
+	self.gui.Enabled = true
 end
 
 function FishingCastSequence.new(
@@ -415,7 +407,6 @@ function FishingCastSequence:_release(now)
 	self:_setPhase("Flying")
 	self:_shot("Chase", 0.35, now)
 	self:_impulse(Config.Camera.Release, now)
-	self:_sound("ThrowWhoosh")
 	self.wind = self:_sound("WindLoop")
 end
 
@@ -475,14 +466,16 @@ function FishingCastSequence:_ripple(startedAt, position, strength, now)
 	part.Parent = self.folder
 end
 
-function FishingCastSequence:_waterFeedback(now, position, strength, splash)
+function FishingCastSequence:_waterFeedback(now, position, strength, splash, silent)
 	local surface = self:_waterTarget()
 	position = Vector3.new(position.X, surface.Y - BaitElasticMotion.BaseSize(self).Y * 0.15, position.Z)
 	self:_ripple(now, position, strength)
 	if splash then
 		self:_splash(now, position, strength)
 	end
-	self:_sound("Splash", Config.Sounds.Splash.Volume * strength, 1.1 - strength * 0.2)
+	if not silent then
+		self:_sound("Splash", Config.Sounds.Splash.Volume * strength, 1.1 - strength * 0.2)
+	end
 end
 
 function FishingCastSequence:_nibbleRipple(now, position)
@@ -610,17 +603,25 @@ function FishingCastSequence:_setBaitVisible(visible)
 		return
 	end
 	self.baitVisible = visible
-	self.baitHighlight.Enabled = visible
 	for instance, transparency in pairs(self.baitAppearance) do
 		instance.Transparency = if visible then transparency else 1
 	end
 end
 
-function FishingCastSequence:_presentBait(phase)
-	self:_setBaitVisible(phase ~= "Lifting" and phase ~= "Caught")
-	self.baitHighlight.FillTransparency = if phase == "Bite" or phase == "Struggling"
+function FishingCastSequence:_presentBait(phase, elapsed)
+	local visible = phase ~= "Lifting" and phase ~= "Caught"
+	self:_setBaitVisible(visible)
+	local fade = if phase == "Struggling"
+		then math.clamp((elapsed or 0) / Config.Bite.Struggle.HighlightFadeTime, 0, 1)
+		elseif not visible then 1
+		else 0
+	fade = fade * fade * (3 - 2 * fade)
+	local fill = if phase == "Bite" or phase == "Struggling"
 		then Config.Bite.BaitFillTransparency
 		else 1
+	self.baitHighlight.FillTransparency = fill + (1 - fill) * fade
+	self.baitHighlight.OutlineTransparency = fade
+	self.baitHighlight.Enabled = visible and fade < 1
 end
 
 function FishingCastSequence:_updateLine()
@@ -672,7 +673,6 @@ function FishingCastSequence:_land(now)
 	local strength = math.clamp(self.distance / 400, 0, 1)
 	self:_impulse(Config.Camera.Landing, now, strength)
 	self:_sound("Splash", Config.Sounds.Splash.Volume + strength * 0.2, 0.95 - strength * 0.25)
-	self:_sound("FovImpact")
 	local surface = self:_waterTarget() - Vector3.new(0, BaitElasticMotion.BaseSize(self).Y * 0.15, 0)
 	self:_playWaterVFX(now, Config.WaterVFX.Entry, surface)
 	self.distanceLabel.Text = string.format("%d STUDS", self.distance)
@@ -695,6 +695,9 @@ function FishingCastSequence:_updateAction(now)
 		self.actionStarted = now
 		RigUtil.RestoreReadyPose(self.rig)
 		self.track:Play(0.05, 1, 1)
+		if self.fishAudio then
+			self.fishAudio:Play("FishingRodCast")
+		end
 	end
 	local elapsed = now - self.actionStarted
 	if elapsed >= Config.FrontShotTime and not self.frontShown then
@@ -1037,11 +1040,14 @@ function FishingCastSequence:Update(now: number, dt: number)
 	self:_updateLine()
 end
 
-function FishingCastSequence:Destroy()
+function FishingCastSequence:Destroy(keepFail)
 	if self.destroyed then
 		return
 	end
 	self.destroyed = true
+	if self.fishAudio then
+		self.fishAudio:Destroy(keepFail and self.phase == "Reeled")
+	end
 	for _, original in ipairs(self.originals or {}) do
 		if original.instance.Parent then
 			pcall(function()
@@ -1066,8 +1072,8 @@ function FishingCastSequence:Destroy()
 		self.folder:Destroy()
 	end
 	self.waterVFX = {}
-	if self.gui then
-		self.gui:Destroy()
+	if self.gui and self.gui.Parent then
+		self.gui.Enabled = false
 	end
 end
 

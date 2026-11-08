@@ -1,0 +1,165 @@
+-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
+
+-- Bytecode (Base64):
+-- CQNcBG1hdGgFZmxvb3IDbWF4ByVkbSAlZHMGZm9ybWF0C2Zvcm1hdFRpbWVyFVN0YXJ0ZXJQYWNrT2ZmZXJTdGFydBlTdGFydGVyUGFja09mZmVyUmVtYWluaW5nF1N0YXJ0ZXJQYWNrU2Vzc2lvblN0YXJ0Am9zBHRpbWUOb2ZmZXJSZW1haW5pbmcKRGF0YUNsaWVudAtjdXJyZW50RGF0YRRTdGFydGVyUGFja1B1cmNoYXNlZAdWaXNpYmxlBFRleHQPT0ZGRVIgRU5EUyBJTjogClVJX01hbmFnZXILQ2xvc2VXaW5kb3cGVXBkYXRlD1B1cmNoYXNlTWFuYWdlchVQcm9tcHRQcm9kdWN0UHVyY2hhc2ULU3RhcnRlclBhY2sERmlyZQR0YXNrBHdhaXQHUmViaXJ0aAxXYWl0Rm9yQ2hpbGQYR2V0UHJvcGVydHlDaGFuZ2VkU2lnbmFsBFdhaXQKT3BlbldpbmRvdwVzcGF3bg9BZGRCb3VuY2VCdXR0b24JQWN0aXZhdGVkB0Nvbm5lY3QSU3RhcnRlclBhY2tTZXJ2aWNlDE9mZmVyU3RhcnRlZAlFVl9VUERBVEUFVURpbTIDbmV3ElBBUlRJQ0xFX1RFTVBMQVRFUwdTUEFSS0xFBnpJbmRleAhlbV9kZWxheRJBZGRFbWl0dGVyVGVtcGxhdGUGQ29sb3IzDW5vVGhpblR3aW5rbGUIcm90U3BlZWQKQWRkU2hpbmVWMwlLbml0U3RhcnQNR2V0Q29udHJvbGxlcgpHZXRTZXJ2aWNlCEtuaXRJbml0B3JlcXVpcmUEZ2FtZRFSZXBsaWNhdGVkU3RvcmFnZQhQYWNrYWdlcwRLbml0BkNsaWVudAtDb250cm9sbGVycwdNb2R1bGVzB1V0aWxpdHkQTXVzaWNBbmRBbWJpZW5jZQZTaGFyZWQESW5mbwlDb25zdGFudHMKQ3VzdG9tRW51bRBDcmVhdGVDb250cm9sbGVyBE5hbWUVU3RhcnRlclBhY2tDb250cm9sbGVyB1BsYXllcnMLTG9jYWxQbGF5ZXIJUGxheWVyR3VpB1dpbmRvd3MDVG9wBEV4aXQEQ2FzaAtSb2J1eEJ1dHRvbgZCdXR0b24HQ29udGVudAVTZWVkcwZPcmFuZ2UESWNvbgdBdm9jYWRvBUxlbW9uA0hVRAlT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
+
+-- https://lua.expert/
+local Knit = require(game.ReplicatedStorage.Packages.Knit)
+local UI_Manager = require(game.ReplicatedStorage.Client.Controllers.UI_Manager)
+
+require(game.ReplicatedStorage.Client.Modules.Utility.MusicAndAmbience)
+require(game.ReplicatedStorage.Shared.Info.Constants)
+require(game.ReplicatedStorage.Shared.Info.CustomEnum)
+
+local v1 = Knit.CreateController({
+	Name = "StarterPackController"
+})
+local PlayerGui = game.Players.LocalPlayer.PlayerGui
+local Windows = PlayerGui:WaitForChild("Windows")
+local StarterPack = Windows:WaitForChild("StarterPack")
+local Exit = StarterPack:WaitForChild("Top"):WaitForChild("Exit")
+local Cash = StarterPack:WaitForChild("Top"):WaitForChild("Cash")
+local Button = StarterPack:WaitForChild("RobuxButton"):WaitForChild("Button")
+local Seeds = StarterPack:WaitForChild("Content"):WaitForChild("Seeds")
+local Icon = Seeds:WaitForChild("Orange"):WaitForChild("Icon")
+local Icon2 = Seeds:WaitForChild("Avocado"):WaitForChild("Icon")
+local Icon3 = Seeds:WaitForChild("Lemon"):WaitForChild("Icon")
+local StarterPackButton = PlayerGui:WaitForChild("HUD"):WaitForChild("SideMenus"):WaitForChild("Right"):WaitForChild("Buttons"):WaitForChild("StarterPackButton")
+local Timer = StarterPackButton:WaitForChild("Button"):WaitForChild("Timer")
+
+local function formatTimer(p1) --[[ formatTimer | Line: 40 ]]
+	local v2 = math.max(0, (math.floor(p1)))
+
+	return ("%dm %ds"):format(v2 // 60, v2 % 60)
+end
+
+local function offerRemaining(p1) --[[ offerRemaining | Line: 46 ]]
+	if not p1 or (p1.StarterPackOfferStart or 0) <= 0 then
+		return 0
+	end
+
+	local v2 = p1.StarterPackSessionStart or os.time()
+
+	return (p1.StarterPackOfferRemaining or 0) - math.max(0, os.time() - v2)
+end
+
+function v1.Update(p1) --[[ Update | Line: 53 | Upvalues: StarterPackButton (copy), Timer (copy), Cash (copy), StarterPack (copy) ]]
+	local currentData = p1.DataClient.currentData
+	local v1 = if currentData then if currentData.StarterPackPurchased == true then true else false else currentData
+	local v3
+
+	if currentData and not ((currentData.StarterPackOfferStart or 0) <= 0) then
+		local v5 = currentData.StarterPackSessionStart or os.time()
+
+		v3 = (currentData.StarterPackOfferRemaining or 0) - math.max(0, os.time() - v5)
+	else
+		v3 = 0
+	end
+
+	local v7 = not v1 and (if v3 > 0 then true else false)
+
+	StarterPackButton.Visible = v7
+
+	if v7 then
+		local v9 = math.max(0, (math.floor(v3)))
+		local v10 = ("%dm %ds"):format(v9 // 60, v9 % 60)
+
+		Timer.Text = v10
+		Cash.Text = "OFFER ENDS IN: " .. v10
+
+		return
+	end
+
+	if not (StarterPack.Visible and (v1 or (currentData and currentData.StarterPackOfferStart or 0) > 0)) then
+		return
+	end
+
+	p1.UI_Manager:CloseWindow(StarterPack, true)
+end
+function v1.KnitStart(p1) --[[ KnitStart | Line: 71 | Upvalues: UI_Manager (copy), Exit (copy), StarterPack (copy), Button (copy), Windows (copy), Icon (copy), Icon2 (copy), Icon3 (copy) ]]
+	UI_Manager:AddBounceButton(Exit, 1.2, true)
+	Exit.Activated:Connect(function() --[[ Line: 74 | Upvalues: UI_Manager (ref), StarterPack (ref) ]]
+		UI_Manager:CloseWindow(StarterPack, true)
+	end)
+	UI_Manager:AddBounceButton(Button, 1.05)
+	Button.Activated:Connect(function() --[[ Line: 79 | Upvalues: p1 (copy) ]]
+		p1.PurchaseManager.PromptProductPurchase:Fire("StarterPack")
+	end)
+	p1.StarterPackService.OfferStarted:Connect(function() --[[ Line: 83 | Upvalues: Windows (ref), p1 (copy), UI_Manager (ref), StarterPack (ref) ]]
+		task.spawn(function() --[[ Line: 84 | Upvalues: Windows (ref), p1 (ref), UI_Manager (ref), StarterPack (ref) ]]
+			task.wait(1)
+
+			local Rebirth = Windows:WaitForChild("Rebirth")
+
+			while Rebirth.Visible do
+				Rebirth:GetPropertyChangedSignal("Visible"):Wait()
+			end
+
+			task.wait(0.5)
+
+			local currentData = p1.DataClient.currentData
+
+			if not currentData or currentData.StarterPackPurchased == true then
+				return
+			end
+
+			local v1
+
+			if currentData and not ((currentData.StarterPackOfferStart or 0) <= 0) then
+				local v3 = currentData.StarterPackSessionStart or os.time()
+
+				v1 = (currentData.StarterPackOfferRemaining or 0) - math.max(0, os.time() - v3)
+			else
+				v1 = 0
+			end
+
+			if not (v1 > 0) then
+				return
+			end
+
+			p1:Update()
+			UI_Manager:OpenWindow(StarterPack, true, true)
+		end)
+	end)
+	p1.DataClient.EV_UPDATE:Connect(function() --[[ Line: 101 | Upvalues: p1 (copy) ]]
+		p1:Update()
+	end)
+	task.spawn(function() --[[ Line: 104 | Upvalues: p1 (copy) ]]
+		while true do
+			p1:Update()
+			task.wait(0.5)
+		end
+	end)
+	UI_Manager:AddEmitterTemplate(Icon, UDim2.new(0.5, 0, 0.5, 0), UI_Manager.PARTICLE_TEMPLATES.SPARKLE, {
+		zIndex = 4,
+		em_delay = 0.8
+	})
+	UI_Manager:AddShineV3(Icon, 1.75, Color3.new(255/255, 255/255, 255/255), {
+		noThinTwinkle = true,
+		rotSpeed = 20
+	})
+	UI_Manager:AddEmitterTemplate(Icon2, UDim2.new(0.5, 0, 0.5, 0), UI_Manager.PARTICLE_TEMPLATES.SPARKLE, {
+		zIndex = 4,
+		em_delay = 0.9
+	})
+	UI_Manager:AddShineV3(Icon2, 1.75, Color3.new(255/255, 255/255, 255/255), {
+		noThinTwinkle = true,
+		rotSpeed = 20
+	})
+	UI_Manager:AddEmitterTemplate(Icon3, UDim2.new(0.5, 0, 0.5, 0), UI_Manager.PARTICLE_TEMPLATES.SPARKLE, {
+		zIndex = 4,
+		em_delay = 1.1
+	})
+	UI_Manager:AddShineV3(Icon3, 1.75, Color3.new(255/255, 255/255, 255/255), {
+		noThinTwinkle = true,
+		rotSpeed = 20
+	})
+end
+function v1.KnitInit(p1) --[[ KnitInit | Line: 156 | Upvalues: Knit (copy) ]]
+	p1.DataClient = Knit.GetController("DataClient")
+	p1.UI_Manager = Knit.GetController("UI_Manager")
+	p1.PurchaseManager = Knit.GetService("PurchaseManager")
+	p1.StarterPackService = Knit.GetService("StarterPackService")
+end
+
+return v1

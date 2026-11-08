@@ -1,0 +1,14 @@
+-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
+
+-- Bytecode (Base64):
+-- CQMHBGdhbWUMU291bmRTZXJ2aWNlBU11c2ljBlZvbHVtZQ5NdXNpY1ZvbHVtZVNldAxTb3VuZEVmZmVjdHMOU291bmRWb2x1bWVTZXQAAwMCAAAABwQAAAUCBAIJpAIBAAAAAEBNAgK1AgAAAE0CAn0DAAAAMAECSwQAAACCAAEABQMBBAAAAEADAgMDAwQABwUBGAAAAAAAAAAAAQgAAAAAAwIAAAAHBAAABQIEAgmkAgEAAAAAQE0CArUCAAAATQICkwMAAAAwAQJLBAAAAIIAAQAFAwEEAAAAQAMCAwYDBAALBwEYAAAAAAAAAAABDAAAAAACAAABAgAKowAAAP8AAgAAAAAAwAEAADABAFgBAAAAwAECADABAK0DAAAAggACAAQGAAMFBgEDBwIAAQEAARgAAAAGAAAEAAAEAQAAAAACsW4/wdjMtYO7bXGDS2dPosF2KLWDqlXA
+
+-- https://lua.expert/
+return {
+	MusicVolumeSet = function(p1, p2) --[[ MusicVolumeSet | Line: 7 ]]
+		game.SoundService.Music.Volume = p2
+	end,
+	SoundVolumeSet = function(p1, p2) --[[ SoundVolumeSet | Line: 11 ]]
+		game.SoundService.SoundEffects.Volume = p2
+	end
+}

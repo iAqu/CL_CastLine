@@ -1,0 +1,29 @@
+-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
+
+-- https://lua.expert
+
+require(script.Parent.Parent.Types)
+
+local t1 = {
+    Description = "Complete the Dr. Scramble index to claim this sword!",
+    DisplayInShop = false,
+    DisplayName = "Scramble Sword",
+    Icon = "rbxassetid://123989129211581",
+    MaxShopStockQuantity = 1,
+    MinShopStockQuantity = 1,
+    MoneyCost = 0,
+    Persistent = true,
+    Rarity = "Prismatic",
+    ShopDropWeight = 0,
+    OneTime = true,
+    ToolController = "None",
+    ToolModel = "Scramble Sword",
+    _id = "Scramble Sword",
+    BatControllerData = {
+        Duration = 1.1789738455,
+        Force = 82.528169185,
+        RangeBonus = 16.875
+    }
+}
+
+return table.freeze(t1)

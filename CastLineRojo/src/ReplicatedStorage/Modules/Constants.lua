@@ -1,5 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
+local RarityConfig = require(script.Parent.RarityConfig)
 local Constants = {}
 
 -- 发布设置
@@ -210,16 +211,8 @@ Constants.COLOR = {
     COMMON_OUTLINE = Color3.fromRGB(0, 59, 86),
 }
 
--- 与 ReplicatedStorage.Gui.UIGradient 中各稀有度 UIGradient 的中点主题色一致
--- （Crimson/Abyssal/Transcendent 暂无对应渐变模板，保留原值）
+-- Regular rarity colors share the code-defined gradient midpoint; special categories keep their palette.
 Constants.RARITY_COLOR = {
-    Common = Color3.fromRGB(182, 182, 182),
-    Uncommon = Color3.fromRGB(85, 215, 112),
-    Rare = Color3.fromRGB(60, 150, 248),
-    Epic = Color3.fromRGB(172, 93, 245),
-    Legendary = Color3.fromRGB(255, 182, 55),
-    Mythical = Color3.fromRGB(241, 72, 60),
-    Secret = Color3.fromRGB(215, 58, 255),
     Limited = Color3.fromRGB(204, 0, 2),
 
     Crimson = Color3.fromRGB(210, 0, 120),
@@ -228,6 +221,10 @@ Constants.RARITY_COLOR = {
 
     Exclusive = Color3.fromRGB(1, 193, 255),
 }
+for _, entry in ipairs(RarityConfig.List) do
+    Constants.RARITY_COLOR[entry.Name] = entry.Color
+end
+Constants.RARITY_COLOR.Mythical = Constants.RARITY_COLOR.Mythic
 
 Constants.SUPER_REBIRTH_UPGRADE_ID = {
     DIAMONDS = "Diamonds",

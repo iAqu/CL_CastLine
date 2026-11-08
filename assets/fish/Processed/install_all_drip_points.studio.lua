@@ -1,22 +1,35 @@
 -- Edit-only repair for current templates and staged models. Keeps a full resource backup.
-return function(baseUrl)
+return function(baseUrl, additionalDataUrls)
 	assert(not game:GetService("RunService"):IsRunning(), "Repair fish resources in Edit mode")
 	assert(game.PlaceId == 84106335829275 and game.CreatorId == 598797612, "Wrong development place")
 	baseUrl = baseUrl or "http://127.0.0.1:18773"
 	local http = game:GetService("HttpService")
 	local data = http:JSONDecode(http:GetAsync(baseUrl .. "/drip-surface-points.json"))
+	for _, url in additionalDataUrls or {} do
+		local batch = http:JSONDecode(http:GetAsync(url))
+		for name, spec in batch.fish do
+			assert(not data.fish[name], "Duplicate authored fish " .. name)
+			data.fish[name] = spec
+		end
+	end
 	local install = assert(loadstring(http:GetAsync(baseUrl .. "/install_drip_points.studio.lua")))()
 	local folders = { game.ReplicatedStorage.Models.Fish, workspace.Fish_Processed }
 	-- Preflight every target before changing any resources.
+	local expected = #workspace.Fish_Processed:GetChildren()
 	for _, folder in ipairs(folders) do
-		assert(#folder:GetChildren() == 28, "Expected 28 fish: " .. folder:GetFullName())
+		assert(
+			expected > 0 and #folder:GetChildren() == expected,
+			"Fish directory count mismatch: " .. folder:GetFullName()
+		)
 		for _, fish in ipairs(folder:GetChildren()) do
 			local spec = assert(data.fish[fish.Name], "Missing authored drip data: " .. fish.Name)
 			local body = assert(fish.PrimaryPart, "Fish PrimaryPart is missing")
 			assert(#spec.points == 24, "Expected 24 surface points")
 			if spec.primarySize then
-				assert((body.Size - Vector3.new(table.unpack(spec.primarySize))).Magnitude < 0.01,
-					"Authored fish geometry differs: " .. fish.Name)
+				assert(
+					(body.Size - Vector3.new(table.unpack(spec.primarySize))).Magnitude < 0.01,
+					"Authored fish geometry differs: " .. fish.Name
+				)
 			end
 			for _, point in ipairs(spec.points) do
 				local bone = body:FindFirstChild(point.bone, true)

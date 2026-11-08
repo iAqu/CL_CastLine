@@ -5,6 +5,7 @@ local StarterGui = game:GetService("StarterGui")
 local ConditionsData = require(ReplicatedFirst.Data.ConditionsData)
 local ConditionLabelUtil = require(ReplicatedStorage.Modules.ConditionLabelUtil)
 local GuiUtil = require(ReplicatedStorage.Modules.GuiUtil)
+local RarityConfig = require(ReplicatedStorage.Modules.RarityConfig)
 local ItemBoundsUtil = require(ReplicatedStorage.Modules.ItemBoundsUtil)
 local ItemStatUtil = require(ReplicatedStorage.Modules.ItemStatUtil)
 local ItemTitlePositionUtil = require(ReplicatedStorage.Modules.ItemTitlePositionUtil)
@@ -144,7 +145,7 @@ local function createHeldItemTitle(
 	end
 	local rarityLabel = findLabel(title, "RarityLabel")
 	if rarityLabel then
-		rarityLabel.Text = item.Rarity
+		rarityLabel.Text = RarityConfig.Normalize(item.Rarity)
 		GuiUtil.SetRarityGradient(rarityLabel, item.Rarity)
 	end
 	local priceLabel = findLabel(title, "PriceLabel")

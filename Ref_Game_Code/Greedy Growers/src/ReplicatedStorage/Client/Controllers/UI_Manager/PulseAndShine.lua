@@ -1,0 +1,119 @@
+-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
+
+-- Bytecode (Base64):
+-- CQNBBXR3ZWVuBkNhbmNlbAZvZ1NpemUEU2l6ZQNuZXcEbWFpZAVVRGltMgFYBVNjYWxlBk9mZnNldAFZB2JpZ1NpemUJVHdlZW5JbmZvBEVudW0LRWFzaW5nU3R5bGUEUXVhZA9FYXNpbmdEaXJlY3Rpb24FSW5PdXQGQ3JlYXRlBFBsYXkIR2l2ZVRhc2sIQWRkUHVsc2UHRGVzdHJveQtSZW1vdmVQdWxzZQhSb3RhdGlvbhBzaGluZTFDb25uZWN0aW9uCkRpc2Nvbm5lY3QQc2hpbmUyQ29ubmVjdGlvbgVDbG9uZQtJbWFnZUNvbG9yMwZzaGluZTEGc2hpbmUyCEluc3RhbmNlBUZyYW1lDlNoaW5lQ29udGFpbmVyBE5hbWULQW5jaG9yUG9pbnQIUG9zaXRpb24WQmFja2dyb3VuZFRyYW5zcGFyZW5jeQZaSW5kZXgGUGFyZW50B0NoYW5nZWQHQ29ubmVjdAhBZGRTaGluZQtSZW1vdmVTaGluZQVWYWx1ZQtOdW1iZXJWYWx1ZQZzY3JpcHQNUmVuZGVyU3RlcHBlZARnYW1lEVJlcGxpY2F0ZWRTdG9yYWdlCkdldFNlcnZpY2UMVHdlZW5TZXJ2aWNlClJ1blNlcnZpY2UIUGFja2FnZXMMV2FpdEZvckNoaWxkBlNoYXJlZARJbmZvBkFzc2V0cwNHdWkHRWZmZWN0cwdyZXF1aXJlBE1haWQMU2hpbmVWMVNoaW5lBkNvbG9yMwJBAAsEAAIAAAAZ+wEAAPsCAQCHAAECTQAAwAAAAAAOAAgA+wEAAPsCAQCHAAECTQAAwAAAAAC8AAChAQAAAJ8AAgH7AQAA+wIBAIcAAQL7AgAA+wMBAIcBAgNNAQFpAgAAADABAC8DAAAAggABAAQDAQMCAwMDBAAwAAEYAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAATEAAAAADQMDAAAIBQAABQMEBwJt+wQAAIcDBAEOAwEAggABAPsDAAD/BAAAAAAAAGoEAwH7BAAAhwMEAfsEAQBNBATvAAAAAJ8EAQIwBAMWAQAAAPsEAACHAwQBTQQBLwIAAAAwBANpAwAAAPsEAACHAwQBpAQFAAAAQID7BwAAhwYHAU0GBmkDAAAATQYGeQYAAABNBgaEBwAAAAkFBgL7CAAAhwcIAU0HB2kDAAAATQcH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
+
+-- https://lua.expert/
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local Packages = ReplicatedStorage:WaitForChild("Packages")
+
+ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Info")
+
+local Effects = ReplicatedStorage:WaitForChild("Assets"):WaitForChild("Gui"):WaitForChild("Effects")
+local Maid = require(Packages:WaitForChild("Maid"))
+local ShineV1Shine = Effects:WaitForChild("ShineV1Shine")
+local t = {}
+local t2 = {}
+
+return function(p1) --[[ Line: 26 | Upvalues: t (copy), Maid (copy), TweenService (copy), t2 (copy), ShineV1Shine (copy), RunService (copy) ]]
+	function p1.AddPulse(p1, p2, p3) --[[ AddPulse | Line: 32 | Upvalues: t (ref), Maid (ref), TweenService (ref) ]]
+		if not t[p2] then
+			t[p2] = {}
+			t[p2].maid = Maid.new()
+			t[p2].ogSize = p2.Size
+			t[p2].bigSize = UDim2.new(t[p2].ogSize.X.Scale * p3, t[p2].ogSize.X.Offset * p3, t[p2].ogSize.Y.Scale * p3, t[p2].ogSize.Y.Offset * p3)
+			t[p2].tween = TweenService:Create(p2, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut, -1, true), {
+				Size = t[p2].bigSize
+			})
+			t[p2].tween:Play()
+			t[p2].maid:GiveTask(function() --[[ Line: 48 | Upvalues: t (ref), p2 (copy) ]]
+				if t[p2].tween then
+					t[p2].tween:Cancel()
+				end
+
+				t[p2].Size = t[p2].ogSize
+			end)
+		end
+	end
+	function p1.RemovePulse(p1, p2) --[[ RemovePulse | Line: 56 | Upvalues: t (ref) ]]
+		if not t[p2] then
+			return
+		end
+
+		t[p2].maid:Destroy()
+		t[p2] = nil
+	end
+
+	local v1 = Instance.new("NumberValue")
+
+	v1.Parent = script
+	function p1.AddShine(p1, p2, p3, p4, p5) --[[ AddShine | Line: 68 | Upvalues: t2 (ref), Maid (ref), ShineV1Shine (ref), v1 (copy) ]]
+		if t2[p2] then
+			return
+		end
+
+		t2[p2] = {}
+		t2[p2].maid = Maid.new()
+
+		local v12 = ShineV1Shine:Clone()
+		local v2 = ShineV1Shine:Clone()
+
+		if p4 then
+			if not p5 then
+				p5 = p4
+			end
+
+			v12.ImageColor3 = p4
+			v2.ImageColor3 = p5
+		end
+
+		if not p3 then
+			p3 = 1
+		end
+
+		t2[p2].shine1 = v12
+		t2[p2].shine2 = v2
+
+		local ShineContainer = Instance.new("Frame")
+
+		ShineContainer.Name = "ShineContainer"
+		ShineContainer.Size = p2.Size
+		ShineContainer.AnchorPoint = p2.AnchorPoint
+		ShineContainer.Position = p2.Position
+		ShineContainer.BackgroundTransparency = 1
+		ShineContainer.ZIndex = -9999
+		v12.Parent = ShineContainer
+		v2.Parent = ShineContainer
+		ShineContainer.Parent = p2.Parent
+		v12.Size = UDim2.new(p3 * 1, 0, p3 * 1, 0)
+		v2.Size = UDim2.new(p3 * 1.3, 0, p3 * 1.3, 0)
+		t2[p2].shine1Connection = v1.Changed:Connect(function(p1) --[[ Line: 107 | Upvalues: v12 (copy) ]]
+			v12.Rotation = p1
+		end)
+		t2[p2].shine2Connection = v1.Changed:Connect(function(p1) --[[ Line: 110 | Upvalues: v2 (copy) ]]
+			v2.Rotation = -p1 * 2
+		end)
+		t2[p2].maid:GiveTask(function() --[[ Line: 114 | Upvalues: v12 (copy), v2 (copy), ShineContainer (copy), t2 (ref), p2 (copy) ]]
+			v12:Destroy()
+			v2:Destroy()
+			ShineContainer:Destroy()
+			t2[p2].shine1Connection:Disconnect()
+			t2[p2].shine2Connection:Disconnect()
+		end)
+	end
+	function p1.RemoveShine(p1, p2) --[[ RemoveShine | Line: 125 | Upvalues: t2 (ref) ]]
+		if not t2[p2] then
+			return
+		end
+
+		t2[p2].maid:Destroy()
+		t2[p2] = nil
+	end
+	RunService.RenderStepped:Connect(function() --[[ Line: 132 | Upvalues: v1 (copy) ]]
+		local v12 = v1
+
+		v12.Value = v12.Value + 1
+	end)
+end

@@ -1,0 +1,48 @@
+-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
+
+-- Bytecode (Base64):
+-- CQMVBE5BTUUORmluZEZpcnN0Q2hpbGQIQmFzZVBhcnQDSXNBA2dldAxUcmFuc3BhcmVuY3kKQ2FuQ29sbGlkZQhDYW5RdWVyeQhDYW5Ub3VjaAtHZXRDaGlsZHJlbgVEZWNhbAdUZXh0dXJlB0Rlc3Ryb3kEaGlkZQZDRnJhbWUGQW5nbGVzCkxvb2tWZWN0b3IKUFZJbnN0YW5jZQhHZXRQaXZvdAdwZXJjaENGDlRyZWVNb3VudFBvaW50AAQGAQEAAAYDAAAFAYcUKwACAMYBAACCAQIA+wMAAE0DA4IAAAAAqQQBALwBAAMBAAAAnwEEAg4BBwBvBQIAvAMB/gMAAACfAwMCDgMCAFICAQArAgEAxgIAAIICAgAEAwEDAgMDAwQABwUBGAAAAAEAAAAAAAABAAAAAAAAAAAACAAAAAAKAQEAAAYDAAAFAYcn+wEAAE0BAV8AAAAAUgIAAJ8BAgIrAQEAggABAIwCAQAwAgHZAQAAAKkCAAAwAgHTAgAAAKkCAAAwAgFiAwAAAKkCAAAwAgH2BAAAALwCAWgFAAAAnwICBGQCDQBvCQYAvAcG/gcAAACfBwMCKwcFAG8JCAC8Bwb+BwAAAJ8HAwIOBwMAvAcGUAkAAACfBwIBbgLy/wIAAACCAAEACgMFAwYDBwMIAwkDCgMLAwQDDAMNAA4OARgAAAAAAAEAAQAAAQAAAQAAAQAAAQAAAAEAAAAAAAAAAAAAAAD/AAMPAAAAAAkBAQAABgMAAAUBhyL7AQAATQEBXwAAAABSAgAAnwECAg4BEABNBAGFAQAAAKQFAwAACBCAjAYAAG8HBACMCAAAnwUEAgkDBAVNBQGFAQAAAE0FBWgGAAAAWwQFBUMCAwSCAgIADgAJAG8FBwC8AwD+CAAAAJ8DAwIOAwQAvAIAUgkAAACfAgICKwIBAMYCAACCAgIACgMFAw8DEAQACBCAAhgtRFT7Ifm/AgAAAAAAAPA/AxEDEgMEAxMAGxQBGAAAAAAAAQAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAcAAAAAAIAAAECABOjAAAA/wADAAAAAABvAQAAMAEAggEAAADAAQIAEgAAADABAF8DAAAAwAEEABIAAAAwAQDvBQAAAMABBgASAAAAMAEAiQcAAACCAAIACAMVAwEGAAMFBgEDDgYCAxQDAAECAQABGAACAAIAAAIAAAAHAAAADQAAAAYBAAAAAAO/w4vnVeGB5jD9eabpIWjJz9uck40H4eY=
+
+-- https://lua.expert/
+local t = {
+	NAME = "TreeMountPoint"
+}
+
+function t.get(p1) --[[ get | Line: 7 | Upvalues: t (copy) ]]
+	if not p1 then
+		return nil
+	end
+
+	local v1 = p1:FindFirstChild(t.NAME, true)
+
+	return if v1 and (v1:IsA("BasePart") and v1) then v1 else nil
+end
+function t.hide(p1) --[[ hide | Line: 14 | Upvalues: t (copy) ]]
+	local v1 = t.get(p1)
+
+	if not v1 then
+		return
+	end
+
+	v1.Transparency = 1
+	v1.CanCollide = false
+	v1.CanQuery = false
+	v1.CanTouch = false
+
+	for v2, v3 in v1:GetChildren() do
+		if v3:IsA("Decal") or v3:IsA("Texture") then
+			v3:Destroy()
+		end
+	end
+end
+function t.perchCF(p1) --[[ perchCF | Line: 27 | Upvalues: t (copy) ]]
+	local v1 = t.get(p1)
+
+	if v1 then
+		return v1.CFrame * CFrame.Angles(0, -1.5707963267948966, 0) + v1.CFrame.LookVector * 1
+	end
+
+	return if p1 and p1:IsA("PVInstance") then p1:GetPivot() or nil else nil
+end
+
+return t

@@ -1,0 +1,19 @@
+-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
+
+-- Bytecode (Base64):
+-- CQMUBGdhbWURUmVwbGljYXRlZFN0b3JhZ2UKR2V0U2VydmljZQpTdGFydGVyR3VpCFBhY2thZ2VzB3JlcXVpcmUES25pdARFbnVtC0NvcmVHdWlUeXBlCEJhY2twYWNrEVNldENvcmVHdWlFbmFibGVkBmlwYWlycwZDbGllbnQOR2V0RGVzY2VuZGFudHMMTW9kdWxlU2NyaXB0A0lzQQVTdGFydAR3YXJuBWNhdGNoBWF3YWl0AAEMAAABAAA6owAAAKQAAQAAAABAbwICALwAABYDAAAAnwADAqQBAQAAAABAbwMEALwBARYDAAAAnwEDAk0CAOYFAAAApAMHAAAAYEBNBAJxCAAAAJ8DAgKkBgwACyiQwKkHAAC8BAEYDQAAAJ8EBAGkBA8AAADgQE0FAE0QAAAAvAUFRxEAAACfBQIAnwQABFEECQBvCxIAvAkI/hMAAACfCQMCDgkEAKQJBwAAAGBAUgoIAJ8JAgFuBPb/AgAAgE0EAxwUAAAAnwQBAqQGFgAAAFBBvAQEGRcAAACfBAMCvAQEDRgAAACfBAIBggABABkDAQQAAABAAwIDAwMEAwUDBgQAAGBAAwcDCAMJAwoECyiQwAMLAwwEAADgQAMNAw4DDwMQAxEDEgQAAFBBAxMDFAABAAEYAAAAAAAAAAEAAAAAAAIAAQAAAAACAAAAAAADAAAAAAAAAAABAAAAAAMAAAD8AAcAAAAAAAAAAAAAAAEAAAAAAA6OvSncxWH414/N0aiglz5+lqpdPErXKA==
+
+-- https://lua.expert/
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local StarterGui = game:GetService("StarterGui")
+local Knit = require(ReplicatedStorage.Packages.Knit)
+
+StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
+
+for i, v in ipairs(ReplicatedStorage.Client:GetDescendants()) do
+	if v:IsA("ModuleScript") then
+		require(v)
+	end
+end
+
+Knit.Start():catch(warn):await()

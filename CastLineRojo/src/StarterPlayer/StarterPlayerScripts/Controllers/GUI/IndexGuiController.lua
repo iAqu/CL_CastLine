@@ -6,6 +6,7 @@ local Knit = require(ReplicatedStorage.Packages.Knit)
 local ItemsData = require(ReplicatedFirst.Data.ItemsData)
 local GuiAnimation = require(ReplicatedStorage.Modules.GuiAnimation)
 local GuiUtil = require(ReplicatedStorage.Modules.GuiUtil)
+local RarityConfig = require(ReplicatedStorage.Modules.RarityConfig)
 local IndexItemViewport = require(ReplicatedStorage.Modules.IndexItemViewport)
 local NotificationClient = require(ReplicatedStorage.Modules.NotificationClient)
 
@@ -114,7 +115,7 @@ local function updateEntry(itemId: string)
 	local discovered = discoveryLog[itemId] == true
 	setText(button:FindFirstChild("NameLabel"), if discovered then item.DisplayName else "???")
 	local rarityLabel = button:FindFirstChild("RarityLabel")
-	setText(rarityLabel, item.Rarity)
+	setText(rarityLabel, RarityConfig.Normalize(item.Rarity))
 	if rarityLabel and rarityLabel:IsA("TextLabel") then
 		GuiUtil.SetRarityGradient(rarityLabel, item.Rarity)
 	end

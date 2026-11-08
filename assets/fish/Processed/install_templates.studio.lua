@@ -5,30 +5,38 @@ local jobs = _G
 assert(game.PlaceId == 84106335829275 and game.CreatorId == 598797612, "Wrong development place")
 local staged = workspace.Fish_Processed
 local templates = game.ReplicatedStorage.Models.Fish
+local manifest = game.HttpService:JSONDecode(game.HttpService:GetAsync("http://127.0.0.1:18773/source-manifest.json"))
+local expected = #manifest.fish
 local gameplay =
 	game.HttpService:JSONDecode(game.HttpService:GetAsync("http://127.0.0.1:18773/gameplay-validation.json"))
 assert(
-	gameplay.done and #gameplay.results == 28 and #gameplay.errors == 0 and gameplay.legacyMouthFallback.passed,
-	"Gameplay validation must pass for all 28 fish"
+	gameplay.done and #gameplay.results == expected and #gameplay.errors == 0 and gameplay.legacyMouthFallback.passed,
+	"Gameplay validation must pass for the complete source batch"
 )
 for _, result in gameplay.results do
 	assert(result.passed and result.framingPassed, result.name)
 end
 assert(
-	jobs.FishSkinValidationJob.done and #jobs.FishSkinValidationJob.results == 28 and #jobs.FishSkinValidationJob.errors == 0,
-	"Published skin validation must pass for all 28 fish"
+	jobs.FishSkinValidationJob.done
+		and #jobs.FishSkinValidationJob.results == expected
+		and #jobs.FishSkinValidationJob.errors == 0,
+	"Published skin validation must pass for the complete source batch"
 )
 assert(
-	jobs.FishValidationJob.done and #jobs.FishValidationJob.results == 28 and #jobs.FishValidationJob.errors == 0,
-	"Animation validation must pass for all 28 fish"
+	jobs.FishValidationJob.done and #jobs.FishValidationJob.results == expected and #jobs.FishValidationJob.errors == 0,
+	"Animation validation must pass for the complete source batch"
 )
-assert(#staged:GetChildren() == 28 and #templates:GetChildren() == 28, "Expected 28 staged fish and templates")
+assert(
+	#staged:GetChildren() >= expected and #templates:GetChildren() >= expected,
+	"Incomplete staged fish or templates"
+)
 local backupName = "BeforeTemplateInstall_" .. os.date("!%Y%m%d_%H%M%S")
 local backup = templates:Clone()
 backup.Name = backupName
 backup.Parent = game.ServerStorage.FishUpgradeBackups
 local replacements = {}
-for _, fish in staged:GetChildren() do
+for _, spec in manifest.fish do
+	local fish = assert(staged:FindFirstChild(spec.name))
 	local old = assert(templates:FindFirstChild(fish.Name))
 	assert(
 		#fish.Animations:GetChildren() == 5 and fish.PrimaryPart.MouthAttachment,
@@ -64,7 +72,7 @@ if exportSource then
 	exportSource:Destroy()
 end
 local result = {
-	installed = 28,
+	installed = expected,
 	backup = backup:GetFullName(),
 	originalBackup = "ServerStorage.FishUpgradeBackups.BeforeProcessed_20261104_062102",
 	sourceCount = #workspace.Fish:GetChildren(),

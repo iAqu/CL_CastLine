@@ -1,0 +1,90 @@
+-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
+
+-- Bytecode (Base64):
+-- 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
+
+-- https://lua.expert/
+local TweenService = game:GetService("TweenService")
+
+game:GetService("UserInputService")
+
+local Maid = require(game.ReplicatedStorage.Packages.Maid)
+local t = {}
+
+return function(p1) --[[ Line: 8 | Upvalues: t (copy), TweenService (copy), Maid (copy) ]]
+	function p1.SetBar(p1, p2, p3, p4, p5, p6) --[[ SetBar | Line: 11 | Upvalues: t (ref), TweenService (ref) ]]
+		if not t[p2] then
+			return
+		end
+
+		if t[p2].currentRatio == p3 then
+			return
+		end
+
+		if not p5 then
+			p5 = Enum.EasingStyle.Quad
+		end
+
+		if not p6 then
+			p6 = Enum.EasingDirection.InOut
+		end
+
+		local v1 = math.clamp(p3, 0, 1)
+
+		if t[p2].currentTween then
+			t[p2].currentTween:Cancel()
+		end
+
+		t[p2].currentRatio = v1
+		t[p2].currentTween = TweenService:Create(t[p2].numVal, TweenInfo.new(p4, p5, p6), {
+			Value = t[p2].currentRatio
+		})
+		t[p2].currentTween:Play()
+	end
+	function p1.AddProgressBar(p1, p2, p3) --[[ AddProgressBar | Line: 32 | Upvalues: t (ref), Maid (ref) ]]
+		t[p2] = {}
+		t[p2].maid = Maid.new()
+		t[p2].currentRatio = 0
+		t[p2].currentTween = nil
+		t[p2].numVal = Instance.new("NumberValue")
+		t[p2].numVal.Parent = p2
+		t[p2].maid:GiveTask(t[p2].numVal.Changed:Connect(function(p1) --[[ Line: 40 | Upvalues: p2 (copy), p3 (copy) ]]
+			p2.Fill.Size = UDim2.new(p1, 0, 1, 0)
+
+			if not p3 then
+				return
+			end
+
+			local v1 = p3.Keypoints[1].Value
+
+			for v2, v3 in p3.Keypoints do
+				if v3.Time <= p1 then
+					v1 = v3.Value
+				end
+			end
+
+			p2.Fill.BackgroundColor3 = v1
+		end))
+		t[p2].numVal.Value = 1
+		t[p2].numVal.Value = 0
+		t[p2].maid:GiveTask(function() --[[ Line: 56 | Upvalues: t (ref), p2 (copy) ]]
+			if not t[p2].numVal then
+				return
+			end
+
+			t[p2].numVal:Destroy()
+		end)
+
+		return t[p2]
+	end
+	function p1.RemoveProgressBar(p1, p2) --[[ RemoveProgressBar | Line: 67 | Upvalues: t (ref) ]]
+		if not t[p2] then
+			return
+		end
+
+		t[p2].maid:Destroy()
+		t[p2] = nil
+	end
+
+	return p1
+end

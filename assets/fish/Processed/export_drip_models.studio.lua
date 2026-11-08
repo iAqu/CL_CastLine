@@ -9,6 +9,13 @@ return function(receiverUrl)
 		{ folder = workspace.Fish_Processed, file = "Fish_Processed.rbxm" },
 		{ folder = game.ReplicatedStorage.Models.Fish, file = "Fish_GameTemplates.rbxm" },
 	}) do
+		local expectedFish = #entry.folder:GetChildren()
+		local expectedMeshes = 0
+		for _, item in entry.folder:GetDescendants() do
+			if item:IsA("MeshPart") then
+				expectedMeshes += 1
+			end
+		end
 		local data = serializer:SerializeInstancesAsync({ entry.folder })
 		local clones = serializer:DeserializeInstancesAsync(data)
 		local root = clones[1]
@@ -24,7 +31,11 @@ return function(receiverUrl)
 			end
 		end
 		local descendants = #root:GetDescendants()
-		local valid = #root:GetChildren() == 28 and points == 672 and meshes == 65 and animations == 140
+		local valid = expectedFish > 0
+			and #root:GetChildren() == expectedFish
+			and points == expectedFish * 24
+			and meshes == expectedMeshes
+			and animations == expectedFish * 5
 		root:Destroy()
 		assert(valid, "Export round-trip lost fish resources: " .. entry.file)
 		local response = http:RequestAsync({

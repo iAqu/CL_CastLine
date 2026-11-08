@@ -1,0 +1,14 @@
+-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
+
+-- https://lua.expert
+
+local t1 = {
+    HATCHED_ETERNAL_ASSET = 4448343437950888,
+    HATCHED_SECRET_ASSET = 383815774941459,
+    HATCHED_DIVINE_ASSET = 1521646775064072,
+    GOT_DIVINE_TRAIL = 1701163841407856,
+    GOT_ANGELIC_TREADMILL = 2940582970403757,
+    THE_HOLLOW_RACE_WINS = 1123072533658443
+}
+
+return table.freeze(t1)

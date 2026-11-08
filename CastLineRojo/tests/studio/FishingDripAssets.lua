@@ -1,6 +1,7 @@
 -- Edit/Server：两个资源目录都必须包含完整、唯一且绑定骨骼的滴水点。
 local settings = require(game.ReplicatedStorage.Modules.FishingConfig).Bite.Drip
 local result = { passed = true, folders = {}, failures = {} }
+local expected = #workspace.Fish_Processed:GetChildren()
 for _, folder in ipairs({ game.ReplicatedStorage.Models.Fish, workspace.Fish_Processed }) do
 	local checked, failed = 0, 0
 	for _, fish in ipairs(folder:GetChildren()) do
@@ -24,7 +25,7 @@ for _, folder in ipairs({ game.ReplicatedStorage.Models.Fish, workspace.Fish_Pro
 			end
 		end
 	end
-	result.passed = result.passed and failed == 0 and checked == 28
+	result.passed = result.passed and failed == 0 and checked == expected and checked > 0
 	table.insert(result.folders, { path = folder:GetFullName(), checked = checked, failed = failed })
 end
 return result

@@ -1,0 +1,326 @@
+-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
+
+-- Bytecode (Base64):
+-- CQOXAQNnY2QEbWF0aANzaW4RZWFzZU91dFNpbmVDdXN0b20KR2V0T25nb2luZwVXb3JtcwJpZBFBZGp1c3RlZFdvcm1UYWJsZQhtdXRhdGlvbgNHZXQJdGV4dENvbG9yBkNvbG9yMwNuZXcABkx1Y2t5IAZ3ZWlnaHQFcm91bmQFaW1hZ2UEbmFtZQVjb2xvcgRtdWx0CmNoYW5jZVRleHQLZGlzcGxheU5hbWUIJSBjaGFuY2USR2V0SXRlbURpc3BsYXlEYXRhC3RvdGFsV2VpZ2h0DklNQUdFU19UT19TSE9XBFJvbGwJUm9sbEx1Y2t5BXRhYmxlBmluc2VydBJjb21wdXRlTmV4dEl0ZW1RdWUFQ2xvbmUGUGFyZW50BGljb24FSW1hZ2UMUHJlbG9hZEFzeW5jEVByZWxvYWRJdGVtSW1hZ2VzB0Rlc3Ryb3kFVmFsdWUFZmxvb3IOaGlkZUVuZGluZ0l0ZW0QSUNPTl9aT09NX1NNT09USARTaXplD0lDT05fU0laRV9MQVJHRQZDcmVhdGUEUGxheQpVSV9NYW5hZ2VyCkFkZFNoaW5lVjMFVURpbTISUEFSVElDTEVfVEVNUExBVEVTB1NQQVJLTEUGekluZGV4CGVtX2RlbGF5EkFkZEVtaXR0ZXJUZW1wbGF0ZQ9Tb3VuZENvbnRyb2xsZXIKV29ybVJldmVhbAlQbGF5U291bmQHVmlzaWJsZQlMdWNreUljb24Jem9vbVR3ZWVuBkNhbmNlbAlmcm9tU2NhbGURSUNPTl9aT09NX0VMQVNUSUMRSUNPTl9ERUZBVUxUX1NJWkUEVGV4dA9SYWluYm93R3JhZGllbnQHRW5hYmxlZApUZXh0Q29sb3IzC3VwZGF0ZUltYWdlClJvbGxDbG9zZWQERmlyZQ1SZW1vdmVTaGluZVYzDVJlbW92ZUVtaXR0ZXIISW5zdGFuY2ULTnVtYmVyVmFsdWUGc2NyaXB0CEdpdmVUYXNrB0NoYW5nZWQHQ29ubmVjdA9JQ09OX1NJWkVfU01BTEwKUm9sbE9wZW5lZAlUd2VlbkluZm8PQ1JBVEVfUk9MTF9USU1FBEVudW0LRWFzaW5nU3R5bGUGTGluZWFyD0Vhc2luZ0RpcmVjdGlvbgNPdXQIV29ybU9wZW4MV29ybVRpY2tGdWxsCVNldHVwUm9sbAZyZW1vdmUQUGxheVdvcm1Sb2xsQW5pbQ5Sb2xsRW5kUHJvY2VzcwpEYXRhQ2xpZW50C2N1cnJlbnREYXRhBHRhc2sEd2FpdBVDbG9zZU9wZW5XaW5kb3dzUXVpY2sFcHJpbnQQSVRFTSBSRVdBUkQgUVVFIAh3b3JtVHlwZQRXSU4gC1dvcm1TZXJ2aWNlC1dvcm1HcmFudGVkCUtuaXRTdGFydA1HZXRDb250cm9sbGVyFk5vdGlmaWNhdGlvbkNvbnRyb2xsZXIKR2V0U2VydmljZQhLbml0SW5pdARnYW1lEVJlcGxpY2F0ZWRTdG9yYWdlDFR3ZWVuU2VydmljZQ9Db250ZW50UHJvdmlkZXIHUGxheWVycwhQYWNrYWdlcwxXYWl0Rm9yQ2hpbGQGU2hhcmVkBEluZm8HVXRpbGl0eQZDbGllbnQHTW9kdWxlcwpDb21wb25lbnRzB3JlcXVpcmUES25pdAZTaWduYWwETWFpZAlDb25zdGFudHMKQ3VzdG9tRW51bQpXb3JtQ29uZmlnDk11dGF0aW9uQ29uZmlnDFJvbGxXZWlnaHRlZBBDcmVhdGVDb250cm9sbGVyBE5hbWUSV29ybVJvbGxDb250cm9sbGVyC0xvY2FsUGxheWVyCVBsYXllckd1aQNIVUQKVG9wQnV0dG9ucwZDZW50ZXILTXlzdGVyeVJvbGwOTXlzdGVyeUljb25Cb3gESWNvbgVUaXRsZRBGZXJ0aWxpemVyc0FkZGVkD1pPT01fVFdFRU5fVElNRQdFbGFzdGljBFF1YWQGUmFuZG9tC2hpZGVDaGFuY2VzABAFAgEAAAAIDQECAAAAAICCAAIA+wIAAFIDAQDPBAABnwIDAIICAAABAgAAAAAAAAAAAEgBARgAAAABAAAAAEkAAAAABwIAAAAHBAAABQIEAglbBgEDWwUGAj4EBQG7GAQCpAMGAAAUQICfAwICPgIDAIICAgAHAvZL0DKGDO8/AgAAAAAAAABAAhgtRFT7IQlAAr7BFyZTBes/AwIDAwQAFECAAE4EARgAAAAAAAAAAABQAAAAAAIBAQAAAAL7AQAAggECAAAAVAUBGAAAVQAAAAAPBAIAAAkGAAAFBAQEAoJe+wUAAE0FBQEAAAAATQYB9AEAAACHBAUG+wYAAE0GBtICAAAATQcB9AEAAACHBQYH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
+
+-- https://lua.expert/
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+local ContentProvider = game:GetService("ContentProvider")
+
+game:GetService("Players")
+
+local Packages = ReplicatedStorage:WaitForChild("Packages")
+local Shared = ReplicatedStorage:WaitForChild("Shared")
+local Info = Shared:WaitForChild("Info")
+local Utility = Shared:WaitForChild("Utility")
+local Client = ReplicatedStorage:WaitForChild("Client")
+
+Client:WaitForChild("Modules"):WaitForChild("Utility")
+Client:WaitForChild("Components")
+
+local Knit = require(Packages:WaitForChild("Knit"))
+local Signal = require(Packages:WaitForChild("Signal"))
+local Maid = require(Packages:WaitForChild("Maid"))
+local Constants = require(Info:WaitForChild("Constants"))
+
+require(Info:WaitForChild("CustomEnum"))
+
+local WormConfig = require(Info:WaitForChild("WormConfig"))
+local MutationConfig = require(Info:WaitForChild("MutationConfig"))
+local RollWeighted = require(Utility:WaitForChild("RollWeighted"))
+local v1 = Knit.CreateController({
+	Name = "WormRollController",
+	RollOpened = Signal.new(),
+	RollClosed = Signal.new()
+})
+local MysteryRoll = game.Players.LocalPlayer.PlayerGui:WaitForChild("HUD"):WaitForChild("TopButtons"):WaitForChild("Center"):WaitForChild("MysteryRoll")
+local MysteryIconBox = MysteryRoll:WaitForChild("MysteryIconBox")
+local Icon = MysteryIconBox:WaitForChild("Icon")
+
+Icon.Visible = false
+v1.ICON_DEFAULT_SIZE = Icon.Size
+
+local Title = MysteryIconBox:WaitForChild("Title")
+local FertilizersAdded = MysteryIconBox:WaitForChild("FertilizersAdded")
+
+v1.IMAGES_TO_SHOW = 20
+v1.ICON_SIZE_SMALL = MysteryIconBox.Size
+v1.ICON_SIZE_LARGE = UDim2.fromScale(1, 1)
+v1.ZOOM_TWEEN_TIME = 0.2
+v1.ICON_ZOOM_ELASTIC = TweenInfo.new(v1.ZOOM_TWEEN_TIME, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out)
+v1.ICON_ZOOM_SMOOTH = TweenInfo.new(v1.ZOOM_TWEEN_TIME, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+
+local t = {}
+local t2 = {}
+local v2 = false
+local v3 = false
+local v4 = Random.new()
+
+local function v5(p1, p2) --[[ gcd | Line: 72 | Upvalues: v5 (copy) ]]
+	if p2 == 0 then
+		return p1
+	end
+
+	return v5(p2, p1 % p2)
+end
+
+function v1.easeOutSineCustom(p1, p2) --[[ easeOutSineCustom | Line: 78 ]]
+	return math.sin(p2 * 0.8444 * math.pi / 2) / 0.9702788345770148
+end
+function v1.GetOngoing(p1) --[[ GetOngoing | Line: 84 | Upvalues: v3 (ref) ]]
+	return v3
+end
+function v1.GetItemDisplayData(p1, p2, p3, p4) --[[ GetItemDisplayData | Line: 89 | Upvalues: WormConfig (copy), MutationConfig (copy) ]]
+	local v1 = WormConfig.Worms[p2.id]
+	local v2 = WormConfig.AdjustedWormTable[p2.id]
+	local v3 = if v1.mutation then MutationConfig.Get(v1.mutation).textColor else Color3.new(255/255, 255/255, 255/255)
+	local v5 = if p3 == nil then "" else "Lucky "
+
+	if p4 then
+		return {
+			id = p2.id,
+			image = v1.image,
+			name = v5 .. v1.displayName,
+			color = v3,
+			mult = p3,
+			chanceText = math.round(100 / (p4 / v2.weight) * 100) / 100 .. "% chance"
+		}
+	end
+
+	return {
+		id = p2.id,
+		image = v1.image,
+		name = v5 .. v1.displayName,
+		color = v3,
+		mult = p3
+	}
+end
+function v1.computeNextItemQue(p1) --[[ computeNextItemQue | Line: 135 | Upvalues: WormConfig (copy), RollWeighted (copy), v4 (copy) ]]
+	local AdjustedWormTable = WormConfig.AdjustedWormTable
+	local v1 = RollWeighted:totalWeight(AdjustedWormTable)
+	local v2 = nil
+	local t = {}
+
+	for i = 1, p1.IMAGES_TO_SHOW do
+		local v3, v42
+
+		repeat
+			v3, v42 = RollWeighted:Roll(AdjustedWormTable)
+		until v42 ~= v2
+
+		local v5 = WormConfig.RollLucky(v3.id, v4)
+
+		if v5 then
+			v3.mult = v5
+		end
+
+		table.insert(t, (p1:GetItemDisplayData(v3, v5, v1)))
+		v2 = v42
+	end
+
+	return t
+end
+function v1.PreloadItemImages(p1) --[[ PreloadItemImages | Line: 171 | Upvalues: WormConfig (copy), t (copy), Icon (copy), MysteryIconBox (copy), ContentProvider (copy) ]]
+	local t2 = {}
+
+	for v1, v2 in WormConfig.Worms do
+		t[v1] = {
+			image = Icon:Clone()
+		}
+		t[v1].image.Parent = MysteryIconBox
+		t[v1].image.Image = v2.icon
+		table.insert(t2, t[v1].image)
+	end
+
+	ContentProvider:PreloadAsync(t2)
+end
+
+local t3 = {
+	hideChances = false,
+	hideEndingItem = false
+}
+
+function v1.SetupRoll(p1, p2, p3, p4) --[[ SetupRoll | Line: 189 | Upvalues: Maid (copy), t3 (copy), t (copy), TweenService (copy), MysteryIconBox (copy), Title (copy), FertilizersAdded (copy), MysteryRoll (copy), Constants (copy) ]]
+	local v1 = Maid.new()
+
+	if not p4 then
+		p4 = {}
+	end
+
+	for v2, v3 in t3 do
+		if not p4[v2] then
+			p4[v2] = v3
+		end
+	end
+
+	local v4 = Instance.new("NumberValue")
+
+	v4.Parent = script
+	v4.Value = 0
+	v1:GiveTask(function() --[[ Line: 204 | Upvalues: v4 (copy) ]]
+		if not v4 then
+			return
+		end
+
+		v4:Destroy()
+	end)
+
+	local v5 = nil
+	local v6 = 0
+	local v7 = nil
+
+	local function updateImage() --[[ updateImage | Line: 212 | Upvalues: p1 (copy), v4 (copy), p2 (copy), v6 (ref), p4 (ref), p3 (copy), t (ref), TweenService (ref), MysteryIconBox (ref), v7 (ref), v5 (ref), Title (ref), FertilizersAdded (ref) ]]
+		local v2 = math.floor(#p2 * p1:easeOutSineCustom(v4.Value)) + 1
+
+		if v2 ~= v6 then
+			local v3 = #p2 < v2
+			local v42 = nil
+
+			if v3 then
+				if p4.hideEndingItem ~= true then
+					v42 = p3
+
+					local image = t[p3.id].image
+
+					TweenService:Create(MysteryIconBox, p1.ICON_ZOOM_SMOOTH, {
+						Size = p1.ICON_SIZE_LARGE
+					}):Play()
+					p1.UI_Manager:AddShineV3(image, 2, Color3.new(255/255, 255/255, 255/255))
+					v7 = p1.UI_Manager:AddEmitterTemplate(image, UDim2.new(0.5, 0, 0.5, 0), p1.UI_Manager.PARTICLE_TEMPLATES.SPARKLE, {
+						zIndex = 1,
+						em_delay = 0.3
+					})
+				end
+
+				p1.SoundController:PlaySound("WormReveal")
+			else
+				v42 = p2[v2]
+			end
+
+			if v5 and t[v5] then
+				t[v5].image.Visible = false
+				t[v42.id].image.LuckyIcon.Visible = false
+			end
+
+			if v42 then
+				v5 = v42.id
+				t[v42.id].image.Visible = true
+
+				if t[v42.id].zoomTween then
+					t[v42.id].zoomTween:Cancel()
+				end
+
+				t[v42.id].image.Size = UDim2.fromScale(0, 0)
+				t[v42.id].zoomTween = TweenService:Create(t[v42.id].image, p1.ICON_ZOOM_ELASTIC, {
+					Size = p1.ICON_DEFAULT_SIZE
+				})
+				t[v42.id].zoomTween:Play()
+
+				if v3 then
+					Title.Text = v42.name
+					Title.RainbowGradient.Enabled = if v42.mult == nil then false else true
+
+					if v42.mult == nil then
+						Title.TextColor3 = v42.color
+					else
+						Title.TextColor3 = Color3.new(255/255, 255/255, 255/255)
+					end
+
+					FertilizersAdded.Visible = true
+				else
+					Title.Text = ""
+					Title.RainbowGradient.Enabled = false
+					Title.TextColor3 = Color3.new(255/255, 255/255, 255/255)
+					FertilizersAdded.Visible = false
+				end
+
+				t[v42.id].image.LuckyIcon.Visible = if v42.mult == nil then false else true
+			else
+				Title.Visible = false
+			end
+		end
+
+		v6 = v2
+	end
+
+	v4.Value = 0
+	v1:GiveTask(v4.Changed:Connect(updateImage))
+	updateImage()
+	MysteryIconBox.Size = p1.ICON_SIZE_SMALL
+	Title.Visible = true
+	v1:GiveTask(function() --[[ Line: 312 | Upvalues: t (ref), v5 (ref), MysteryRoll (ref), p1 (copy), p3 (copy), v7 (ref) ]]
+		t[v5].image.Visible = false
+		MysteryRoll.Visible = false
+		p1.RollClosed:Fire()
+		p1.UI_Manager:RemoveShineV3(t[p3.id].image)
+		p1.UI_Manager:RemoveEmitter(v7)
+	end)
+	MysteryRoll.Visible = true
+	p1.RollOpened:Fire()
+	TweenService:Create(v4, TweenInfo.new(Constants.CRATE_ROLL_TIME, Enum.EasingStyle.Linear, Enum.EasingDirection.Out), {
+		Value = 1
+	}):Play()
+	p1.SoundController:PlaySound("WormOpen")
+	p1.SoundController:PlaySound("WormTickFull")
+
+	return v1
+end
+function v1.RollEndProcess(p1) --[[ RollEndProcess | Line: 340 | Upvalues: t2 (copy), v2 (ref), v3 (ref) ]]
+	v2 = false
+
+	if #t2 > 0 then
+		p1:PlayWormRollAnim(table.remove(t2, 1)[1], true)
+	else
+		v3 = false
+	end
+end
+function v1.PlayWormRollAnim(p1, p2, p3) --[[ PlayWormRollAnim | Line: 352 | Upvalues: v2 (ref), t2 (copy), v3 (ref), WormConfig (copy), RollWeighted (copy), Constants (copy) ]]
+	while p1.DataClient.currentData == nil do
+		task.wait()
+	end
+
+	if v2 then
+		table.insert(t2, { p2 })
+
+		return
+	end
+
+	v2 = true
+
+	if not p3 then
+		v3 = true
+		p1.UI_Manager:CloseOpenWindowsQuick()
+	end
+
+	local itemrewardque = p1:computeNextItemQue()
+
+	print("ITEM REWARD QUE ", itemrewardque)
+
+	local v22 = RollWeighted:totalWeight(WormConfig.AdjustedWormTable)
+	local win = WormConfig.Worms[p2.wormType]
+
+	print("WIN ", win, p2)
+
+	local v32 = p1:SetupRoll(itemrewardque, p1:GetItemDisplayData(win, p2.mult, v22), {})
+
+	task.wait(Constants.CRATE_ROLL_TIME)
+	task.wait(2.5)
+	v32:Destroy()
+	p1:RollEndProcess()
+end
+function v1.KnitStart(p1) --[[ KnitStart | Line: 408 ]]
+	p1:PreloadItemImages()
+	p1.WormService.WormGranted:Connect(function(p12) --[[ Line: 412 | Upvalues: p1 (copy) ]]
+		p1:PlayWormRollAnim(p12, false)
+	end)
+end
+function v1.KnitInit(p1) --[[ KnitInit | Line: 418 | Upvalues: Knit (copy) ]]
+	p1.DataClient = Knit.GetController("DataClient")
+	p1.UI_Manager = Knit.GetController("UI_Manager")
+	p1.SoundController = Knit.GetController("SoundController")
+	p1.NotificationController = Knit.GetController("NotificationController")
+	p1.WormService = Knit.GetService("WormService")
+end
+
+return v1

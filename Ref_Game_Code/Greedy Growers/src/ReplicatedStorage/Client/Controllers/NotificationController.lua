@@ -1,0 +1,302 @@
+-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
+
+-- Bytecode (Base64):
+-- CQOHAQRTaXplBVVEaW0yCWZyb21TY2FsZQZDcmVhdGUEUGxheQdBZGRJdGVtCG9uQXBwZWFyEFRleHRUcmFuc3BhcmVuY3kIVUlTdHJva2UMVHJhbnNwYXJlbmN5EUltYWdlVHJhbnNwYXJlbmN5B2Rlc3Ryb3kISW5zdGFuY2UDbmV3BUZyYW1lFkJhY2tncm91bmRUcmFuc3BhcmVuY3kKSW1hZ2VMYWJlbAJCRwROYW1lG3JieGFzc2V0aWQ6Ly84NjA3OTMyNTEyNzk0MgVJbWFnZQhQb3NpdGlvbgdWZWN0b3IyC0FuY2hvclBvaW50D0JvcmRlclNpemVQaXhlbAhSb3RhdGlvbgZDb2xvcjMHZnJvbVJHQgtJbWFnZUNvbG9yMwZaSW5kZXgGUGFyZW50B1Zpc2libGUJVGV4dExhYmVsBWxhYmVsClRleHRDb2xvcjMKVGV4dFNjYWxlZARFbnVtDUF1dG9tYXRpY1NpemUBWAAEVGV4dARGb250CGZyb21OYW1lEENvbWljTmV1ZUFuZ3VsYXIKRm9udFdlaWdodAdSZWd1bGFyCUZvbnRTdHlsZQZOb3JtYWwIRm9udEZhY2UQVGV4dFN0cm9rZUNvbG9yMxZUZXh0U3Ryb2tlVHJhbnNwYXJlbmN5CVRoaWNrbmVzcwlUd2VlbkluZm8LRWFzaW5nU3R5bGUEU2luZRVub3RpZmljYXRpb25Db21wb25lbnQKTG9hZFNjcmVlbg5GaW5kRmlyc3RDaGlsZAR0YXNrBHdhaXQNR2V0Q29udHJvbGxlchJXb3JtUm9sbENvbnRyb2xsZXIKR2V0T25nb2luZwhSaWNoVGV4dAtMYXlvdXRPcmRlcgVwYWlycwtHZXRDaGlsZHJlbgNJc0EKVUlfTWFuYWdlchJQQVJUSUNMRV9URU1QTEFURVMLU0NSQVBfQlVSU1QGekluZGV4A2FtdARzaXplC051bWJlclJhbmdlEkFkZEVtaXR0ZXJUZW1wbGF0ZQxBYnNvbHV0ZVNpemUEbWF0aAVmbG9vchBCYWNrZ3JvdW5kQ29sb3IzBWRlbGF5EFNlbmROb3RpZmljYXRpb24MVGV4dEVsZW1lbnRzCUJlZ2lubmluZwhTZWVkTmFtZQZFbmRpbmcac3BlY2lhbFNlZWREaXNwbGF5VGVtcGxhdGUFQ2xvbmUGcmFyaXR5DFNldEF0dHJpYnV0ZQ5TaGlueVRleHRMYWJlbAZBZGRUYWcFIFNlZWQNIGhhcyBzcGF3bmVkIRtTZW5kU3BlY2lhbFNlZWROb3RpZmljYXRpb24MVGV4dENoYW5uZWxzCVJCWFN5c3RlbQxbU2VydmVyXTogJSoGZm9ybWF0FERpc3BsYXlTeXN0ZW1NZXNzYWdlFFNlbmRDaGF0Tm90aWZpY2F0aW9uB0tleUNvZGUBTB5TYW1wbGUgbm90aWZpY2F0aW9uIHRyaWdnZXJlZCEKR2V0U2VydmljZRNOb3RpZmljYXRpb25TZXJ2aWNlBGdhbWUHUGxheWVycwtMb2NhbFBsYXllcglQbGF5ZXJHdWkMV2FpdEZvckNoaWxkBU90aGVyDU5vdGlmaWNhdGlvbnMIRmVlZGJhY2sSU3BlY2lhbFNlZWREaXNwbGF5BnNjcmlwdAdDb25uZWN0CklucHV0QmVnYW4JS25pdFN0YXJ0BkRlYnJpcxFSZXBsaWNhdGVkU3RvcmFnZQxUd2VlblNlcnZpY2UPVGV4dENoYXRTZXJ2aWNlEFVzZXJJbnB1dFNlcnZpY2ULVGV4dFNlcnZpY2URQ29sbGVjdGlvblNlcnZpY2UGU2hhcmVkBEluZm8HcmVxdWlyZQpDdXN0b21FbnVtBkltYWdlcwhQYWNrYWdlcwRLbml0EENyZWF0ZUNvbnRyb2xsZXIWTm90aWZpY2F0aW9uQ29udHJvbGxlcgMbAA4HAQQAAAAk4gEBAKQCBAAADCCAjAMBAG8EBQCfAgMCMAIBLwAAAABHAAoAAAAAAOICAQCkAwQAAAwggIwEAQBvBQYAnwMDAjADAi8AAAAAUgECAPsCAAD7BAEA+wUCAFIGAQC8AgKWBwAAAJ8CBQK8AwLuCAAAAJ8DAgH7AwMAUgUCAIwGAgC8AwN4CQAAAJ8DBAGCAAEACgMBBQEAAwIDAwQADCCAAs3MzMzMzOw/ApqZmZmZmck/AwQDBQMGAFcHARgAAAAAAAAAAAEAAQAAAAAAAAAAAgAAAAAAAAEAAAEAAAAAAAFYAAAAAAcABQAAADP7AAAA+wIBAPsDAgDiBAIAvAAAlgMAAACfAAUC+wEAAPsDAQBNAwNtBAAAAPsEAgDiBQYAvAEBlgMAAACfAQUC+wIAAPsEAwD7BQIA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
+
+-- https://lua.expert/
+local Debris = game:GetService("Debris")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+local TextChatService = game:GetService("TextChatService")
+local UserInputService = game:GetService("UserInputService")
+
+game:GetService("TextService")
+
+local CollectionService = game:GetService("CollectionService")
+local Info = ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Info")
+
+require(Info:WaitForChild("CustomEnum"))
+require(Info:WaitForChild("Images"))
+
+local Knit = require(ReplicatedStorage.Packages.Knit)
+local v1 = Knit.CreateController({
+	Name = "NotificationController"
+})
+local v2 = nil
+local v3 = nil
+local v4 = nil
+local v5 = nil
+local v6 = nil
+
+local function notificationComponent(p1) --[[ notificationComponent | Line: 36 | Upvalues: TweenService (copy), Debris (copy) ]]
+	local Frame = Instance.new("Frame")
+
+	Frame.BackgroundTransparency = 1
+	Frame.Size = UDim2.fromScale(1, 0)
+
+	local BG = Instance.new("ImageLabel")
+
+	BG.Name = "BG"
+	BG.Image = "rbxassetid://86079325127942"
+	BG.Position = UDim2.fromScale(0.5, 0.5)
+	BG.AnchorPoint = Vector2.new(0.5, 0.5)
+	BG.BackgroundTransparency = 1
+	BG.ImageTransparency = 0.65
+	BG.BorderSizePixel = 0
+	BG.Rotation = 0
+	BG.ImageColor3 = Color3.fromRGB(0, 0, 0)
+	BG.Size = UDim2.fromScale(0, 1)
+	BG.ZIndex = 4
+	BG.Parent = Frame
+
+	if p1 ~= nil then
+		BG.Visible = false
+	end
+
+	local label = Instance.new("TextLabel")
+
+	label.BackgroundTransparency = 1
+	label.Name = "label"
+	label.TextColor3 = Color3.fromRGB(0, 255, 0)
+	label.TextScaled = true
+	label.AutomaticSize = Enum.AutomaticSize.X
+	label.Position = UDim2.fromScale(0.5, 0.5)
+	label.AnchorPoint = Vector2.new(0.5, 0.5)
+	label.Text = ""
+
+	if p1 == nil then
+		label.FontFace = Font.fromName("ComicNeueAngular", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+		label.Size = UDim2.fromScale(0.05, 1)
+	else
+		label.FontFace = Font.fromName("ComicNeueAngular", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
+		label.Size = UDim2.fromScale(1, 1)
+		label.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+		label.TextStrokeTransparency = 0
+	end
+
+	label.ZIndex = 7
+
+	local UIStroke = Instance.new("UIStroke")
+
+	UIStroke.Thickness = 2
+	UIStroke.Parent = label
+	label.Parent = Frame
+
+	local v1 = TweenInfo.new(0.2, Enum.EasingStyle.Sine)
+
+	return Frame, function(p1) --[[ onAppear | Line: 87 | Upvalues: TweenService (ref), Frame (copy), v1 (copy), Debris (ref) ]]
+		local t = {
+			Size = UDim2.fromScale(1, 0.9)
+		}
+
+		if p1 ~= nil then
+			t = {
+				Size = UDim2.fromScale(1, 0.2)
+			}
+		end
+
+		local v12 = TweenService:Create(Frame, v1, t)
+
+		v12:Play()
+		Debris:AddItem(v12, 2)
+	end, function() --[[ destroy | Line: 97 | Upvalues: TweenService (ref), label (copy), v1 (copy), BG (copy), Debris (ref) ]]
+		local v12 = TweenService:Create(label, v1, {
+			TextTransparency = 1
+		})
+		local v2 = TweenService:Create(label.UIStroke, v1, {
+			Transparency = 1
+		})
+		local v3 = TweenService:Create(BG, v1, {
+			ImageTransparency = 1
+		})
+
+		v12:Play()
+		v2:Play()
+		v3:Play()
+		Debris:AddItem(v12, 1)
+		Debris:AddItem(v2, 1)
+		Debris:AddItem(v3, 1)
+	end
+end
+
+function v1.SendNotification(p1, p2, p3, p4, p5, p6, p7, p8, p9) --[[ SendNotification | Line: 115 | Upvalues: v3 (ref), Knit (copy), notificationComponent (copy), v5 (ref), v6 (ref), Debris (copy) ]]
+	while v3:FindFirstChild("LoadScreen") do
+		task.wait(0.5)
+	end
+
+	while Knit.GetController("WormRollController"):GetOngoing() do
+		task.wait(0.5)
+	end
+
+	if p5 == false then
+		p5 = nil
+	end
+
+	local v1 = if p5 == nil then 4 else 2
+	local v2, v32, v4 = notificationComponent(p5)
+
+	v2.label.TextColor3 = if p4 then p4 else Color3.new(0, 255, 0)
+	v2.label.RichText = if p9 == true then true else false
+	v2.label.Text = p2
+
+	if p5 == nil then
+		v2.Parent = v5
+		v2.LayoutOrder = 0
+
+		for k, v in pairs(v5:GetChildren()) do
+			if v ~= v2 and v:IsA("Frame") then
+				v.LayoutOrder = (v.LayoutOrder or 1) + 1
+			end
+		end
+
+		if p7 == true then
+			p1.UI_Manager:AddEmitterTemplate(v5, UDim2.new(0.5, 0, 0.5, 0), p1.UI_Manager.PARTICLE_TEMPLATES.SCRAP_BURST, {
+				zIndex = 2,
+				amt = p8,
+				size = NumberRange.new(40, 50)
+			})
+		end
+	else
+		v2.Parent = v6
+		v2.LayoutOrder = 0
+
+		for k, v in pairs(v6:GetChildren()) do
+			if v ~= v2 and v:IsA("Frame") then
+				v.LayoutOrder = (v.LayoutOrder or 1) + 1
+			end
+		end
+	end
+
+	v2.Visible = false
+	v2.Size = UDim2.fromScale(1, 0.9)
+	v2.BG.Size = UDim2.new(0, math.floor(v2.label.AbsoluteSize.X) + 80, 1.5, 0)
+	v2.BG.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	v2.Size = UDim2.fromScale(1, 0)
+	v2.Visible = true
+	v32(p5)
+	task.delay(v1, v4)
+	Debris:AddItem(v2, v1 + 0.2)
+end
+function v1.SendSpecialSeedNotification(p1, p2, p3, p4) --[[ SendSpecialSeedNotification | Line: 200 | Upvalues: v3 (ref), Knit (copy), CollectionService (copy), TweenService (copy), Debris (copy), v5 (ref) ]]
+	while v3:FindFirstChild("LoadScreen") do
+		task.wait(0.5)
+	end
+
+	while Knit.GetController("WormRollController"):GetOngoing() do
+		task.wait(0.5)
+	end
+
+	local v1 = p1.specialSeedDisplayTemplate:Clone()
+
+	v1.TextElements.SeedName:SetAttribute("rarity", p3)
+	CollectionService:AddTag(v1.TextElements.SeedName, "ShinyTextLabel")
+
+	local v2 = TweenInfo.new(0.2, Enum.EasingStyle.Sine)
+
+	local function f3() --[[ Line: 219 | Upvalues: TweenService (ref), v1 (copy), v2 (copy), Debris (ref) ]]
+		local v12 = TweenService:Create(v1, v2, {
+			Size = UDim2.fromScale(1, 0.9)
+		})
+
+		v12:Play()
+		Debris:AddItem(v12, 2)
+	end
+
+	local function f4() --[[ Line: 227 | Upvalues: TweenService (ref), v1 (copy), v2 (copy), Debris (ref) ]]
+		local v12 = TweenService:Create(v1.TextElements.Beginning, v2, {
+			TextTransparency = 1
+		})
+		local v22 = TweenService:Create(v1.TextElements.Beginning.UIStroke, v2, {
+			Transparency = 1
+		})
+		local v3 = TweenService:Create(v1.TextElements.SeedName, v2, {
+			TextTransparency = 1
+		})
+		local v4 = TweenService:Create(v1.TextElements.SeedName.UIStroke, v2, {
+			Transparency = 1
+		})
+		local v5 = TweenService:Create(v1.TextElements.Ending, v2, {
+			TextTransparency = 1
+		})
+		local v6 = TweenService:Create(v1.TextElements.Ending.UIStroke, v2, {
+			Transparency = 1
+		})
+		local v7 = TweenService:Create(v1.BG, v2, {
+			ImageTransparency = 1
+		})
+
+		v12:Play()
+		v3:Play()
+		v5:Play()
+		v22:Play()
+		v4:Play()
+		v6:Play()
+		v7:Play()
+		Debris:AddItem(v12, 1)
+		Debris:AddItem(v3, 1)
+		Debris:AddItem(v5, 1)
+		Debris:AddItem(v22, 1)
+		Debris:AddItem(v4, 1)
+		Debris:AddItem(v6, 1)
+		Debris:AddItem(v7, 1)
+	end
+
+	v1.TextElements.SeedName.Text = p2 .. " Seed"
+	v1.TextElements.Ending.Text = " has spawned!"
+	v1.Parent = v5
+	v1.Size = UDim2.fromScale(1, 0.9)
+
+	local v52 = v1.TextElements.Beginning.AbsoluteSize.X + v1.TextElements.SeedName.AbsoluteSize.X + v1.TextElements.Ending.AbsoluteSize.X
+	local X = v1.TextElements.AbsoluteSize.X
+
+	v1.TextElements.AnchorPoint = Vector2.new(0.5, 0.5)
+	v1.TextElements.Position = UDim2.new(0.5, -(v52 / 2) + X / 2, 0.5, 0)
+	v1.Size = UDim2.fromScale(1, 0)
+	v1.LayoutOrder = 0
+
+	for k, v in pairs(v5:GetChildren()) do
+		if v ~= v1 and v:IsA("Frame") then
+			v.LayoutOrder = (v.LayoutOrder or 1) + 1
+		end
+	end
+
+	v1.Visible = true
+	f3()
+	task.delay(p4, f4)
+	Debris:AddItem(v1, p4 + 0.2)
+end
+function v1.SendChatNotification(p1, p2) --[[ SendChatNotification | Line: 297 | Upvalues: TextChatService (copy) ]]
+	TextChatService.TextChannels.RBXSystem:DisplaySystemMessage((("[Server]: %*"):format(p2)))
+end
+function v1.KnitStart(p1) --[[ KnitStart | Line: 302 | Upvalues: v2 (ref), Knit (copy), v3 (ref), v4 (ref), v5 (ref), v6 (ref), UserInputService (copy) ]]
+	v2 = Knit.GetService("NotificationService")
+	v3 = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+	v4 = v3:WaitForChild("Other")
+	v5 = v4:WaitForChild("Notifications")
+	v6 = v4:WaitForChild("Feedback")
+	p1.specialSeedDisplayTemplate = v5:WaitForChild("SpecialSeedDisplay")
+	p1.specialSeedDisplayTemplate.Parent = script
+	p1.UI_Manager = Knit.GetController("UI_Manager")
+	v2.SendNotification:Connect(function(p12, p2, p3, p4, p5, p6) --[[ Line: 315 | Upvalues: p1 (copy) ]]
+		p1:SendNotification(p12, p2, p3, p4, p5, nil, nil, p6)
+	end)
+	v2.SendSpecialSeedNotification:Connect(function(p12, p2, p3) --[[ Line: 320 | Upvalues: p1 (copy) ]]
+		p1:SendSpecialSeedNotification(p12, p2, p3)
+	end)
+	v2.SendChatNotification:Connect(function(...) --[[ Line: 324 | Upvalues: p1 (copy) ]]
+		p1:SendChatNotification(...)
+	end)
+	UserInputService.InputBegan:Connect(function(p12, p2) --[[ Line: 329 | Upvalues: p1 (copy) ]]
+		if p2 then
+			return
+		end
+
+		if p12.KeyCode ~= Enum.KeyCode.L then
+			return
+		end
+
+		p1:SendNotification("Sample notification triggered!", 3, Color3.fromRGB(255, 255, 0))
+	end)
+end
+
+return v1

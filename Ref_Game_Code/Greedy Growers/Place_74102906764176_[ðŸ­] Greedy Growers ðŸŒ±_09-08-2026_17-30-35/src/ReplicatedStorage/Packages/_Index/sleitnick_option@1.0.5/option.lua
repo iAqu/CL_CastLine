@@ -1,0 +1,176 @@
+-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
+
+-- Bytecode (Base64):
+-- CQMvCUNsYXNzTmFtZQZPcHRpb24CX3YCX3MMc2V0bWV0YXRhYmxlBF9uZXchT3B0aW9uLlNvbWUoKSB2YWx1ZSBjYW5ub3QgYmUgbmlsBmFzc2VydARTb21lBE5vbmUEV3JhcAR0eXBlBXRhYmxlDGdldG1ldGF0YWJsZQJJcx1SZXN1bHQgd2FzIG5vdCBvZiB0eXBlIE9wdGlvbgZBc3NlcnQlSW52YWxpZCBkYXRhIGZvciBkZXNlcmlhbGl6aW5nIE9wdGlvbgVWYWx1ZQtEZXNlcmlhbGl6ZQlTZXJpYWxpemUIZnVuY3Rpb24UTWlzc2luZyAnU29tZScgbWF0Y2gUTWlzc2luZyAnTm9uZScgbWF0Y2gGSXNTb21lBlVud3JhcAVNYXRjaAZJc05vbmUGRXhwZWN0CkV4cGVjdE5vbmUhQ2Fubm90IHVud3JhcCBvcHRpb24gb2YgTm9uZSB0eXBlCFVud3JhcE9yDFVud3JhcE9yRWxzZQNBbmQHQW5kVGhlbgJPcgZPckVsc2UDWE9yBkZpbHRlcghDb250YWlucwdPcHRpb248BnR5cGVvZgE+DE9wdGlvbjxOb25lPgpfX3Rvc3RyaW5nBF9fZXEHX19pbmRleAAZBAEBAAAAEOICBAAwAAK4AgAAAEcAAgAAAACAqQMAAakDAQAwAwIaAwAAAPsDAACePQIDAwAAAKQBBgAAAFBAnwEDAoIBAgAHAwEDAgMDAwQIAwABAAAAAv////8D/////wMFBAAAUEAAgQEGARgAAgABAAAAAAABAAD8AAAFggAAAAAEAQEAAAAQRwACAAAAAICpAgABqQIBAIEBAgQAAAAAbwMAAKQBAgAAABBAnwEDAfsBAABNAQHCAwAAAFICAACfAQIAggEAAAQDBwMIBAAAEEADBgCRAQkBGAAAAAAAAAAAAAABAAAAAACSAAAAAAMBAQAAAAxHAAUAAAAAgPsBAABNAQE/AAAAAIIBAgD7AQAATQEBHwEAAABSAgAAnwECAIIBAAACAwoDCQCeAQsBGAAAAQAAAAIAAAAAAJ8AAAAABAEBAAAAE6kBAAC7KAADUgMAAKQCAQAAAABAnwICAvACCwACAACAuzwAA1IDAACkAgQAAAAwQJ8CAgL7AwAA8QICAAMAAACpAQABqQEBAIIBAgAFAwwEAAAAQAMNAw4EAAAwQACrAQ8BGAAAAAAAAAAAAAAAAAAAAAAAAACsAAAAAAQBAQAAAAz7AgAATQICJAAAAABSAwAAnwICAoEBAgQBAAAAbwMBAKQBAwAAACBAnwEDAYIAAQAEAw8DEAMIBAAAIEAAswERARgAAAAAAAAAAAAAAAG0AAAAAAUBAQAAACOpAgAAuygAA1IEAACkAwEAAAAAQJ8DAgLwAwcAAgAAgE0DANsDAAAA8AMCAAQAAACpAgABqQIBAIEBAgQFAAAAbwMFAKQBBwAAAGBAnwEDAU0CAOwIAAAARwIFAAAAAID7AQAATQEBPwkAAAArAQYA+wEAAE0BAR8KAAAATQIA7AgAAACfAQICggECAAsDDAQAAABAAw0DAQMCAxIDCAQAAGBAAxMDCgMJAL0BFAEYAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAC+AAAAAAMBAAAAAAriAQIATQIA2wAAAAAwAgHbAAAAAE0CALgDAAAAMAIB7AEAAACCAQIABAMBAxMFAgABAwMAxgEVARgAAQAAAAEAAAAAxwAAAAAIAgAAAAAvTQIBHwAAAABNAwE/AQAAALsoAgNSBwIApAYDAAAAIECfBgIC8AYCAAQAAACpBQABqQUBAIEBBQQFAAAAbwYFAKQEBwAAAGBAnwQDAbsoAwNSBwMApAYDAAAAIECfBgIC8AYCAAQAAACpBQABqQUBAIEBBQQIAAAAbwYIAKQEBwAAAGBAnwQDAbwEAHcJAAAAnwQCAg4EBgBSBAIAvAUAiwoAAACfBQIAnwQAAIIEAABSBAMAnwQBAIIEAAALAwkDCgMMBAAAIEADFgMXAwgEAABgQAMYAxkDGgDbARsBGAAAAQABAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAABAAAAAQAAAAAAAgAA3AAAAAACAQAAAAADTQEAGgAAAACCAQIAAQMEAOsBGQEYAAAA7AAAAAADAQAAAAAETQIAGgAAAABWAQIAggECAAEDBADzARwBGAAAAAD0AAAAAAUCAAAAAAy8AwB3AAAAAJ8DAgKeAQMEAQAAAFIEAQCkAgIAAAAQQJ8CAwFNAgC4AwAAAIICAgAEAxkDCAQAABBAAwMAgQIdARgAAAAAAAAAAAABAAACAQAAAAUCAAAAAAq8AwA5AAAAAJ8DAgKeAQMEAQAAAFIEAQCkAgIAAAAQQJ8CAwGCAAEAAwMcAwgEAAAQQACKAh4BGAAAAAAAAAAAAAELAQAAAAQBAAAAAAVvAwAAvAEAAQEAAACfAQMAggEAAAIDHwMdAJICGgEYAAAAAAATAQAAAAQCAAAAAAm8AgB3AAAAAJ8CAgIOAgQAvAIAiwEAAACfAgIAggIAAIIBAgACAxkDGgCbAiABGAAAAAABAAAAAhwBAAAABAIAAAAAC7wCAHcAAAAAnwICAg4CBAC8AgCLAQAAAJ8CAgCCAgAAUgIBAJ8CAQCCAgAAAgMZAxoAqQIhARgAAAAAAQAAAAIAACoBAAAABAIBAAAACbwCAHcAAAAAnwICAg4CAQCCAQIA+wIAAE0CAj8BAAAAggICAAIDGQMKAMMCIgEYAAAAAAECAAAARAEAAAAFAgEAAAATvAIAdwAAAACfAgICDgILAFICAQC8AwCLAQAAAJ8DAgCfAgAC+wMAAE0DA/UCAAAAUgQCAJ8DAgGCAgIA+wIAAE0CAj8DAAAAggICAAQDGQMaAxEDCgDbAiMBGAAAAAABAAAAAAEAAAAAAQIAAABcAQAAAAQCAAAAAAa8AgB3AAAAAJ8CAgIOAgEAggACAIIBAgABAxkA6gIkARgAAAAAAQJrAQAAAAUCAQAAAA28AgB3AAAAAJ8CAgIOAgEAggACAFICAQCfAgEC+wMAAE0DA/UBAAAAUgQCAJ8DAgGCAgIAAgMZAxEA+AIlARgAAAAAAQIAAQAAAAABeQEAAAAFAgEAAAAPvAIAdwAAAACfAgICvAMBdwAAAACfAwICmgIFAAMAAAD7BAAATQQEPwEAAACCBAIADgIBAIIAAgCCAQIAAgMZAwoAiQMmARgAAAABAAABAAEAAAABAQKKAQAAAAQCAQAAAA68AgA5AAAAAJ8CAgIrAgUAUgIBAE0DALgBAAAAnwICAisCBAD7AgAATQICPwIAAACCAgIAggACAAMDHAMDAwoAmwMnARgAAAAAAAAAAAABAAAAApwBAAAABAIAAAAAC7wCAHcAAAAAnwICAg4CBgBNAwC4AQAAAPEDAgABAAAAqQIAAakCAQCCAgIAAgMZAwMAqAMoARgAAAAAAAAAAAAAAKkBAAAABwEAAAAAEbwBAHcAAAAAnwECAg4BCwBvAgEATQYAuAIAAAC7LAYCpAUEAAAAMECfBQICUgMFAG8EBQBzAQIEggECAG8BBgCCAQIABwMZAykDAwMqBAAAMEADKwMsALYDLQEYAAAAAAEAAAAAAAAAAAAAAgC3AQAAAAYCAQAAACX7AgAATQICJAAAAABSAwEAnwICAg4CHQC8AgB3AQAAAJ8CAgIOAg8AvAIBdwEAAACfAgICDgILALwDAIsCAAAAnwMCArwEAYsCAAAAnwQCAvEDAgAEAAAAqQIAAakCAQCCAgIAvAIAOQMAAACfAgICDgIGALwCATkDAAAAnwICAg4CAgCpAgEAggICAKkCAACCAgIABAMPAxkDGgMcANADLgEYAAAAAAAAAQAAAAAAAAABAAAAAAAAAAAAAAEAAAAAAAAAAQADANEBAAAAAgAAAQIAX6MAAAD/AAYAAAAAADAAAG4AAAAAwAEBABIAAAAwAQDCAgAAAMABAwASAAAAMAEAHwQAAADAAQUAEgAAADABALUGAAAAwAEHABIAAAAwAQAkCAAAAMABCQASAAAAMAEA9QoAAADAAQsAEgAAADABAE8MAAAAwAENADABAHEOAAAAwAEPADABAAcQAAAAwAERADABAHcSAAAAwAETADABADkUAAAAwAEVADABAAEWAAAAwAEXADABAGgYAAAAwAEZADABAIsaAAAAwAEbADABAGscAAAAwAEdADABAEgeAAAAwAEfABIAAAAwAQAXIAAAAMABIQASAAAAMAEAlSIAAADAASMAMAEAyyQAAADAASUAEgAAADABAHsmAAAAwAEnABIAAAAwAQBGKAAAAMABKQASAAAAMAEAGyoAAADAASsAMAEAXSwAAADAAS0AMAEABi4AAADAAS8AEgAAADABAOMwAAAATQEAwgIAAACfAQECMAEAPzEAAACCAAIAMgMvBgADBgYBAwkGAgMLBgMDDwYEAxEGBQMUBgYDFQYHAxsGCAMZBgkDHAYKAx0GCwMeBgwDGgYNAyAGDgMhBg8DIgYQAyMGEQMkBhIDJQYTAyYGFAMnBhUDKAYWAy0GFwMuAwoYAAECAwQFBgcICQoLDA0ODxAREhMUFRYXAQABBQB9AAEAAgAAABAAAAANAAAADQAAAAgAAAAKAAAACQAAOwAAEAAACAAADgAACQAACAAACQAADgAAGgAAABgAAACAAAAOAAAAEQAAABIAAAANAAAOAAAaAAAAEAAAAAACAQAAANoAAACPAAAAABipm72FNTcOSL3i8ELHZD3T2YOq8Ztf14Q=
+
+-- https://lua.expert/
+local t = {}
+
+t.__index = t
+function t._new(p1) --[[ _new | Line: 129 | Upvalues: t (copy) ]]
+	local t2 = {
+		ClassName = "Option",
+		_v = p1
+	}
+
+	t2._s = p1 ~= nil
+
+	return setmetatable(t2, t)
+end
+function t.Some(p1) --[[ Some | Line: 145 | Upvalues: t (copy) ]]
+	assert(p1 ~= nil, "Option.Some() value cannot be nil")
+
+	return t._new(p1)
+end
+function t.Wrap(p1) --[[ Wrap | Line: 158 | Upvalues: t (copy) ]]
+	if p1 == nil then
+		return t.None
+	end
+
+	return t.Some(p1)
+end
+function t.Is(p1) --[[ Is | Line: 171 | Upvalues: t (copy) ]]
+	return if type(p1) == "table" then getmetatable(p1) == t else false
+end
+function t.Assert(p1) --[[ Assert | Line: 179 | Upvalues: t (copy) ]]
+	assert(t.Is(p1), "Result was not of type Option")
+end
+function t.Deserialize(p1) --[[ Deserialize | Line: 189 | Upvalues: t (copy) ]]
+	assert(if type(p1) == "table" then if p1.ClassName == "Option" then true else false else false, "Invalid data for deserializing Option")
+
+	return p1.Value == nil and t.None or t.Some(p1.Value)
+end
+function t.Serialize(p1) --[[ Serialize | Line: 198 ]]
+	return {
+		ClassName = p1.ClassName,
+		Value = p1._v
+	}
+end
+function t.Match(p1, p2) --[[ Match | Line: 219 ]]
+	local Some = p2.Some
+	local None = p2.None
+
+	assert(if type(Some) == "function" then true else false, "Missing \'Some\' match")
+	assert(if type(None) == "function" then true else false, "Missing \'None\' match")
+
+	if p1:IsSome() then
+		return Some(p1:Unwrap())
+	end
+
+	return None()
+end
+function t.IsSome(p1) --[[ IsSome | Line: 235 ]]
+	return p1._s
+end
+function t.IsNone(p1) --[[ IsNone | Line: 243 ]]
+	return not p1._s
+end
+function t.Expect(p1, p2) --[[ Expect | Line: 257 ]]
+	assert(p1:IsSome(), p2)
+
+	return p1._v
+end
+function t.ExpectNone(p1, p2) --[[ ExpectNone | Line: 266 ]]
+	assert(p1:IsNone(), p2)
+end
+function t.Unwrap(p1) --[[ Unwrap | Line: 274 ]]
+	return p1:Expect("Cannot unwrap option of None type")
+end
+function t.UnwrapOr(p1, p2) --[[ UnwrapOr | Line: 283 ]]
+	if p1:IsSome() then
+		return p1:Unwrap()
+	end
+
+	return p2
+end
+function t.UnwrapOrElse(p1, p2) --[[ UnwrapOrElse | Line: 297 ]]
+	if p1:IsSome() then
+		return p1:Unwrap()
+	end
+
+	return p2()
+end
+function t.And(p1, p2) --[[ And | Line: 323 | Upvalues: t (copy) ]]
+	if p1:IsSome() then
+		return p2
+	end
+
+	return t.None
+end
+function t.AndThen(p1, p2) --[[ AndThen | Line: 347 | Upvalues: t (copy) ]]
+	if p1:IsSome() then
+		local v1 = p2(p1:Unwrap())
+
+		t.Assert(v1)
+
+		return v1
+	end
+
+	return t.None
+end
+function t.Or(p1, p2) --[[ Or | Line: 362 ]]
+	if p1:IsSome() then
+		return p1
+	end
+
+	return p2
+end
+function t.OrElse(p1, p2) --[[ OrElse | Line: 376 | Upvalues: t (copy) ]]
+	if p1:IsSome() then
+		return p1
+	end
+
+	local v1 = p2()
+
+	t.Assert(v1)
+
+	return v1
+end
+function t.XOr(p1, p2) --[[ XOr | Line: 393 | Upvalues: t (copy) ]]
+	local v1 = p1:IsSome()
+
+	if v1 == p2:IsSome() then
+		return t.None
+	end
+
+	if v1 then
+		return p1
+	end
+
+	return p2
+end
+function t.Filter(p1, p2) --[[ Filter | Line: 411 | Upvalues: t (copy) ]]
+	if p1:IsNone() or not p2(p1._v) then
+		return t.None
+	end
+
+	return p1
+end
+function t.Contains(p1, p2) --[[ Contains | Line: 424 ]]
+	return p1:IsSome() and p1._v == p2
+end
+function t.__tostring(p1) --[[ __tostring | Line: 438 ]]
+	if p1:IsSome() then
+		return "Option<" .. typeof(p1._v) .. ">"
+	end
+
+	return "Option<None>"
+end
+function t.__eq(p1, p2) --[[ __eq | Line: 464 | Upvalues: t (copy) ]]
+	if not t.Is(p2) then
+		return false
+	end
+
+	if p1:IsSome() and p2:IsSome() then
+		return p1:Unwrap() == p2:Unwrap()
+	end
+
+	if p1:IsNone() and p2:IsNone() then
+		return true
+	end
+
+	return false
+end
+t.None = t._new()
+
+return t

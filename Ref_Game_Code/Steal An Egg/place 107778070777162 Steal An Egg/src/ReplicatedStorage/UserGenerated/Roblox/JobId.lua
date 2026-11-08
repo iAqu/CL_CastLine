@@ -1,0 +1,35 @@
+-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
+
+-- https://lua.expert
+
+local RunService = game:GetService("RunService")
+local HttpService = game:GetService("HttpService")
+local JobId = game.JobId
+
+if #JobId ~= 0 and JobId ~= "00000000-0000-0000-0000-000000000000" then
+    return JobId
+end
+
+assert(RunService:IsStudio())
+
+if RunService:IsServer() then
+    local v1 = HttpService:GenerateGUID(false):lower()
+
+    script:SetAttribute("Studio", v1)
+
+    return v1
+end
+
+local Studio
+
+while true do
+    Studio = script:GetAttribute("Studio")
+
+    if type(Studio) == "string" then
+        break
+    end
+
+    task.wait()
+end
+
+return Studio

@@ -1,0 +1,109 @@
+-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
+
+-- Bytecode (Base64):
+-- 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
+
+-- https://lua.expert/
+local Players = game:GetService("Players")
+local v1 = script.Parent
+local t = {
+	_connectionUtil = require(v1:WaitForChild("ConnectionUtil")).new(),
+	_boundEvents = {},
+	getLocalPlayer = function() --[[ getLocalPlayer | Line: 53 | Upvalues: Players (copy) ]]
+		return Players.LocalPlayer
+	end
+}
+
+function t.onLocalPlayer(p1) --[[ onLocalPlayer | Line: 57 | Upvalues: t (copy), Players (copy) ]]
+	local v1 = t.getLocalPlayer()
+
+	if v1 then
+		p1(v1)
+	end
+
+	t._connectionUtil:trackConnection("LOCAL_PLAYER", Players:GetPropertyChangedSignal("LocalPlayer"):Connect(function() --[[ Line: 66 | Upvalues: t (ref) ]]
+		local v1 = t.getLocalPlayer()
+
+		assert(v1)
+		t._getOrCreateBoundEvent("LOCAL_PLAYER"):Fire(v1)
+	end))
+
+	return t._getOrCreateBoundEvent("LOCAL_PLAYER").Event:Connect(p1)
+end
+function t.getCharacter() --[[ getCharacter | Line: 77 | Upvalues: t (copy) ]]
+	local v1 = t.getLocalPlayer()
+
+	if v1 then
+		return v1.Character
+	end
+
+	return nil
+end
+function t.onCharacter(p1) --[[ onCharacter | Line: 85 | Upvalues: t (copy) ]]
+	t._connectionUtil:trackConnection("ON_LOCAL_PLAYER", t.onLocalPlayer(function(p12) --[[ Line: 89 | Upvalues: t (ref), p1 (copy) ]]
+		local v1 = t.getCharacter()
+
+		if v1 then
+			p1(v1)
+		end
+
+		t._connectionUtil:trackConnection("CHARACTER_ADDED", p12.CharacterAdded:Connect(function(p1) --[[ Line: 98 | Upvalues: t (ref) ]]
+			assert(p1)
+			t._getOrCreateBoundEvent("CHARACTER_ADDED"):Fire(p1)
+		end))
+	end))
+
+	return t._getOrCreateBoundEvent("CHARACTER_ADDED").Event:Connect(p1)
+end
+function t.getChild(p1, p2) --[[ getChild | Line: 110 | Upvalues: t (copy) ]]
+	local v1 = t.getCharacter()
+
+	if not v1 then
+		return nil
+	end
+
+	local v2 = v1:FindFirstChild(p1)
+
+	if v2 and v2:IsA(p2) then
+		return v2
+	end
+
+	return nil
+end
+function t.onChild(p1, p2, p3) --[[ onChild | Line: 122 | Upvalues: t (copy) ]]
+	t._connectionUtil:trackConnection("ON_CHARACTER", t.onCharacter(function(p12) --[[ Line: 126 | Upvalues: t (ref), p1 (copy), p2 (copy), p3 (copy) ]]
+		local v1 = t.getChild(p1, p2)
+
+		if not v1 then
+			t._connectionUtil:trackConnection("CHARACTER_CHILD_ADDED", p12.ChildAdded:Connect(function(p13) --[[ Line: 135 | Upvalues: p1 (ref), p2 (ref), t (ref) ]]
+				if p13.Name ~= p1 or not p13:IsA(p2) then
+					return
+				end
+
+				t._getOrCreateBoundEvent("CHARACTER_CHILD_ADDED" .. p1 .. p2):Fire(p13)
+			end))
+
+			return
+		end
+
+		p3(v1)
+		t._connectionUtil:trackConnection("CHARACTER_CHILD_ADDED", p12.ChildAdded:Connect(function(p13) --[[ Line: 135 | Upvalues: p1 (ref), p2 (ref), t (ref) ]]
+			if p13.Name ~= p1 or not p13:IsA(p2) then
+				return
+			end
+
+			t._getOrCreateBoundEvent("CHARACTER_CHILD_ADDED" .. p1 .. p2):Fire(p13)
+		end))
+	end))
+
+	return t._getOrCreateBoundEvent("CHARACTER_CHILD_ADDED" .. p1 .. p2).Event:Connect(p3)
+end
+function t._getOrCreateBoundEvent(p1) --[[ _getOrCreateBoundEvent | Line: 149 | Upvalues: t (copy) ]]
+	if not t._boundEvents[p1] then
+		t._boundEvents[p1] = Instance.new("BindableEvent")
+	end
+
+	return t._boundEvents[p1]
+end
+
+return t

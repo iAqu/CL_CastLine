@@ -3,6 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Cast = require(ReplicatedStorage.Modules.FishingCastSequence)
 local Bite = require(ReplicatedStorage.Modules.FishingBiteSequence)
 local FishAnimation = require(ReplicatedStorage.Modules.FishAnimationController)
+local Audio = require(ReplicatedStorage.Modules.FishingAudio)
 local config = require(ReplicatedStorage.Modules.FishingConfig)
 local settings = config.Bite
 local originalFishName = settings.FishName
@@ -72,10 +73,19 @@ local ok, result = xpcall(function()
 		_nibbleRipple = function() end,
 		_nibbleFeedback = function() end,
 		_sound = function(self, name)
-			assert(name == "FishBite", "Unexpected bite cue")
+			assert(name == "FishBiteHeavey", "Unexpected bite cue")
 			self.biteCues = (self.biteCues or 0) + 1
 		end,
 	}, Cast)
+	owner.fishAudio = setmetatable({
+		Play = function(_, name)
+			if name == "FishBiteHeavey" then owner:_sound(name) end
+		end,
+		StartLoop = function() end,
+		StopLoop = function() end,
+		UpdateFlap = function() end,
+		Destroy = function() end,
+	}, Audio)
 	local function round(at, nibbles, sector)
 		owner:_startBiteRound(at)
 		local random = {
@@ -113,6 +123,16 @@ local ok, result = xpcall(function()
 		local bite = owner.bite
 		local mouth = bite.fish.PrimaryPart.CFrame:PointToWorldSpace(bite.mouthOffset * bite.scale)
 		assertShowcaseLine(mouth - Vector3.yAxis)
+	end
+	local function assertCaughtOutline(bite)
+		assert(
+			bite.highlight.Enabled and bite.highlight.Adornee == bite.fish
+				and bite.highlight.FillTransparency == 1
+				and bite.highlight.OutlineTransparency == 0
+				and bite.highlight.OutlineColor == Color3.new(0, 0, 0)
+				and bite.highlight.DepthMode == Enum.HighlightDepthMode.Occluded,
+			"Surfaced fish lost its occluded black outline"
+		)
 	end
 	local function fishCount()
 		local count = 0
@@ -475,6 +495,25 @@ local ok, result = xpcall(function()
 	round(3000)
 	local hookAt = 3000 + trueBite + 0.2
 	assert(owner:TryHook(hookAt), "True bite did not accept hook input")
+	local previousHighlight = settings.ShadowTransparency
+	for _, struggleElapsed in ipairs({ 0, 0.125, 0.25, 0.375, 0.5, 0.75 }) do
+		update(hookAt + struggleElapsed)
+		local bite = owner.bite
+		local progress = math.clamp(struggleElapsed / settings.Struggle.HighlightFadeTime, 0, 1)
+		local eased = progress * progress * (3 - 2 * progress)
+		local transparency = bite.highlight.FillTransparency
+		assert(
+			math.abs(transparency - (settings.ShadowTransparency + (1 - settings.ShadowTransparency) * eased)) < 1e-6
+				and bite.highlight.OutlineTransparency == transparency
+				and transparency >= previousHighlight,
+			"Struggle highlight did not fade smoothly"
+		)
+		assert(bite.highlight.Enabled == (progress < 1), "Struggle highlight fade endpoint is wrong")
+		for part, saved in pairs(bite.originals) do
+			assert(part.Transparency == saved.transparency, "Highlight fade hid the fish body")
+		end
+		previousHighlight = transparency
+	end
 	update(hookAt + 0.82)
 	local first = owner.bite.fish.PrimaryPart.Position
 	update(hookAt + 1.03)
@@ -501,6 +540,12 @@ local ok, result = xpcall(function()
 	-- 出水保持竖线，完全出水才恢复彩色；最终鱼头朝上。
 	local liftingAt = owner.bite.timeline.endsAt
 	update(liftingAt)
+	assert(
+		not owner.bite.highlight.Enabled
+			and owner.bite.highlight.FillTransparency == 1
+			and owner.bite.highlight.OutlineTransparency == 1,
+		"Highlight flashed back before the fish cleared the water"
+	)
 	assertFishShowcaseLine()
 	assert(
 		line.Attachment0 == topAttachment and body.TextureID == "" and bait.Transparency == 1,
@@ -514,6 +559,11 @@ local ok, result = xpcall(function()
 		local at = liftingAt + settings.LiftTime * index / 100
 		update(at)
 		owner:_updateCamera(at, 1 / 60)
+		if owner.bite.originalShown then
+			assertCaughtOutline(owner.bite)
+		else
+			assert(not owner.bite.highlight.Enabled, "Black outline appeared before the fish surfaced")
+		end
 		peakScale = math.max(peakScale, owner.bite.scale)
 		if index / 100 > settings.LiftFallEnd then
 			bounceHeight = math.max(bounceHeight, body.Position.Y - target.Y - settings.ShowcaseHeight)
@@ -525,6 +575,7 @@ local ok, result = xpcall(function()
 		assertFishShowcaseLine()
 	end
 	update(caughtAt + settings.ShowcaseHold)
+	assertCaughtOutline(owner.bite)
 	assertFishShowcaseLine()
 	local baseCaught = owner.bite:_basePose("Caught", settings.ShowcaseHold, target)
 	local showcaseMotion = settings.Motion.Secondary.Showcase
@@ -608,6 +659,7 @@ local ok, result = xpcall(function()
 		for index = 0, 60 do
 			local at = start + swaySettings.Duration * index / 60
 			update(at)
+			assertCaughtOutline(owner.bite)
 			owner:_updateCamera(at, 1 / 60)
 			local _, angle = restingFrame.Rotation:ToObjectSpace(body.CFrame.Rotation):ToAxisAngle()
 			maximum = math.max(maximum, math.abs(angle))
@@ -666,15 +718,44 @@ local ok, result = xpcall(function()
 		template.PrimaryPart.TextureID == originalTexture and template.PrimaryPart.Color == originalColor,
 		"Source fish appearance changed"
 	)
+	-- 单网格与多部件鱼都复用同一个模型级描边，出水前关闭，显色后保持。
+	for index, name in ipairs({ "ThresherShark", "YaoYu_04_00" }) do
+		settings.FishName = name
+		local at = 5000 + index * 100
+		round(at)
+		local bite = owner.bite
+		assert(owner:TryHook(at + trueBite + 0.2), "Outline validation fish did not hook")
+		local liftAt = bite.timeline.endsAt
+		update(liftAt)
+		assert(not bite.highlight.Enabled, "Outline validation fish showed black outline underwater")
+		for frame = 1, 60 do
+			update(liftAt + settings.LiftTime * frame / 60)
+			if bite.originalShown then
+				assertCaughtOutline(bite)
+			else
+				assert(not bite.highlight.Enabled, "Black outline preceded original appearance")
+			end
+		end
+		assertCaughtOutline(bite)
+		update(liftAt + settings.LiftTime + settings.ShowcaseHold)
+		assertCaughtOutline(bite)
+		bite:_appearance(false, true, 0, "Caught", 0)
+		assert(
+			not bite.highlight.Enabled and bite.highlight.OutlineTransparency == 1,
+			"Hidden original fish retained an outline"
+		)
+	end
+	local caughtHighlight = owner.bite.highlight
 	owner:Destroy()
 	owner:Destroy()
 	assert(
-		folder.Parent == nil and lineEnd.Parent == nil and lineTop.Parent == nil and body.Parent == nil,
+		folder.Parent == nil and lineEnd.Parent == nil and lineTop.Parent == nil and body.Parent == nil
+			and caughtHighlight.Parent == nil,
 		"Cleanup left fishing instances behind"
 	)
 	return {
 		passed = true,
-		checks = "three spawn sectors, Glass shadow render support and original material restoration, shared 30/60 fps appearance easing, escape fade endpoints, keyframe animation, actual size/fade/rise, bait outline/red fill, side contact, timeout retry, spr reel with continuous retargeting and physical settling, struggle shake, single exit impulse, sky spin/fall/bounce, camera tracking, three idle bursts, fixed mouth/focus/line, centered bait anchor, fish anchor one world stud below scaled mouth, landscape/portrait animation framing, cleanup",
+		checks = "three spawn sectors, Glass shadow render support and original material restoration, shared 30/60 fps appearance easing, escape fade endpoints, keyframe animation, actual size/fade/rise, bait outline/red fill, side contact, timeout retry, spr reel with continuous retargeting and physical settling, struggle shake, single exit impulse, sky spin/fall/bounce, camera tracking, three idle bursts, fixed mouth/focus/line, centered bait anchor, fish anchor one world stud below scaled mouth, landscape/portrait animation framing, single-mesh and multipart surfaced black outline, hidden outline and cleanup",
 	}
 end, debug.traceback)
 

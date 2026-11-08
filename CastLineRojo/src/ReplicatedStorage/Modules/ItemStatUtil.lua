@@ -1,3 +1,5 @@
+local RarityConfig = require(script.Parent.RarityConfig)
+
 local ItemStatUtil = {}
 
 export type ItemConfig = {
@@ -9,15 +11,11 @@ export type ItemConfig = {
 	SpecialLuckMult: number,
 }
 
-ItemStatUtil.RARITY_LUCK = {
-	Common = 1,
-	Uncommon = 1.6,
-	Rare = 2.6,
-	Epic = 4.2,
-	Legendary = 7,
-	Mythical = 12,
-	Secret = 20,
-}
+ItemStatUtil.RARITY_LUCK = {}
+for _, entry in ipairs(RarityConfig.List) do
+	ItemStatUtil.RARITY_LUCK[entry.Name] = entry.Luck
+end
+ItemStatUtil.RARITY_LUCK.Mythical = ItemStatUtil.RARITY_LUCK.Mythic
 
 local ITEM_LUCK_BASE = 0.00045
 local ITEM_LUCK_MIN_WEIGHT = 1
@@ -72,7 +70,7 @@ function ItemStatUtil.CalculateLuck(item: ItemConfig, actualWeight: number, cond
 	end
 	weight = math.clamp(weight, ITEM_LUCK_MIN_WEIGHT, ITEM_LUCK_MAX_WEIGHT)
 
-	local rarityLuck = ItemStatUtil.RARITY_LUCK[item.Rarity] or ItemStatUtil.RARITY_LUCK.Common
+	local rarityLuck = ItemStatUtil.RARITY_LUCK[RarityConfig.Normalize(item.Rarity)] or ItemStatUtil.RARITY_LUCK.Common
 	return rarityLuck
 		* math.sqrt(weight)
 		* getPositiveMultiplier(conditionLuckMult)

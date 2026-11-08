@@ -1,0 +1,47 @@
+-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
+
+-- Bytecode (Base64):
+-- CQMYCHRvbnVtYmVyBG1hdGgDYWJzBWZsb29yCHRvc3RyaW5nAS0Gc3RyaW5nBmZvcm1hdAQlLjJmBSUuMDAkAARnc3ViCmFiYnJldmlhdGUBSwFNAUIBVAJRYQJRaQJTeAJTcAJPYwJObwJEZQACCgEBAAAGAwAABQECT7s+AANSAgAApAECAAAAEECfAQICkAABAIwCAAC3AAIAAgAAAKkBAAGpAQEAuwIAA1IDAACkAgUAABAwgJ8CAgJSAAIAjALoA2AAEQACAAAAlQQABrsMBAKkAwgAABwwgJ8DAgK7PwMCpAIKAAAAkECfAgICDgEEAG8ECwBSBQIAcwMEBSsDAQBSAwIAggMCAIwCAACMA+gDfQMJAAAAAAD7BQAAHAQFAHgDBAxgAgQAAwAAAD4AAA2VAgIMSAD1/28DDgB9AwgAAAAAAPsFAAAcBAUAeAMEDGACAwADAAAAPgAADZUCAgykAxEAAEDwgG8EEgBSBQAAnwMDAm8GEwBvBxQAvAQDzBUAAACfBAQCUgMEAA4BAgBvBQsAZQABAG8FFABSBgMA+wgAAJUJAgyHBwgJcwQFB4IEAgAWAgAAAAAAAAAAAwEEAAAQQAMCAwMEABAwgAIAAAAAAADgPwMEBAAcMIADBQQAAJBAAwYCAAAAAAAA8D8CAAAAAABAj0ACKVyPwvU/j0ADBwMIBABA8IADCQMKAwsDDAAGDQEYAAAAAAAAAQAAAAABAAAAAAACAAABAAAAAAAAAAABAAAAAAAAAwEAAAAAAAAAAQH+BgAAAAAAAAABAQMAAAAAAQAAAAAAAQAAAAAAAAAAAAcAAAAADQAAAQIAFKMAAAD/AAAADAAAAG8BAABvAgEAbwMCAG8EAwBvBQQAbwYFAG8HBgBvCAcAbwkIAG8KCQBvCwoAbwwLAMUAAQ0BAAAAwAEMABIAAACCAQIADQMLAw4DDwMQAxEDEgMTAxQDFQMWAxcDGAYAAQABAAEYAAMAAAAAAAAAAAAAAAAAAAACABsBAAAAAAEN2kPTi8UDH7VkbzwQ5cOZfcJUpz8eKdI=
+
+-- https://lua.expert/
+local t = {
+	"",
+	"K",
+	"M",
+	"B",
+	"T",
+	"Qa",
+	"Qi",
+	"Sx",
+	"Sp",
+	"Oc",
+	"No",
+	"De"
+}
+
+return function(p1) --[[ abbreviate | Line: 6 | Upvalues: t (copy) ]]
+	local v1 = tonumber(p1) or 0
+	local v2 = v1 < 0
+	local v3 = math.abs(v1)
+
+	if v3 < 1000 then
+		local v5 = tostring((math.floor(v3 + 0.5)))
+
+		return v2 and "-" .. v5 or v5
+	end
+
+	v7 = v3
+	count = 0
+
+	while v7 >= 1000 and count < #t - 1 do
+		v7 = v7 / 1000
+		count = count + 1
+	end
+
+	if v7 >= 999.995 and count < #t - 1 then
+		v7 = v7 / 1000
+		count = count + 1
+	end
+
+	return (if v2 then "-" else "") .. string.format("%.2f", v7):gsub("%.00$", "") .. t[count + 1]
+end

@@ -1,0 +1,51 @@
+-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
+
+-- Bytecode (Base64):
+-- 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
+
+-- https://lua.expert/
+return function() --[[ Line: 1 ]]
+	local v1 = require(script.Parent)
+
+	it("Should be able to generate a Camera instance", function() --[[ Line: 4 | Upvalues: v1 (copy) ]]
+		expect(function() --[[ Line: 5 | Upvalues: v1 (ref) ]]
+			v1.new("Abc")
+		end).never.to.throw()
+		expect(function() --[[ Line: 9 | Upvalues: v1 (ref) ]]
+			v1.new()
+		end).to.throw()
+	end)
+	it("Should be able to detect a Camera instance", function() --[[ Line: 14 | Upvalues: v1 (copy) ]]
+		expect(v1.is((v1.new("Abcd")))).to.equal(true)
+	end)
+	describe("Camera Lifecycle methods", function() --[[ Line: 20 | Upvalues: v1 (copy) ]]
+		it("Should be able to invoke & run camera lifecycles", function() --[[ Line: 21 | Upvalues: v1 (ref) ]]
+			local v12 = v1.new("Abcde")
+			local v2 = false
+
+			function v12.abc(p1) --[[ abc | Line: 25 | Upvalues: v2 (ref) ]]
+				v2 = true
+			end
+			v12:InvokeLifecycleMethod("abc")
+			expect(v2).to.equal(true)
+		end)
+		it("Should be able to invoke & run camera lifecycles with varadic parameters", function() --[[ Line: 34 | Upvalues: v1 (ref) ]]
+			local v12 = v1.new("Abcdef")
+			local v2 = false
+
+			function v12.abc(p1, p2) --[[ abc | Line: 38 | Upvalues: v2 (ref) ]]
+				v2 = p2
+			end
+			v12:InvokeLifecycleMethod("abc", true)
+			expect(v2).to.equal(true)
+		end)
+		it("Should be able to return the result of a lifecycle", function() --[[ Line: 47 | Upvalues: v1 (ref) ]]
+			local v12 = v1.new("Abcdefg")
+
+			function v12.abc(p1, p2) --[[ abc | Line: 50 ]]
+				return p2
+			end
+			expect(v12:InvokeLifecycleMethod("abc", true)).to.equal(true)
+		end)
+	end)
+end

@@ -1,3 +1,5 @@
+local RarityConfig = require(script.Parent.RarityConfig)
+
 local RarityRevealConfig = {}
 
 export type RevealStyle = {
@@ -92,7 +94,7 @@ local STYLES: { [string]: RevealStyle } = {
 		flashBrightness = 0.48,
 		soundPlaybackSpeed = 1.17,
 	},
-	Mythical = {
+	Mythic = {
 		minBeams = 7,
 		maxBeams = 9,
 		minHeight = 17,
@@ -124,18 +126,14 @@ local STYLES: { [string]: RevealStyle } = {
 	},
 }
 
-local RARITY_RANKS = {
-	Common = 1,
-	Uncommon = 2,
-	Rare = 3,
-	Epic = 4,
-	Legendary = 5,
-	Mythical = 6,
-	Secret = 7,
-}
+for _, entry in ipairs(RarityConfig.List) do
+	if not STYLES[entry.Name] then
+		STYLES[entry.Name] = table.clone(STYLES.Secret)
+	end
+end
 
 function RarityRevealConfig.ResolveRarity(rarity: string?): string
-	local candidate = rarity or ""
+	local candidate = RarityConfig.Normalize(rarity)
 	return if STYLES[candidate] then candidate else "Common"
 end
 
@@ -144,7 +142,7 @@ function RarityRevealConfig.GetStyle(rarity: string?): RevealStyle
 end
 
 function RarityRevealConfig.GetRank(rarity: string?): number
-	return RARITY_RANKS[RarityRevealConfig.ResolveRarity(rarity)] or RARITY_RANKS.Common
+	return RarityConfig.Get(rarity).Index
 end
 
 function RarityRevealConfig.GetSizeScale(bounds: Vector3?): number

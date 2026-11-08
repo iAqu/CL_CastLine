@@ -1,0 +1,125 @@
+-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
+
+-- Bytecode (Base64):
+-- CQNLAzk5KwRUZXh0CFRleHRTaXplDGdldEljb25CeVVJRA1wYXJlbnRJY29uVUlEDWRyb3Bkb3duSWNvbnMJbWVudUljb25zCmlzU2VsZWN0ZWQKc2V0VmlzaWJsZQ1Ob3RpY2VIYW5kbGVyBEZpcmUNbm90aWNlQ2hhbmdlZAx0b3RhbE5vdGljZXMMdXBkYXRlTm90aWNlB2Rlc3Ryb3kHbm90aWNlcwpkZXNlbGVjdGVkBm5vdGlmeQdqYW5pdG9yA25ldwNhZGQKZW5kTm90aWNlcwdDb25uZWN0C2dlbmVyYXRlVUlEDmNvbXBsZXRlU2lnbmFsEGNsZWFyTm90aWNlRXZlbnQLTm90aWNlTGFiZWwLZ2V0SW5zdGFuY2UIbm90aWZpZWQET25jZQhJbnN0YW5jZQVGcmFtZQZOb3RpY2UETmFtZQZaSW5kZXgERW51bQ1BdXRvbWF0aWNTaXplAVgGQ29sb3IzB2Zyb21SR0IMQm9yZGVyQ29sb3IzD0JvcmRlclNpemVQaXhlbBZCYWNrZ3JvdW5kVHJhbnNwYXJlbmN5EEJhY2tncm91bmRDb2xvcjMHVmlzaWJsZQZ3aWRnZXQGUGFyZW50CFVJQ29ybmVyBFVEaW0MQ29ybmVyUmFkaXVzCFVJU3Ryb2tlCVRleHRMYWJlbAdWZWN0b3IyC0FuY2hvclBvaW50BVVEaW0yBFNpemUIUG9zaXRpb24IRm9udFNpemUGU2l6ZTE0ClRleHRDb2xvcjMBMQtUZXh0V3JhcHBlZAhUZXh0V3JhcARGb250BUFyaWFsBnNjcmlwdAhQYWNrYWdlcwdyZXF1aXJlB0phbml0b3IKR29vZFNpZ25hbAdVdGlsaXR5DW5vdGljZVN0YXJ0ZWQSQ2xpcFRvSm9pbmVkUGFyZW50DFNldEF0dHJpYnV0ZQtjbGlwT3V0c2lkZQAICgEFAAAARCsAAQCCAAEAjAJjALcCAgAAAAAAqQEAAakBAQAOAQIAbwIAAGUAAQBSAgAA+wMAADACA/UBAAAADgEEAPsDAACMBAsAMAQDbgIAAACpAwEAjAQBAGAAAgAEAAAAqQMAAPsEAQBNBATbAwAAAPsFAgBNBQWIBAAAAJ8EAgKpBQEA+wcCAE0HB5YFAAAAHAYHAIwHAAC3BwoABgAAAPsHAgBNBweiBgAAABwG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
+
+-- https://lua.expert/
+return function(p1, p2) --[[ Line: 1 ]]
+	local Notice = Instance.new("Frame")
+
+	Notice.Name = "Notice"
+	Notice.ZIndex = 25
+	Notice.AutomaticSize = Enum.AutomaticSize.X
+	Notice.BorderColor3 = Color3.fromRGB(0, 0, 0)
+	Notice.BorderSizePixel = 0
+	Notice.BackgroundTransparency = 0.1
+	Notice.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	Notice.Visible = false
+	Notice.Parent = p1.widget
+
+	local UICorner = Instance.new("UICorner")
+
+	UICorner.CornerRadius = UDim.new(1, 0)
+	UICorner.Parent = Notice
+	Instance.new("UIStroke").Parent = Notice
+
+	local NoticeLabel = Instance.new("TextLabel")
+
+	NoticeLabel.Name = "NoticeLabel"
+	NoticeLabel.ZIndex = 26
+	NoticeLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+	NoticeLabel.AutomaticSize = Enum.AutomaticSize.X
+	NoticeLabel.Size = UDim2.new(1, 0, 1, 0)
+	NoticeLabel.BackgroundTransparency = 1
+	NoticeLabel.Position = UDim2.new(0.5, 0, 0.515, 0)
+	NoticeLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	NoticeLabel.FontSize = Enum.FontSize.Size14
+	NoticeLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
+	NoticeLabel.Text = "1"
+	NoticeLabel.TextWrapped = true
+	NoticeLabel.TextWrap = true
+	NoticeLabel.Font = Enum.Font.Arial
+	NoticeLabel.Parent = Notice
+
+	local v1 = script.Parent.Parent
+	local Packages = v1.Packages
+	local Janitor = require(Packages.Janitor)
+	local GoodSignal = require(Packages.GoodSignal)
+	local Utility = require(v1.Utility)
+
+	p1.noticeChanged:Connect(function(p12) --[[ Line: 43 | Upvalues: NoticeLabel (copy), p2 (copy), p1 (copy), Utility (copy), Notice (copy) ]]
+		if not p12 then
+			return
+		end
+
+		local v1 = p12 > 99
+
+		NoticeLabel.Text = if v1 then "99+" else p12
+
+		if v1 then
+			NoticeLabel.TextSize = 11
+		end
+
+		local v3 = not (p12 < 1)
+		local v4 = p2.getIconByUID(p1.parentIconUID)
+
+		if p1.isSelected and (if #p1.dropdownIcons > 0 then true else #p1.menuIcons > 0) or v4 and not v4.isSelected then
+			v3 = false
+		end
+
+		Utility.setVisible(Notice, v3, "NoticeHandler")
+	end)
+	p1.noticeStarted:Connect(function(p12, p22) --[[ Line: 71 | Upvalues: p1 (copy), p2 (copy), Janitor (copy), GoodSignal (copy), Utility (copy) ]]
+		if not p12 then
+			p12 = p1.deselected
+		end
+
+		local v1 = p2.getIconByUID(p1.parentIconUID)
+
+		if v1 then
+			v1:notify(p12)
+		end
+
+		local v2 = p1.janitor:add(Janitor.new())
+		local v3 = v2:add(GoodSignal.new())
+
+		v2:add(p1.endNotices:Connect(function() --[[ Line: 83 | Upvalues: v3 (copy) ]]
+			v3:Fire()
+		end))
+		v2:add(p12:Connect(function() --[[ Line: 86 | Upvalues: v3 (copy) ]]
+			v3:Fire()
+		end))
+
+		local v5 = p22 or Utility.generateUID()
+
+		p1.notices[v5] = {
+			completeSignal = v3,
+			clearNoticeEvent = p12
+		}
+		p1:getInstance("NoticeLabel")
+
+		local function updateNotice() --[[ updateNotice | Line: 95 | Upvalues: p1 (ref) ]]
+			p1.noticeChanged:Fire(p1.totalNotices)
+		end
+
+		p1.notified:Fire(v5)
+
+		local v6 = p1
+
+		v6.totalNotices = v6.totalNotices + 1
+		p1.noticeChanged:Fire(p1.totalNotices)
+		v3:Once(function() --[[ Line: 101 | Upvalues: v2 (copy), p1 (ref), v5 (ref) ]]
+			v2:destroy()
+
+			local v1 = p1
+
+			v1.totalNotices = v1.totalNotices - 1
+			p1.notices[v5] = nil
+			p1.noticeChanged:Fire(p1.totalNotices)
+		end)
+	end)
+	Notice:SetAttribute("ClipToJoinedParent", true)
+	p1:clipOutside(Notice)
+
+	return Notice
+end

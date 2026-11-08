@@ -99,3 +99,5 @@ FishAnimationController 优先读取模型动作，缺少单个动作时回退�
 - Studio Client 执行 `CastLineRojo/tests/studio/FishingDripEffect.lua` 遍历全部鱼，验证 48 个发射器、10 秒常态 80 颗、甩尾 10 颗、骨骼/缩放跟随和清理。Edit/Server 执行 `FishingDripAssets.lua` 审计两个资源目录。
 - 滴水粒子模板与调度参数保持现状；已目视检查 Clownfish、AngelShark 和 ThresherShark。错误日志和缺失滴水点警告均为 0。
 - 本次 Studio 备份：`ServerStorage.FishDripBackups.BeforeAllFishDrip_20261104_074253`。RBXM 导出前的文件副本见 `drip-validation.json` 的 previousFile。
+
+新增 race 批次的 25 条鱼及完整 53 种成品见 [Race/README.md](Race/README.md)。本页保留原 28 条制作记录。

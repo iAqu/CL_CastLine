@@ -1,0 +1,18 @@
+{
+  "selene": {
+    "errors": 0,
+    "warnings": 0,
+    "parseErrors": 0,
+    "robloxApiSource": "cached (API dump network unavailable)"
+  },
+  "tests": {
+    "run": 4,
+    "failures": 0,
+    "names": [
+      "FishAnimationController",
+      "FishingBiteSequence",
+      "FishingCastLifecycle",
+      "FishingTransition"
+    ]
+  }
+}

@@ -18,6 +18,7 @@ local function sound(volume, speed)
 end
 
 local sounds = { BGM_1 = sound(0.4, 1), OceanSound = sound(0.3, 0.8) }
+sounds.OceanSound.IsPlaying = true -- A Studio sound may already be playing when the controller starts.
 local playerData = { Settings = { Music = true } }
 local toggleMusic
 local warningCount = 0
@@ -50,8 +51,13 @@ setfenv(chunk, setmetatable({
 local controller = chunk()
 controller:KnitStart()
 assert(toggleMusic, "Music setting changes must be connected")
-assert(sounds.BGM_1.IsPlaying and sounds.OceanSound.IsPlaying, "Enabled audio must play both ambient sounds")
+assert(sounds.BGM_1.IsPlaying and not sounds.OceanSound.IsPlaying, "Only BGM may play before fishing starts")
 assert(sounds.BGM_1.Looped and sounds.OceanSound.Looped, "Both ambient sounds must loop")
+controller:RefreshAmbientAudio()
+assert(sounds.OceanSound.playCount == 0, "Refreshing outside fishing must not start ocean audio")
+controller:SetFishingActive(true)
+assert(sounds.BGM_1.IsPlaying and sounds.OceanSound.IsPlaying, "Entering fishing must start ocean audio")
+controller:SetFishingActive(true)
 controller:RefreshAmbientAudio()
 assert(sounds.BGM_1.playCount == 1 and sounds.OceanSound.playCount == 1, "Refreshing must not restart playing sounds")
 playerData.Settings.Music = false
@@ -61,8 +67,30 @@ playerData.Settings.Music = true
 toggleMusic()
 assert(sounds.BGM_1.IsPlaying and sounds.OceanSound.IsPlaying, "Re-enabling Music must restart both sounds")
 assert(sounds.OceanSound.Volume == 0.3 and sounds.OceanSound.PlaybackSpeed == 0.8, "Ocean audio must retain the Studio volume and speed")
+controller:SetFishingActive(false)
+assert(sounds.BGM_1.IsPlaying and not sounds.OceanSound.IsPlaying, "Leaving fishing must stop only ocean audio")
+playerData.Settings.Music = false
+toggleMusic()
+playerData.Settings.Music = true
+toggleMusic()
+assert(sounds.BGM_1.IsPlaying and not sounds.OceanSound.IsPlaying, "Enabling Music outside fishing must not start ocean audio")
+playerData.Settings.Music = false
+toggleMusic()
+local oceanPlayCount = sounds.OceanSound.playCount
+controller:SetFishingActive(true)
+assert(not sounds.OceanSound.IsPlaying and sounds.OceanSound.playCount == oceanPlayCount, "Entering fishing with Music off must stay silent")
+playerData.Settings.Music = true
+toggleMusic()
+assert(sounds.OceanSound.IsPlaying and sounds.OceanSound.playCount == oceanPlayCount + 1, "Re-entered fishing must resume ocean audio when Music is enabled")
+assert(sounds.OceanSound.Volume == 0.3 and sounds.OceanSound.PlaybackSpeed == 0.8, "Fishing and settings changes must preserve Studio audio properties")
 assert(warningCount == 0, "Valid audio must not produce missing-system warnings")
 
+playerData = nil
+controller:SetFishingActive(false)
+assert(not sounds.OceanSound.IsPlaying, "Leaving fishing must stop ocean audio even if player data is unavailable")
+assert(warningCount == 1, "Unavailable player data must keep the existing warning")
+playerData = { Settings = { Music = true } }
+warningCount = 0
 sounds.OceanSound = nil
 controller:RefreshAmbientAudio()
 controller:RefreshAmbientAudio()

@@ -7,7 +7,14 @@ end
 
 local config = assert(loadstring(read("src/ReplicatedStorage/Modules/FishingConfig.lua")))()
 local environment = setmetatable({
-	Enum = { Material = { Glass = "glass" } },
+	Enum = {
+		Material = { Glass = "glass" },
+		HighlightDepthMode = { Occluded = "occluded", AlwaysOnTop = "always-on-top" },
+	},
+	Color3 = {
+		new = function(r, g, b) return string.format("%g,%g,%g", r, g, b) end,
+		fromRGB = function(r, g, b) return string.format("%g,%g,%g", r / 255, g / 255, b / 255) end,
+	},
 	script = {
 		Parent = {
 			FishingConfig = "config",
@@ -133,7 +140,10 @@ local function appearanceProbe()
 		__newindex = function(_, key, value)
 			if key == "Enabled" and value then
 				assert(part.Transparency < 1, "Highlight enabled before the fish appearance was applied")
-				assert(highlightValues.FillTransparency < 1, "Highlight enabled with stale transparency")
+				assert(
+					highlightValues.FillTransparency < 1 or highlightValues.OutlineTransparency < 1,
+					"Highlight enabled with stale transparency"
+				)
 			end
 			highlightValues[key] = value
 		end,
@@ -170,6 +180,8 @@ for _, rate in ipairs({ 30, 60, 144 }) do
 			"Shadow fade lost shared easing"
 		)
 		assert(instance.highlight.OutlineTransparency == instance.highlight.FillTransparency, "Outline fade detached")
+		assert(instance.highlight.OutlineColor == environment.Color3.fromRGB(254, 254, 254), "Shadow outline changed")
+		assert(instance.highlight.DepthMode == "always-on-top", "Shadow depth mode changed")
 		assert(part.Transparency >= previous, "Fade reversed")
 		assert(instance.highlight.Enabled == (fade < 1), "Fully transparent shadow is still enabled")
 		assert(part.Material == (if fade < 1 then "glass" else "plastic"), "Shadow rendering material is wrong")
@@ -202,17 +214,70 @@ for _, rate in ipairs({ 30, 60, 144 }) do
 	)
 end
 do
+	local instance, part = appearanceProbe()
+	assert(settings.Struggle.HighlightFadeTime == 0.5, "Struggle highlight fade duration changed")
+	local previous = settings.ShadowTransparency
+	for _, elapsed in ipairs({ 0, 0.125, 0.25, 0.375, 0.5, 1, settings.StruggleTime }) do
+		instance:_appearance(true, false, 0, "Struggling", elapsed)
+		local progress = math.clamp(elapsed / settings.Struggle.HighlightFadeTime, 0, 1)
+		local eased = progress * progress * (3 - 2 * progress)
+		local transparency = instance.highlight.FillTransparency
+		assert(
+			math.abs(transparency - (settings.ShadowTransparency + (1 - settings.ShadowTransparency) * eased)) < 1e-9,
+			"Struggle highlight did not follow fade timing"
+		)
+		assert(transparency >= previous, "Struggle highlight fade reversed")
+		assert(instance.highlight.OutlineTransparency == transparency, "Struggle outline fade detached")
+		assert(instance.highlight.Enabled == (progress < 1), "Struggle highlight remained enabled after fade")
+		assert(part.Transparency == 0.2 and instance.appearanceFade == 0, "Struggle highlight fade hid fish geometry")
+		assert(part.Material == "glass" and part.MaterialVariant == "", "Highlight fade changed fish shadow material")
+		previous = transparency
+	end
+	-- 跨帧直接进入出水，尚未恢复原外观时也不能重新启用高亮。
+	instance = appearanceProbe()
+	instance:_appearance(true, false, 0, "Struggling", 0.1)
+	for _, phase in ipairs({ "Lifting", "Caught" }) do
+		instance:_appearance(true, false, 0, phase, 0)
+		assert(
+			not instance.highlight.Enabled
+				and instance.highlight.FillTransparency == 1
+				and instance.highlight.OutlineTransparency == 1,
+			"Highlight flashed back during lift or showcase"
+		)
+	end
+end
+do
 	local instance, part, surface, parent = appearanceProbe()
-	instance:_appearance(true, true, 0)
+	instance:_appearance(true, true, 0, "Lifting", 0.5)
 	assert(part.Color == "original" and part.TextureID == "fish-texture", "Original fish appearance was not restored")
 	assert(
 		part.Material == "plastic" and part.MaterialVariant == "fish-variant",
 		"Original fish material was not restored"
 	)
 	assert(surface.Parent == parent and instance.originalShown, "Original surface was not restored")
-	assert(not instance.highlight.Enabled and instance.highlight.FillTransparency == 1, "Original fish retained shadow")
-	instance:_appearance(true, true, 0)
+	assert(
+		instance.highlight.Enabled and instance.highlight.FillTransparency == 1
+			and instance.highlight.OutlineTransparency == 0 and instance.highlight.OutlineColor == "0,0,0"
+			and instance.highlight.DepthMode == "occluded",
+		"Surfaced fish did not switch to an occluded black outline"
+	)
+	instance:_appearance(true, true, 0, "Caught", 5)
 	assert(part.Transparency == 0.2 and surface.Parent == parent, "Original appearance was not stable")
+	assert(instance.highlight.Enabled and instance.highlight.OutlineTransparency == 0, "Showcase lost its outline")
+	for _, fade in ipairs({ 0.25, 0.5, 0.75, 1, 2, -1 }) do
+		instance:_appearance(true, true, fade, "Caught", 5)
+		local progress = math.clamp(fade, 0, 1)
+		local eased = progress * progress * (3 - 2 * progress)
+		assert(instance.highlight.OutlineTransparency == eased, "Caught outline did not follow fish fade")
+		assert(instance.highlight.Enabled == (progress < 1), "Invisible caught fish retained an outline")
+		assert(instance.highlight.FillTransparency == 1, "Caught outline filled the fish")
+		assert(part.Color == "original" and part.TextureID == "fish-texture", "Caught outline changed fish appearance")
+	end
+	instance:_appearance(false, true, 0, "Caught", 5)
+	assert(
+		part.Transparency == 1 and not instance.highlight.Enabled and instance.highlight.OutlineTransparency == 1,
+		"Hidden caught fish retained an outline"
+	)
 end
 
 local function timeline(count, delay, startedAt, readyAt)
@@ -458,17 +523,16 @@ end
 local sounds = 0
 local soundProbe = setmetatable(
 	{ owner = {
-		_sound = function(_, name)
-			assert(name == "FishBite")
+		fishAudio = { SetPhase = function(_, phase)
+			assert(phase == "Bite")
 			sounds += 1
-		end,
+		end },
 	} },
 	Bite
 )
 soundProbe:_biteSound()
 soundProbe:_biteSound()
 assert(sounds == 1, "Bite cue played twice")
-assert(config.Sounds.FishBite.Id == "rbxasset://sounds/impact_water.mp3")
 
 -- 相同种子完全复现，另一种子改变绕圈；帧采样不能推进随机序列。
 local function seeded(seed)

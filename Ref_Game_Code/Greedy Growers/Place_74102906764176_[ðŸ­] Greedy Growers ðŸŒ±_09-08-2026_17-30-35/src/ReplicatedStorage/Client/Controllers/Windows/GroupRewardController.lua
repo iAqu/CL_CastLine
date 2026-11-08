@@ -1,0 +1,90 @@
+-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
+
+-- Bytecode (Base64):
+-- CQM/Ekdyb3VwUmV3YXJkU2VydmljZQlJc0luR3JvdXAFYXdhaXQIX2luR3JvdXAOX3JlZnJlc2hCdXR0b24KVUlfTWFuYWdlcgdfd2luZG93Ck9wZW5XaW5kb3cEdGFzawVzcGF3bgRPcGVuDF9jbGFpbUJ1dHRvbhBCYWNrZ3JvdW5kQ29sb3IzC0Nsb3NlV2luZG93BUNsYWltC0xvY2FsUGxheWVyCVBsYXllckd1aQxXYWl0Rm9yQ2hpbGQHV2luZG93cwtHcm91cFJld2FyZANUb3AERXhpdAdWaXNpYmxlB0NvbnRlbnQITGVmdFNpZGUGUmV3YXJkBEljb24LR2V0Q2hpbGRyZW4JVGV4dExhYmVsA0lzQQRUZXh0A0JvdwRmaW5kCFJpY2hUZXh0P0ZSRUUgPGZvbnQgY29sb3I9InJnYigwLDE3MCwwKSI+UmFkaW9hY3RpdmU8L2ZvbnQ+IE9yYW5nZSBTZWVkIQtDbGFpbUJ1dHRvbgZCdXR0b24GQ29sb3IzA25ldwpBZGRTaGluZVYzBVVEaW0yElBBUlRJQ0xFX1RFTVBMQVRFUwdTUEFSS0xFBnpJbmRleAhlbV9kZWxheRJBZGRFbWl0dGVyVGVtcGxhdGUPQWRkQm91bmNlQnV0dG9uCUFjdGl2YXRlZAdDb25uZWN0CUtuaXRTdGFydA1HZXRDb250cm9sbGVyCkdldFNlcnZpY2UIS25pdEluaXQEZ2FtZQdQbGF5ZXJzEVJlcGxpY2F0ZWRTdG9yYWdlB3JlcXVpcmUIUGFja2FnZXMES25pdAdmcm9tUkdCEENyZWF0ZUNvbnRyb2xsZXIETmFtZRVHcm91cFJld2FyZENvbnRyb2xsZXIACAQAAQAAABf7AAAATQAAZAAAAAC8AACkAQAAAJ8AAgK8AAANAgAAAJ8AAgP7AgAAUgMAAA4DBAAqAQIAAQAAAKkDAAGpAwEAMAMCcgMAAAD7AgAAvAICqQQAAACfAgIBggABAAUDAQMCAwMDBAMFABQAARgAAAAAAAAAAAABAAAAAAAAAAABAAAAARUAAAAABAEAAAAADU0BAPIAAAAATQMApwEAAAC8AQGQAgAAAJ8BAwGkAQUAABAwgNkCAAASAAAAnwECAYIAAQAGAwYDBwMIAwkDCgQAEDCAAQARCwEYAAAAAAAAAAIAAAAA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
+
+-- https://lua.expert/
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Knit = require(ReplicatedStorage.Packages.Knit)
+local v1 = Color3.fromRGB(0, 170, 0)
+local v2 = Color3.fromRGB(150, 150, 150)
+local v3 = Knit.CreateController({
+	Name = "GroupRewardController"
+})
+
+function v3.Open(p1) --[[ Open | Line: 17 ]]
+	p1.UI_Manager:OpenWindow(p1._window)
+	task.spawn(function() --[[ Line: 20 | Upvalues: p1 (copy) ]]
+		local v1, v2 = p1.GroupRewardService:IsInGroup():await()
+
+		p1._inGroup = if v1 then v2 == true else v1
+		p1:_refreshButton()
+	end)
+end
+function v3._refreshButton(p1) --[[ _refreshButton | Line: 27 | Upvalues: v1 (copy), v2 (copy) ]]
+	local _claimButton = p1._claimButton
+
+	if not _claimButton then
+		return
+	end
+
+	_claimButton.BackgroundColor3 = p1._inGroup and v1 or v2
+end
+function v3.KnitStart(p1) --[[ KnitStart | Line: 33 | Upvalues: Players (copy) ]]
+	local GroupReward = Players.LocalPlayer:WaitForChild("PlayerGui"):WaitForChild("Windows"):WaitForChild("GroupReward")
+	local Exit = GroupReward.Top.Exit
+
+	p1._window = GroupReward
+	p1._inGroup = false
+	GroupReward.Visible = false
+
+	local Icon = GroupReward.Content.LeftSide.Reward.Icon
+
+	for v1, v2 in GroupReward.Content.LeftSide:GetChildren() do
+		if v2:IsA("TextLabel") and v2.Text:find("Bow") then
+			v2.RichText = true
+			v2.Text = "FREE <font color=\"rgb(0,170,0)\">Radioactive</font> Orange Seed!"
+		end
+	end
+
+	local Button = GroupReward.ClaimButton.Button
+
+	p1._claimButton = Button
+	p1:_refreshButton()
+	p1.UI_Manager:AddShineV3(Icon, 1.75, Color3.new(0/255, 255/255, 0/255))
+	p1.UI_Manager:AddEmitterTemplate(Icon, UDim2.new(0.5, 0, 0.5, 0), p1.UI_Manager.PARTICLE_TEMPLATES.SPARKLE, {
+		zIndex = 3,
+		em_delay = 0.3
+	})
+	p1.UI_Manager:AddBounceButton(Exit, 1.1, true)
+	Exit.Activated:Connect(function() --[[ Line: 70 | Upvalues: p1 (copy), GroupReward (copy) ]]
+		p1.UI_Manager:CloseWindow(GroupReward)
+	end)
+
+	local v3 = false
+
+	Button.Activated:Connect(function() --[[ Line: 75 | Upvalues: p1 (copy), v3 (ref), GroupReward (copy) ]]
+		if not p1._inGroup or v3 then
+			return
+		end
+
+		v3 = true
+
+		local v1, v2 = p1.GroupRewardService:Claim():await()
+
+		v3 = false
+
+		if not (v1 and v2) then
+			return
+		end
+
+		p1.UI_Manager:CloseWindow(GroupReward)
+	end)
+end
+function v3.KnitInit(p1) --[[ KnitInit | Line: 86 | Upvalues: Knit (copy) ]]
+	p1.UI_Manager = Knit.GetController("UI_Manager")
+	p1.GroupRewardService = Knit.GetService("GroupRewardService")
+end
+
+return v3

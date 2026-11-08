@@ -1,0 +1,176 @@
+-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
+
+-- Bytecode (Base64):
+-- CQNSA25ldwxzZXRtZXRhdGFibGUNcGFyZW50VUlGcmFtZQpqdW1wQnV0dG9uEWV4dGVybmFsbHlFbmFibGVkCWlzSnVtcGluZwdfYWN0aXZlD19jb25uZWN0aW9uVXRpbAt0b3VjaE9iamVjdAdWZWN0b3IyD0ltYWdlUmVjdE9mZnNldAZfcmVzZXQGQ3JlYXRlB1Zpc2libGUQSlVNUF9JTlBVVF9FTkRFRApJbnB1dEVuZGVkB0Nvbm5lY3QPdHJhY2tDb25uZWN0aW9uC01FTlVfT1BFTkVECk1lbnVPcGVuZWQKZGlzY29ubmVjdAxFbmFibGVCdXR0b24IZ2V0Q2hpbGQISHVtYW5vaWQMVXNlSnVtcFBvd2VyCUp1bXBQb3dlcgpKdW1wSGVpZ2h0BEVudW0RSHVtYW5vaWRTdGF0ZVR5cGUHSnVtcGluZw9HZXRTdGF0ZUVuYWJsZWQNVXBkYXRlRW5hYmxlZAZ1cGRhdGUTSFVNQU5PSURfSlVNUF9QT1dFUhhHZXRQcm9wZXJ0eUNoYW5nZWRTaWduYWwUSFVNQU5PSURfSlVNUF9IRUlHSFQeSFVNQU5PSURfU1RBVEVfRU5BQkxFRF9DSEFOR0VEE1N0YXRlRW5hYmxlZENoYW5nZWQHb25DaGlsZAhIVU1BTk9JRBRfc2V0dXBDb25maWd1cmF0aW9ucw1kaXNjb25uZWN0QWxsBkVuYWJsZQxBYnNvbHV0ZVNpemUBeAF5BG1hdGgDbWluBVVEaW0yBFNpemUIUG9zaXRpb24QUmVzaXplSnVtcEJ1dHRvbg1Vc2VySW5wdXRUeXBlBVRvdWNoDlVzZXJJbnB1dFN0YXRlBUJlZ2luB0Rlc3Ryb3kXYWJzb2x1dGVTaXplQ2hhbmdlZENvbm4KRGlzY29ubmVjdAhJbnN0YW5jZQtJbWFnZUJ1dHRvbgpKdW1wQnV0dG9uBE5hbWUWQmFja2dyb3VuZFRyYW5zcGFyZW5jeTVyYnhhc3NldDovL3RleHR1cmVzL3VpL0lucHV0L1RvdWNoQ29udHJvbHNTaGVldFYyLnBuZwVJbWFnZQ1JbWFnZVJlY3RTaXplCklucHV0QmVnYW4HY29ubmVjdAZQYXJlbnQEZ2FtZQdQbGF5ZXJzCkdldFNlcnZpY2UKR3VpU2VydmljZQZzY3JpcHQL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
+
+-- https://lua.expert/
+game:GetService("Players")
+
+local GuiService = game:GetService("GuiService")
+local CommonUtils = script.Parent.Parent:WaitForChild("CommonUtils")
+local ConnectionUtil = require(CommonUtils:WaitForChild("ConnectionUtil"))
+local CharacterUtil = require(CommonUtils:WaitForChild("CharacterUtil"))
+local BaseCharacterController = require(script.Parent:WaitForChild("BaseCharacterController"))
+local v1 = setmetatable({}, BaseCharacterController)
+
+v1.__index = v1
+function v1.new() --[[ new | Line: 51 | Upvalues: BaseCharacterController (copy), v1 (copy), ConnectionUtil (copy) ]]
+	local v3 = setmetatable(BaseCharacterController.new(), v1)
+
+	v3.parentUIFrame = nil
+	v3.jumpButton = nil
+	v3.externallyEnabled = false
+	v3.isJumping = false
+	v3._active = false
+	v3._connectionUtil = ConnectionUtil.new()
+
+	return v3
+end
+function v1._reset(p1) --[[ _reset | Line: 65 ]]
+	p1.isJumping = false
+	p1.touchObject = nil
+
+	if not p1.jumpButton then
+		return
+	end
+
+	p1.jumpButton.ImageRectOffset = Vector2.new(1, 146)
+end
+function v1.EnableButton(p1, p2) --[[ EnableButton | Line: 76 | Upvalues: GuiService (copy) ]]
+	if p2 == p1._active then
+		return
+	end
+
+	if p2 then
+		if not p1.jumpButton then
+			p1:Create()
+		end
+
+		p1.jumpButton.Visible = true
+		p1._connectionUtil:trackConnection("JUMP_INPUT_ENDED", p1.jumpButton.InputEnded:Connect(function(p12) --[[ Line: 91 | Upvalues: p1 (copy) ]]
+			if p12 ~= p1.touchObject then
+				return
+			end
+
+			p1:_reset()
+		end))
+		p1._connectionUtil:trackConnection("MENU_OPENED", GuiService.MenuOpened:Connect(function() --[[ Line: 101 | Upvalues: p1 (copy) ]]
+			if not p1.touchObject then
+				return
+			end
+
+			p1:_reset()
+		end))
+	else
+		if p1.jumpButton then
+			p1.jumpButton.Visible = false
+		end
+
+		p1._connectionUtil:disconnect("JUMP_INPUT_ENDED")
+		p1._connectionUtil:disconnect("MENU_OPENED")
+	end
+
+	p1:_reset()
+	p1._active = p2
+end
+function v1.UpdateEnabled(p1) --[[ UpdateEnabled | Line: 118 | Upvalues: CharacterUtil (copy) ]]
+	local v1 = CharacterUtil.getChild("Humanoid", "Humanoid")
+
+	if v1 and p1.externallyEnabled then
+		if not (v1.UseJumpPower and v1.JumpPower > 0) and (v1.UseJumpPower or not (v1.JumpHeight > 0)) then
+			p1:EnableButton(false)
+
+			return
+		end
+
+		if v1:GetStateEnabled(Enum.HumanoidStateType.Jumping) then
+			p1:EnableButton(true)
+
+			return
+		end
+	end
+
+	p1:EnableButton(false)
+end
+function v1._setupConfigurations(p1) --[[ _setupConfigurations | Line: 127 | Upvalues: CharacterUtil (copy) ]]
+	local function update() --[[ update | Line: 128 | Upvalues: p1 (copy) ]]
+		p1:UpdateEnabled()
+	end
+
+	p1._connectionUtil:trackConnection("HUMANOID", (CharacterUtil.onChild("Humanoid", "Humanoid", function(p12) --[[ Line: 133 | Upvalues: p1 (copy), update (copy) ]]
+		p1:UpdateEnabled()
+		p1:_reset()
+		p1._connectionUtil:trackConnection("HUMANOID_JUMP_POWER", p12:GetPropertyChangedSignal("JumpPower"):Connect(update))
+		p1._connectionUtil:trackConnection("HUMANOID_JUMP_HEIGHT", p12:GetPropertyChangedSignal("JumpHeight"):Connect(update))
+		p1._connectionUtil:trackConnection("HUMANOID_STATE_ENABLED_CHANGED", p12.StateEnabledChanged:Connect(function(p12, p2) --[[ Line: 146 | Upvalues: p1 (ref) ]]
+			if p12 ~= Enum.HumanoidStateType.Jumping or p2 == p1._active then
+				return
+			end
+
+			p1:UpdateEnabled()
+		end))
+	end)))
+end
+function v1.Enable(p1, p2, p3) --[[ Enable | Line: 158 ]]
+	if p3 then
+		p1.parentUIFrame = p3
+	end
+
+	if p1.externallyEnabled == p2 then
+		return
+	end
+
+	p1.externallyEnabled = p2
+	p1:UpdateEnabled()
+
+	if p2 then
+		p1:_setupConfigurations()
+	else
+		p1._connectionUtil:disconnectAll()
+	end
+end
+function v1.Create(p1) --[[ Create | Line: 175 ]]
+	if not p1.parentUIFrame then
+		return
+	end
+
+	if p1.jumpButton then
+		p1.jumpButton:Destroy()
+		p1.jumpButton = nil
+	end
+
+	if p1.absoluteSizeChangedConn then
+		p1.absoluteSizeChangedConn:Disconnect()
+		p1.absoluteSizeChangedConn = nil
+	end
+
+	p1.jumpButton = Instance.new("ImageButton")
+	p1.jumpButton.Name = "JumpButton"
+	p1.jumpButton.Visible = false
+	p1.jumpButton.BackgroundTransparency = 1
+	p1.jumpButton.Image = "rbxasset://textures/ui/Input/TouchControlsSheetV2.png"
+	p1.jumpButton.ImageRectOffset = Vector2.new(1, 146)
+	p1.jumpButton.ImageRectSize = Vector2.new(144, 144)
+
+	local function ResizeJumpButton() --[[ ResizeJumpButton | Line: 198 | Upvalues: p1 (copy) ]]
+		local v1 = math.min(p1.parentUIFrame.AbsoluteSize.x, p1.parentUIFrame.AbsoluteSize.y) <= 500
+		local v2 = if v1 then 70 else 120
+
+		p1.jumpButton.Size = UDim2.new(0, v2, 0, v2)
+		p1.jumpButton.Position = v1 and UDim2.new(1, -(v2 * 1.5 - 10), 1, -v2 - 20) or UDim2.new(1, -(v2 * 1.5 - 10), 1, -v2 * 1.75)
+	end
+
+	ResizeJumpButton()
+	p1.absoluteSizeChangedConn = p1.parentUIFrame:GetPropertyChangedSignal("AbsoluteSize"):Connect(ResizeJumpButton)
+	p1.touchObject = nil
+	p1.jumpButton.InputBegan:connect(function(p12) --[[ Line: 212 | Upvalues: p1 (copy) ]]
+		if not p1.touchObject and (p12.UserInputType == Enum.UserInputType.Touch and p12.UserInputState == Enum.UserInputState.Begin) then
+			p1.touchObject = p12
+			p1.jumpButton.ImageRectOffset = Vector2.new(146, 146)
+			p1.isJumping = true
+		end
+	end)
+	p1.jumpButton.Parent = p1.parentUIFrame
+end
+
+return v1

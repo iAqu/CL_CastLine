@@ -1,0 +1,197 @@
+-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
+
+-- Bytecode (Base64):
+-- CQNzEEFic29sdXRlUG9zaXRpb24MQWJzb2x1dGVTaXplAVgBWQ1pc1RvdWNoSW5zaWRlB1Zpc2libGUPR2VuTW9iaWxlQnV0dG9uD1VzZXJJbnB1dFBhcnNlcgxnZXRJbnB1dFR5cGULSU5QVVRfVFlQRVMGTU9CSUxFBHRhc2sFc3Bhd24TVXBkYXRlTW9iaWxlQnV0dG9ucw1Vc2VySW5wdXRUeXBlBEVudW0FVG91Y2gGQnV0dG9uCFBvc2l0aW9uBXByaW50ClBMQU5UIFRSRUUPVHJlZVBsYW50QnV0dG9uBEZpcmUJUGxhbnRUcmVlBlBhcmVudAAMUHJlc3NlZEltYWdlBU1vZGFsBkFjdGl2ZQRnYW1lEFVzZXJJbnB1dFNlcnZpY2UKR2V0U2VydmljZQpJbnB1dEJlZ2FuB0Nvbm5lY3QNUHJlcGFyZUJ1dHRvbhBJbnB1dFR5cGVDaGFuZ2VkDFNldHVwQnV0dG9ucxJNT0JJTEVfQlVUVE9OX0RBVEEEd2FybgdCVVRUT04gCyBOT1QgU0VUIFVQCVBsYXllckd1aQhUb3VjaEd1aQ5GaW5kRmlyc3RDaGlsZAR3YWl0DFdhaXRGb3JDaGlsZBFUb3VjaENvbnRyb2xGcmFtZQpKdW1wQnV0dG9uDUdldENvbnRyb2xsZXIKRGF0YUNsaWVudAtjdXJyZW50RGF0YQhTZXR0aW5ncwxNb2JpbGVPZmZzZXQHQnV0dG9ucwF4AXkFQ2xvbmUGc2NyaXB0BVVEaW0yA25ldwp4U2NhbGVTaXplCnlTY2FsZVNpemUEU2l6ZQx4T2Zmc2V0U2NhbGUMeU9mZnNldFNjYWxlBHRleHQJVGV4dExhYmVsBFRleHQFaW1hZ2UFSW1hZ2UGQ29sb3IzEEJhY2tncm91bmRDb2xvcjMWQmFja2dyb3VuZFRyYW5zcGFyZW5jeQhJbnN0YW5jZQhVSUNvcm5lcgRVRGltDENvcm5lclJhZGl1cxdnZXRDdXJyZW50TW9iaWxlQnV0dG9ucxBTZXRUcmVlUGxhY2VUZXh0E1NldFRyZWVQbGFjZVZpc2libGUJRVZfVVBEQVRFD0VWX0ZJUlNUX1VQREFURQRPbmNlCUtuaXRTdGFydApVSV9NYW5hZ2VyCEtuaXRJbml0ClJ1blNlcnZpY2URUmVwbGlj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
+
+-- https://lua.expert/
+game:GetService("RunService")
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Info = ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Info")
+
+ReplicatedStorage:WaitForChild("Client"):WaitForChild("Modules"):WaitForChild("Utility")
+
+local Effects = ReplicatedStorage:WaitForChild("Assets"):WaitForChild("Gui"):WaitForChild("Effects")
+local Constants = require(Info:WaitForChild("Constants"))
+local CustomEnum = require(Info:WaitForChild("CustomEnum"))
+
+require(Info:WaitForChild("Images"))
+
+local Knit = require(ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Knit"))
+local Signal = require(ReplicatedStorage:WaitForChild("Packages"):WaitForChild("Signal"))
+local v1 = Knit.CreateController({
+	Name = "MobileControls"
+})
+local LocalPlayer = game.Players.LocalPlayer
+
+require(LocalPlayer.PlayerScripts.PlayerModule)
+require(LocalPlayer.PlayerScripts.PlayerModule.ControlModule.TouchJump)
+
+local MobileButtons = LocalPlayer.PlayerGui:WaitForChild("MobileUI"):WaitForChild("MobileButtons")
+local ButtonTemplate = Effects:WaitForChild("ButtonTemplate")
+local t = {}
+local v2 = nil
+
+v1.TreePlantButton = Signal.new()
+
+local function isTouchInside(p1, p2) --[[ isTouchInside | Line: 41 ]]
+	local AbsolutePosition = p1.AbsolutePosition
+	local AbsoluteSize = p1.AbsoluteSize
+
+	return if p2.X >= AbsolutePosition.X and (p2.X <= AbsolutePosition.X + AbsoluteSize.X and p2.Y >= AbsolutePosition.Y) then p2.Y <= AbsolutePosition.Y + AbsoluteSize.Y else false
+end
+
+function v1.UpdateMobileButtons(p1) --[[ UpdateMobileButtons | Line: 50 | Upvalues: CustomEnum (copy), MobileButtons (copy), t (copy) ]]
+	local isMOBILE = p1.UserInputParser:getInputType() == CustomEnum.INPUT_TYPES.MOBILE
+
+	task.spawn(function() --[[ Line: 53 | Upvalues: isMOBILE (copy), MobileButtons (ref), t (ref), p1 (copy) ]]
+		if not isMOBILE then
+			MobileButtons.Visible = false
+
+			return
+		end
+
+		MobileButtons.Visible = true
+
+		for v1, v2 in t do
+			p1:GenMobileButton(v2, v1)
+		end
+	end)
+end
+function v1.SetupButtons(p1) --[[ SetupButtons | Line: 67 | Upvalues: MobileButtons (copy), t (copy), CustomEnum (copy) ]]
+	task.spawn(function() --[[ Line: 68 | Upvalues: p1 (copy), MobileButtons (ref), t (ref), CustomEnum (ref) ]]
+		local v1 = p1:GenMobileButton(nil, "PlantTree")
+
+		v1.Parent = MobileButtons
+		t.PlantTree = v1
+		v1.Button.PressedImage = ""
+		v1.Button.Modal = false
+		v1.Button.Active = false
+		game:GetService("UserInputService").InputBegan:Connect(function(p12, p2) --[[ Line: 77 | Upvalues: v1 (copy), p1 (ref) ]]
+			if p12.UserInputType ~= Enum.UserInputType.Touch or not v1.Visible then
+				return
+			end
+
+			local Button = v1.Button
+			local Position = p12.Position
+			local AbsolutePosition = Button.AbsolutePosition
+			local AbsoluteSize = Button.AbsoluteSize
+
+			if not (if Position.X >= AbsolutePosition.X and (Position.X <= AbsolutePosition.X + AbsoluteSize.X and Position.Y >= AbsolutePosition.Y) then Position.Y <= AbsolutePosition.Y + AbsoluteSize.Y else false) then
+				return
+			end
+
+			print("PLANT TREE")
+			p1.TreePlantButton:Fire()
+		end)
+		p1:PrepareButton(v1.Button)
+		v1.Visible = false
+		p1.UserInputParser.InputTypeChanged:Connect(function(p12) --[[ Line: 89 | Upvalues: CustomEnum (ref), p1 (ref) ]]
+			local _ = p12 == CustomEnum.INPUT_TYPES.MOBILE
+
+			p1:UpdateMobileButtons()
+		end)
+		p1:UpdateMobileButtons()
+	end)
+end
+function v1.GenMobileButton(p1, p2, p3) --[[ GenMobileButton | Line: 102 | Upvalues: Constants (copy), LocalPlayer (copy), Knit (copy), ButtonTemplate (copy), v2 (ref) ]]
+	if not Constants.MOBILE_BUTTON_DATA[p3] then
+		warn("BUTTON ", p3, " NOT SET UP")
+
+		return
+	end
+
+	local TouchGui = LocalPlayer.PlayerGui:FindFirstChild("TouchGui")
+
+	while not TouchGui do
+		local TouchGui2 = LocalPlayer.PlayerGui:FindFirstChild("TouchGui")
+
+		task.wait(1)
+		TouchGui = TouchGui2
+	end
+
+	local v1 = Constants.MOBILE_BUTTON_DATA[p3]
+	local JumpButton = LocalPlayer.PlayerGui:WaitForChild("TouchGui"):WaitForChild("TouchControlFrame"):WaitForChild("JumpButton")
+	local X2 = JumpButton.AbsoluteSize.X
+	local Y2 = JumpButton.AbsoluteSize.Y
+	local v4 = Knit.GetController("DataClient").currentData.Settings.MobileOffset.Buttons[p3] or {
+		x = 0,
+		y = 0
+	}
+	local v5
+
+	if p2 then
+		v5 = p2
+	else
+		local v6 = ButtonTemplate:Clone()
+
+		v6.Parent = script
+		v5 = v6
+	end
+
+	v5.Size = UDim2.new(0, X2 * v1.xScaleSize, 0, Y2 * v1.yScaleSize)
+	v5.Position = UDim2.new(0, JumpButton.AbsolutePosition.X + X2 / 2 + X2 * v1.xOffsetScale, 0, JumpButton.AbsolutePosition.Y + Y2 / 2 + Y2 * v1.yOffsetScale)
+
+	if v1.text then
+		v5.Button.TextLabel.Text = p3 == "PlantTree" and v2 or v1.text
+	end
+
+	v5.Button.Position = UDim2.new(0.5, v4.x, 0.5, v4.y)
+
+	if not p2 then
+		v5.Button.Image = v1.image
+		v5.Button.PressedImage = v1.image
+	end
+
+	return v5
+end
+function v1.PrepareButton(p1, p2) --[[ PrepareButton | Line: 156 ]]
+	p2.BackgroundColor3 = Color3.new(0/255, 0/255, 0/255)
+	p2.BackgroundTransparency = 0.35
+
+	local UICorner = Instance.new("UICorner")
+
+	UICorner.CornerRadius = UDim.new(0, 100)
+	UICorner.Parent = p2
+end
+function v1.getCurrentMobileButtons(p1) --[[ getCurrentMobileButtons | Line: 164 | Upvalues: t (copy) ]]
+	return t
+end
+function v1.SetTreePlaceText(p1, p2) --[[ SetTreePlaceText | Line: 168 | Upvalues: v2 (ref), t (copy) ]]
+	v2 = p2
+
+	local PlantTree = t.PlantTree
+	local v1 = if PlantTree then PlantTree.Button:FindFirstChild("TextLabel") else PlantTree
+
+	if not v1 then
+		return
+	end
+
+	v1.Text = p2
+end
+function v1.SetTreePlaceVisible(p1, p2) --[[ SetTreePlaceVisible | Line: 175 | Upvalues: t (copy) ]]
+	if not t.PlantTree then
+		return
+	end
+
+	t.PlantTree.Visible = p2
+end
+function v1.KnitStart(p1) --[[ KnitStart | Line: 181 | Upvalues: CustomEnum (copy) ]]
+	p1.DataClient.EV_UPDATE:Connect(function() --[[ Line: 183 | Upvalues: p1 (copy), CustomEnum (ref) ]]
+		if p1.UserInputParser:getInputType() ~= CustomEnum.INPUT_TYPES.MOBILE then
+			return
+		end
+
+		p1:UpdateMobileButtons()
+	end)
+	p1.DataClient.EV_FIRST_UPDATE:Once(function() --[[ Line: 189 | Upvalues: p1 (copy) ]]
+		p1:SetupButtons()
+	end)
+end
+function v1.KnitInit(p1) --[[ KnitInit | Line: 194 | Upvalues: Knit (copy) ]]
+	p1.DataClient = Knit.GetController("DataClient")
+	p1.UI_Manager = Knit.GetController("UI_Manager")
+	p1.UserInputParser = Knit.GetController("UserInputParser")
+end
+
+return v1

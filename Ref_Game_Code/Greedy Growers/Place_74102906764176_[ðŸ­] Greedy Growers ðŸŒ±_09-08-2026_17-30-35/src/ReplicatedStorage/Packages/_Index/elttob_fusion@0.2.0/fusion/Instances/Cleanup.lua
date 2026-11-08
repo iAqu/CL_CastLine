@@ -1,0 +1,16 @@
+-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
+
+-- Bytecode (Base64):
+-- CQMNBXRhYmxlBmluc2VydAVhcHBseQZzY3JpcHQGUGFyZW50B3JlcXVpcmUIUHViVHlwZXMKU3BlY2lhbEtleQR0eXBlB0NsZWFudXAEa2luZAhvYnNlcnZlcgVzdGFnZQACBwQAAAAJBgAABQQEDwcECJ40AwUBAAAAUgUDAFIGAQCkBAIAAAQAgJ8EAwGCAAEAAwMBAwIEAAQAgAAQAwEYAAAAAAAAAAERAAAAAAQAAAECABujAAAApAABAAAAAEBNAAAkAgAAAE0AACQCAAAApAEEAAAAMEBNAgCnBQAAAJ8BAgL/AgMAAAAAAG8DBgAwAwJxBwAAAG8DCAAwAwJdCQAAAG8DCgAwAwI+CwAAAMADDAAwAwLPDQAAAIICAgAOAwQEAAAAQAMFAwYEAAAwQAMHAwgDCQMKAwsDDAMNBgADAwEAAQABGAAHAAAAAAABAAAAAAIAAQAAAQAAAQAAAgAABAEAAAAAAeDmNvaL5PWiIb8ZWO5rNQGQ/iGC0iJc9w==
+
+-- https://lua.expert/
+require(script.Parent.Parent.PubTypes)
+
+return {
+	type = "SpecialKey",
+	kind = "Cleanup",
+	stage = "observer",
+	apply = function(p1, p2, p3, p4) --[[ apply | Line: 16 ]]
+		table.insert(p4, p2)
+	end
+}

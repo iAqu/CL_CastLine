@@ -1,0 +1,85 @@
+-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
+
+-- https://lua.expert
+
+local TestService = game:GetService("TestService")
+local TestEnum = require(script.Parent.Parent.TestEnum)
+local v1 = (" "):rep(3)
+local t1 = {
+    [TestEnum.TestStatus.Success] = "+",
+    [TestEnum.TestStatus.Failure] = "-",
+    [TestEnum.TestStatus.Skipped] = "~"
+}
+local t2 = {}
+
+local function reportNode(p1, p2, p3) -- line: 22
+    -- upvalues: TestEnum (copy), v1 (copy), t1 (copy), reportNode (copy)
+    p2 = p2 or {}
+    p3 = p3 or 0
+
+    if p1.status ~= TestEnum.TestStatus.Skipped then
+        local v4
+
+        if p1.status ~= TestEnum.TestStatus.Success then
+            local v5 = t1[p1.status] or "?"
+
+            v4 = ("%s[%s] %s"):format(v1:rep(p3), v5, p1.planNode.phrase)
+        end
+
+        table.insert(p2, v4)
+
+        for _, v6 in ipairs(p1.children) do
+            reportNode(v6, p2, p3 + 1)
+        end
+    end
+
+    return p2
+end
+
+local function reportRoot(p4) -- line: 47
+    -- upvalues: reportNode (copy)
+    local t3 = {}
+
+    for _, v7 in ipairs(p4.children) do
+        reportNode(v7, t3, 0)
+    end
+
+    return t3
+end
+
+local function report(p5) -- line: 57
+    -- upvalues: reportRoot (copy)
+    local v8 = reportRoot(p5)
+
+    return table.concat(v8, "\n")
+end
+
+function t2.report(p6) -- line: 63
+    -- upvalues: TestService (copy), reportRoot (copy)
+    local v9 = reportRoot(p6)
+    local t4 = {
+        "Test results:",
+        table.concat(v9, "\n"),
+        ("%d passed, %d failed, %d skipped"):format(p6.successCount, p6.failureCount, p6.skippedCount)
+    }
+
+    print(table.concat(t4, "\n"))
+
+    if p6.failureCount > 0 then
+        print(("%d test nodes reported failures."):format(p6.failureCount))
+    end
+
+    if not (#p6.errors > 0) then
+        return
+    end
+
+    print("Errors reported by tests:")
+    print("")
+
+    for _, v10 in ipairs(p6.errors) do
+        TestService:Error(v10)
+        print("")
+    end
+end
+
+return t2

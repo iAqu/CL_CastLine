@@ -1,0 +1,76 @@
+-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
+
+-- Bytecode (Base64):
+-- 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
+
+-- https://lua.expert/
+game:GetService("Players")
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+game:GetService("CollectionService")
+game:GetService("TweenService")
+
+local Knit = require(ReplicatedStorage.Packages.Knit)
+local Component = require(ReplicatedStorage.Packages.Component)
+local Maid = require(ReplicatedStorage.Packages.Maid)
+local ExpandedRarities = require(ReplicatedStorage.Shared.Info.ExpandedRarities)
+local UI_Manager = require(ReplicatedStorage.Client.Controllers.UI_Manager)
+local v1 = Component.new({
+	Tag = "ShinyTextLabel"
+})
+
+function v1.Start(p1) --[[ Start | Line: 17 | Upvalues: Knit (copy), Maid (copy), UI_Manager (copy), ExpandedRarities (copy) ]]
+	Knit.OnStart():await()
+	p1._maid = Maid.new()
+
+	local v1 = p1.Instance:GetAttribute("rarity")
+	local v2 = v1 == "CELESTIAL"
+	local v3 = if v1 == "SECRET" then true else false
+	local v4 = if v1 == "DIVINE" then true else false
+	local v5 = if v1 == "CHARGED" then true else false
+	local v6 = if v1 == "ANCIENT" then true else false
+	local v7 = if v1 == "TRANSCENDENT" then true else false
+
+	if v2 or (v3 or (v4 or (v5 or (v6 or v7)))) then
+		p1.Instance.TextColor3 = Color3.new(255/255, 255/255, 255/255)
+		p1.uiGradient = Instance.new("UIGradient", p1.Instance)
+
+		if v2 then
+			UI_Manager:SetupShinyGradient(p1.uiGradient, UI_Manager.GRADIENTS.CELESTIAL)
+		elseif v3 then
+			UI_Manager:SetupShinyGradient(p1.uiGradient, UI_Manager.GRADIENTS.SECRET)
+		elseif v4 then
+			UI_Manager:SetupShinyGradient(p1.uiGradient, UI_Manager.GRADIENTS.DIVINE)
+		elseif v5 then
+			UI_Manager:SetupShinyGradient(p1.uiGradient, UI_Manager.GRADIENTS.CHARGED)
+		elseif v6 then
+			UI_Manager:SetupRainbowShinyGradient(p1.uiGradient, 1, UI_Manager.GRADIENTS.ANCIENT)
+		elseif v7 then
+			UI_Manager:SetupRainbowShinyGradient(p1.uiGradient, 1, UI_Manager.GRADIENTS.TRANSCENDENT)
+		end
+	else
+		local v8 = ExpandedRarities[v1]
+
+		if v8 then
+			p1.Instance.TextColor3 = v8.mainColor
+		end
+	end
+
+	p1._maid:GiveTask(function() --[[ Line: 56 | Upvalues: p1 (copy), UI_Manager (ref) ]]
+		if not p1.uiGradient then
+			return
+		end
+
+		UI_Manager:RemoveShinyGradient(p1.uiGradient)
+	end)
+end
+function v1.Stop(p1) --[[ Stop | Line: 64 ]]
+	if not p1._maid then
+		return
+	end
+
+	p1._maid:Destroy()
+end
+
+return v1

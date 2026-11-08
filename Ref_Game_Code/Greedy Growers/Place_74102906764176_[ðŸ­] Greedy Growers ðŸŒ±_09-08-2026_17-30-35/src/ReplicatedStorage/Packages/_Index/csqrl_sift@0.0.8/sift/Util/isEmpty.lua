@@ -1,0 +1,11 @@
+-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
+
+-- Bytecode (Base64):
+-- CQMGBG5leHQHaXNFbXB0eQdyZXF1aXJlBnNjcmlwdAZQYXJlbnQFVHlwZXMAAgQBAAAAAAmkAgEAAAAAQFIDAACfAgICRwICAAAAAACpAQABqQEBAIIBAgACAwEEAAAAQAAWAgEYAAAAAAAAAAAAFwAAAAACAAABAgAOowAAAKQAAQAAAABApAEDAAAAIEBNAQEkBAAAAE0BASQEAAAATQEB7wUAAACfAAICwAEGAIIBAgAHAwMEAAAAQAMEBAAAIEADBQMGBgABAAEAARgAAQAAAAAAAAAAAAAUBAEAAAAAAQ==
+
+-- https://lua.expert/
+require(script.Parent.Parent.Types)
+
+return function(p1) --[[ isEmpty | Line: 22 ]]
+	return next(p1) == nil
+end

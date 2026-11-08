@@ -11,6 +11,7 @@ local AMBIENT_SOUND_NAMES = { "BGM_1", "OceanSound" }
 
 local MusicController = Knit.CreateController {
 	Name = "MusicController",
+	_FishingActive = false,
 	_MissingSoundWarnings = {},
 }
 
@@ -68,13 +69,21 @@ function MusicController:ApplyNormalAmbientState()
 	end
 
 	local oceanSound = self._OceanSound
-	if oceanSound and not oceanSound.IsPlaying then
+	if oceanSound and self._FishingActive and not oceanSound.IsPlaying then
 		oceanSound:Play()
 	end
 end
 
+function MusicController:SetFishingActive(active: boolean)
+	self._FishingActive = active
+	self:RefreshAmbientAudio()
+end
+
 function MusicController:RefreshAmbientAudio()
 	self:ResolveAmbientSounds()
+	if self._OceanSound and not self._FishingActive then
+		self._OceanSound:Stop()
+	end
 
 	local playerData = PlayerDataController:GetData()
 	if not playerData then

@@ -1,0 +1,25 @@
+-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
+
+-- Bytecode (Base64):
+-- CQMJDHNldG1ldGF0YWJsZQZDcmVhdGUHQ29ubmVjdAljb3JvdXRpbmUGY3JlYXRlBnJlc3VtZQRGaXJlB0Rlc3Ryb3kHX19pbmRleAAFBAEBAAAACf8CAAAAAAAA+wMAAJ49AgMDAAAApAEBAAAAAECfAQMCggECAAIDAQQAAABAAAYCARgAAAAAAAAAAAAHAAAAAAICAAAAAAL2AQAAggABAAAACgMBGAABCwAAAAAFAQABAAAOowEAABMBAAArAQEAggABAKQBAgAABACAEwIAAJ8BAgKkAgQAAAwAgFIDAQDdBAAAnwIAAYIAAQAFAwQDBQQABACAAwYEAAwAgAAOBwEYAAEAAAIAAAABAAAAAAEOAAAAAAIBAAAAAAPGAQAA9gEAAIIAAQAAABUIARgAAAEWAAAAAAIAAAECABOjAAAA/wAEAAAAAAAwAABuAAAAAMABAQASAAAAMAEAlgIAAADAAQMAMAEAxwQAAADAAQUAMAEA3QYAAADAAQcAMAEAUAgAAACCAAIACQMJBgADAgYBAwMGAgMHBgMDCAQAAQIDAQABGAACAAEAAgAAAAQAAAQAAAcAAAQBAAAAAASlKuPIswlxpnDia68yDB3w1TL0vJfuick=
+
+-- https://lua.expert/
+local t = {}
+
+t.__index = t
+function t.Create(p1) --[[ Create | Line: 6 | Upvalues: t (copy) ]]
+	return setmetatable({}, t)
+end
+function t.Connect(p1, p2) --[[ Connect | Line: 10 ]]
+	p1[1] = p2
+end
+function t.Fire(p1, ...) --[[ Fire | Line: 14 ]]
+	if p1[1] then
+		coroutine.resume(coroutine.create(p1[1]), ...)
+	end
+end
+function t.Destroy(p1) --[[ Destroy | Line: 21 ]]
+	p1[1] = nil
+end
+
+return t

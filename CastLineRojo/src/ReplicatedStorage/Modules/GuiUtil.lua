@@ -1,6 +1,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
+local RarityConfig = require(script.Parent.RarityConfig)
 
 local GuiUtil = {}
 
@@ -308,12 +309,24 @@ local function getColorSequenceColorAt(colorSequence: ColorSequence, time: numbe
 end
 
 function GuiUtil.GetRarityGradientColor(rarity: string?): Color3?
+	local entry = RarityConfig.ByName[RarityConfig.Normalize(rarity)]
+	if entry then
+		return entry.Color
+	end
 	local gradient = getRarityGradientTemplate(rarity)
 	return gradient and getColorSequenceColorAt(gradient.Color, 0.5) or nil
 end
 
 function GuiUtil.SetRarityGradient(parent: Instance, rarity: string?)
 	GuiUtil.ClearGradeint(parent)
+	local entry = RarityConfig.ByName[RarityConfig.Normalize(rarity)]
+	if entry then
+		local gradient = Instance.new("UIGradient")
+		gradient.Name = "UIGradient_" .. entry.Name
+		gradient.Color = entry.Gradient
+		gradient.Parent = parent
+		return
+	end
 	local gradient = getRarityGradientTemplate(rarity)
 	if not gradient then
 		return

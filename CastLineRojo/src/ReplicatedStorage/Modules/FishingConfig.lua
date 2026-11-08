@@ -219,6 +219,7 @@ return {
 		StruggleTime = 3,
 		Struggle = {
 			BlendTime = 0.2,
+			HighlightFadeTime = 0.5,
 			Speed = 2,
 			FeedbackFrequencyMin = 0.7,
 			FeedbackFrequencyMax = 1.1,
@@ -262,10 +263,8 @@ return {
 		Perfect = { Id = "rbxassetid://112485797063762", Volume = 0.5, Pitch = 1.3 },
 		CameraWhoosh = { Id = "rbxassetid://9126233950", Volume = 0.4 },
 		SpinWhoosh = { Id = "rbxassetid://134012322", Volume = 0.5 },
-		ThrowWhoosh = { Id = "rbxassetid://231731980", Volume = 0.85 },
 		WindLoop = { Id = "rbxassetid://3308152153", Volume = 0, Looped = true },
 		Splash = { Id = "rbxasset://sounds/impact_water.mp3", Volume = 0.8 },
-		FishBite = { Id = "rbxasset://sounds/impact_water.mp3", Volume = 1, Pitch = 0.65 },
 		FovImpact = { Id = "rbxassetid://9120705982", Volume = 0.5 },
 	},
 }

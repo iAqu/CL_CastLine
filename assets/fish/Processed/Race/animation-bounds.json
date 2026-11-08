@@ -1,0 +1,152 @@
+{
+  "1_\u9ca8\u9c7c_01_00": {
+    "measuredRadius": 8.131440537516145,
+    "presentationRadius": 8.94458459126776,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "1_\u9ca8\u9c7c_02_00": {
+    "measuredRadius": 6.18891093687699,
+    "presentationRadius": 6.80780203056469,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "1_\u9ca8\u9c7c_03_00": {
+    "measuredRadius": 8.312206596559953,
+    "presentationRadius": 9.143427256215949,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "1_\u9ca8\u9c7c_04_00": {
+    "measuredRadius": 12.445940249715704,
+    "presentationRadius": 13.690534274687275,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "HaiGui_01_00": {
+    "measuredRadius": 8.772972740243295,
+    "presentationRadius": 9.650270014267626,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "HaiGui_02_00": {
+    "measuredRadius": 8.945602481839419,
+    "presentationRadius": 9.840162730023362,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "HaiGui_03_00": {
+    "measuredRadius": 8.919519148894654,
+    "presentationRadius": 9.81147106378412,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "HaiGui_04_00": {
+    "measuredRadius": 10.759747690576054,
+    "presentationRadius": 11.83572245963366,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "HaiMan_01_00": {
+    "measuredRadius": 16.3337144547716,
+    "presentationRadius": 17.96708590024876,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "SXYu_01_00": {
+    "measuredRadius": 9.22751184242086,
+    "presentationRadius": 10.150263026662946,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "YaoYu_01_00": {
+    "measuredRadius": 7.574991110335774,
+    "presentationRadius": 8.332490221369353,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "YaoYu_02_00": {
+    "measuredRadius": 8.753956466915474,
+    "presentationRadius": 9.629352113607021,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "YaoYu_03_00": {
+    "measuredRadius": 10.463847248157245,
+    "presentationRadius": 11.51023197297297,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "YaoYu_04_00": {
+    "measuredRadius": 13.16119214977416,
+    "presentationRadius": 14.477311364751579,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "YouYu_01_00": {
+    "measuredRadius": 10.151403489261249,
+    "presentationRadius": 11.166543838187375,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "YouYu_02_00": {
+    "measuredRadius": 15.054029829187643,
+    "presentationRadius": 16.559432812106408,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "\u4ed8\u8d39_01_00": {
+    "measuredRadius": 7.199626309688378,
+    "presentationRadius": 7.919588940657217,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "\u4ed8\u8d39_02_00": {
+    "measuredRadius": 7.35842481043949,
+    "presentationRadius": 8.09426729148344,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "\u4ed8\u8d39_03_00": {
+    "measuredRadius": 8.901611458695806,
+    "presentationRadius": 9.791772604565388,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "\u4ed8\u8d39_04_00": {
+    "measuredRadius": 8.529713168901994,
+    "presentationRadius": 9.382684485792193,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "\u521d\u59cb_00_00": {
+    "measuredRadius": 7.537057829455974,
+    "presentationRadius": 8.290763612401571,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "\u6d77\u8c5a1-0": {
+    "measuredRadius": 8.396120101221465,
+    "presentationRadius": 9.235732111343612,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "\u6d77\u8c5a2-0": {
+    "measuredRadius": 7.031515649969455,
+    "presentationRadius": 7.734667214966401,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "\u6d77\u8c5a3-0": {
+    "measuredRadius": 6.917722565356937,
+    "presentationRadius": 7.609494821892631,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "\u6d77\u8c5a4-0": {
+    "measuredRadius": 7.112835283036366,
+    "presentationRadius": 7.8241188113400035,
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  }
+}

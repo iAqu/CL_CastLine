@@ -1,0 +1,320 @@
+-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
+
+-- https://lua.expert
+
+local t1 = {}
+local t2 = {
+    to = true,
+    be = true,
+    been = true,
+    have = true,
+    was = true,
+    at = true
+}
+local t3 = {
+    never = true
+}
+
+local function assertLevel(p1, p2, p3) -- line: 42
+    p2 = p2 or "Assertion failed!"
+    p3 = p3 or 1
+
+    if not p1 then
+        error(p2, p3 + 1)
+    end
+end
+
+local function bindSelf(p4, p5) -- line: 54
+    return function(p6, ...) -- line: 55
+        -- upvalues: p4 (copy), p5 (copy)
+        if p6 == p4 then
+            return p5(p4, ...)
+        end
+
+        return p5(p4, p6, ...)
+    end
+end
+
+local function formatMessage(p7, p8, p9) -- line: 64
+    if p7 then
+        return p8
+    end
+
+    return p9
+end
+
+function t1.new(p10) -- line: 75
+    -- upvalues: t1 (copy)
+    local t4 = {
+        successCondition = true,
+        condition = false,
+        value = p10,
+        matchers = {},
+        _boundMatchers = {}
+    }
+
+    setmetatable(t4, t1)
+
+    local a = t4.a
+
+    t4.a = function(p11, ...) -- line: 55
+        -- upvalues: t4 (copy), a (copy)
+        if p11 == t4 then
+            return a(t4, ...)
+        end
+
+        return a(t4, p11, ...)
+    end
+
+    t4.an = t4.a
+
+    local ok = t4.ok
+
+    t4.ok = function(p12, ...) -- line: 55
+        -- upvalues: t4 (copy), ok (copy)
+        if p12 == t4 then
+            return ok(t4, ...)
+        end
+
+        return ok(t4, p12, ...)
+    end
+
+    local equal = t4.equal
+
+    t4.equal = function(p13, ...) -- line: 55
+        -- upvalues: t4 (copy), equal (copy)
+        if p13 == t4 then
+            return equal(t4, ...)
+        end
+
+        return equal(t4, p13, ...)
+    end
+
+    local throw = t4.throw
+
+    t4.throw = function(p14, ...) -- line: 55
+        -- upvalues: t4 (copy), throw (copy)
+        if p14 == t4 then
+            return throw(t4, ...)
+        end
+
+        return throw(t4, p14, ...)
+    end
+
+    local near = t4.near
+
+    t4.near = function(p15, ...) -- line: 55
+        -- upvalues: t4 (copy), near (copy)
+        if p15 == t4 then
+            return near(t4, ...)
+        end
+
+        return near(t4, p15, ...)
+    end
+
+    return t4
+end
+
+function t1.checkMatcherNameCollisions(p16) -- line: 96
+    -- upvalues: t1 (copy), t2 (copy), t3 (copy)
+    return not t2[p16] and not t3[p16] and not t1[p16]
+end
+
+function t1.extend(p17, p18) -- line: 104
+    p17.matchers = p18 or {}
+
+    for v3, v4 in pairs(p17.matchers) do
+        local _boundMatchers = p17._boundMatchers
+
+        local function v5(_, ...) -- line: 108
+            -- upvalues: p17 (copy), v4 (copy)
+            local v6 = v4(p17.value, ...)
+            local v7 = v6.pass == p17.successCondition
+            local v8 = v6.message or "Assertion failed!"
+            local n1 = 3
+
+            if not v7 then
+                error(v8, n1 + 1)
+            end
+
+            p17:_resetModifiers()
+
+            return p17
+        end
+
+        _boundMatchers[v3] = function(p20, ...) -- line: 55
+            -- upvalues: p17 (copy), v5 (copy)
+            if p20 == p17 then
+                return v5(p17, ...)
+            end
+
+            return v5(p17, p20, ...)
+        end
+    end
+
+    return p17
+end
+
+function t1.__index(p21, p22) -- line: 121
+    -- upvalues: t1 (copy), t2 (copy), t3 (copy)
+    if t2[p22] then
+        return p21
+    end
+
+    if t3[p22] then
+        local v9 = t1.new(p21.value):extend(p21.matchers)
+
+        v9.successCondition = not p21.successCondition
+
+        return v9
+    end
+
+    if p21._boundMatchers[p22] then
+        return p21._boundMatchers[p22]
+    end
+
+    return t1[p22]
+end
+
+function t1._resetModifiers(p23) -- line: 154
+    p23.successCondition = true
+end
+
+function t1.a(p24, p25) -- line: 163
+    local v10 = type(p24.value) == p25 == p24.successCondition
+    local successCondition = p24.successCondition
+    local v12 = ("Expected value of type %q, got value %q of type %s"):format(p25, tostring(p24.value), (type(p24.value)))
+    local v14 = ("Expected value not of type %q, got value %q of type %s"):format(p25, tostring(p24.value), (type(p24.value)))
+
+    if not successCondition then
+        v12 = v14
+    end
+
+    local v15 = v12 or "Assertion failed!"
+    local n2 = 3
+
+    if not v10 then
+        error(v15, n2 + 1)
+    end
+
+    p24:_resetModifiers()
+
+    return p24
+end
+
+t1.an = t1.a
+
+function t1.ok(p26) -- line: 188
+    local v16 = p26.value ~= nil == p26.successCondition
+    local successCondition = p26.successCondition
+    local v17 = ("Expected value %q to be non-nil"):format((tostring(p26.value)))
+    local v18 = ("Expected value %q to be nil"):format((tostring(p26.value)))
+
+    if not successCondition then
+        v17 = v18
+    end
+
+    local v19 = v17 or "Assertion failed!"
+    local n3 = 3
+
+    if not v16 then
+        error(v19, n3 + 1)
+    end
+
+    p26:_resetModifiers()
+
+    return p26
+end
+
+function t1.equal(p27, p28) -- line: 206
+    local v20 = p27.value == p28 == p27.successCondition
+    local successCondition = p27.successCondition
+    local v24 = ("Expected value %q (%s), got %q (%s) instead"):format(tostring(p28), type(p28), tostring(p27.value), (type(p27.value)))
+    local v25 = ("Expected anything but value %q (%s)"):format(tostring(p28), (type(p28)))
+
+    if not successCondition then
+        v24 = v25
+    end
+
+    local v26 = v24 or "Assertion failed!"
+    local n4 = 3
+
+    if not v20 then
+        error(v26, n4 + 1)
+    end
+
+    p27:_resetModifiers()
+
+    return p27
+end
+
+function t1.near(p29, p30, p31) -- line: 230
+    assert(type(p29.value) == "number", "Expectation value must be a number to use 'near'")
+    assert(type(p30) == "number", "otherValue must be a number")
+    assert(type(p31) == "number" or p31 == nil, "limit must be a number or nil")
+    p31 = p31 or 1E-07
+
+    local v32 = math.abs(p29.value - p30) <= p31 == p29.successCondition
+    local successCondition = p29.successCondition
+    local v33 = ("Expected value to be near %f (within %f) but got %f instead"):format(p30, p31, p29.value)
+    local v34 = ("Expected value to not be near %f (within %f) but got %f instead"):format(p30, p31, p29.value)
+
+    if not successCondition then
+        v33 = v34
+    end
+
+    local v35 = v33 or "Assertion failed!"
+    local n5 = 3
+
+    if not v32 then
+        error(v35, n5 + 1)
+    end
+
+    p29:_resetModifiers()
+
+    return p29
+end
+
+function t1.throw(p32, p33) -- line: 256
+    local value = p32.value
+    local ok, result = pcall(value)
+    local v36 = ok ~= p32.successCondition
+    local v37
+
+    if p33 then
+        if not ok then
+            v36 = if p32.successCondition then result:find(p33, 1, true) ~= nil else result:find(p33, 1, true) == nil
+        end
+
+        local successCondition = p32.successCondition
+
+        v37 = ("Expected function to throw an error containing %q, but it %s"):format(p33, result and ("threw: %s"):format(result) or "did not throw.")
+
+        local v38 = ("Expected function to never throw an error containing %q, but it threw: %s"):format(p33, (tostring(result)))
+
+        if not successCondition then
+            v37 = v38
+        end
+    else
+        local successCondition = p32.successCondition
+
+        v37 = ("Expected function to succeed, but it threw an error: %s"):format((tostring(result)))
+
+        if successCondition then
+            v37 = "Expected function to throw an error, but it did not throw."
+        end
+    end
+
+    local v39 = v37 or "Assertion failed!"
+    local n6 = 3
+
+    if not v36 then
+        error(v39, n6 + 1)
+    end
+
+    p32:_resetModifiers()
+
+    return p32
+end
+
+return t1

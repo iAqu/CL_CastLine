@@ -1,0 +1,393 @@
+-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
+
+-- Bytecode (Base64):
+-- CQNpBnR5cGVvZgZudW1iZXIDTWluCk5leHROdW1iZXIDTWF4E3JhbmRvbU51bWJlckluUmFuZ2UNbm9ybWFsaXplQm9vbAhJbnN0YW5jZQNuZXcKSW1hZ2VMYWJlbAdWZWN0b3IyC0FuY2hvclBvaW50FkJhY2tncm91bmRUcmFuc3BhcmVuY3kFVURpbTIIUG9zaXRpb24EbWF0aAZyYW5kb20FSW1hZ2ULSW1hZ2VDb2xvcjMIUm90YXRpb24GUGFyZW50BlpJbmRleAZvYmplY3QGb2dMaWZlBGxpZmUIcGFydFR5cGUHaW1nU3BpbgFZAVgDdmVsBWFjY2VsBmFuZ1ZlbAVhbmdsZQdhbmdEcmFnBnNocmluawRmYWRlBm9nU2l6ZQ5QQVJUSUNMRV9UWVBFUwREVVNUBFNpemUFU0hJTkUJVHdlZW5JbmZvBkNyZWF0ZQpjb2xvclR3ZWVuBFBsYXkEZW1pdAR0YXNrBHdhaXQEbWFpZAdEZXN0cm95B3RpbWVDb24KRGlzY29ubmVjdAVGcmFtZRJQYXJ0aWNsZXNDb250YWluZXIETmFtZQhlbV9kZWxheQNhbXQGaW1hZ2VzC3N0YXJ0Q29sb3JzCWVuZENvbG9ycwhsaWZlVGltZQ1pbWdEaXJlY3Rpb25zBHNpemUJeFZlbFJhbmdlCXlWZWxSYW5nZQZ6SW5kZXgLcGFydFBlckVtaXQGY2VudGVyDVJlbmRlclN0ZXBwZWQHQ29ubmVjdAhHaXZlVGFzawpBZGRFbWl0dGVyD2Rlc3Ryb3lQYXJ0aWNsZQNyYWQDY29zA3NpbhFJbWFnZVRyYW5zcGFyZW5jeQ1SZW1vdmVFbWl0dGVyElBBUlRJQ0xFX1RFTVBMQVRFUwtTQ1JBUF9CVVJTVAtOdW1iZXJSYW5nZQRCT0xUBVNDUkVXB1NQQVJLTEUMVFdJTktMRV9USElOBHdhcm4YaW52YWxpZCBlbWl0dGVyIHRlbXBsYXRlEkFkZEVtaXR0ZXJUZW1wbGF0ZQRnYW1lClJ1blNlcnZpY2UKR2V0U2VydmljZQxUd2VlblNlcnZpY2UGUmFuZG9tB3JlcXVpcmURUmVwbGljYXRlZFN0b3JhZ2UIUGFja2FnZXMETWFpZAZTaGFyZWQESW5mbwZJbWFnZXMKQ3VzdG9tRW51bQhUV0lO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
+
+-- https://lua.expert/
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local v1 = Random.new()
+local Maid = require(game.ReplicatedStorage.Packages.Maid)
+local Images = require(game.ReplicatedStorage.Shared.Info.Images)
+local CustomEnum = require(game.ReplicatedStorage.Shared.Info.CustomEnum)
+local t = {}
+local t2 = {}
+local v2 = 1
+local v3 = 1
+local t3 = { Images.TWINKLE1, Images.TWINKLE2, Images.TWINKLE3 }
+local DUST = CustomEnum.PARTICLE_TYPES.DUST
+local t4 = { Color3.new(255/255, 255/255, 255/255) }
+local t5 = { Color3.new(255/255, 255/255, 255/255) }
+local v4 = NumberRange.new(0.1, 1.5)
+local v5 = NumberRange.new(50, 100)
+local v6 = NumberRange.new(1, 360)
+local v7 = NumberRange.new(-300, 300)
+local v8 = Vector2.new(0, 0)
+local v9 = Vector2.new(0, 0)
+local v10 = NumberRange.new(3, 5)
+local v11 = NumberRange.new(1, 360)
+
+local function randomNumberInRange(p1) --[[ randomNumberInRange | Line: 37 | Upvalues: v1 (copy) ]]
+	if typeof(p1) == "number" then
+		return p1
+	end
+
+	return p1.Min + v1:NextNumber() * (p1.Max - p1.Min)
+end
+
+local function normalizeBool(p1, p2) --[[ normalizeBool | Line: 44 ]]
+	if p1 == nil then
+		return p2
+	end
+
+	return p1
+end
+
+return function(p1) --[[ Line: 49 | Upvalues: v2 (ref), t (copy), Maid (copy), v1 (copy), t3 (copy), DUST (copy), t4 (copy), t5 (copy), v4 (copy), v6 (copy), v5 (copy), v7 (copy), v8 (copy), v9 (copy), v10 (copy), v11 (copy), v3 (ref), t2 (copy), CustomEnum (copy), TweenService (copy), RunService (copy), Images (copy) ]]
+	function p1.AddEmitter(p1, p2, p3, p4) --[[ AddEmitter | Line: 55 | Upvalues: v2 (ref), t (ref), Maid (ref), v1 (ref), t3 (ref), DUST (ref), t4 (ref), t5 (ref), v4 (ref), v6 (ref), v5 (ref), v7 (ref), v8 (ref), v9 (ref), v10 (ref), v11 (ref), v3 (ref), t2 (ref), CustomEnum (ref), TweenService (ref), RunService (ref) ]]
+		local v12 = v2
+
+		v2 = v2 + 1
+		t[v12] = {}
+		t[v12].maid = Maid.new()
+
+		local ParticlesContainer = Instance.new("Frame")
+
+		ParticlesContainer.Name = "ParticlesContainer"
+		ParticlesContainer.Size = UDim2.new(1, 0, 1, 0)
+		ParticlesContainer.AnchorPoint = Vector2.new(0.5, 0.5)
+		ParticlesContainer.Position = p3
+		ParticlesContainer.BackgroundTransparency = 1
+		ParticlesContainer.ZIndex = 0
+		ParticlesContainer.Parent = p2
+
+		local v22 = p4.em_delay or 0.2
+		local v32 = p4.amt or nil
+
+		if v32 then
+			local v42 = v32
+
+			v32 = if typeof(v42) == "number" then v42 else v42.Min + v1:NextNumber() * (v42.Max - v42.Min)
+		end
+
+		local v52 = p4.images or t3
+		local v62 = p4.partType or DUST
+		local v72 = p4.startColors or t4
+		local v82 = p4.endColors or t5
+		local v92 = p4.lifeTime or v4
+		local v102 = p4.imgDirections or v6
+		local v112 = p4.size or v5
+		local v122 = p4.imgSpin or v7
+		local v13 = p4.vel or v8
+		local v14 = p4.xVelRange or nil
+		local v15 = p4.yVelRange or nil
+		local v16 = p4.accel or v9
+		local v17 = p4.angVel or v10
+		local v18 = p4.angle or v11
+		local v19 = p4.zIndex or 999999
+		local v20 = p4.angDrag or 0.98
+		local v21 = p4.partPerEmit or 1
+		local center = p4.center
+		local v222 = if center == nil then true else center
+		local shrink = p4.shrink
+		local v23 = if shrink == nil then true else shrink
+		local fade = p4.fade
+		local v24 = if fade == nil then true else fade
+
+		local function emit() --[[ emit | Line: 103 | Upvalues: v222 (copy), v1 (ref), v52 (copy), v72 (copy), v102 (copy), ParticlesContainer (copy), v19 (copy), v3 (ref), t2 (ref), v92 (copy), v62 (copy), v122 (copy), v14 (copy), v13 (ref), v15 (copy), v16 (copy), v17 (copy), v18 (copy), v20 (copy), v23 (copy), v24 (copy), v112 (copy), CustomEnum (ref), TweenService (ref), v82 (copy) ]]
+			local ImageLabel = Instance.new("ImageLabel")
+
+			ImageLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+			ImageLabel.BackgroundTransparency = 1
+
+			if v222 then
+				ImageLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
+			else
+				ImageLabel.Position = UDim2.new(v1:NextNumber(0, 1), 0, v1:NextNumber(0, 1), 0)
+			end
+
+			ImageLabel.Image = v52[math.random(1, #v52)]
+			ImageLabel.ImageColor3 = v72[math.random(1, #v72)]
+
+			local v12 = v102
+
+			ImageLabel.Rotation = if typeof(v12) == "number" then v12 else v12.Min + v1:NextNumber() * (v12.Max - v12.Min)
+			ImageLabel.Parent = ParticlesContainer
+			ImageLabel.ZIndex = v19
+
+			local v32 = v3
+
+			v3 = v3 + 1
+			t2[v32] = {}
+			t2[v32].object = ImageLabel
+
+			local v5 = v92
+
+			t2[v32].ogLife = if typeof(v5) == "number" then v5 else v5.Min + v1:NextNumber() * (v5.Max - v5.Min)
+			t2[v32].life = t2[v32].ogLife
+			t2[v32].partType = v62
+
+			local v8 = v122
+
+			t2[v32].imgSpin = if typeof(v8) == "number" then v8 else v8.Min + v1:NextNumber() * (v8.Max - v8.Min)
+
+			if v14 then
+				local v10 = Vector2.new
+				local v11 = v14
+
+				v13 = v10(if typeof(v11) == "number" then v11 else v11.Min + v1:NextNumber() * (v11.Max - v11.Min), v13.Y)
+			end
+
+			if v15 then
+				local v142 = v15
+
+				v13 = Vector2.new(v13.X, if typeof(v142) == "number" then v142 else v142.Min + v1:NextNumber() * (v142.Max - v142.Min))
+			end
+
+			t2[v32].vel = v13
+			t2[v32].accel = v16
+
+			local v172 = v17
+
+			t2[v32].angVel = if typeof(v172) == "number" then v172 else v172.Min + v1:NextNumber() * (v172.Max - v172.Min)
+
+			local v202 = v18
+
+			t2[v32].angle = if typeof(v202) == "number" then v202 else v202.Min + v1:NextNumber() * (v202.Max - v202.Min)
+			t2[v32].angDrag = v20
+			t2[v32].shrink = v23
+			t2[v32].fade = v24
+
+			local v232 = v112
+
+			t2[v32].ogSize = if typeof(v232) == "number" then v232 else v232.Min + v1:NextNumber() * (v232.Max - v232.Min)
+
+			if v62 == CustomEnum.PARTICLE_TYPES.DUST then
+				ImageLabel.Size = UDim2.new(0, t2[v32].ogSize, 0, t2[v32].ogSize)
+			elseif v62 == CustomEnum.PARTICLE_TYPES.SHINE then
+				ImageLabel.Size = UDim2.new(0, 0, 0, 0)
+			end
+
+			t2[v32].colorTween = TweenService:Create(ImageLabel, TweenInfo.new(t2[v32].life), {
+				ImageColor3 = v82[math.random(1, #v82)]
+			})
+			t2[v32].colorTween:Play()
+		end
+
+		local v25 = true
+		local v26 = false
+		local v27 = 0
+
+		t[v12].timeCon = RunService.RenderStepped:Connect(function(p1) --[[ Line: 172 | Upvalues: v26 (ref), v25 (ref), v27 (ref), v22 (copy), v21 (copy), emit (copy), v32 (ref), v92 (copy), t (ref), v12 (copy) ]]
+			if v26 then
+				return
+			end
+
+			if not v25 then
+				return
+			end
+
+			v27 = v27 + p1
+
+			if v27 < v22 then
+				return
+			end
+
+			v27 = 0
+			v26 = true
+
+			for i = 1, v21 do
+				emit()
+			end
+
+			if not v32 then
+				v26 = false
+
+				return
+			end
+
+			v32 = v32 - v21
+
+			if not (v32 < 1) then
+				v26 = false
+
+				return
+			end
+
+			v25 = false
+			task.wait(v92.Max)
+
+			if not (t[v12] and t[v12].maid) then
+				v26 = false
+
+				return
+			end
+
+			t[v12].maid:Destroy()
+			v26 = false
+		end)
+		t[v12].maid:GiveTask(function() --[[ Line: 201 | Upvalues: ParticlesContainer (copy), t (ref), v12 (copy) ]]
+			if ParticlesContainer then
+				ParticlesContainer:Destroy()
+			end
+
+			if not t[v12].timeCon then
+				return
+			end
+
+			t[v12].timeCon:Disconnect()
+		end)
+
+		return v12
+	end
+
+	local function destroyParticle(p1) --[[ destroyParticle | Line: 211 | Upvalues: t2 (ref) ]]
+		if not t2[p1] then
+			return
+		end
+
+		if t2[p1].object then
+			t2[p1].object:Destroy()
+		end
+
+		t2[p1] = nil
+	end
+
+	local v12 = 0
+
+	RunService.RenderStepped:Connect(function(p1) --[[ Line: 218 | Upvalues: v12 (ref), t2 (ref), CustomEnum (ref) ]]
+		v12 = v12 + 1
+
+		for v1, v2 in t2 do
+			local v3 = t2[v1].life / t2[v1].ogLife
+
+			if t2[v1].object then
+				local v4 = t2[v1]
+
+				v4.life = v4.life - p1
+
+				if t2[v1].life <= 0 then
+					if t2[v1] then
+						if t2[v1].object then
+							t2[v1].object:Destroy()
+						end
+
+						t2[v1] = nil
+					end
+
+					continue
+				end
+
+				if t2[v1].partType == CustomEnum.PARTICLE_TYPES.DUST then
+					local object = t2[v1].object
+
+					object.Rotation = object.Rotation + t2[v1].imgSpin * p1
+
+					local object2 = t2[v1].object
+
+					object2.Position = object2.Position + UDim2.new(0, t2[v1].vel.X * p1, 0, t2[v1].vel.Y * p1)
+
+					local v5 = t2[v1]
+
+					v5.vel = v5.vel + t2[v1].accel * p1
+
+					if t2[v1].angVel ~= 0 then
+						local object3 = t2[v1].object
+
+						object3.Position = object3.Position + UDim2.new(0, t2[v1].angVel * math.cos(math.rad(t2[v1].angle) * p1), 0, t2[v1].angVel * math.sin(math.rad(t2[v1].angle) * p1))
+
+						local v10 = t2[v1]
+
+						v10.angVel = v10.angVel * (t2[v1].angDrag * p1)
+					end
+
+					if t2[v1].shrink then
+						t2[v1].object.Size = UDim2.new(0, t2[v1].ogSize * v3, 0, t2[v1].ogSize * v3)
+					end
+
+					if t2[v1].fade then
+						t2[v1].object.ImageTransparency = 1 - v3
+					end
+
+					continue
+				end
+
+				if t2[v1].partType == CustomEnum.PARTICLE_TYPES.SHINE then
+					local v11 = if v3 < 0.5 then 2 * v3 else 2 * (1 - v3)
+
+					t2[v1].object.Size = UDim2.new(0, t2[v1].ogSize * v11, 0, t2[v1].ogSize * v11)
+					t2[v1].object.ImageTransparency = 0.2
+				end
+
+				continue
+			end
+
+			if t2[v1] then
+				if t2[v1].object then
+					t2[v1].object:Destroy()
+				end
+
+				t2[v1] = nil
+			end
+		end
+	end)
+	function p1.RemoveEmitter(p1, p2) --[[ RemoveEmitter | Line: 290 | Upvalues: t (ref) ]]
+		if not t[p2] then
+			return
+		end
+
+		t[p2].maid:Destroy()
+		t[p2] = nil
+	end
+	p1.PARTICLE_TEMPLATES = {
+		SCRAP_BURST = "SCRAP_BURST",
+		SPARKLE = "SPARKLE"
+	}
+	function p1.AddEmitterTemplate(p1, p2, p3, p4, p5) --[[ AddEmitterTemplate | Line: 302 | Upvalues: Images (ref), CustomEnum (ref) ]]
+		local v1
+
+		if p4 == p1.PARTICLE_TEMPLATES.SCRAP_BURST then
+			v1 = {
+				zIndex = 35,
+				center = true,
+				em_delay = 0,
+				amt = 10,
+				fade = false,
+				shrink = false,
+				angVel = NumberRange.new(0, 0),
+				xVelRange = NumberRange.new(-600, 600),
+				yVelRange = NumberRange.new(-450, -200),
+				accel = Vector2.new(0, 2000),
+				images = { Images.BOLT, Images.SCREW },
+				partType = CustomEnum.PARTICLE_TYPES.DUST,
+				imgDirections = NumberRange.new(0, 0),
+				lifeTime = NumberRange.new(1.5, 1.5),
+				size = NumberRange.new(30, 40)
+			}
+		else
+			if p4 ~= p1.PARTICLE_TEMPLATES.SPARKLE then
+				warn("invalid emitter template")
+
+				return
+			end
+
+			v1 = {
+				zIndex = 15,
+				center = false,
+				em_delay = 0.9,
+				angVel = NumberRange.new(0, 0),
+				images = { Images.TWINKLE_THIN },
+				partType = CustomEnum.PARTICLE_TYPES.SHINE,
+				imgDirections = NumberRange.new(0, 0),
+				lifeTime = NumberRange.new(0.3, 0.4),
+				size = NumberRange.new(30, 40)
+			}
+		end
+
+		for v2, v3 in p5 do
+			v1[v2] = v3
+		end
+
+		return p1:AddEmitter(p2, p3, v1)
+	end
+end

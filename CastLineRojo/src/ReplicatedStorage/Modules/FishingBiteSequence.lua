@@ -345,6 +345,9 @@ function FishingBiteSequence:TryHook(now)
 	end
 	local previous = self.timeline.phase
 	local hooked = self.timeline:TryHook(now)
+	if self.owner.fishAudio then
+		self.owner.fishAudio:SetPhase(self.timeline.phase)
+	end
 	if self.timeline.phase == "Reeling" and previous ~= "Reeling" then
 		local owner = self.owner
 		self.reelFrom = CFrame.new(-owner:_waterTarget()) * owner.bait.CFrame
@@ -356,14 +359,16 @@ function FishingBiteSequence:TryHook(now)
 		owner:_setPhase("Reeling")
 		owner:_waterFeedback(now, owner:_waterTarget(), 0.35, true)
 	end
-	self.owner:_presentBait(self.timeline.phase)
+	self.owner:_presentBait(self.timeline.phase, math.max(0, now - self.timeline.startedAt))
 	return hooked
 end
 
 function FishingBiteSequence:_biteSound()
 	if not self.biteSoundPlayed then
 		self.biteSoundPlayed = true
-		self.owner:_sound("FishBite")
+		if self.owner.fishAudio then
+			self.owner.fishAudio:SetPhase("Bite")
+		end
 	end
 end
 
@@ -386,14 +391,25 @@ function FishingBiteSequence:CanRetry(now)
 	return not self.destroyed and self.timeline:CanRetry(now)
 end
 
-function FishingBiteSequence:_appearance(visible, original, fade)
+function FishingBiteSequence:_appearance(visible, original, fade, phase, elapsed)
 	self.appearanceFade = if visible then math.clamp(fade, 0, 1) else 1
 	fade = if visible then smooth(fade) else 1
 	local shadow = visible and not original and fade < 1
+	-- 挣扎只淡出高亮，鱼身保持可见；出水前也保持淡出终点，避免阶段切换闪回。
+	local highlightFade = if phase == "Struggling"
+		then smooth(elapsed / Settings.Struggle.HighlightFadeTime)
+		elseif phase == "Lifting" or phase == "Caught" then 1
+		else 0
+	highlightFade = 1 - (1 - fade) * (1 - highlightFade)
 	self.highlight.FillTransparency = if shadow
-		then Settings.ShadowTransparency + (1 - Settings.ShadowTransparency) * fade
+		then Settings.ShadowTransparency + (1 - Settings.ShadowTransparency) * highlightFade
 		else 1
-	self.highlight.OutlineTransparency = self.highlight.FillTransparency
+	-- 出水显色后复用鱼影高亮，只保留遵循场景遮挡的黑色描边。
+	self.highlight.OutlineColor = if original then Color3.new(0, 0, 0) else Color3.fromRGB(254, 254, 254)
+	self.highlight.OutlineTransparency = if original then fade else self.highlight.FillTransparency
+	self.highlight.DepthMode = if original
+		then Enum.HighlightDepthMode.Occluded
+		else Enum.HighlightDepthMode.AlwaysOnTop
 	for part, saved in pairs(self.originals) do
 		-- Plastic 半透明网格会被 Highlight 排除；Glass 让填充和描边完整参与渐变。
 		-- 仅在可见鱼影阶段使用，隐藏和出水时恢复，避免全透明 Glass 残影。
@@ -414,7 +430,7 @@ function FishingBiteSequence:_appearance(visible, original, fade)
 		end
 	end
 	-- 外观就绪后再启用；完全淡出后关闭，避免首尾帧使用旧的填充/描边。
-	self.highlight.Enabled = shadow
+	self.highlight.Enabled = (visible and original and fade < 1) or (shadow and highlightFade < 1)
 end
 
 function FishingBiteSequence:_scaleAt(phase, elapsed)
@@ -798,6 +814,70 @@ function FishingBiteSequence:_pose(phase, elapsed, target, _now, request, camera
 	return frame, baitPosition, fade, baitRotation
 end
 
+function FishingBiteSequence:_createFishTrail()
+	self.fishTrailAttempted = true
+	local vfx = ReplicatedStorage:FindFirstChild("VFX")
+	local folder = vfx and vfx:FindFirstChild("Fish")
+	local template = folder and folder:FindFirstChild("FishTrail")
+	local source0 = template and template:FindFirstChild("Att0")
+	local source1 = template and template:FindFirstChild("Att1")
+	local sourceTrail = source0 and source0:FindFirstChild("Trail")
+	if not (
+		source0 and source0:IsA("Attachment") and source0.Archivable
+		and source1 and source1:IsA("Attachment") and source1.Archivable
+		and sourceTrail and sourceTrail:IsA("Trail") and sourceTrail.Archivable
+	) then
+		warn("FishingBiteSequence: VFX.Fish.FishTrail is missing or invalid; skipping fish trail")
+		return
+	end
+	-- originals 只包含鱼体可见部件；在主部件局部坐标测量，兼容宽鳍与多网格鱼。
+	local body = self.fish.PrimaryPart
+	local minX, maxX = math.huge, -math.huge
+	for part in pairs(self.originals) do
+		local relative = body.CFrame:ToObjectSpace(part.CFrame)
+		for _, x in ipairs({ -1, 1 }) do
+			for _, y in ipairs({ -1, 1 }) do
+				for _, z in ipairs({ -1, 1 }) do
+					local point = relative:PointToWorldSpace(part.Size * Vector3.new(x, y, z) * 0.5)
+					minX, maxX = math.min(minX, point.X), math.max(maxX, point.X)
+				end
+			end
+		end
+	end
+	if minX >= maxX then
+		warn("FishingBiteSequence: fish has no visible width; skipping fish trail")
+		return
+	end
+	local att0, att1 = source0:Clone(), source1:Clone()
+	local trail = att0.Trail
+	trail.Enabled = false
+	trail.Attachment0, trail.Attachment1 = att0, att1
+	-- 缓存未发生出水形变时的边界；每帧显式更新，避免与 ScaleTo 重复缩放。
+	self.fishTrail = {
+		att0 = att0, att1 = att1, trail = trail,
+		minX = minX / self.scale, maxX = maxX / self.scale,
+	}
+	att0.Position, att1.Position = Vector3.new(maxX, 0, 0), Vector3.new(minX, 0, 0)
+	att0.Parent, att1.Parent = body, body
+	trail:Clear()
+end
+
+function FishingBiteSequence:_updateFishTrail(phase)
+	if phase == "Lifting" and not self.fishTrailAttempted then
+		local waterY = WaterSurfaceUtil.GetWaterSurfaceY()
+		if waterY and self.fish.PrimaryPart.Position.Y >= waterY then
+			self:_createFishTrail()
+		end
+	end
+	local effect = self.fishTrail
+	if effect then
+		effect.att0.Position = Vector3.new(effect.maxX * self.scale, 0, 0)
+		effect.att1.Position = Vector3.new(effect.minX * self.scale, 0, 0)
+		-- 展示阶段只关闭生成，让最后一段拖尾按模板寿命自然消散。
+		effect.trail.Enabled = phase == "Lifting"
+	end
+end
+
 -- Update 先准备基础姿态供镜头取景；正式会话在镜头更新后调用 Present。
 function FishingBiteSequence:Present(cameraPosition)
 	self.presentationCamera = cameraPosition
@@ -810,6 +890,7 @@ function FishingBiteSequence:Present(cameraPosition)
 	local offset = CFrame.new(self.bodyOffset.Position * self.scale) * self.bodyOffset.Rotation
 	self.fish:PivotTo(frame * offset:Inverse())
 	self.displayFrame = frame
+	self:_updateFishTrail(pose.phase)
 	if pose.phase == "Lifting" and not self.rarityVFXPlayed then
 		self.rarityVFXPlayed = true
 		local center = self.fish:GetBoundingBox()
@@ -823,10 +904,13 @@ function FishingBiteSequence:Present(cameraPosition)
 	if pose.phase == "Caught" and not self.drip then
 		self.drip = FishDripEffect.new(self.fish)
 	end
+	local active = self.animation.active
+	local request = pose.request
+	local playing = active and request and active.name == request.name and active.token == request.token and active.track.IsPlaying
+	if self.owner.fishAudio then
+		self.owner.fishAudio:UpdateFlap(pose.phase, request, playing)
+	end
 	if self.drip then
-		local active = self.animation.active
-		local request = pose.request
-		local playing = active and request and active.token == request.token and active.track.IsPlaying
 		self.drip:Update(pose.phase, pose.elapsed, if playing then request else nil)
 	end
 	BaitElasticMotion.Apply(
@@ -837,6 +921,25 @@ function FishingBiteSequence:Present(cameraPosition)
 	self.linePosition = if pose.phase == "Lifting" or pose.phase == "Caught"
 		then frame:PointToWorldSpace(self.mouthOffset * self.scale) - Vector3.yAxis * Settings.ShowcaseLineMouthDrop
 		else nil
+end
+
+function FishingBiteSequence:_updateReelSurface(now, target)
+	if self.reelSurfaced or not self.reelMotion.lifting then
+		return
+	end
+	local waterY = assert(WaterSurfaceUtil.GetWaterSurfaceY(), "Workspace.Areas.Water.Top disappeared")
+	if target.Y + self.reelMotion.position.Y <= waterY then
+		return
+	end
+	-- 空收首次出水就提示失败，与附近鱼开始逃离使用同一个判断点。
+	-- 静音时也消费此事件，后续回弹或重新开启声音不能补播。
+	self.reelSurfaced = true
+	if self.owner.fishAudio then
+		self.owner.fishAudio:Play("FishFail")
+	end
+	if self.reelFish and not self.reelFish.startedAt then
+		self.reelFish.startedAt = now
+	end
 end
 
 function FishingBiteSequence:Update(now, deferPresentation)
@@ -858,14 +961,9 @@ function FishingBiteSequence:Update(now, deferPresentation)
 				FishingReelSpring.new(self.reelFrom.Position, BaitElasticMotion.BaseSize(owner).Y, timeline.startedAt)
 		end
 		local _, settled = self.reelMotion:Update(now)
+		self:_updateReelSurface(now, target)
 		local fish = self.reelFish
 		if fish then
-			if not fish.startedAt and self.reelMotion.lifting then
-				local waterY = assert(WaterSurfaceUtil.GetWaterSurfaceY(), "Workspace.Areas.Water.Top disappeared")
-				if target.Y + self.reelMotion.position.Y > waterY then
-					fish.startedAt = now
-				end
-			end
 			fish.elapsed = if fish.startedAt then math.max(0, now - fish.startedAt) else 0
 			fish.finished = fish.elapsed >= Settings.EscapeTime
 		end
@@ -879,13 +977,13 @@ function FishingBiteSequence:Update(now, deferPresentation)
 		self:_biteSound()
 		self:_trueBiteFeedback(now, target)
 	end
-	owner:_presentBait(phase)
 	local elapsed = math.max(0, now - timeline.startedAt)
+	owner:_presentBait(phase, elapsed)
 	if phase ~= self.lastPhase or timeline.startedAt ~= self.lastStartedAt then
 		if phase == "Escaped" then
 			self.escapeOffset = self.lastPosition and self.lastPosition - target
 		elseif phase == "Struggling" or phase == "Lifting" then
-			owner:_waterFeedback(now, target, 0.8, false)
+			owner:_waterFeedback(now, target, 0.8, false, phase == "Lifting")
 			if phase == "Lifting" then
 				local surface = target - Vector3.yAxis * BaitElasticMotion.BaseSize(owner).Y * 0.15
 				owner:_playWaterVFX(now, Config.WaterVFX.Exit, surface)
@@ -927,7 +1025,7 @@ function FishingBiteSequence:Update(now, deferPresentation)
 			visible = self.reelFish ~= nil and not self.reelFish.finished
 		end
 		local original = phase == "Caught" or (phase == "Lifting" and frame.Position.Y >= target.Y)
-		self:_appearance(visible, original, fade)
+		self:_appearance(visible, original, fade, phase, elapsed)
 		self.wasVisible = visible
 		if not deferPresentation then
 			self:Present(self.presentationCamera)
@@ -998,6 +1096,12 @@ function FishingBiteSequence:Destroy()
 		return
 	end
 	self.destroyed = true
+	if self.fishTrail then
+		self.fishTrail.trail.Enabled = false
+		self.fishTrail.trail:Clear()
+		self.fishTrail.att0:Destroy()
+		self.fishTrail.att1:Destroy()
+	end
 	if self.rarityVFX then
 		self.rarityVFX.model:Destroy()
 	end

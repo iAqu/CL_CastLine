@@ -36,6 +36,9 @@ local environment = setmetatable({
 		end,
 	},
 	UDim2 = {
+		fromScale = function(x, y)
+			return { X = x, Y = y }
+		end,
 		fromOffset = function(x, y)
 			return { X = x, Y = y }
 		end,
@@ -53,6 +56,32 @@ modules.math = assert(
 local Sequence = assert(
 	load(read("src/ReplicatedStorage/Modules/FishingCastSequence.lua"), "FishingCastSequence", "t", environment)
 )()
+
+-- 抛竿音跟随实际动画起播；动画未加载、前摇等待和重复帧不能提前或重复播放。
+do
+	local starts, cues, phases = 0, 0, {}
+	modules.rig.RestoreReadyPose = function() end
+	local probe = setmetatable({
+		phase = "Casting", castClickedAt = 0, rig = {},
+		track = { Length = 0, Play = function() starts += 1 end },
+		folder = { SetAttribute = function() end },
+		fishAudio = {
+			Play = function(_, name) assert(name == "FishingRodCast"); cues += 1 end,
+			SetPhase = function(_, phase) table.insert(phases, phase) end,
+		},
+	}, Sequence)
+	probe:_updateAction(0.1)
+	probe.track.Length = 3
+	probe:_updateAction(0.2)
+	assert(starts == 0 and cues == 0)
+	probe:_updateAction(modules.config.CastLeadTime)
+	probe:_updateAction(modules.config.CastLeadTime + 0.01)
+	assert(starts == 1 and cues == 1)
+	probe:_setPhase("Struggling")
+	probe:_setPhase("Struggling")
+	probe:_setPhase("Lifting")
+	assert(#phases == 2 and phases[1] == "Struggling" and phases[2] == "Lifting")
+end
 
 local attributes = {}
 local feedbackCount = 0
@@ -239,6 +268,8 @@ local function cleanupProbe(failStop)
 			end,
 		},
 		gui = {
+			Parent = true,
+			Enabled = true,
 			Destroy = function()
 				guiDestroyed += 1
 			end,
@@ -247,7 +278,7 @@ local function cleanupProbe(failStop)
 	instance:Destroy()
 	instance:Destroy()
 	assert(
-		stopped == 1 and folderDestroyed == 1 and guiDestroyed == 1,
+		stopped == 1 and folderDestroyed == 1 and guiDestroyed == 0 and not instance.gui.Enabled,
 		"Cleanup must be idempotent and survive an unavailable Animator"
 	)
 	if not failStop then
@@ -257,7 +288,76 @@ end
 cleanupProbe(false)
 cleanupProbe(true)
 
--- 独立咬钩提示沿用声音开关，静音时不创建或延迟补播。
+-- 复用同一预置 UI；每轮的状态变化与初始化失败均不能销毁它或污染下一轮。
+do
+	local function node(name, class, children)
+		local item = { Name = name, Parent = true, children = children or {} }
+		function item:IsA(kind)
+			return kind == class
+		end
+		function item:FindFirstChild(key)
+			return self.children[key]
+		end
+		function item:GetFullName()
+			return self.Name
+		end
+		return item
+	end
+	local function text(name)
+		local item = node(name, "TextLabel")
+		item.Text, item.Visible, item.TextTransparency, item.TextColor3 = name, false, 0.2, "studioColor"
+		item.Position, item.FontFace = "studioPosition", "studioFont"
+		return item
+	end
+	local gui = node("FishingSequenceGui", "ScreenGui", {
+		PerfectFlash = node("PerfectFlash", "Frame"),
+		TopBar = node("TopBar", "Frame"), BottomBar = node("BottomBar", "Frame"),
+		Distance = text("Distance"), ReturnPrompt = text("ReturnPrompt"),
+		CatchStatus = text("CatchStatus"), PowerPopup = text("PowerPopup"),
+	})
+	gui.children.PerfectFlash.BackgroundColor3, gui.children.PerfectFlash.BackgroundTransparency = "studioFlash", 1
+	gui.children.TopBar.Size, gui.children.BottomBar.Size = "studioTopSize", "studioBottomSize"
+	local popup = gui.children.PowerPopup
+	popup.children.UIStroke, popup.children.UIScale = node("UIStroke", "UIStroke"), node("UIScale", "UIScale")
+	popup.children.UIStroke.Transparency, popup.children.UIScale.Scale = 0.1, 1.1
+	local playerGui = node("PlayerGui", "PlayerGui", { FishingSequenceGui = gui })
+	local function create()
+		return setmetatable({ originals = {}, createdScales = {} }, Sequence)
+	end
+	for _ = 1, 2 do
+		local owner = create()
+		owner:_bindGui(playerGui)
+		assert(owner.gui == gui and not gui.Enabled and not owner.popup.Visible)
+		assert(owner.distanceLabel.Text == "0 STUDS" and owner.popupScale.Scale == 1)
+		assert(owner.popup.FontFace == "studioFont" and owner.distanceLabel.Position == "studioPosition")
+		gui.Enabled = true
+		for _, original in ipairs(owner.originals) do
+			original.instance[original.property] = "changedDuringRound"
+		end
+		owner:Destroy()
+		owner:Destroy()
+		assert(not gui.Enabled and gui.Parent, "Preset UI must stay available after cleanup")
+		for _, original in ipairs(owner.originals) do
+			assert(original.instance[original.property] == original.value, "Presentation state leaked into the next round")
+		end
+	end
+	for _, replacement in ipairs({ false, node("UIScale", "Frame") }) do
+		local scale = popup.children.UIScale
+		popup.children.UIScale = replacement or nil
+		local owner = create()
+		local ok, err = pcall(owner._bindGui, owner, playerGui)
+		assert(not ok and string.find(err, "PowerPopup.UIScale", 1, true), "Invalid preset must fail with its path")
+		owner:Destroy()
+		assert(gui.Parent and not gui.Enabled, "Partial binding must leave the preset hidden and intact")
+		popup.children.UIScale = scale
+	end
+	local owner = create()
+	playerGui.children.FishingSequenceGui = nil
+	assert(not pcall(owner._bindGui, owner, playerGui), "Missing preset must fail without a runtime fallback")
+	owner:Destroy()
+end
+
+-- 保留的水花音沿用声音开关，静音时不创建或延迟补播。
 local plays, created = 0, 0
 environment.Instance = {
 	new = function(class)
@@ -272,11 +372,11 @@ environment.Instance = {
 	end,
 }
 enabled = false
-assert(audio:_sound("FishBite") == nil and created == 0)
+assert(audio:_sound("Splash") == nil and created == 0)
 enabled = true
-local cue = audio:_sound("FishBite")
-assert(created == 1 and plays == 1 and cue.Volume == 1 and cue.PlaybackSpeed == 0.65)
-assert(cue.SoundId == modules.config.Sounds.FishBite.Id)
+local cue = audio:_sound("Splash")
+assert(created == 1 and plays == 1 and cue.Volume == 0.8 and cue.PlaybackSpeed == 1)
+assert(cue.SoundId == modules.config.Sounds.Splash.Id)
 
 -- 同帧先计算基础姿态和镜头，再显示透视补偿并连接鱼线。
 do

@@ -1,0 +1,25 @@
+-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
+
+-- Bytecode (Base64):
+-- CQMMDHNldG1ldGF0YWJsZQVOb2RlMAVOb2RlMQZXZWlnaHQDbmV3B0hhc05vZGUHcmVxdWlyZQZzY3JpcHQGUGFyZW50BE5vZGUMV2FpdEZvckNoaWxkB19faW5kZXgAAwYDAQAACAUAAAUDDw+CD/8EAAAAAAAA+wUAAJ49BAMFAAAApAMBAAAAAECfAwMCMAADaQIAAAAwAQMAAwAAADACA6sEAAAAggMCAAUDAQQAAABAAwIDAwMEABgFARgAAAAAAAAAAAIAAQABAAIZAAAAAAQCAAAAAAypAgEATQMAaQAAAADxAQcAAwAAAE0DAAABAAAA8QECAAMAAACpAgABqQIBAIICAgACAwIDAwAiBgEYAAAAAAAAAAAAAAAAIwAAAAAEAAABAgAYowAAAKQAAQAAAABApAEDAAAAIEBNAQEkBAAAAG8DBQC8AQHTBgAAAJ8BAwCfAAAC/wEDAAAAAAAwAQFuBwAAAMACCAASAAEAMAIB7wkAAADAAgoAMAIBRAsAAACCAQIADAMHBAAAAEADCAQAACBAAwkDCgMLAwwGAAMFBgEDBgIAAQEAARgACgAAAAAAAAAAAAAJAAEAAwAAAAoAAAQBAAAAAALWC1Ys5jYaQ//f0CwwY5kKphNBWOTPPC0=
+
+-- https://lua.expert/
+require(script.Parent:WaitForChild("Node"))
+
+local t = {}
+
+t.__index = t
+function t.new(p1, p2, p3) --[[ new | Line: 24 | Upvalues: t (copy) ]]
+	local v2 = setmetatable({}, t)
+
+	v2.Node0 = p1
+	v2.Node1 = p2
+	v2.Weight = p3
+
+	return v2
+end
+function t.HasNode(p1, p2) --[[ HasNode | Line: 34 ]]
+	return if p2 == p1.Node0 then true else p2 == p1.Node1
+end
+
+return t

@@ -1,0 +1,22 @@
+-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
+
+-- https://lua.expert
+
+return {
+    Name = "giveEssence",
+    Description = "Give Enchanted Essence mutation consumables.",
+    Group = "Admin",
+    Args = {
+        {
+            Type = "players",
+            Name = "Player",
+            Description = "Players to give Enchanted Essence to."
+        },
+        {
+            Type = "positiveInteger",
+            Name = "Amount",
+            Description = "How many to give, from 1 to 1000.",
+            Default = 1
+        }
+    }
+}

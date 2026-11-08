@@ -8,6 +8,7 @@ local ItemsData = require(ReplicatedFirst.Data.ItemsData)
 local Knit = require(ReplicatedStorage.Packages.Knit)
 local ConditionLabelUtil = require(ReplicatedStorage.Modules.ConditionLabelUtil)
 local GuiUtil = require(ReplicatedStorage.Modules.GuiUtil)
+local RarityConfig = require(ReplicatedStorage.Modules.RarityConfig)
 local ItemStatUtil = require(ReplicatedStorage.Modules.ItemStatUtil)
 local ItemTitlePositionUtil = require(ReplicatedStorage.Modules.ItemTitlePositionUtil)
 local ItemToolUtil = require(ReplicatedStorage.Modules.ItemToolUtil)
@@ -173,7 +174,7 @@ local function createLocalHeldItemTitle(tool: Tool)
 	end
 	local rarityLabel = findLabel(title, "RarityLabel")
 	if rarityLabel then
-		rarityLabel.Text = item.Rarity
+		rarityLabel.Text = RarityConfig.Normalize(item.Rarity)
 		GuiUtil.SetRarityGradient(rarityLabel, item.Rarity)
 	end
 	local priceLabel = findLabel(title, "PriceLabel")

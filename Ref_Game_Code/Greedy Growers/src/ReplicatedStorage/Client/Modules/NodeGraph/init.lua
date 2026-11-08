@@ -1,0 +1,102 @@
+-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
+
+-- Bytecode (Base64):
+-- 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
+
+-- https://lua.expert/
+local Node = require(script:WaitForChild("Node"))
+local Edge = require(script:WaitForChild("Edge"))
+local t = {}
+
+t.__index = t
+function t.new() --[[ new | Line: 24 | Upvalues: t (copy) ]]
+	local v2 = setmetatable({}, t)
+
+	v2.Nodes = {}
+	v2.Edges = {}
+	v2.NodeEdges = {}
+
+	return v2
+end
+function t.GetNode(p1, p2) --[[ GetNode | Line: 34 ]]
+	for v1, v2 in p1.Nodes do
+		for v3, v4 in v2.Data do
+			if p2 == v4 then
+				return v2
+			end
+		end
+	end
+end
+function t.GetEdgesForNode(p1, p2) --[[ GetEdgesForNode | Line: 46 ]]
+	return p1.NodeEdges[p2]
+end
+function t.GetEdgeForNodes(p1, p2, p3) --[[ GetEdgeForNodes | Line: 50 ]]
+	for v1, v2 in p1:GetEdgesForNode(p2) do
+		if v2.Node0 == p3 or v2.Node1 == p3 then
+			return v2
+		end
+	end
+end
+function t.AddNode(p1, p2) --[[ AddNode | Line: 62 | Upvalues: Node (copy) ]]
+	local v1 = Node.new(p2)
+
+	table.insert(p1.Nodes, v1)
+	p1.NodeEdges[v1] = {}
+
+	return v1
+end
+function t.RemoveNode(p1, p2) --[[ RemoveNode | Line: 70 ]]
+	for v1, v2 in p1:GetEdgesForNode(p2) do
+		p1:RemoveEdge(v2)
+	end
+
+	p1.NodeEdges[p2] = nil
+
+	for v3, v4 in p1.Nodes do
+		if v4 == p2 then
+			table.remove(p1.Nodes, v3)
+
+			return true
+		end
+	end
+
+	return false
+end
+function t.AddEdge(p1, p2, p3, p4) --[[ AddEdge | Line: 89 | Upvalues: Edge (copy) ]]
+	assert(if p2 == p3 then false else true, "Can\'t make an edge between the same node!")
+
+	for v2, v3 in p1:GetEdgesForNode(p2) do
+		if v3:HasNode(p3) then
+			return
+		end
+	end
+
+	local v4 = Edge.new(p2, p3, p4)
+
+	table.insert(p1.Edges, v4)
+	table.insert(p1.NodeEdges[p2], v4)
+	table.insert(p1.NodeEdges[p3], v4)
+
+	return v4
+end
+function t.RemoveEdge(p1, p2) --[[ RemoveEdge | Line: 110 ]]
+	for v1, v2 in p1.Edges do
+		if v2 == p2 then
+			table.remove(p1.Edges, v1)
+
+			return true
+		end
+	end
+
+	for v3, v4 in p1.NodeEdges do
+		for v5, v6 in v4 do
+			if p2 == v6 then
+				table.remove(p1.NodeEdges[v3], v5)
+			end
+		end
+	end
+
+	return false
+end
+
+return t

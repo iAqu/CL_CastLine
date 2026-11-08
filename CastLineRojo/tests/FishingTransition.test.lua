@@ -10,6 +10,8 @@ local source = read("src/StarterPlayer/StarterPlayerScripts/Controllers/FishingC
 local function fixture()
 	local now, render, locked, movement = 0, nil, false, false
 	local created, warnings = {}, {}
+	local fishingAudio = { active = false, starts = 0 }
+	local effectAudio = { clears = 0, refreshes = 0 }
 	local function signal()
 		local handlers = {}
 		return {
@@ -151,6 +153,14 @@ local function fixture()
 	local input, heartbeat = signal(), signal()
 	local sequence, failCreate = nil, false
 	local controllers = {
+		MusicController = {
+			SetFishingActive = function(_, active)
+				fishingAudio.active = active
+				if active then
+					fishingAudio.starts += 1
+				end
+			end,
+		},
 		PlayerDataController = {
 			GetData = function()
 				return { Settings = { Sound = true } }
@@ -168,6 +178,13 @@ local function fixture()
 			end,
 		},
 		Config = config,
+		FishingAudio = {
+			ClearTails = function() effectAudio.clears += 1 end,
+			RefreshTails = function() effectAudio.refreshes += 1 end,
+			new = function()
+				return { Destroy = function() end }
+			end,
+		},
 		Constants = { SETTINGS_ID = { SOUND = "Sound" } },
 		LoadingAttributes = { LOADING_SCREEN_DONE = "LoadingScreenDone" },
 		GameplayInputGate = {
@@ -204,7 +221,8 @@ local function fixture()
 							self.phase, self.readyAt = "Reeled", now + config.Reel.HoldTime
 						end
 					end,
-					Destroy = function(self)
+					Destroy = function(self, keepFail)
+						self.keepFail = keepFail
 						self.destroyCount = (self.destroyCount or 0) + 1
 					end,
 					Cast = function(self)
@@ -238,6 +256,7 @@ local function fixture()
 	storage.Modules = {
 		FishingRigUtil = "FishingRigUtil",
 		FishingCastSequence = "FishingCastSequence",
+		FishingAudio = "FishingAudio",
 		FishingConfig = "Config",
 		Constants = "Constants",
 		GameplayInputGate = "GameplayInputGate",
@@ -347,6 +366,9 @@ local function fixture()
 		character = character,
 		camera = camera,
 		warnings = warnings,
+		fishingAudio = fishingAudio,
+		effectAudio = effectAudio,
+		toggleSound = function() controllers.SettingsGuiController.ToggleSound:Fire() end,
 		advance = function(dt)
 			now += dt
 			if render then
@@ -359,6 +381,10 @@ local function fixture()
 		end,
 		abort = function()
 			player.CharacterRemoving:Fire()
+		end,
+		die = function()
+			humanoid.Health = 0
+			humanoid.Died:Fire()
 		end,
 		sequence = function()
 			return sequence
@@ -381,13 +407,16 @@ local function fixture()
 end
 local normal = fixture()
 assert(normal.locked() and normal.root.Anchored)
+assert(not normal.fishingAudio.active and normal.fishingAudio.starts == 0, "Entering cover must not start ocean audio yet")
 normal.advance(0.15)
 assert(normal.covered() > 0 and normal.covered() < 1)
 assert(normal.sequence() == nil, "Do not replace the character before the screen is covered")
+assert(not normal.fishingAudio.active, "Ocean audio must wait for fishing scene preparation")
 normal.tap()
 normal.advance(0.16)
 assert(normal.sequence(), table.concat(normal.warnings, "\n"))
 assert(normal.sequence().phase == "Preparing")
+assert(normal.fishingAudio.active and normal.fishingAudio.starts == 1, "Preparing the covered fishing scene must start ocean audio once")
 normal.tap()
 assert(normal.sequence().casts == nil, "Block input until the new scene is revealed")
 normal.advance(0.36)
@@ -409,11 +438,17 @@ normal.tap()
 normal.tap()
 normal.advance(0.15)
 assert(normal.sequence().destroyCount == nil, "Keep the sequence visible until return is covered")
+assert(normal.fishingAudio.active, "Keep ocean audio until the fishing scene is restored")
 normal.advance(0.16)
 assert(normal.character.teleports == 1 and normal.sequence().destroyCount == 1)
+assert(normal.sequence().keepFail, "Normal covered return must allow the failure tail")
+assert(not normal.fishingAudio.active, "Covered return must stop ocean audio")
 assert(normal.locked(), "Keep gameplay blocked until the world is revealed")
 normal.advance(0.36)
 assert(not normal.locked() and not normal.root.Anchored and normal.covered() == 0)
+assert(normal.effectAudio.clears == 1, "Finishing a normal return must not clear the tail")
+normal.toggleSound()
+assert(normal.effectAudio.refreshes == 1, "Sound settings must reach tails outside fishing")
 assert(normal.camera.FieldOfView == 70 and not normal.controller:IsPreparing())
 assert(#normal.warnings == 0)
 for _, phase in ipairs({ "Waiting", "Escaped" }) do
@@ -439,6 +474,7 @@ for _, phase in ipairs({ "Waiting", "Escaped" }) do
 	assert(reeled.sequence().destroyCount == 1 and reeled.character.teleports == 1, "Auto-return must finish once")
 	reeled.advance(0.36)
 	assert(not reeled.controller:IsPreparing() and not reeled.root.Anchored)
+	assert(not reeled.fishingAudio.active, "Auto-return must stop ocean audio")
 end
 for _, delay in ipairs({ 0.1, reelDuration + 0.1 }) do
 	local cancelled = fixture()
@@ -450,6 +486,7 @@ for _, delay in ipairs({ 0.1, reelDuration + 0.1 }) do
 	cancelled.abort()
 	cancelled.advance(10)
 	assert(cancelled.sequence().destroyCount == 1 and not cancelled.controller:IsPreparing(), "Cancelled reel returned again")
+	assert(not cancelled.fishingAudio.active, "Cancelled reel must stop ocean audio")
 end
 for _, elapsed in ipairs({ 0.15, 0.31, 0.67 }) do
 	local interrupted = fixture()
@@ -458,6 +495,7 @@ for _, elapsed in ipairs({ 0.15, 0.31, 0.67 }) do
 	assert(not interrupted.locked() and not interrupted.root.Anchored and interrupted.covered() == 0)
 	interrupted.advance(5)
 	assert(not interrupted.controller:IsPreparing(), "Cancelled transitions must not reopen")
+	assert(not interrupted.fishingAudio.active, "Interrupted transitions must leave ocean audio stopped")
 end
 local returning = fixture()
 returning.advance(0.31)
@@ -467,7 +505,22 @@ returning.advance(0.15)
 returning.abort()
 returning.advance(5)
 assert(returning.covered() == 0 and not returning.locked() and returning.sequence().destroyCount == 1)
+assert(not returning.fishingAudio.active, "Interrupted return must stop ocean audio")
 local failed = fixture()
 failed.failCreate()
 failed.advance(0.31)
 assert(not failed.locked() and not failed.root.Anchored and failed.covered() == 0 and #failed.warnings == 1)
+assert(not failed.fishingAudio.active and failed.fishingAudio.starts == 0, "Failed preparation must never start ocean audio")
+local dead = fixture()
+dead.advance(0.31)
+assert(dead.fishingAudio.active)
+dead.die()
+assert(dead.sequence().keepFail == false, "Death must not preserve a failure tail")
+assert(not dead.fishingAudio.active and not dead.controller:IsPreparing(), "Death must stop ocean audio")
+local broken = fixture()
+broken.advance(0.31)
+assert(broken.fishingAudio.active)
+broken.sequence().Update = function() error("Sequence update failed") end
+broken.advance(0.36)
+assert(not broken.fishingAudio.active and not broken.controller:IsPreparing(), "Runtime errors must stop ocean audio")
+assert(#broken.warnings == 1, "Runtime errors must retain their warning")

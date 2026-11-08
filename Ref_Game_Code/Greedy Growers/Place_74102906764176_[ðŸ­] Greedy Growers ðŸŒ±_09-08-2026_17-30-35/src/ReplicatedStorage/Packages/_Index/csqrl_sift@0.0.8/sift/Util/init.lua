@@ -1,0 +1,11 @@
+-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
+
+-- Bytecode (Base64):
+-- CQMFDGVxdWFsT2JqZWN0cwRmdW5jB2lzRW1wdHkHcmVxdWlyZQZzY3JpcHQAAQMAAAECAB6jAAAA4gADAKQBBQAAAEBApAIHAAAAYEBNAgK4AAAAAJ8BAgIwAQC4AAAAAKQBBQAAAEBApAIHAAAAYEBNAgJmAQAAAJ8BAgIwAQBmAQAAAKQBBQAAAEBApAIHAAAAYEBNAgLVAgAAAJ8BAgIwAQDVAgAAAIIAAgAIAwEDAgMDBQMAAQIDBAQAAEBAAwUEAABgQAABAAEYAAABAAAAAAAAAAABAAAAAAAAAAABAAAAAAAAAAAAAQAAAAAA
+
+-- https://lua.expert/
+return {
+	equalObjects = require(script.equalObjects),
+	func = require(script.func),
+	isEmpty = require(script.isEmpty)
+}

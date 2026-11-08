@@ -65,7 +65,7 @@ def load():
             faces.append(corners)
         result.setdefault(f['name'], dict(source=f, parts=[]))['parts'].append(dict(
             original=part, name=g['name'], material=g['material'], vertices=values[0], uvs=values[1], normals=values[2], faces=faces))
-    assert len(result) == 28
+    assert len(result) == len(manifest['fish'])
     return result
 
 

@@ -1,0 +1,88 @@
+-- Saved by UniversalSynSaveInstance (Join to Copy Games) https://discord.gg/wx4ThpAsmw
+
+-- Bytecode (Base64):
+-- CQMrA25ldwR0YXNrBHdhaXQJR2V0VGFnZ2VkBFBhcnQIUG9zaXRpb24HQWRkTm9kZQhCYXNlUGFydANJc0EMVHJhbnNwYXJlbmN5DkdldERlc2NlbmRhbnRzDEJpbGxib2FyZEd1aQdEZXN0cm95DkNvbm5lY3RlZE5vZGVzDkZpbmRGaXJzdENoaWxkBHdhcm40Tm8gQ29uZmlndXJhdGlvbiBuYW1lZCAiQ29ubmVjdGVkTm9kZXMiIGV4aXN0cyBpbiAlKgROYW1lBmZvcm1hdAtHZXRDaGlsZHJlbgVWYWx1ZTpObyBWYWx1ZSBmb3IgY29ubmVjdGVkIG5vZGUgJSouIE5vZGUgbmFtZTogUFJPQkxFTV9SRUZfTklMBlBhcmVudA9QUk9CTEVNX1JFRl9OSUxJQ2Fubm90IG1ha2UgZWRnZSBiZXR3ZWVuIHRoZSBzYW1lIG5vZGUuIE5vZGUgbmFtZTogUFJPQkxFTV9FREdFX1NBTUVfTk9ERRZQUk9CTEVNX0VER0VfU0FNRV9OT0RFMSUqIGlzIG5vdCBhIE5vZGUuIE5vZGUgbmFtZTogUFJPQkxFTV9SRUZfTk9UX05PREUUUFJPQkxFTV9SRUZfTk9UX05PREUJTWFnbml0dWRlB0FkZEVkZ2UMZ3JhcGhGYWN0b3J5BGdhbWURQ29sbGVjdGlvblNlcnZpY2UKR2V0U2VydmljZQdQbGF5ZXJzC0xvY2FsUGxheWVyDVBsYXllclNjcmlwdHMMV2FpdEZvckNoaWxkEVJlcGxpY2F0ZWRTdG9yYWdlBkNsaWVudAdNb2R1bGVzB3JlcXVpcmUJTm9kZUdyYXBoAAIXAgIAAAcEAAAFAgMBowH7AgAATQIC7wAAAACfAgECpAMDAAAIEICMBAMAnwMCAfsDAQBSBQAAvAMDBQQAAACfAwMC/wQAAAAAAABSBQMAxgYAAMYHAABkBSsA4gwHADAJDEQFAAAATQ0JOwYAAAAwDQw7BgAAALwKAtkIAAAAnwoDAmoKBAkrAR8Abw0JALwLCf4KAAAAnwsDAg4LAwCMCwEAMAsJ2QsAAAC8CwlHDAAAAJ8LAgRkCxEAbxIJALwQD/4KAAAAnxADAg4QBACMEAEAMBAP2QsAAABlAAgAbxINALwQD/4KAAAAnxADAg4QAwC8EA9QDgAAAJ8QAgFuC+7/AgAAAG4F1P8CAAAAUgUEAMYGAADGBwAAZAVcAG8MDwC8CggDEAAAAJ8KAwIrCgoApAsSAAAAEEFvDBMATQ4IuhQAAAC8DAyNFQAAAJ8MAwKfCwIBZQBNALwLCmgWAAAAnwsCBGQLRwBNEA/sFwAAACsQFwCkERIAAAAQQW8SGABNFA8kGQAAAE0UFCQZAAAATRQUuhQAAAC8EhKNFQAAAJ8SAwKfEQIBbxEaADARELoUAAAAbxEaADARD7oUAAAAbxEaADARCLoUAAAAZQAtAIcRBBCaCQwAEQAAAKQREgAAABBBbxIbAJ8RAgFvERwAMBEQuhQAAABvERwAMBEPuhQAAABlAB8AhxEEECsREACkERIAAAAQQW8SHQBNFBC6FAAAALwSEo0VAAAAnxIDAp8RAgFvER4AMBEPuhQAAABvER4AMBEIuhQAAABlAA0ATRIQOwYAAABNEwg7BgAAACYREhNNERGqHwAAAFIUCQCHFQQQUhYRALwSAmMgAAAAnxIFAW4LuP8CAAAAbgWj/wIAAACCAgIAIQMBAwIDAwQACBCAAwQDBQMGBQIFBgMHAwgDCQMKAwsDDAMNAw4DDwMQBAAAEEEDEQMSAxMDFAMVAxYDFwMYAxkDGgMbAxwDHQMeABQfARgAAAAAAQAAAAEAAAAAAgACAAAAAQEAAQAAAP4AAAUCAQAAAAABAAADAAAAAQAAAAABAAAAAQAAAAABAAD8APMAGAAAAAEAAAACAQAAAAAAAAAAAQMAAAABAAIBAAAAAAAAAAAAAAAAAgAAAQAAAQAAAQMAAAEAAAACAAABAAABAwABAAAAAAAAAAACAAABAAABAwAAAAAAAAIAAAAAAOIA+AAqFQAAAAAJAAABAgAoowAAAKQAAQAAAABAbwICALwAABYDAAAAnwADAqQBAQAAAABAbwMEALwBARYDAAAAnwEDAk0CATEFAAAAbwUGALwDAtMHAAAAnwMDAqQEAQAAAABATQQEPwgAAABNBARNCQAAAG8GCgC8BATTBwAAAJ8EAwKkBQwAAACwQG8IDQC8BgTTBwAAAJ8GAwCfBQACwAYOABIABQASAAAAggYCAA8DIAQAAABAAyEDIgMjAyQDJQMmAycDKAMpAyoEAACwQAMrBgABAAEAARgACAAAAAAAAQAAAAAAAwABAAAAAQAAAAAAAAAAAAMAAAAAAAACAABMAQAAAAABSlJhz0JaRUCAvjptVl0zCTpKdrt4lgvO
+
+-- https://lua.expert/
+local CollectionService = game:GetService("CollectionService")
+
+game:GetService("Players").LocalPlayer:WaitForChild("PlayerScripts")
+
+local Modules = game.ReplicatedStorage.Client:WaitForChild("Modules")
+local NodeGraph = require(Modules:WaitForChild("NodeGraph"))
+
+return function(p1, p2) --[[ graphFactory | Line: 20 | Upvalues: NodeGraph (copy), CollectionService (copy) ]]
+	local v1 = NodeGraph.new()
+
+	task.wait(3)
+
+	local t = {}
+
+	for v2, v3 in CollectionService:GetTagged(p1) do
+		t[v3] = v1:AddNode({
+			Part = v3,
+			Position = v3.Position
+		})
+
+		if not p2 then
+			if v3:IsA("BasePart") then
+				v3.Transparency = 1
+			end
+
+			for v4, v5 in v3:GetDescendants() do
+				if v5:IsA("BasePart") then
+					v5.Transparency = 1
+
+					continue
+				end
+
+				if v5:IsA("BillboardGui") then
+					v5:Destroy()
+				end
+			end
+		end
+	end
+
+	for v6, v7 in t do
+		local ConnectedNodes = v6:FindFirstChild("ConnectedNodes")
+
+		if ConnectedNodes then
+			for v8, v9 in ConnectedNodes:GetChildren() do
+				local PROBLEM_REF_NIL = v9.Value
+
+				if PROBLEM_REF_NIL then
+					if v7 == t[PROBLEM_REF_NIL] then
+						warn("Cannot make edge between the same node. Node name: PROBLEM_EDGE_SAME_NODE")
+						PROBLEM_REF_NIL.Name = "PROBLEM_EDGE_SAME_NODE"
+						v9.Name = "PROBLEM_EDGE_SAME_NODE"
+
+						continue
+					end
+
+					if t[PROBLEM_REF_NIL] then
+						v1:AddEdge(v7, t[PROBLEM_REF_NIL], (PROBLEM_REF_NIL.Position - v6.Position).Magnitude)
+
+						continue
+					end
+
+					warn((("%* is not a Node. Node name: PROBLEM_REF_NOT_NODE"):format(PROBLEM_REF_NIL.Name)))
+					v9.Name = "PROBLEM_REF_NOT_NODE"
+					v6.Name = "PROBLEM_REF_NOT_NODE"
+
+					continue
+				end
+
+				warn((("No Value for connected node %*. Node name: PROBLEM_REF_NIL"):format(v9.Parent.Parent.Name)))
+				PROBLEM_REF_NIL.Name = "PROBLEM_REF_NIL"
+				v9.Name = "PROBLEM_REF_NIL"
+				v6.Name = "PROBLEM_REF_NIL"
+			end
+
+			continue
+		end
+
+		warn((("No Configuration named \"ConnectedNodes\" exists in %*"):format(v6.Name)))
+	end
+
+	return v1
+end
