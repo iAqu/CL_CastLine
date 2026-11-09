@@ -1,7 +1,12 @@
+local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Knit = require(ReplicatedStorage.Packages.Knit)
+
+local Config = require(ReplicatedStorage.Modules.FishingConfig)
+local RodsData = require(ReplicatedFirst:WaitForChild("Data"):WaitForChild("RodsData"))
+local DEFAULT_MODEL = RodsData[Config.DefaultRodId].Model
 
 local ROD_NAME = "DefaultBackRod"
 local BACK_MOUNT_OFFSET = CFrame.new(0.55, 0.05, 0.72)
@@ -34,9 +39,9 @@ function BackRodService:AttachBackRod(character: Model)
 	end
 	local models = ReplicatedStorage:FindFirstChild("Models")
 	local rods = models and models:FindFirstChild("FishRod")
-	local template = rods and rods:FindFirstChild("TestRod")
+	local template = rods and rods:FindFirstChild(DEFAULT_MODEL)
 	if not template or not (template:IsA("Tool") or template:IsA("Model")) then
-		warn("BackRodService: ReplicatedStorage.Models.FishRod.TestRod is missing or invalid")
+		warn("BackRodService: invalid rod template " .. DEFAULT_MODEL)
 		return
 	end
 
@@ -66,7 +71,7 @@ function BackRodService:AttachBackRod(character: Model)
 	local handle = rod:FindFirstChild("Handle", true)
 	if not handle or not handle:IsA("BasePart") then
 		rod:Destroy()
-		warn("BackRodService: TestRod.Handle is missing or invalid")
+		warn("BackRodService: invalid Handle for " .. DEFAULT_MODEL)
 		return
 	end
 	rod.PrimaryPart = handle

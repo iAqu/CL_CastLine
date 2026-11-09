@@ -1,9 +1,8 @@
 local Players = game:GetService("Players")
-local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Knit = require(ReplicatedStorage.Packages.Knit)
-local ItemsData = require(ReplicatedFirst.Data.ItemsData)
+local FishInventoryData = require(ReplicatedStorage.Modules.FishInventoryData)
 local GuiAnimation = require(ReplicatedStorage.Modules.GuiAnimation)
 local GuiUtil = require(ReplicatedStorage.Modules.GuiUtil)
 local RarityConfig = require(ReplicatedStorage.Modules.RarityConfig)
@@ -44,12 +43,12 @@ local IndexGuiController = Knit.CreateController({
 
 local function getOrderedItemIds(): { string }
 	local itemIds = {}
-	for itemId in pairs(ItemsData) do
+	for itemId in pairs(FishInventoryData) do
 		table.insert(itemIds, itemId)
 	end
 	table.sort(itemIds, function(left, right)
-		local leftItem = ItemsData[left]
-		local rightItem = ItemsData[right]
+		local leftItem = FishInventoryData[left]
+		local rightItem = FishInventoryData[right]
 		if leftItem.LayoutOrder ~= rightItem.LayoutOrder then
 			return leftItem.LayoutOrder < rightItem.LayoutOrder
 		end
@@ -104,7 +103,7 @@ end
 
 local function updateEntry(itemId: string)
 	local entry = entries[itemId]
-	local item = ItemsData[itemId]
+	local item = FishInventoryData[itemId]
 	if not entry or not item then
 		return
 	end
@@ -160,7 +159,7 @@ local function createEntries()
 	end
 
 	for _, itemId in ipairs(ORDERED_ITEM_IDS) do
-		local item = ItemsData[itemId]
+		local item = FishInventoryData[itemId]
 		local entry = template:Clone()
 		entry.Name = "IndexItem_" .. itemId
 		entry.LayoutOrder = item.LayoutOrder
@@ -199,7 +198,7 @@ function IndexGuiController:KnitStart()
 
 	local indexService = Knit.GetService("IndexService")
 	indexService.IndexDiscovered:Connect(function(itemId: string, updatedRewardProgress: RewardProgress)
-		if ItemsData[itemId] and not discoveryLog[itemId] then
+		if FishInventoryData[itemId] and not discoveryLog[itemId] then
 			discoveryLog[itemId] = true
 			rewardProgress = updatedRewardProgress
 			updateEntry(itemId)
@@ -208,7 +207,7 @@ function IndexGuiController:KnitStart()
 		end
 	end)
 	indexService.IndexRewardClaimed:Connect(function(itemId: string)
-		if ItemsData[itemId] then
+		if FishInventoryData[itemId] then
 			rewardClaimLog[itemId] = true
 			updateEntry(itemId)
 			updateHomeNotification()

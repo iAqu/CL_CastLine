@@ -4,7 +4,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
 local ConditionsData = require(ReplicatedFirst.Data.ConditionsData)
-local ItemsData = require(ReplicatedFirst.Data.ItemsData)
+local FishInventoryData = require(ReplicatedStorage.Modules.FishInventoryData)
 local ItemStatUtil = require(ReplicatedStorage.Modules.ItemStatUtil)
 local ItemToolUtil = require(ReplicatedStorage.Modules.ItemToolUtil)
 local Knit = require(ReplicatedStorage.Packages.Knit)
@@ -79,7 +79,7 @@ local function normalizeItemRecord(record): (any?, any?)
 	if typeof(record) ~= "table" or typeof(record.ItemId) ~= "string" then
 		return nil, nil
 	end
-	local item = ItemsData[record.ItemId]
+	local item = FishInventoryData[record.ItemId]
 	if not item then
 		return nil, nil
 	end
@@ -246,7 +246,7 @@ local function getGiftDisplayNameForPlayer(player: Player, heldItem: HeldItemDes
 	if typeof(record) ~= "table" or typeof(record.ItemId) ~= "string" then
 		return "item"
 	end
-	local item = ItemsData[record.ItemId]
+	local item = FishInventoryData[record.ItemId]
 	return if item and typeof(item.DisplayName) == "string" then item.DisplayName else "item"
 end
 

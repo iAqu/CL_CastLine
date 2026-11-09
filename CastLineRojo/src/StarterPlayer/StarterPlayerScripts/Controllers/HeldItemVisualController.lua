@@ -4,7 +4,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local ConditionsData = require(ReplicatedFirst.Data.ConditionsData)
-local ItemsData = require(ReplicatedFirst.Data.ItemsData)
+local FishInventoryData = require(ReplicatedStorage.Modules.FishInventoryData)
 local Knit = require(ReplicatedStorage.Packages.Knit)
 local ConditionLabelUtil = require(ReplicatedStorage.Modules.ConditionLabelUtil)
 local GuiUtil = require(ReplicatedStorage.Modules.GuiUtil)
@@ -153,7 +153,7 @@ local function createLocalHeldItemTitle(tool: Tool)
 	local weight = tool:GetAttribute(ItemToolUtil.WEIGHT_ATTRIBUTE)
 	local conditionId = tool:GetAttribute(ItemToolUtil.CONDITION_ID_ATTRIBUTE)
 	local price = tool:GetAttribute(ItemToolUtil.PRICE_ATTRIBUTE)
-	local item = if typeof(itemId) == "string" then ItemsData[itemId] else nil
+	local item = if typeof(itemId) == "string" then FishInventoryData[itemId] else nil
 	if not item
 		or typeof(weight) ~= "number"
 		or typeof(conditionId) ~= "string"

@@ -3,7 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
 local ConditionsData = require(ReplicatedFirst.Data.ConditionsData)
-local ItemsData = require(ReplicatedFirst.Data.ItemsData)
+local FishInventoryData = require(ReplicatedStorage.Modules.FishInventoryData)
 local ItemStatUtil = require(ReplicatedStorage.Modules.ItemStatUtil)
 local ItemToolUtil = require(ReplicatedStorage.Modules.ItemToolUtil)
 local GamePassEffectUtil = require(ReplicatedStorage.Modules.GamePassEffectUtil)
@@ -46,7 +46,7 @@ local function getRecordPrice(record): number?
 	if typeof(record) ~= "table" or typeof(record.ItemId) ~= "string" then
 		return nil
 	end
-	local item = ItemsData[record.ItemId]
+	local item = FishInventoryData[record.ItemId]
 	if not item then
 		return nil
 	end

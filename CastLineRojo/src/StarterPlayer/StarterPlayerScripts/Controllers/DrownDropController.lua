@@ -5,7 +5,7 @@ local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 
 local ConditionsData = require(ReplicatedFirst.Data.ConditionsData)
-local ItemsData = require(ReplicatedFirst.Data.ItemsData)
+local FishInventoryData = require(ReplicatedStorage.Modules.FishInventoryData)
 local ConditionLabelUtil = require(ReplicatedStorage.Modules.ConditionLabelUtil)
 local GuiUtil = require(ReplicatedStorage.Modules.GuiUtil)
 local RarityConfig = require(ReplicatedStorage.Modules.RarityConfig)
@@ -65,7 +65,7 @@ local function createTitle(model: Model, promptPart: BasePart): (BillboardGui?, 
 		return nil, nil
 	end
 
-	local item = ItemsData[itemId]
+	local item = FishInventoryData[itemId]
 	local template = getTitleTemplate()
 	if not item or not template then
 		return nil, nil

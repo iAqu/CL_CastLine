@@ -1,10 +1,12 @@
--- Studio Client: double-speed clips keep a curved body across ten uninterrupted loops.
+-- Studio Client: Struggle tracks keep phase across uninterrupted loops.
 local storage = game:GetService("ReplicatedStorage")
 local Bite = require(storage.Modules.FishingBiteSequence)
 local settings = require(storage.Modules.FishingConfig).Bite
 local folder = Instance.new("Folder")
 folder.Name, folder.Parent = "FishingStruggleLoopValidation", workspace
 local active
+local previousFish = settings.FishName
+settings.FishName = "Elder Fish"
 local connections = {}
 local ok, result = xpcall(function()
 	local target = Vector3.new(0, 1000, 0)
@@ -21,6 +23,7 @@ local ok, result = xpcall(function()
 		end,
 		_presentBait = function() end,
 		_waterFeedback = function() end,
+		_playRarityVFX = function() end,
 		_playWaterVFX = function() end,
 		_nibbleRipple = function() end,
 		_nibbleFeedback = function() end,
@@ -37,6 +40,7 @@ local ok, result = xpcall(function()
 		active = Bite.new(owner, os.clock(), nil, Random.new(1), Random.new(2))
 		active.motion.mirror = sign
 		local animation = active.animation
+		local expanded = active.fish:GetAttribute("RigVersion") == 2
 		local deadline = os.clock() + 12
 		while animation.loading and os.clock() < deadline do
 			task.wait(0.05)
@@ -49,6 +53,8 @@ local ok, result = xpcall(function()
 		for _, boneName in ipairs(settings.Motion.Animation.Bones) do
 			bones[boneName] = active.fish.PrimaryPart:FindFirstChild(boneName, true)
 		end
+		local spineFlex = expanded and active.fish.PrimaryPart:FindFirstChild("SpineFrontFlex", true)
+		local finTip = expanded and active.fish.PrimaryPart:FindFirstChild("TailFinTip", true)
 		local stopped, loops, samples = 0, 0, 0
 		table.insert(
 			connections,
@@ -63,20 +69,27 @@ local ok, result = xpcall(function()
 			end)
 		)
 		local minimumFront, minimumMid, tailMin, tailMax = 100, 100, 100, -100
-		local minimumBody, maximumBody = 100, 0
+		local minimumBody, maximumBody = math.huge, -math.huge
 		local maxPhaseDrift = 0
+		local observedWraps, previousPosition = 0, track.TimePosition
 		local peakBase, peakTail = { angle = -100 }, { angle = -100 }
 		local maxMouthError = 0
 		local startedAt = os.clock()
 		active.timeline:_enter("Struggling", startedAt, settings.StruggleTime)
 		active:Update(startedAt)
-		assert(math.abs(track.Speed - 2) < 0.0001, "Struggle animation did not use double speed")
+		local speed = settings.Motion.Animation.Clips[name].Duration / settings.Struggle.AnimationCycle
+		assert(math.abs(track.Speed - speed) < 0.0001, "Struggle animation speed does not match its cycle")
 		while os.clock() - startedAt < settings.StruggleTime - 0.04 do
 			local now = os.clock()
 			local elapsed = now - startedAt
 			active:Update(now)
-			local expectedPosition = (elapsed % settings.Struggle.AnimationCycle) * 2
-			local drift = math.abs(track.TimePosition - expectedPosition)
+			local expectedPosition = (elapsed % settings.Struggle.AnimationCycle) * speed
+			local position = track.TimePosition
+			if previousPosition - position > track.Length * 0.5 then
+				observedWraps += 1
+			end
+			previousPosition = position
+			local drift = math.abs(position - expectedPosition)
 			drift = math.min(drift, math.abs(track.Length - drift))
 			maxPhaseDrift = math.max(maxPhaseDrift, drift)
 			assert(drift <= settings.Motion.Animation.SyncTolerance + 0.001, "Struggle loop lost absolute phase")
@@ -90,13 +103,19 @@ local ok, result = xpcall(function()
 			if elapsed >= 0.25 then
 				local front, mid = yaw(bones.SpineFront) * sign, yaw(bones.SpineMid) * sign
 				minimumFront, minimumMid = math.min(minimumFront, front), math.min(minimumMid, mid)
-				assert(front >= 21.8 and front <= 26.2, "Front body bend left authored range")
-				assert(mid >= 32.8 and mid <= 39.2, "Mid body bend left authored range")
-				minimumBody, maximumBody = math.min(minimumBody, front + mid), math.max(maximumBody, front + mid)
-				assert(front + mid >= 54.8 and front + mid <= 65.2, "Total body bend left 55-65 degree range")
+				local body = front + mid
+				if expanded then
+					body += yaw(spineFlex) * sign
+				else
+					assert(front >= 21.8 and front <= 26.2, "Legacy front body bend left authored range")
+					assert(mid >= 32.8 and mid <= 39.2, "Legacy mid body bend left authored range")
+					assert(body >= 54.8 and body <= 65.2, "Legacy body bend left authored range")
+				end
+				minimumBody, maximumBody = math.min(minimumBody, body), math.max(maximumBody, body)
+
 				assert(track.WeightCurrent > 0.99, "Loop weight faded at a cycle boundary")
 			end
-			local tail = yaw(bones.FishTail) * sign
+			local tail = yaw(finTip or bones.FishTail) * sign
 			tailMin, tailMax = math.min(tailMin, tail), math.max(tailMax, tail)
 			if elapsed >= 0.25 then
 				local base = yaw(bones.TailBase) * sign
@@ -116,9 +135,16 @@ local ok, result = xpcall(function()
 			samples += 1
 		end
 		-- 长帧校时可能跨过循环边界而不发出 DidLoop；持续轨道与绝对相位才是判据。
-		assert(loops > 0 and tailMax - tailMin > 45, "Continuous tail loop or its full range is missing")
-		local delay = peakTail.time - peakBase.time
-		assert(delay > 0.015 and delay < 0.075, "Double-speed tail tip did not lag behind tail base")
+		assert(loops > 0 or observedWraps > 0, "Continuous tail loop is missing")
+		local delay = (peakTail.time - peakBase.time) % settings.Struggle.AnimationCycle
+		if expanded then
+			assert(maximumBody - minimumBody > 14, "Expanded body did not bend dynamically")
+			assert(tailMax - tailMin > 20, "Expanded tail fin did not bend independently")
+			assert(delay > 0.01 and delay < settings.Struggle.AnimationCycle * 0.9, "Expanded tail has no phase lag")
+		else
+			assert(tailMax - tailMin > 45, "Legacy tail did not reach its authored range")
+			assert(delay > 0.02 and delay < 0.12, "Legacy tail tip did not lag behind tail base")
+		end
 		active:Update(startedAt + settings.StruggleTime)
 		assert(animation.active.name == "LiftFlop", "Struggle did not transition to lift")
 		task.wait(settings.Motion.Animation.FadeTime + 0.05)
@@ -126,6 +152,7 @@ local ok, result = xpcall(function()
 		results[name] = {
 			samples = samples,
 			loops = loops,
+			observedWraps = observedWraps,
 			minimumFront = minimumFront,
 			minimumMid = minimumMid,
 			bodyRange = { minimumBody, maximumBody },
@@ -150,5 +177,6 @@ if active then
 	active:Destroy()
 end
 folder:Destroy()
+settings.FishName = previousFish
 assert(ok, result)
 return result

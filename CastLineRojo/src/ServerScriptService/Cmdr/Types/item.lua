@@ -1,15 +1,15 @@
-local ReplicatedFirst = game:GetService("ReplicatedFirst")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local ItemsData = require(ReplicatedFirst.Data.ItemsData)
+local FishInventoryData = require(ReplicatedStorage.Modules.FishInventoryData)
 
 local function getOrderedItemIds(): { string }
 	local itemIds = {}
-	for itemId in pairs(ItemsData) do
+	for itemId in pairs(FishInventoryData) do
 		table.insert(itemIds, itemId)
 	end
 	table.sort(itemIds, function(left, right)
-		local leftItem = ItemsData[left]
-		local rightItem = ItemsData[right]
+		local leftItem = FishInventoryData[left]
+		local rightItem = FishInventoryData[right]
 		if leftItem.LayoutOrder ~= rightItem.LayoutOrder then
 			return leftItem.LayoutOrder < rightItem.LayoutOrder
 		end

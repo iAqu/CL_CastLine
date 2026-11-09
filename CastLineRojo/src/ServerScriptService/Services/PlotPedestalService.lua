@@ -4,7 +4,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
 local ConditionsData = require(ReplicatedFirst.Data.ConditionsData)
-local ItemsData = require(ReplicatedFirst.Data.ItemsData)
+local FishInventoryData = require(ReplicatedStorage.Modules.FishInventoryData)
 local Knit = require(ReplicatedStorage.Packages.Knit)
 local ItemStatUtil = require(ReplicatedStorage.Modules.ItemStatUtil)
 local ItemToolUtil = require(ReplicatedStorage.Modules.ItemToolUtil)
@@ -104,7 +104,7 @@ local function normalizeItemRecord(record, allowDefaultCondition: boolean?): (an
 	if typeof(record) ~= "table" or typeof(record.ItemId) ~= "string" then
 		return nil, nil
 	end
-	local item = ItemsData[record.ItemId]
+	local item = FishInventoryData[record.ItemId]
 	if not item then
 		return nil, nil
 	end

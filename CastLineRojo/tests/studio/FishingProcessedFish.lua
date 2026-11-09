@@ -8,22 +8,43 @@ local job = { done = false, results = {}, errors = {} }
 -- selene: allow(global_usage)
 _G.FishGameplayJob = job
 local dataFolder = storage:WaitForChild("_FishGeometryQA")
-local encoded = ""
-local dataDeadline = os.clock() + 30
-repeat
-	local chunks = dataFolder:GetChildren()
+local function decode(folder)
+	local chunks = folder:GetChildren()
 	table.sort(chunks, function(a, b)
 		return a.Name < b.Name
 	end)
 	local strings = {}
-	for _, v in chunks do
-		table.insert(strings, v.Value)
+	for _, value in chunks do
+		table.insert(strings, value.Value)
 	end
-	encoded = table.concat(strings)
-	assert(os.clock() < dataDeadline, "Geometry audit data did not replicate")
-	task.wait()
-until #encoded == dataFolder:GetAttribute("ByteLength")
-local geometry = game.HttpService:JSONDecode(encoded)
+	return table.concat(strings)
+end
+local function replicated(folder)
+	local deadline = os.clock() + 60
+	repeat
+		local encoded = decode(folder)
+		if #encoded == folder:GetAttribute("ByteLength") then
+			return encoded
+		end
+		assert(os.clock() < deadline, "Geometry audit data did not replicate")
+		task.wait()
+	until false
+end
+local geometry = {}
+if not dataFolder:GetAttribute("CompressedPerFish") then
+	geometry = game.HttpService:JSONDecode(replicated(dataFolder))
+end
+local function fishGeometry(name)
+	if not dataFolder:GetAttribute("CompressedPerFish") then
+		return geometry[name]
+	end
+	local row = assert(dataFolder:WaitForChild(name, 60), "Missing geometry for " .. name)
+	local encoding = game:GetService("EncodingService")
+	local packed = encoding:Base64Decode(buffer.fromstring(replicated(row)))
+	return game.HttpService:JSONDecode(
+		buffer.tostring(encoding:DecompressBuffer(packed, Enum.CompressionAlgorithm.Zstd))
+	)
+end
 local originalName = settings.FishName
 local camera = workspace.CurrentCamera
 local savedCamera = { camera.CFrame, camera.FieldOfView, camera.CameraType, camera.Focus }
@@ -33,8 +54,9 @@ folder.Parent = workspace
 local originals = Instance.new("Folder")
 originals.Name = "OriginalTemplates"
 originals.Parent = folder
-local variants = workspace.Fish_Processed:GetChildren()
-local staged = workspace:FindFirstChild("_FishRace_Staging")
+local v2 = workspace:FindFirstChild("_RigV2Stage")
+local variants = (v2 or workspace.Fish_Processed):GetChildren()
+local staged = not v2 and workspace:FindFirstChild("_FishRace_Staging")
 if staged then
 	for _, fish in staged:GetChildren() do
 		table.insert(variants, fish)
@@ -107,6 +129,7 @@ task.spawn(function()
 		settings.FishName = template.Name
 		local active, bait
 		local ok, result = xpcall(function()
+			local bodyGeometry = fishGeometry(template.Name)
 			bait = storage.Models.FishBait["1"]["1"]:Clone()
 			bait.Anchored = true
 			bait.Transparency = 1
@@ -161,6 +184,7 @@ task.spawn(function()
 			local framingByPhase = {}
 			local samples = 0
 			local maxMouthError = 0
+			local idleSamples = 0
 			for name, track in active.animation.tracks do
 				assert(track.Length > 0, "Empty " .. name)
 			end
@@ -211,6 +235,10 @@ task.spawn(function()
 					end
 					if active.animation.active then
 						clips[active.animation.active.name] = true
+						if phase == "Caught" and active.animation.active.token == "ShowcaseIdle" then
+							idleSamples += 1
+							assert(active.drip and #active.drip.emitters == 24, "Showcase idle lost drip points")
+						end
 					end
 					if phase == "Bite" and elapsed >= settings.BiteSinkTime then
 						local yaw = active:_feedingState("Bite", elapsed)
@@ -225,13 +253,8 @@ task.spawn(function()
 							"Line lost mouth"
 						)
 						if sample % 4 == 0 then
-							local ratio = measure(
-								active.fish,
-								geometry[template.Name],
-								active.scale,
-								camera.CFrame,
-								camera.FieldOfView
-							)
+							local ratio =
+								measure(active.fish, bodyGeometry, active.scale, camera.CFrame, camera.FieldOfView)
 							phaseFraming = math.max(phaseFraming, ratio)
 							maxFraming = math.max(maxFraming, ratio)
 						end
@@ -244,13 +267,12 @@ task.spawn(function()
 			for name in settings.Motion.Animation.Clips do
 				assert(clips[name], "Gameplay missed " .. name)
 			end
-			for _, name in
-				(geometry[template.Name] and geometry[template.Name].bones or settings.Motion.Animation.Bones)
-			do
+			for _, name in (bodyGeometry and bodyGeometry.bones or settings.Motion.Animation.Bones) do
 				if name ~= "FishBody" then
 					assert(moved[name], "Gameplay did not move " .. name)
 				end
 			end
+			assert(idleSamples > 0, "Showcase did not settle into continuous tail motion")
 			local partCount = 0
 			for p in active.originals do
 				local original = template:FindFirstChild(p.Name, true)
@@ -270,6 +292,7 @@ task.spawn(function()
 				name = template.Name,
 				passed = true,
 				samples = samples,
+				idleSamples = idleSamples,
 				visibleParts = partCount,
 				clips = clips,
 				maxMouthError = maxMouthError,

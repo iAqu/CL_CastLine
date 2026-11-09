@@ -1,5 +1,6 @@
 local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local FishingAssets = require(ReplicatedStorage.Modules.FishingAssets)
 local StarterGui = game:GetService("StarterGui")
 
 local ConditionsData = require(ReplicatedFirst.Data.ConditionsData)
@@ -54,16 +55,6 @@ export type ItemInstanceData = {
 	Price: number,
 	MutationId: string?,
 }
-
-local function getTemplate(modelName: string): Model?
-	local models = ReplicatedStorage:FindFirstChild("Models")
-	local items = models and models:FindFirstChild("Items")
-	local template = items and items:FindFirstChild(modelName)
-	if template and template:IsA("Model") then
-		return template
-	end
-	return nil
-end
 
 function ItemToolUtil.IsItemTool(tool: Instance?): boolean
 	return tool ~= nil and tool:IsA("Tool") and tool:GetAttribute(ItemToolUtil.KIND_ATTRIBUTE) == "Item"
@@ -168,7 +159,7 @@ local function createHeldItemTitle(
 end
 
 function ItemToolUtil.Create(instanceId: string, item: ItemConfig, instanceData: ItemInstanceData): Tool?
-	local template = getTemplate(item.Model)
+	local template = FishingAssets.GetFish(item.Model)
 	if not template then
 		warn("ItemToolUtil: missing item model", item.Model)
 		return nil

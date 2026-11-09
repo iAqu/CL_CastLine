@@ -1,4 +1,5 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local FishingAssets = require(ReplicatedStorage.Modules.FishingAssets)
 
 local IndexItemViewport = {}
 
@@ -38,9 +39,7 @@ end
 
 function IndexItemViewport.Show(parent: GuiObject, icon: ImageLabel, modelName: string, discovered: boolean): boolean
 	clearPreview(parent)
-	local models = ReplicatedStorage:FindFirstChild("Models")
-	local items = models and models:FindFirstChild("Items")
-	local template = items and items:FindFirstChild(modelName)
+	local template = FishingAssets.GetFish(modelName)
 	if not template or not template:IsA("Model") then
 		return false
 	end

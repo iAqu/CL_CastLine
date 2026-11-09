@@ -231,7 +231,7 @@ function FishingCastSequence:_init(rig, playerGui, meter, animation, baitTemplat
 	self.tip = tip
 	self.launch = self.root.Position
 	self.forward = Vector3.new(self.root.CFrame.LookVector.X, 0, self.root.CFrame.LookVector.Z).Unit
-	self.initialYaw = math.random() * math.pi * 2
+	self.initialYaw = self.options.initialYaw or math.random() * math.pi * 2
 	self.spin = self.initialYaw
 	self.folder = Instance.new("Folder")
 	self.folder.Name = "FishingSequence"
@@ -378,11 +378,11 @@ function FishingCastSequence:_castFeedback(value, now)
 	end
 end
 
-function FishingCastSequence:Cast(value: number)
+function FishingCastSequence:Cast(value: number, distance: number?)
 	if self.phase ~= "Preparing" then
 		return
 	end
-	self.distance = ProjectileMath.Distance(value)
+	self.distance = distance or ProjectileMath.Distance(value)
 	self.folder:SetAttribute("Distance", self.distance)
 	self.castClickedAt = os.clock()
 	self.castFromScale = self.baitVisualScale
@@ -588,14 +588,40 @@ function FishingCastSequence:_updateWaterEffects(now)
 end
 
 function FishingCastSequence:TryHook(now)
-	if self.bite then
-		return self.bite:TryHook(now)
+	local bite = self.bite
+	if not bite or self.hookPendingAt then
+		return false
 	end
+	if not self.options.hook or bite.timeline:Advance(now) ~= "Bite" then
+		local hooked = bite:TryHook(now)
+		if self.phase == "Reeling" and self.options.cancel then
+			self.options.cancel()
+		end
+		return hooked
+	end
+	self.hookPendingAt = now
+	local pressedAt = self.serverRoundStart + (now - self.localRoundStart)
+	self.options.hook(self.round, pressedAt):andThen(function(result)
+		if self.destroyed or self.bite ~= bite then
+			return
+		end
+		self.hookPendingAt = nil
+		if result.ok then
+			bite:TryHook(now)
+		elseif result.message ~= "Missed the bite" then
+			self.options.onFailure(result.message)
+		end
+	end):catch(function()
+		if not self.destroyed then
+			self.hookPendingAt = nil
+			self.options.onFailure("Could not confirm the catch")
+		end
+	end)
 	return false
 end
 
 function FishingCastSequence:CanReturn(now)
-	return self.bite ~= nil and self.bite:CanReturn(now)
+	return not self.hookPendingAt and self.bite ~= nil and self.bite:CanReturn(now)
 end
 
 function FishingCastSequence:_setBaitVisible(visible)
@@ -638,7 +664,7 @@ function FishingCastSequence:_updateLine()
 	end
 end
 
-function FishingCastSequence:_startBiteRound(now, readyAt)
+function FishingCastSequence:_startBiteRound(now, readyAt, round)
 	if self.bite then
 		self.bite:Destroy()
 		self.bite = nil
@@ -658,9 +684,48 @@ function FishingCastSequence:_startBiteRound(now, readyAt)
 	BaitElasticMotion.Apply(self, self.bait.CFrame, Vector3.one)
 	self:_presentBait("Waiting")
 	self.bait.CFrame = CFrame.new(self:_waterTarget()) * CFrame.Angles(0, self.spin or 0, 0)
-	self.bite = FishingBiteSequence.new(self, now, readyAt)
-	self.round = (self.round or 0) + 1
+	if round then
+		local fish, template = self.options.resolveFish(round.fishId)
+		assert(template, "Selected fish model unavailable")
+		self.bite = FishingBiteSequence.new(self, now, readyAt, Random.new(round.seed), Random.new(round.motionSeed), template)
+		self.bite.fish:SetAttribute("FishId", fish.FishID)
+		self.bite.fish:SetAttribute("Rarity", fish.Rarity)
+		self.bite.fish:SetAttribute("DisplayName", fish.DisplayName)
+		self.folder:SetAttribute("Luck", round.luck)
+		self.round = round.round
+	else
+		self.bite = FishingBiteSequence.new(self, now, readyAt)
+		self.round = (self.round or 0) + 1
+	end
 	self.folder:SetAttribute("Round", self.round)
+end
+
+function FishingCastSequence:_requestBiteRound()
+	if self.roundPending then
+		return
+	end
+	self.roundPending = true
+	self.options.requestRound(self.round or 0):andThen(function(round)
+		if self.destroyed then
+			return
+		end
+		self.roundPending = false
+		if not round.ok then
+			self.options.onFailure(round.message)
+			return
+		end
+		local offset = os.clock() - Workspace:GetServerTimeNow()
+		self.serverRoundStart = round.startedAt
+		self.serverRetryAt = round.retryAt
+		self.localRoundStart = round.startedAt + offset
+		self.readyAt = math.max(self.readyAt, round.readyAt + offset)
+		self:_startBiteRound(self.localRoundStart, round.readyAt + offset, round)
+	end):catch(function(err)
+		if not self.destroyed then
+			warn("FishingCastSequence: " .. tostring(err))
+			self.options.onFailure("Could not start the next fishing round")
+		end
+	end)
 end
 
 function FishingCastSequence:_land(now)
@@ -680,7 +745,11 @@ function FishingCastSequence:_land(now)
 	for index = 1, 3 do
 		self:_ripple(now + (index - 1) * Config.WaterRipple.LandingInterval, surface, 1, now)
 	end
-	self:_startBiteRound(now, self.readyAt)
+	if self.options.requestRound then
+		self:_requestBiteRound()
+	else
+		self:_startBiteRound(now, self.readyAt)
+	end
 end
 
 function FishingCastSequence:_updateAction(now)
@@ -780,17 +849,24 @@ function FishingCastSequence:_updateBait(now, dt)
 			self.bait.CFrame = CFrame.new(self:_waterTarget()) * CFrame.Angles(0, self.spin, 0)
 			self:_land(now)
 		end
-	elseif self.bite then
+	elseif self.landedAt then
 		local elapsed = now - self.landedAt
 		self.wind.Volume *= math.exp(-dt * 12)
 		if elapsed > 0.3 then
 			self.wind:Stop()
 		end
-		self.bite:Update(now, true)
-		if self.bite:CanRetry(now) then
-			-- 从当前帧补饵重开一轮，不追赶卡顿期间已经错过的多轮等待。
-			self:_startBiteRound(now)
+		if self.bite then
 			self.bite:Update(now, true)
+			if self.bite:CanRetry(now) then
+				if self.options.requestRound then
+					if Workspace:GetServerTimeNow() >= self.serverRetryAt + 0.05 then
+						self:_requestBiteRound()
+					end
+				else
+					self:_startBiteRound(now)
+					self.bite:Update(now, true)
+				end
+			end
 		end
 	end
 end
@@ -1007,6 +1083,7 @@ function FishingCastSequence:_updatePresentation(now)
 end
 
 function FishingCastSequence:Update(now: number, dt: number)
+	now = self.hookPendingAt or now
 	assert(
 		self.bait.Parent
 			and self.line.Parent

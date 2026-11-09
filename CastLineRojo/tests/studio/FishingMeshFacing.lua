@@ -1,7 +1,10 @@
 -- Studio Edit：与原 OBJ 的真实几何标志点比对，防止 FBX 轴转换造成头尾颠倒。
 -- 标志点来自 /Users/gx/Downloads/fish/1.obj，已居中并按各轴包围盒尺寸归一化。
 local storage = game:GetService("ReplicatedStorage")
-local body = storage.Models.Fish["Elder Fish"].PrimaryPart
+local stage = workspace:FindFirstChild("_RigV2Stage")
+local model = (stage and stage:FindFirstChild("Elder Fish")) or storage.Models.Fish["Elder Fish"]
+local body = model.PrimaryPart
+local expanded = model:GetAttribute("RigVersion") == 2
 local mesh = game:GetService("AssetService"):CreateEditableMeshAsync(body.MeshContent)
 assert(mesh, "Cannot read the uploaded fish mesh for asset validation")
 local ok, result = xpcall(function()
@@ -28,8 +31,21 @@ local ok, result = xpcall(function()
 		landmarks[11] = Vector3.new(0.17035008, -0.02384738, -0.38214300)
 	end
 	local vertices = mesh:GetVertices()
-	local boneOrder = { "FishBody", "SpineFront", "SpineMid", "TailBase", "FishTail" }
-	assert(#mesh:GetBones() == #boneOrder, "Expected five skinned bones")
+	local boneOrder = if expanded
+		then {
+			"FishBody",
+			"SpineFront",
+			"SpineFrontFlex",
+			"SpineMid",
+			"SpineRear",
+			"TailBase",
+			"TailMid",
+			"FishTail",
+			"TailFinBase",
+			"TailFinTip",
+		}
+		else { "FishBody", "SpineFront", "SpineMid", "TailBase", "FishTail" }
+	assert(#mesh:GetBones() == #boneOrder, "Unexpected skinned bone count")
 	local ids, order, parent = {}, {}, body
 	for index, name in ipairs(boneOrder) do
 		ids[index] = mesh:GetBoneByName(name)
@@ -47,7 +63,7 @@ local ok, result = xpcall(function()
 	end
 	for _, id in ipairs(vertices) do
 		local weights, bones = mesh:GetVertexBoneWeights(id), mesh:GetVertexBones(id)
-		local total, first, last, count = 0, 6, 0, 0
+		local total, first, last, count = 0, #boneOrder + 1, 0, 0
 		for index, weight in ipairs(weights) do
 			assert(weight >= 0 and weight <= 1, "Invalid skin weight")
 			total += weight
@@ -58,7 +74,7 @@ local ok, result = xpcall(function()
 			end
 		end
 		assert(
-			math.abs(total - 1) < 0.00001 and count <= 2 and last - first <= 1,
+			math.abs(total - 1) < 0.00001 and count <= (if expanded then 4 else 2) and (expanded or last - first <= 1),
 			"Skin weights are not normalized/adjacent"
 		)
 	end
@@ -74,12 +90,16 @@ local ok, result = xpcall(function()
 		assert(distance < 0.0005, "Fish mesh facing changed: source landmark " .. index .. " error " .. distance)
 		maximum = math.max(maximum, distance)
 	end
-	local tailId = mesh:GetBoneByName("FishTail")
+	local tailIds = { [mesh:GetBoneByName("FishTail")] = true }
+	if expanded then
+		tailIds[mesh:GetBoneByName("TailFinBase")] = true
+		tailIds[mesh:GetBoneByName("TailFinTip")] = true
+	end
 	local function tailWeight(vertex)
 		local total = 0
 		local weights = mesh:GetVertexBoneWeights(vertex)
 		for index, bone in ipairs(mesh:GetVertexBones(vertex)) do
-			if bone == tailId then
+			if tailIds[bone] then
 				total += weights[index]
 			end
 		end
@@ -95,7 +115,7 @@ local ok, result = xpcall(function()
 		passed = true,
 		landmarks = #landmarks,
 		maximumNormalizedError = maximum,
-		checks = "source geometry facing, five-bone hierarchy, normalized adjacent weights, fixed real mouth, weighted real tail",
+		checks = "source geometry facing, published hierarchy, normalized weights, fixed real mouth, weighted real tail",
 	}
 end, debug.traceback)
 mesh:Destroy()

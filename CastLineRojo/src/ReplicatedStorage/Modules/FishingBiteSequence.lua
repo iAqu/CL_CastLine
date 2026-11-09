@@ -225,39 +225,31 @@ function FishingBiteSequence.SelectFishTemplate(fishFolder, random)
 	return candidates[rng:NextInteger(1, #candidates)]
 end
 
-function FishingBiteSequence.new(owner, startedAt, readyAt, random, visualRandom)
-	owner.baitBaseSize = BaitElasticMotion.BaseSize(owner)
-	local models = ReplicatedStorage:FindFirstChild("Models")
-	local fishFolder = models and models:FindFirstChild("Fish")
-	local template = FishingBiteSequence.SelectFishTemplate(fishFolder)
-	local fish = template:Clone()
+local function prepareRound(owner, template, startedAt, readyAt, random, visualRandom)
 	local rng = random or Random.new()
-	-- 立即纳入父会话，初始化异常时也能由会话清理。
-	fish.Name, fish.Parent = "BitingFish", owner.folder
 	local self = setmetatable({
 		owner = owner,
-		fish = fish,
 		timeline = FishingBiteSequence.NewTimeline(startedAt, rng, readyAt),
 		motion = FishingBiteSequence.NewMotion(startedAt, visualRandom),
 		originals = {},
 		surfaces = {},
 	}, FishingBiteSequence)
-	local body = fish.PrimaryPart
+	local body = template.PrimaryPart
 	-- 多部件鱼的 PrimaryPart 可能只覆盖半段鱼身，制作时标定完整体形尺寸。
-	local bodySize = fish:GetAttribute("FishBodySize")
+	local bodySize = template:GetAttribute("FishBodySize")
 	if typeof(bodySize) ~= "Vector3" or math.min(bodySize.X, bodySize.Y, bodySize.Z) <= 0 then
 		bodySize = body.Size
 	end
 	self.halfLength, self.depth = bodySize.Z * 0.5, bodySize.Y * 0.5 + Settings.WaterClearance
 	self.bodyWidth = math.max(bodySize.X, bodySize.Y)
 	-- 美术导出时测量全部蒙皮部件在五个动作中的范围，包含宽鳍、长尾与装饰。
-	self.presentationRadius = fish:GetAttribute("PresentationRadius")
+	self.presentationRadius = template:GetAttribute("PresentationRadius")
 	local mouth = body:FindFirstChild("MouthAttachment")
 	self.mouthOffset = if mouth and mouth:IsA("Attachment")
 		then mouth.Position
 		else body.Size * Vector3.new(unpack(Settings.MouthOffset))
-	self.bodyOffset = fish:GetPivot():ToObjectSpace(body.CFrame)
-	self.baseScale, self.scale = fish:GetScale(), 1
+	self.bodyOffset = template:GetPivot():ToObjectSpace(body.CFrame)
+	self.baseScale, self.scale = template:GetScale(), 1
 	self.biteDepth = BaitElasticMotion.BaseSize(owner).Y * Settings.BiteDepthFraction
 	self.side = owner.forward:Cross(Vector3.yAxis)
 	self.spawnSector = rng:NextInteger(1, 3)
@@ -269,6 +261,30 @@ function FishingBiteSequence.new(owner, startedAt, readyAt, random, visualRandom
 	-- 初次靠近的接触点；换位后的进食按当前方位重新求边缘交点。
 	self.contactOffset = self:_contactOffset(0)
 	self:_prepareRepositions()
+	return self
+end
+
+function FishingBiteSequence.GetBiteWindow(template, baitSize, startedAt, readyAt, seed, motionSeed, spin)
+	local owner = { baitBaseSize = baitSize, forward = Vector3.zAxis, spin = spin }
+	local round = prepareRound(owner, template, startedAt, readyAt, Random.new(seed), Random.new(motionSeed))
+	local timeline = round.timeline
+	while timeline.phase ~= "Bite" do
+		timeline:Advance(timeline.endsAt)
+	end
+	return timeline.startedAt, timeline.endsAt
+end
+
+function FishingBiteSequence.new(owner, startedAt, readyAt, random, visualRandom, template)
+	owner.baitBaseSize = BaitElasticMotion.BaseSize(owner)
+	if not template then
+		local models = ReplicatedStorage:FindFirstChild("Models")
+		local fishFolder = models and models:FindFirstChild("Fish")
+		template = FishingBiteSequence.SelectFishTemplate(fishFolder)
+	end
+	local self = prepareRound(owner, template, startedAt, readyAt, random, visualRandom)
+	local fish = template:Clone()
+	fish.Name, fish.Parent = "BitingFish", owner.folder
+	self.fish = fish
 	for _, part in ipairs(fish:GetDescendants()) do
 		if
 			part:IsA("BaseScript")

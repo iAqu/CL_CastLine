@@ -1,11 +1,11 @@
-local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local FishingAssets = require(ReplicatedStorage.Modules.FishingAssets)
 local RunService = game:GetService("RunService")
 local ServerScriptService = game:GetService("ServerScriptService")
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 
-local ItemsData = require(ReplicatedFirst.Data.ItemsData)
+local FishInventoryData = require(ReplicatedStorage.Modules.FishInventoryData)
 local ItemStatUtil = require(ReplicatedStorage.Modules.ItemStatUtil)
 local ItemToolUtil = require(ReplicatedStorage.Modules.ItemToolUtil)
 local MutationDataUtil = require(ReplicatedStorage.Modules.MutationDataUtil)
@@ -101,16 +101,6 @@ local function getWaterSurfaceY(waterTop: BasePart): number
 	return waterTop.CFrame:PointToWorldSpace(Vector3.new(0, waterTop.Size.Y * 0.5, 0)).Y
 end
 
-local function getItemTemplate(item): Model?
-	local models = ReplicatedStorage:FindFirstChild("Models")
-	local items = models and models:FindFirstChild("Items")
-	local template = item and items and items:FindFirstChild(item.Model)
-	if template and template:IsA("Model") then
-		return template
-	end
-	return nil
-end
-
 local function getPromptPart(model: Model): BasePart?
 	local handle = model:FindFirstChild("Handle", true)
 	if handle and handle:IsA("BasePart") then
@@ -168,7 +158,7 @@ local function getCarriedCandidates(player: Player, profile): { DropCandidate }
 			end
 
 			local record = normalizeRecord(profile.Data.Items[instanceId])
-			local item = record and ItemsData[record.ItemId] or nil
+			local item = record and FishInventoryData[record.ItemId] or nil
 			if not record or not item then
 				warn("DrownDropService: carried item has invalid profile data", instanceId)
 				continue
@@ -426,7 +416,7 @@ function DrownDropService:_createDrop(
 	dropOrigin: Vector3,
 	placements: { ScatterPlacement }
 ): DropState?
-	local template = getItemTemplate(candidate.item)
+	local template = FishingAssets.GetFish(candidate.item.Model)
 	if not template then
 		warn("DrownDropService: item model missing", candidate.record.ItemId)
 		return nil

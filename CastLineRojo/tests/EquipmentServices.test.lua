@@ -30,7 +30,7 @@ local services = {
 		Packages = { Knit = "knit" },
 		Modules = {
 			GamePassEffectUtil = "effects", PlayerLuckUtil = "luck", ItemStatUtil = "stats",
-			ItemToolUtil = "tools", MutationDataUtil = "mutation",
+			ItemToolUtil = "tools", MutationDataUtil = "mutation", FishInventoryData = "items",
 		},
 	},
 	ServerScriptService = { Services = { PlayerDataService = "profiles" } },

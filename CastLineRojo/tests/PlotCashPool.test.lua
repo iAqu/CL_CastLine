@@ -80,7 +80,7 @@ assert(
 	"A segment outside the expanded boundary must not count"
 )
 
-assert(service:find("ItemsData[record.ItemId]", 1, true), "The server must resolve the placed item from saved data")
+assert(service:find("FishInventoryData[record.ItemId]", 1, true), "The server must resolve the placed item from saved data")
 assert(service:find("MutationDataUtil.GetEarnCashRate(mutationId)", 1, true), "Production must apply the saved Mutation Cps rate")
 assert(not service:find("PaybackTime", 1, true), "PaybackTime must not affect runtime production")
 assert(not service:find("ConditionId", 1, true), "Condition must not affect runtime production")

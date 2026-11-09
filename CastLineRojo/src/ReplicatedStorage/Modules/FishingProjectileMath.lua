@@ -2,8 +2,10 @@ local Config = require(script.Parent.FishingConfig)
 
 local FishingProjectileMath = {}
 
-function FishingProjectileMath.Distance(meterValue: number): number
-	return Config.BaseDistance + math.floor(Config.MeterBonus * math.clamp(meterValue, 0, 1) + 0.5)
+function FishingProjectileMath.Distance(meterValue: number, minimum: number?, maximum: number?): number
+	local minDistance = minimum or Config.BaseDistance
+	local maxDistance = maximum or (minDistance + Config.MeterBonus)
+	return minDistance + math.round((maxDistance - minDistance) * math.clamp(meterValue, 0, 1))
 end
 
 function FishingProjectileMath.FlightTime(distance: number): number

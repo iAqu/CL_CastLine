@@ -62,8 +62,8 @@ local ok, result = xpcall(function()
 			)
 		end
 		local bones, parent = {}, active.fish.PrimaryPart
-		for _, name in ipairs(names) do
-			parent = assert(parent:FindFirstChild(name), "Missing bone: " .. name)
+		for index, name in ipairs(names) do
+			parent = assert(parent:FindFirstChild(name, index > 1), "Missing bone: " .. name)
 			bones[name] = parent
 		end
 		local startedAt = 101
@@ -98,8 +98,10 @@ local ok, result = xpcall(function()
 				local mouth = body.CFrame:PointToWorldSpace(active.mouthOffset * active.scale)
 				if phase == "Bite" and elapsed >= settings.BiteSinkTime then
 					local yaw = active:_feedingState("Bite", elapsed)
-					assert((mouth - (bait.Position + active:_contactOffset(yaw, bait.Size))).Magnitude < 0.001,
-						"Actual mouth left bait")
+					assert(
+						(mouth - (bait.Position + active:_contactOffset(yaw, bait.Size))).Magnitude < 0.001,
+						"Actual mouth left bait"
+					)
 				end
 				if phase == "Lifting" or phase == "Caught" then
 					local anchor = mouth - Vector3.yAxis

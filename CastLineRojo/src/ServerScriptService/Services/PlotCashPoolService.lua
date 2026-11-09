@@ -1,10 +1,9 @@
 local Players = game:GetService("Players")
-local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local Workspace = game:GetService("Workspace")
 
-local ItemsData = require(ReplicatedFirst.Data.ItemsData)
+local FishInventoryData = require(ReplicatedStorage.Modules.FishInventoryData)
 local Knit = require(ReplicatedStorage.Packages.Knit)
 local MutationDataUtil = require(ReplicatedStorage.Modules.MutationDataUtil)
 local PlotCashPoolUtil = require(ReplicatedStorage.Modules.PlotCashPoolUtil)
@@ -110,7 +109,7 @@ local function getPlacedRate(profile, slot: number): number
 	end
 	local itemUid = PlotPlacementUtil.GetItemUid(placements, slot)
 	local record = typeof(itemUid) == "string" and profile.Data.Items[itemUid] or nil
-	local itemData = typeof(record) == "table" and ItemsData[record.ItemId] or nil
+	local itemData = typeof(record) == "table" and FishInventoryData[record.ItemId] or nil
 	local mutationId = typeof(record) == "table" and record.MutationId or nil
 	return PlotCashPoolUtil.GetCpsPrice(itemData, MutationDataUtil.GetEarnCashRate(mutationId))
 end

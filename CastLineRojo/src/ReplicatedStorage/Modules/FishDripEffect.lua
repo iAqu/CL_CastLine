@@ -27,10 +27,38 @@ local function emissionCount(elapsed)
 	return math.floor(count + 0.000001)
 end
 
+local function surfaceBinding(body, point)
+	local rest = point:GetAttribute("RigV2SurfaceBind")
+	local encoded = point:GetAttribute("RigV2SurfaceWeights")
+	if typeof(rest) ~= "CFrame" or type(encoded) ~= "string" then
+		return nil
+	end
+	local influences, total = {}, 0
+	for name, value in string.gmatch(encoded, "([^:;]+):([^;]+)") do
+		local joint, weight = body:FindFirstChild(name, true), tonumber(value)
+		if not joint or not joint:IsA("Bone") or not weight or weight <= 0 or weight > 1 then
+			return nil
+		end
+		table.insert(influences, { joint = joint, weight = weight })
+		total += weight
+	end
+	if #influences == 0 or #influences > 4 or math.abs(total - 1) > 0.001 then
+		return nil
+	end
+	return { point = point, rest = rest, influences = influences }
+end
+
 function FishDripEffect.new(fish, random)
 	local self = setmetatable({
-		emitters = {}, burstEmitters = {}, bag = {}, bagIndex = 1,
-		random = random or Random.new(), lastCount = 0,
+		emitters = {},
+		burstEmitters = {},
+		bag = {},
+		bagIndex = 1,
+		fish = fish,
+		surfaces = {},
+		surfaceScale = fish:GetAttribute("RigV2SurfaceScale"),
+		random = random or Random.new(),
+		lastCount = 0,
 	}, FishDripEffect)
 	local vfx = ReplicatedStorage:FindFirstChild("VFX")
 	local water = vfx and vfx:FindFirstChild("WaterVFX")
@@ -50,6 +78,12 @@ function FishDripEffect.new(fish, random)
 		table.insert(points, point)
 	end
 	for _, point in ipairs(points) do
+		if type(self.surfaceScale) == "number" and self.surfaceScale > 0 then
+			local binding = surfaceBinding(fish.PrimaryPart, point)
+			if binding then
+				table.insert(self.surfaces, binding)
+			end
+		end
 		for _, burst in ipairs({ false, true }) do
 			local emitter = source:Clone()
 			emitter.Name = if burst then "ShowcaseBurst" else "ShowcaseDrip"
@@ -69,6 +103,37 @@ function FishDripEffect.new(fish, random)
 		end
 	end
 	return self
+end
+
+function FishDripEffect:_updateSurfaces()
+	if #self.surfaces == 0 then
+		return
+	end
+	local bodyFrame = self.fish.PrimaryPart.CFrame
+	local scale = self.fish:GetScale() / self.surfaceScale
+	for _, binding in ipairs(self.surfaces) do
+		local rest = binding.rest
+		local worldBind = bodyFrame * CFrame.new(rest.Position * scale) * rest.Rotation
+		local position, right, up = Vector3.zero, Vector3.zero, Vector3.zero
+		for _, influence in ipairs(binding.influences) do
+			local joint, weight = influence.joint, influence.weight
+			local frame = joint.TransformedWorldCFrame * joint.WorldCFrame:ToObjectSpace(worldBind)
+			position += frame.Position * weight
+			right += frame.RightVector * weight
+			up += frame.UpVector * weight
+		end
+		-- Match the skinned surface instead of following a single joint through a large bend.
+		local parent = binding.point.Parent.TransformedWorldCFrame
+		local rotation = parent.Rotation * binding.point.CFrame.Rotation
+		if up.Magnitude > 0.0001 then
+			up = up.Unit
+			right -= up * right:Dot(up)
+			if right.Magnitude > 0.0001 then
+				rotation = CFrame.fromMatrix(Vector3.zero, right.Unit, up)
+			end
+		end
+		binding.point.CFrame = parent:ToObjectSpace(CFrame.new(position) * rotation)
+	end
 end
 
 function FishDripEffect:_nextPoint()
@@ -110,6 +175,7 @@ function FishDripEffect:Update(phase, elapsed, request)
 		self:_clear()
 	end
 	self.active = true
+	self:_updateSurfaces()
 	local wanted = emissionCount(elapsed)
 	local count = math.min(math.max(0, wanted - self.lastCount), Settings.MaxCatchup)
 	-- 丢弃长帧中已过期的粒子，不把欠量留到后面的帧。
@@ -142,7 +208,7 @@ function FishDripEffect:Destroy()
 			emitter:Destroy()
 		end
 	end
-	self.emitters, self.burstEmitters = {}, {}
+	self.emitters, self.burstEmitters, self.surfaces = {}, {}, {}
 end
 
 return FishDripEffect

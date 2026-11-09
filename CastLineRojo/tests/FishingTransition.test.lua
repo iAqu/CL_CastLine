@@ -55,12 +55,13 @@ local function fixture()
 	end
 	local fm = {}
 	local function frame(position)
-		return setmetatable({ Position = position or vec(0, 0, 0), UpVector = vec(0, 1, 0) }, fm)
+		return setmetatable({ Position = position or vec(0, 0, 0), UpVector = vec(0, 1, 0), LookVector = vec(0, 0, 1) }, fm)
 	end
 	fm.__mul = function(a, b)
 		return frame(a.Position + b.Position)
 	end
 	fm.__index = {
+		PointToWorldSpace = function(self, point) return self.Position + point end,
 		PointToObjectSpace = function(self, point)
 			return point - self.Position
 		end,
@@ -132,7 +133,8 @@ local function fixture()
 		root.Position, root.CFrame = target.Position, target
 		self.teleports = (self.teleports or 0) + 1
 	end
-	local playerGui = object("PlayerGui", { CastMeterGui = meter })
+	local baitGui = object("ScreenGui")
+	local playerGui = object("PlayerGui", { CastMeterGui = meter, BaitSelectGui = baitGui })
 	playerGui.ChildAdded = signal()
 	function playerGui:GetGuiObjectsAtPosition()
 		return {}
@@ -152,6 +154,22 @@ local function fixture()
 	workspace.CurrentCamera = camera
 	local input, heartbeat = signal(), signal()
 	local sequence, failCreate = nil, false
+	local chooseBait
+	local function resolved(result)
+		return {
+			andThen = function(self, callback)
+				callback(result)
+				return self
+			end,
+			catch = function(self) return self end,
+		}
+	end
+	local fishingService = {
+		Begin = function() return resolved({ ok = true, token = "test" }) end,
+		SelectBait = function() return resolved({ ok = true, initialYaw = 0 }) end,
+		Cast = function() return resolved({ ok = true, distance = 50 }) end,
+		Cancel = function() return resolved({ ok = true }) end,
+	}
 	local controllers = {
 		MusicController = {
 			SetFishingActive = function(_, active)
@@ -173,11 +191,22 @@ local function fixture()
 			CreateController = function(value)
 				return value
 			end,
+			GetService = function() return fishingService end,
 			GetController = function(name)
 				return controllers[name]
 			end,
 		},
 		Config = config,
+		RodsData = { Rod_101 = { Model = "Alien Antenna", DistanceMin = 5, DistanceMax = 100 } },
+		BaitsData = {},
+		FishesData = {},
+		ProjectileMath = { Distance = function(value) return 5 + math.round(value * 95) end },
+		NotificationClient = { RedNotify = function() end },
+		FishingAssets = { GetBait = function() return object("Part") end },
+		FishingBaitSelect = { Bind = function(gui, _, _, choose)
+			chooseBait = choose
+			return { SetBusy = function() end, Destroy = function() gui.Enabled = false end }
+		end },
 		FishingAudio = {
 			ClearTails = function() effectAudio.clears += 1 end,
 			RefreshTails = function() effectAudio.refreshes += 1 end,
@@ -247,7 +276,7 @@ local function fixture()
 	local storage = object("ReplicatedStorage", {
 		Character = object("Folder", { PoseDefaultCharacter = object("Model") }),
 		Models = object("Folder", {
-			FishRod = object("Folder", { TestRod = object("Tool") }),
+			FishRod = object("Folder", { ["Alien Antenna"] = object("Tool") }),
 			FishBait = object("Folder", { ["1"] = object("Folder", { ["1"] = object("Part") }) }),
 		}),
 		Animation = object("Folder", { Fishing = object("Folder", { CastRod = object("Animation") }) }),
@@ -258,6 +287,10 @@ local function fixture()
 		FishingCastSequence = "FishingCastSequence",
 		FishingAudio = "FishingAudio",
 		FishingConfig = "Config",
+		FishingAssets = "FishingAssets",
+		FishingBaitSelect = "FishingBaitSelect",
+		FishingProjectileMath = "ProjectileMath",
+		NotificationClient = "NotificationClient",
 		Constants = "Constants",
 		GameplayInputGate = "GameplayInputGate",
 	}
@@ -270,7 +303,12 @@ local function fixture()
 			end,
 		},
 		ReplicatedStorage = storage,
-		ReplicatedFirst = { LoadingAttributes = "LoadingAttributes" },
+		ReplicatedFirst = {
+			LoadingAttributes = "LoadingAttributes",
+			WaitForChild = function()
+				return { WaitForChild = function(_, name) return name end }
+			end,
+		},
 		Workspace = workspace,
 		ProximityPromptService = object("ProximityPromptService"),
 		ContextActionService = {
@@ -386,6 +424,8 @@ local function fixture()
 			humanoid.Health = 0
 			humanoid.Died:Fire()
 		end,
+		baitVisible = function() return baitGui.Enabled == true end,
+		choose = function() chooseBait("NONE") end,
 		sequence = function()
 			return sequence
 		end,
@@ -414,12 +454,14 @@ assert(normal.sequence() == nil, "Do not replace the character before the screen
 assert(not normal.fishingAudio.active, "Ocean audio must wait for fishing scene preparation")
 normal.tap()
 normal.advance(0.16)
-assert(normal.sequence(), table.concat(normal.warnings, "\n"))
-assert(normal.sequence().phase == "Preparing")
+assert(not normal.sequence() and not normal.baitVisible(), "Keep the selection hidden until the scene is revealed")
 assert(normal.fishingAudio.active and normal.fishingAudio.starts == 1, "Preparing the covered fishing scene must start ocean audio once")
-normal.tap()
-assert(normal.sequence().casts == nil, "Block input until the new scene is revealed")
 normal.advance(0.36)
+assert(normal.baitVisible() and not normal.sequence(), "Select bait before starting the meter")
+normal.tap()
+assert(not normal.sequence(), "Scene input during selection must not cast")
+normal.choose()
+assert(normal.sequence() and normal.sequence().phase == "Preparing" and not normal.baitVisible())
 normal.tap()
 normal.tap()
 assert(
@@ -455,6 +497,7 @@ for _, phase in ipairs({ "Waiting", "Escaped" }) do
 	local reeled = fixture()
 	reeled.advance(0.31)
 	reeled.advance(0.36)
+	reeled.choose()
 	reeled.sequence().phase = phase
 	reeled.tap()
 	local startedAt = reeled.sequence().reelStarted
@@ -480,6 +523,7 @@ for _, delay in ipairs({ 0.1, reelDuration + 0.1 }) do
 	local cancelled = fixture()
 	cancelled.advance(0.31)
 	cancelled.advance(0.36)
+	cancelled.choose()
 	cancelled.sequence().phase = "Waiting"
 	cancelled.tap()
 	cancelled.advance(delay)
@@ -500,6 +544,7 @@ end
 local returning = fixture()
 returning.advance(0.31)
 returning.advance(0.36)
+returning.choose()
 returning.controller:ReturnToSpawn()
 returning.advance(0.15)
 returning.abort()
@@ -513,12 +558,16 @@ assert(not failed.locked() and not failed.root.Anchored and failed.covered() == 
 assert(not failed.fishingAudio.active and failed.fishingAudio.starts == 0, "Failed preparation must never start ocean audio")
 local dead = fixture()
 dead.advance(0.31)
+dead.advance(0.36)
+dead.choose()
 assert(dead.fishingAudio.active)
 dead.die()
 assert(dead.sequence().keepFail == false, "Death must not preserve a failure tail")
 assert(not dead.fishingAudio.active and not dead.controller:IsPreparing(), "Death must stop ocean audio")
 local broken = fixture()
 broken.advance(0.31)
+broken.advance(0.36)
+broken.choose()
 assert(broken.fishingAudio.active)
 broken.sequence().Update = function() error("Sequence update failed") end
 broken.advance(0.36)

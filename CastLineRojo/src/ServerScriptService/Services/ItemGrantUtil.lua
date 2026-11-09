@@ -4,7 +4,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
 local ConditionsData = require(ReplicatedFirst.Data.ConditionsData)
-local ItemsData = require(ReplicatedFirst.Data.ItemsData)
+local FishInventoryData = require(ReplicatedStorage.Modules.FishInventoryData)
 local GamePassEffectUtil = require(ReplicatedStorage.Modules.GamePassEffectUtil)
 local ItemRollUtil = require(ReplicatedStorage.Modules.ItemRollUtil)
 local ItemStatUtil = require(ReplicatedStorage.Modules.ItemStatUtil)
@@ -39,12 +39,12 @@ end
 
 function ItemGrantUtil.GetOrderedItemIds(): { string }
 	local itemIds = {}
-	for itemId in pairs(ItemsData) do
+	for itemId in pairs(FishInventoryData) do
 		table.insert(itemIds, itemId)
 	end
 	table.sort(itemIds, function(left, right)
-		local leftItem = ItemsData[left]
-		local rightItem = ItemsData[right]
+		local leftItem = FishInventoryData[left]
+		local rightItem = FishInventoryData[right]
 		if leftItem.LayoutOrder ~= rightItem.LayoutOrder then
 			return leftItem.LayoutOrder < rightItem.LayoutOrder
 		end
@@ -59,7 +59,7 @@ function ItemGrantUtil.Grant(player: Player, itemId: string, options: GrantOptio
 		return nil, "No Profile found for player"
 	end
 
-	local item = ItemsData[itemId]
+	local item = FishInventoryData[itemId]
 	if not item then
 		return nil, "Unknown item: " .. tostring(itemId)
 	end

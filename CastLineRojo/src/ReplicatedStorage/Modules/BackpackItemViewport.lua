@@ -1,7 +1,7 @@
-local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local FishingAssets = require(ReplicatedStorage.Modules.FishingAssets)
 
-local ItemsData = require(ReplicatedFirst.Data.ItemsData)
+local FishInventoryData = require(ReplicatedStorage.Modules.FishInventoryData)
 local ItemToolUtil = require(ReplicatedStorage.Modules.ItemToolUtil)
 
 local BackpackItemViewport = {}
@@ -52,10 +52,8 @@ end
 
 local function getAuthoredRotation(tool: Tool): CFrame
 	local itemId = tool:GetAttribute(ItemToolUtil.ITEM_ID_ATTRIBUTE)
-	local item = if typeof(itemId) == "string" then ItemsData[itemId] else nil
-	local models = ReplicatedStorage:FindFirstChild("Models")
-	local items = models and models:FindFirstChild("Items")
-	local template = item and items and items:FindFirstChild(item.Model)
+	local item = if typeof(itemId) == "string" then FishInventoryData[itemId] else nil
+	local template = item and FishingAssets.GetFish(item.Model)
 	if template and template:IsA("Model") then
 		-- The Tool's current rotation can include the character's equipped pose.
 		return template:GetPivot().Rotation

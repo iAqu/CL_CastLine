@@ -1,12 +1,13 @@
 local Players = game:GetService("Players")
 local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local FishingAssets = require(ReplicatedStorage.Modules.FishingAssets)
 local RunService = game:GetService("RunService")
 local StarterGui = game:GetService("StarterGui")
 local Workspace = game:GetService("Workspace")
 
 local ConditionsData = require(ReplicatedFirst.Data.ConditionsData)
-local ItemsData = require(ReplicatedFirst.Data.ItemsData)
+local FishInventoryData = require(ReplicatedStorage.Modules.FishInventoryData)
 local Knit = require(ReplicatedStorage.Packages.Knit)
 local ConditionLabelUtil = require(ReplicatedStorage.Modules.ConditionLabelUtil)
 local DropVFXUtil = require(ReplicatedStorage.Modules.DropVFXUtil)
@@ -356,10 +357,8 @@ local function rebuildDisplay(pedestal: Instance)
 	if typeof(itemUid) ~= "string" or itemUid == "" or typeof(itemId) ~= "string" or typeof(weight) ~= "number" then
 		return
 	end
-	local item = ItemsData[itemId]
-	local models = ReplicatedStorage:FindFirstChild("Models")
-	local itemModels = models and models:FindFirstChild("Items")
-	local template = item and itemModels and itemModels:FindFirstChild(item.Model)
+	local item = FishInventoryData[itemId]
+	local template = item and FishingAssets.GetFish(item.Model)
 	local plot = getPlot(pedestal)
 	if not item or not template or not template:IsA("Model") or not plot then
 		return

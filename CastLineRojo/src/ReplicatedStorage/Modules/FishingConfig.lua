@@ -1,4 +1,8 @@
 return {
+	DefaultRodId = "Rod_101",
+	DistanceLuckScale = 100,
+	WaitLuckMaxMultiplier = 4,
+	WaitLuckRampSeconds = 60,
 	BaseDistance = 55,
 	MeterBonus = 20,
 	BaseFlightTime = 1.6,
@@ -120,7 +124,7 @@ return {
 		HoldTime = 0.5,
 	},
 	Bite = {
-		-- 默认从 Models.Fish 等概率抽取；验证时可临时设置 FishName 指定鱼种。
+		-- 独立演出测试可用 FishName 指定鱼种；正式钓鱼使用服务器抽取结果。
 		-- 相对鱼身尺寸的嘴部连接位置。
 		MouthOffset = { 0, -0.1, -0.485 },
 		AppearDelayMin = 1,
@@ -203,6 +207,8 @@ return {
 				Bones = { "FishBody", "SpineFront", "SpineMid", "TailBase", "FishTail" },
 				FadeTime = 0.15,
 				HoldWeight = 0.4,
+				ShowcaseIdleSpeed = 0.35,
+				ShowcaseIdleWeight = 0.25,
 				GapMin = 3,
 				GapMax = 5,
 				LoadTimeout = 8,
@@ -226,7 +232,7 @@ return {
 			StartRadiusScale = 1.2,
 			EndRadiusMin = 0.8,
 			EndRadiusMax = 0.8,
-			AnimationCycle = 0.3,
+			AnimationCycle = 0.45,
 		},
 		RippleInterval = 0.22,
 		LiftTime = 2,

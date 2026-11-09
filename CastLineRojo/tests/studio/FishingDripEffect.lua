@@ -35,6 +35,30 @@ local function validate(template)
 	sequence.timeline:_enter("Caught", startedAt)
 	sequence:Update(startedAt)
 	local effect = assert(sequence.drip, "Caught did not create droplets")
+	local expanded = template:GetAttribute("RigVersion") == 2
+	if expanded then
+		assert(#effect.surfaces == 24, "Expanded fish did not load all weighted surface binds")
+	end
+	local maxSurfaceError = 0
+	local function checkWeightedSurface()
+		if not expanded then
+			return
+		end
+		effect:_updateSurfaces()
+		local fish = sequence.fish
+		local ratio = fish:GetScale() / template:GetAttribute("RigV2SurfaceScale")
+		for _, binding in effect.surfaces do
+			local rest = fish.PrimaryPart.CFrame:PointToWorldSpace(binding.rest.Position * ratio)
+			local blended = Vector3.zero
+			for _, influence in binding.influences do
+				local bone = influence.joint
+				local moved = bone.TransformedWorldCFrame:PointToWorldSpace(bone.WorldCFrame:PointToObjectSpace(rest))
+				blended += moved * influence.weight
+			end
+			maxSurfaceError = math.max(maxSurfaceError, (binding.point.WorldPosition - blended).Magnitude)
+		end
+		assert(maxSurfaceError < 0.002, "Drip point left the blended skin")
+	end
 	assert(#effect.emitters == 24 and #effect.burstEmitters == 24, "Missing surface emitters")
 	assert(effect.lastBurst == nil and effect.lastCount == 0, "Emission preceded tail movement")
 	local actuals, normalRecords, burstRecords = {}, {}, {}
@@ -93,6 +117,7 @@ local function validate(template)
 	for _, at in ipairs({ 0.2, 0.32, 0.45, 0.55, 0.65, 0.76, 0.9 }) do
 		sequence:Update(startedAt + at)
 		task.wait()
+		checkWeightedSurface()
 		local low, high = math.huge, -math.huge
 		for _, emitter in ipairs(effect.emitters) do
 			local point = emitter.Parent
@@ -135,12 +160,26 @@ local function validate(template)
 			assert(error < 0.001, "Surface point did not scale with fish")
 		end
 	end
-	local point = effect.emitters[5].Parent
+	checkWeightedSurface()
+	local point, bestRadius
+	for _, emitter in effect.emitters do
+		local attachment = emitter.Parent
+		local offset = attachment.Position
+		local radius = Vector2.new(offset.X, offset.Z).Magnitude
+		if not bestRadius or radius > bestRadius then
+			point, bestRadius = attachment, radius
+		end
+	end
 	local beforePosition = point.WorldPosition
-	point.Parent.Transform = CFrame.Angles(0, 0.5, 0)
+	point.Parent.Transform *= CFrame.Angles(0, 0.5, 0)
 	local expected = point.Parent.TransformedWorldCFrame:PointToWorldSpace(point.Position)
 	local followError = (point.WorldPosition - expected).Magnitude
-	assert((point.WorldPosition - beforePosition).Magnitude > 0.1, "Point did not follow bone deformation")
+	local expectedMovement = 2 * bestRadius * math.sin(0.25)
+	assert(
+		expectedMovement > 0.001
+			and math.abs((point.WorldPosition - beforePosition).Magnitude - expectedMovement) < 0.002,
+		"Point did not follow bone deformation"
+	)
 	assert(followError < 0.001, "Point diverged from bone")
 	effect:Update("Lifting", 0)
 	assert(not effect.active, "Droplets leaked outside Caught")
@@ -160,6 +199,7 @@ local function validate(template)
 		emitters = #actuals,
 		minCoverage = minCoverage,
 		maxScaleError = maxScaleError,
+		maxSurfaceError = maxSurfaceError,
 		boneFollowError = followError,
 		normalCount10Seconds = 80,
 		catchupLimit = 4,
@@ -170,15 +210,30 @@ local ok, result = xpcall(function()
 	table.sort(templates, function(a, b)
 		return a.Name < b.Name
 	end)
-	local results = {}
+	local results, errors = {}, {}
 	for _, template in ipairs(templates) do
 		if template:IsA("Model") and template.PrimaryPart then
-			table.insert(results, validate(template))
+			local passed, value = xpcall(function()
+				return validate(template)
+			end, debug.traceback)
+			if passed then
+				table.insert(results, value)
+			else
+				table.insert(errors, { name = template.Name, error = value })
+				if sequence then
+					sequence:Destroy()
+					sequence = nil
+				end
+			end
 			task.wait()
 		end
 	end
-	assert(#results == #templates and #results > 0, "Expected every fish in drip regression")
-	return { passed = true, fish = #results, results = results }
+	return {
+		passed = #errors == 0 and #results == #templates and #results > 0,
+		fish = #results,
+		results = results,
+		errors = errors,
+	}
 end, debug.traceback)
 if sequence then
 	sequence:Destroy()

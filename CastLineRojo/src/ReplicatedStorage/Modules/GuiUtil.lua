@@ -267,7 +267,7 @@ function GuiUtil.ClearGradeint(parent: Instance)
 	end)
 end
 
-local function getRarityGradientTemplate(rarity: string?): UIGradient?
+local function getRarityGradientTemplate(rarity: string?, quiet: boolean?): UIGradient?
 	if not rarity or rarity == "" then
 		return nil
 	end
@@ -277,7 +277,9 @@ local function getRarityGradientTemplate(rarity: string?): UIGradient?
 	local gradientName = "UIGradient_" .. rarity
 	local gradient = gradientsFolder and gradientsFolder:FindFirstChild(gradientName)
 	if not gradient or not gradient:IsA("UIGradient") then
-		warn("Gradient not found:", gradientName)
+		if not quiet then
+			warn("Gradient not found:", gradientName)
+		end
 		return nil
 	end
 
@@ -310,30 +312,31 @@ end
 
 function GuiUtil.GetRarityGradientColor(rarity: string?): Color3?
 	local entry = RarityConfig.ByName[RarityConfig.Normalize(rarity)]
-	if entry then
+	if entry and entry.Name ~= "Exclusive" then
 		return entry.Color
 	end
-	local gradient = getRarityGradientTemplate(rarity)
-	return gradient and getColorSequenceColorAt(gradient.Color, 0.5) or nil
+	local gradient = getRarityGradientTemplate(rarity, entry ~= nil)
+	return if gradient then getColorSequenceColorAt(gradient.Color, 0.5) else entry and entry.Color
 end
 
 function GuiUtil.SetRarityGradient(parent: Instance, rarity: string?)
 	GuiUtil.ClearGradeint(parent)
 	local entry = RarityConfig.ByName[RarityConfig.Normalize(rarity)]
+	if not entry or entry.Name == "Exclusive" then
+		local template = getRarityGradientTemplate(rarity, entry ~= nil)
+		if template then
+			local clone = template:Clone()
+			clone.Enabled = true
+			clone.Parent = parent
+			return
+		end
+	end
 	if entry then
 		local gradient = Instance.new("UIGradient")
 		gradient.Name = "UIGradient_" .. entry.Name
 		gradient.Color = entry.Gradient
 		gradient.Parent = parent
-		return
 	end
-	local gradient = getRarityGradientTemplate(rarity)
-	if not gradient then
-		return
-	end
-	local clone = gradient:Clone()
-	clone.Enabled = true
-	clone.Parent = parent
 end
 
 -- Backward-compatible alias for callers that still use the old helper name.

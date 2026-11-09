@@ -14,14 +14,14 @@ local function check(h)
 	local Gui = h.load("GuiUtil")
 	local VFX = h.load("DropVFXUtil")
 	local names = { "Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythic", "Secret",
-		"Divine", "Celestial", "Eternal", "Cosmic" }
-	local luck = { 1, 1.6, 2.6, 4.2, 7, 12, 20, 32, 52, 84, 136 }
+		"Divine", "Celestial", "Eternal", "Cosmic", "Exclusive" }
+	local luck = { 1, 1.6, 2.6, 4.2, 7, 12, 20, 32, 52, 84, 136, 220 }
 	local palettes = {
 		{ "D7D7DE", "9696A0" }, { "96FF78", "32B432" }, { "78BEFF", "1E5AE6" },
 		{ "D782FF", "7828DC" }, { "FFD25A", "FF7800" }, { "FF6E96", "C8003C" },
 		{ "AEB5C6", "515969" }, { "FFFAC8", "FFD700" },
 		{ "78F5FF", "BE82FF", "FF96DC" }, { "FFEBFF", "BE46FF", "3C0096" },
-		{ "78FFFA", "3C5AFF", "14005A" },
+		{ "78FFFA", "3C5AFF", "14005A" }, { "FFDB89", "FF67B7", "8646FF" },
 	}
 	local function near(a, b) assert(math.abs(a - b) < 1e-6, tostring(a) .. " ~= " .. tostring(b)) end
 	local function sameColor(a, b)
@@ -40,7 +40,7 @@ local function check(h)
 		return {}, { X = 3, Y = 4, Z = 2 }
 	end }
 	local listed = Roll.GetRarities()
-	assert(#listed == 11 and #Config.List == 11)
+	assert(#listed == 12 and #Config.List == 12)
 	for index, name in ipairs(names) do
 		assert(listed[index] == name and Config.List[index].Name == name)
 		assert(Config.Get(name).Index == index and Roll.GetRarityRank(name) == index)
@@ -80,7 +80,7 @@ local function check(h)
 	assert(Config.Normalize("Mythical") == "Mythic" and Config.Normalize("Exclusive") == "Exclusive")
 	assert(Config.Get("Mythical") == Config.Get("Mythic"))
 	assert(Config.Get(nil).Name == "Common" and Reveal.ResolveRarity("unknown") == "Common")
-	assert(Roll.GetRarityRank("Mythical") == 6 and Roll.GetRarityRank("Exclusive") == math.huge)
+	assert(Roll.GetRarityRank("Mythical") == 6 and Roll.GetRarityRank("Exclusive") == 12)
 	assert(Reveal.GetStyle("Mythical") == Reveal.GetStyle("Mythic"))
 	Gui.SetRarityGradient(label, "Mythical")
 	assert(label:GetChildren()[1].Name == "UIGradient_Mythic")

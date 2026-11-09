@@ -84,6 +84,10 @@ function State:Sample(phase, phaseStartedAt, now, mirror, swimWeight, nibbleSpee
 		if now >= self.nextBurst then
 			name, token, speed = "ShowcaseFlop", self.nextBurst, 1
 			position, weight = now - self.nextBurst, 1
+		else
+			name, token, speed = "SwimLoop", "ShowcaseIdle", AnimationSettings.ShowcaseIdleSpeed
+			position = elapsed * speed % clips.SwimLoop.Duration
+			weight = AnimationSettings.ShowcaseIdleWeight
 		end
 	end
 	if not name or weight <= 0.00001 then
@@ -98,10 +102,11 @@ function FishAnimationController.new(fish, startedAt, random)
 		FishAnimationController
 	)
 	local parent = fish.PrimaryPart
-	for _, name in ipairs(AnimationSettings.Bones) do
-		local bone = parent and parent:FindFirstChild(name)
+	for index, name in ipairs(AnimationSettings.Bones) do
+		-- Keep the root directly under the mesh; expanded rigs can insert joints between anchors.
+		local bone = parent and parent:FindFirstChild(name, index > 1)
 		if not bone or not bone:IsA("Bone") then
-			warnOnce("rig", "five-bone rig is missing; keeping neutral pose")
+			warnOnce("rig", "fish rig anchors are missing; keeping neutral pose")
 			return self
 		end
 		parent = bone

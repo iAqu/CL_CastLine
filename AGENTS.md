@@ -27,7 +27,7 @@
 - 若多开 Studio 且无法确认目标工程，先问用户。
 - Rojo 已连接时不要操作 Rojo；断开时提示用户重新连接。
 - Rojo 会自动同步代码到 Studio，禁止通过 MCP 同步仓库脚本。
-
+- 涉及到 UI 文本格式，通过 Mcp 先分析Studio，参考 Label 已经有的 text 文本格式。
 
 
 ## 验证

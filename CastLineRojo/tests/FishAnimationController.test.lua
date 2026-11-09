@@ -1,3 +1,4 @@
+--# selene: allow(incorrect_standard_library_use)
 local function read(path)
 	local file = assert(io.open(path, "r"))
 	local source = file:read("*a")
@@ -29,6 +30,7 @@ local environment = setmetatable({
 	},
 }, { __index = getfenv() })
 services.ReplicatedStorage, services.ContentProvider = {}, {}
+-- selene: allow(undefined_variable)
 local Animation =
 	assert(load(read("src/ReplicatedStorage/Modules/FishAnimationController.lua"), "FishAnimation", "t", environment))()
 local function state()
@@ -39,17 +41,17 @@ local function state()
 	})
 end
 local sampler = state()
-local sampled, sharedRequest = 0, { name = "ShowcaseFlop", position = 0.3 }
+local sampleCalls, sharedRequest = 0, { name = "ShowcaseFlop", position = 0.3 }
 local loading = setmetatable({
 	loading = true,
 	state = {
 		Sample = function()
-			sampled += 1
+			sampleCalls += 1
 			return sharedRequest
 		end,
 	},
 }, Animation)
-assert(loading:Update("Caught", 0, 4.3) == sharedRequest and sampled == 1, "Animation request was not shared once")
+assert(loading:Update("Caught", 0, 4.3) == sharedRequest and sampleCalls == 1, "Animation request was not shared once")
 assert(not sampler:Sample("Waiting", 0, 5))
 assert(not sampler:Sample("Approaching", 10, 10))
 local swim = sampler:Sample("Approaching", 10, 10.5)
@@ -68,12 +70,15 @@ for _, speed in ipairs({ 0.8, 1, 1.3 }) do
 	assert(math.abs(request.position - at % settings.Clips.SwimLoop.Duration) < 1e-9, "Swim phase was time-scaled")
 	assert(not sampler:Sample("Nibbling", 0, 0.15 / speed, 1, nil, speed), "Contact weight missed scaled timing")
 end
+local cycle = config.Bite.Struggle.AnimationCycle
+local struggleSpeed = settings.Clips.StruggleLeft.Duration / cycle
+assert(cycle == 0.45)
 for _, mirror in ipairs({ -1, 1 }) do
-	for index = 0, 9 do
+	for index = 0, math.floor(config.Bite.StruggleTime / cycle) - 1 do
 		local at = (index + 0.5) * config.Bite.Struggle.AnimationCycle
 		local request = sampler:Sample("Struggling", 0, at, mirror)
 		assert(request.name == (if mirror > 0 then "StruggleLeft" else "StruggleRight"))
-		assert(math.abs(request.position - 0.3) < 1e-6 and request.speed == 2)
+		assert(math.abs(request.position - 0.3) < 1e-6 and request.speed == struggleSpeed)
 		assert(request.token == 0, "Loop unnecessarily changed track token")
 		assert(settings.Clips[request.name].Looped, "Struggle must loop without restarts")
 		for _, rate in ipairs({ 15, 30, 60, 144 }) do
@@ -88,8 +93,12 @@ for _, mirror in ipairs({ -1, 1 }) do
 	for _, time in ipairs({ 0, 0.6, 1.05, 1.65, 1.9, 2.65, 2.999 }) do
 		assert(sampler:Sample("Struggling", 0, time, mirror), "Orbit animation paused")
 	end
-	local late = state():Sample("Struggling", 0, 2.85, mirror)
-	assert(late.token == 0 and math.abs(late.position - 0.3) < 1e-6, "Late entry replayed old cycles")
+	local lateAt = 2.85
+	local late = state():Sample("Struggling", 0, lateAt, mirror)
+	assert(
+		late.token == 0 and math.abs(late.position - lateAt % cycle * struggleSpeed) < 1e-6,
+		"Late entry replayed old cycles"
+	)
 	assert(not sampler:Sample("Struggling", 0, 3, mirror), "Expired struggle replayed")
 end
 assert(sampler:Sample("Lifting", 10, 11).name == "LiftFlop")
@@ -100,16 +109,30 @@ assert(first.name == "ShowcaseFlop" and first.token == 100 and first.position ==
 local continuing = idle:Sample("Caught", 100, 100.3)
 assert(continuing.token == first.token and math.abs(continuing.position - 0.3) < 1e-6, "First showcase lost its timing")
 local firstEnd = 100 + settings.Clips.ShowcaseFlop.Duration
-assert(not idle:Sample("Caught", 100, firstEnd) and idle.nextBurst == firstEnd + 4, "Random pause did not start")
+local function showcaseIdle(clock, now)
+	local request = clock:Sample("Caught", 100, now)
+	assert(request.name == "SwimLoop" and request.token == "ShowcaseIdle", "Showcase idle did not swim")
+	assert(request.speed == 0.35 and request.weight == 0.25, "Showcase idle strength changed")
+	assert(
+		math.abs(request.position - ((now - 100) * request.speed % settings.Clips.SwimLoop.Duration)) < 1e-9,
+		"Showcase idle lost its continuous clock"
+	)
+	return request
+end
+showcaseIdle(idle, firstEnd)
+assert(idle.nextBurst == firstEnd + 4, "Random pause did not start")
 local nextBurst = idle.nextBurst
-assert(not idle:Sample("Caught", 100, nextBurst - 0.001), "Showcase skipped its random pause")
+showcaseIdle(idle, nextBurst - 0.001)
 local later = idle:Sample("Caught", 100, nextBurst)
 assert(later.name == "ShowcaseFlop" and later.token == nextBurst and later.position == 0, "Random showcase was delayed")
-assert(not idle:Sample("Caught", 100, nextBurst + settings.Clips.ShowcaseFlop.Duration), "Random showcase did not end")
-assert(not idle:Sample("Caught", 100, 1000) and idle.nextBurst == 1004)
-assert(not idle:Sample("Caught", 100, 1000) and idle.nextBurst == 1004)
+showcaseIdle(idle, nextBurst + settings.Clips.ShowcaseFlop.Duration)
+showcaseIdle(idle, 1000)
+assert(idle.nextBurst == 1004)
+showcaseIdle(idle, 1000)
+assert(idle.nextBurst == 1004)
 local skipped = state()
-assert(not skipped:Sample("Caught", 100, 1000) and skipped.nextBurst == 1004)
+showcaseIdle(skipped, 1000)
+assert(skipped.nextBurst == 1004)
 assert(idle:Sample("Caught", 2000, 2000).position == 0, "Next catch did not play its first showcase")
 assert(not sampler:Sample("Reeling", 10, 10.5))
 assert(not sampler:Sample("Reeled", 10, 10.5))
@@ -127,7 +150,20 @@ do
 		stops += 1
 		self.IsPlaying = false
 	end
-	local controller = setmetatable({ state = state(), tracks = { ShowcaseFlop = track } }, Animation)
+	local idlePlays, idleStops = 0, 0
+	local swimTrack = { Length = settings.Clips.SwimLoop.Duration, Looped = true, TimePosition = 0 }
+	swimTrack.Play = function(self, fade, weight, speed)
+		assert(fade == settings.FadeTime and weight == 0.25 and speed == 0.35)
+		idlePlays += 1
+		self.IsPlaying = true
+	end
+	swimTrack.Stop = function(self, fade)
+		assert(fade == settings.FadeTime, "Idle did not crossfade into the next burst")
+		idleStops += 1
+		self.IsPlaying = false
+	end
+	local controller =
+		setmetatable({ state = state(), tracks = { ShowcaseFlop = track, SwimLoop = swimTrack } }, Animation)
 	for _, at in ipairs({ 100, 100.1, 100.3, 100.6, 100.899 }) do
 		controller:Update("Caught", 100, at)
 		assert(plays == 1 and stops == 0, "First showcase track restarted")
@@ -135,9 +171,9 @@ do
 	controller:Update("Caught", 100, firstEnd)
 	assert(plays == 1 and stops == 1, "First showcase did not finish")
 	controller:Update("Caught", 100, firstEnd + 3.9)
-	assert(plays == 1 and stops == 1, "Showcase replayed during its pause")
+	assert(plays == 1 and stops == 1 and idlePlays == 1 and idleStops == 0, "Idle restarted during the interval")
 	controller:Update("Caught", 100, firstEnd + 4)
-	assert(plays == 2 and stops == 1, "Random showcase did not resume")
+	assert(plays == 2 and stops == 1 and idleStops == 1, "Random showcase did not resume")
 end
 
 -- 周期边界和长帧只调整绝对播放位置，不停止/重播同一挣扎轨道。
@@ -145,7 +181,7 @@ for _, mirror in ipairs({ -1, 1 }) do
 	local plays, stops = 0, 0
 	local track = { Length = 0.6, Looped = true, TimePosition = 0, IsPlaying = false }
 	track.Play = function(self, fade, weight, speed)
-		assert(fade == settings.FadeTime and weight == 1 and speed == 2)
+		assert(fade == settings.FadeTime and weight == 1 and speed == struggleSpeed)
 		plays += 1
 		self.IsPlaying = true
 	end
@@ -158,11 +194,25 @@ for _, mirror in ipairs({ -1, 1 }) do
 			StruggleLeft = track,
 			StruggleRight = track,
 		} }, Animation)
-	for _, at in ipairs({ 0, 0.299, 0.3, 0.301, 0.599, 0.6, 0.601, 1.2, 2.85, 2.999 }) do
+	for _, at in ipairs({
+		0,
+		cycle - 0.001,
+		cycle,
+		cycle + 0.001,
+		cycle * 2 - 0.001,
+		cycle * 2,
+		cycle * 2 + 0.001,
+		1.2,
+		2.85,
+		2.999,
+	}) do
 		controller:Update("Struggling", 0, at, mirror)
 		assert(plays == 1 and stops == 0, "Continuous struggle track restarted at cycle boundary")
 	end
-	assert(math.abs(track.TimePosition - 0.598) < 1e-6, "Long frame did not seek to current loop position")
+	assert(
+		math.abs(track.TimePosition - 2.999 % cycle * struggleSpeed) < 1e-6,
+		"Long frame did not seek to current loop position"
+	)
 	controller:Update("Lifting", 3, 3, mirror)
 	assert(stops == 1, "Leaving struggle failed to fade the loop out")
 end
@@ -268,6 +318,24 @@ local localOnly = Animation.new(fish, 0, {})
 table.remove(tasks, 1)()
 assert(selected and #selected == 5, "Local clips still depend on the shared folder")
 localOnly:Destroy()
+
+-- V2 inserts real joints between the legacy anchors. It must still load all five clips.
+local tailBase = node({ FishTail = node({}, "Bone") }, "Bone")
+local mid = node({ TailBase = tailBase }, "Bone")
+local intermediate = node({ SpineMid = mid }, "Bone")
+local front = node({}, "Bone")
+front.FindFirstChild = function(_, name, recursive)
+	if name == "SpineMid" and recursive then
+		return intermediate:FindFirstChild(name)
+	end
+	return nil
+end
+fish.PrimaryPart = node({ FishBody = node({ SpineFront = front }, "Bone") }, "MeshPart")
+selected = nil
+local expanded = Animation.new(fish, 0, {})
+table.remove(tasks, 1)()
+assert(selected and #selected == 5, "Expanded spine could not load the five clips")
+expanded:Destroy()
 
 local stopped, destroyed = 0, 0
 local active = setmetatable({

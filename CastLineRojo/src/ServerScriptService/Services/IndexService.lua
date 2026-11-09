@@ -3,7 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
 local Knit = require(ReplicatedStorage.Packages.Knit)
-local ItemsData = require(ReplicatedFirst.Data.ItemsData)
+local FishInventoryData = require(ReplicatedStorage.Modules.FishInventoryData)
 local IndexRewardsData = require(ReplicatedFirst.Data.IndexRewardsData)
 local IndexRewardsDataHelper = require(ReplicatedFirst.DataHelpers.IndexRewardsDataHelper)
 local PlayerDataService = require(ServerScriptService.Services.PlayerDataService)
@@ -23,7 +23,7 @@ local function getValidDiscoveryCount(discoveryLog: unknown): number
 		return 0
 	end
 	local count = 0
-	for itemId in pairs(ItemsData) do
+	for itemId in pairs(FishInventoryData) do
 		if discoveryLog[itemId] == true then
 			count += 1
 		end
@@ -33,7 +33,7 @@ end
 
 local function getTotalItemCount(): number
 	local count = 0
-	for _ in pairs(ItemsData) do
+	for _ in pairs(FishInventoryData) do
 		count += 1
 	end
 	return count
@@ -57,7 +57,7 @@ end
 
 function IndexService:DiscoverItem(player: Player, itemId: string): boolean
 	local profile = PlayerDataService:GetProfile(player)
-	if not profile or not ItemsData[itemId] then
+	if not profile or not FishInventoryData[itemId] then
 		return false
 	end
 	if typeof(profile.Data.IndexDiscoveryLog) ~= "table" then
@@ -88,7 +88,7 @@ end
 
 function IndexService:ClaimReward(player: Player, itemId: string)
 	local profile = PlayerDataService:GetProfile(player)
-	local item = ItemsData[itemId]
+	local item = FishInventoryData[itemId]
 	if not profile or not item then
 		return { IsSuccess = false, ResultText = "Unknown item." }
 	end

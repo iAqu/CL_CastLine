@@ -14,7 +14,7 @@ local giveRandomItemServer = read("src/ServerScriptService/Cmdr/Commands/GiveRan
 local permissions = read("src/ServerScriptService/Cmdr/Hooks/Permission.lua")
 
 assert(itemType:find('RegisterType("item"', 1, true), "Cmdr must register an item type")
-assert(itemType:find("ReplicatedFirst.Data.ItemsData", 1, true), "Client Cmdr types must read replicated item data")
+assert(itemType:find("ReplicatedStorage.Modules.FishInventoryData", 1, true), "Client Cmdr types must read replicated item data")
 assert(not itemType:find("ServerScriptService", 1, true), "Client Cmdr types must not depend on server-only services")
 assert(grantUtil:find("ItemRollUtil.RollCondition(ConditionsData, conditionLuck, random)", 1, true), "Granted items must roll Conditions with Condition Luck")
 assert(grantUtil:find("conditionId = conditionId or DEFAULT_CONDITION_ID", 1, true), "Granted items must fall back to Normal when no Condition can roll")

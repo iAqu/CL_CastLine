@@ -36,6 +36,7 @@ RarityConfig.List = {
 	rarity("Celestial", { "78F5FF", "BE82FF", "FF96DC" }, 52),
 	rarity("Eternal", { "FFEBFF", "BE46FF", "3C0096" }, 84),
 	rarity("Cosmic", { "78FFFA", "3C5AFF", "14005A" }, 136),
+	rarity("Exclusive", { "FFDB89", "FF67B7", "8646FF" }, 220),
 }
 
 RarityConfig.ByName = {} :: { [string]: Rarity }

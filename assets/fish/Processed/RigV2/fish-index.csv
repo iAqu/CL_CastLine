@@ -1,0 +1,113 @@
+﻿鱼名,类型,原逻辑骨骼,新逻辑骨骼,实际 Bone 实例,网格数,动作组,游动尾端摆幅倍率,左挣扎,右挣扎,出水,展示,展示取景最大比例
+Elder Fish,elder,5,10,10,1,v2_elder_e2b07cbe70,2.21,3.139,3.139,1.515,2.711,0.6436
+Clownfish,standard,5,10,10,1,v2_standard_9492c85ee9,2.203,2.832,2.832,1.482,2.595,0.4034
+Attacking Whale,dolphin,5,10,10,1,v2_dolphin_cf9273bf86,2.941,4.47,4.381,1.98,3.795,0.6459
+YaoYu_01_00,ray,7,14,126,9,v2_ray_1aaff9db12,2.132,3.028,3.028,2.491,3.635,0.7333
+HaiGui_01_00,turtle,8,16,128,8,v2_turtle_1664b9c173,2.399,2.711,2.519,3.108,3.033,0.7547
+Candy Jellyfish,jellyfish,8,16,448,28,v2_jellyfish_4300fe0f49,2.026,3.841,4.358,4.839,5.72,0.7613
+1_鲨鱼_01_00,shark,5,10,110,11,v2_shark_9eff5a3f24,2.181,2.662,2.662,1.428,2.473,0.5974
+1_鲨鱼_02_00,shark,5,10,110,11,v2_shark_9eff5a3f24,2.15,2.479,2.479,1.407,2.421,0.6016
+1_鲨鱼_03_00,shark,5,10,110,11,v2_shark_9eff5a3f24,2.192,2.755,2.755,1.438,2.499,0.7801
+1_鲨鱼_04_00,shark,5,10,120,12,v2_shark_9eff5a3f24,2.184,2.679,2.679,1.429,2.478,0.859
+AngelShark,fins,7,14,14,1,v2_fins_533dbdd16c,3.126,3.88,3.88,1.992,3.63,0.6432
+Axolotl,axolotl,8,16,16,1,v2_axolotl_03966934e1,3.4,3.93,3.89,2.312,4.402,0.4887
+Azure Sturgeon,standard,5,10,20,2,v2_standard_9492c85ee9,2.196,2.783,2.785,1.475,2.584,0.6799
+AzureDamsel,standard,5,10,10,1,v2_standard_9492c85ee9,2.166,2.638,2.638,1.463,2.54,0.4715
+AzureDamsel_New,standard,5,10,10,1,v2_standard_9492c85ee9,2.147,2.434,2.434,1.425,2.44,0.4722
+BallinaAngelfish,standard,5,10,10,1,v2_standard_9492c85ee9,2.19,2.774,2.774,1.476,2.582,0.3913
+BallinaAngelfish_New,standard,5,10,10,1,v2_standard_9492c85ee9,2.172,2.578,2.578,1.44,2.484,0.3876
+Black Whale,dolphin,5,10,10,1,v2_dolphin_cf9273bf86,2.854,3.495,3.432,1.893,3.504,0.6566
+BleekersDamsel,standard,5,10,10,1,v2_standard_9492c85ee9,2.168,2.529,2.529,1.435,2.47,0.2956
+Blue Dragon,fins,7,14,28,2,v2_fins_533dbdd16c,9.685,10.361,10.576,5.885,10.759,0.5806
+Blue Moonfish,standard,5,10,40,4,v2_standard_9492c85ee9,2.219,2.898,2.889,1.489,2.611,0.6303
+Blue Whale,dolphin,5,10,10,1,v2_dolphin_cf9273bf86,2.825,3.273,3.265,1.883,3.408,0.6324
+BluefinTuna,standard,5,10,10,1,v2_standard_9492c85ee9,2.2,2.764,2.764,1.459,2.534,0.4415
+BumblebeeGrouper,standard,5,10,10,1,v2_standard_9492c85ee9,2.18,2.653,2.653,1.445,2.507,0.4261
+Chimera Perch,standard,5,10,10,1,v2_standard_9492c85ee9,2.192,2.764,2.764,1.474,2.578,0.619
+Dragonfish,longbody,8,16,16,1,v2_longbody_8c3062dd2b,1.807,1.875,2.852,1.741,2.715,0.6443
+FireGoby,standard,5,10,10,1,v2_standard_9492c85ee9,2.152,2.4,2.4,1.429,2.417,0.3063
+Firetail Tilapia,standard,5,10,60,6,v2_standard_9492c85ee9,2.227,2.748,2.748,1.46,2.542,0.655
+FlameAngelfish,standard,5,10,10,1,v2_standard_9492c85ee9,2.163,2.494,2.494,1.433,2.458,0.4311
+Flamingo,standard,5,10,40,4,v2_standard_9492c85ee9,2.185,2.672,2.672,1.444,2.513,0.6265
+FoureyeButterflyfish,standard,5,10,10,1,v2_standard_9492c85ee9,2.172,2.553,2.553,1.439,2.475,0.3517
+FrenchAngelfish,standard,5,10,10,1,v2_standard_9492c85ee9,2.187,2.757,2.764,1.472,2.584,0.528
+Frosttail,standard,5,10,30,3,v2_standard_9492c85ee9,2.384,4.004,4.004,1.629,3.026,0.5206
+Galaxy Megalodon,standard,5,10,30,3,v2_standard_9492c85ee9,2.178,2.618,2.617,1.437,2.497,0.5706
+Golden Carp,standard,5,10,10,1,v2_standard_9492c85ee9,2.217,3.142,3.142,1.518,2.72,0.4907
+GreateWhiteShark,standard,5,10,10,1,v2_standard_9492c85ee9,2.181,2.7,2.7,1.445,2.521,0.5878
+GreenSeahorse,seahorse,8,16,16,1,v2_seahorse_767c025248,3.962,6.399,7.995,3.766,6.396,0.2221
+GreenTurtle,turtle,8,16,16,1,v2_turtle_1d282c30de,2.151,2.973,2.664,3.715,3.664,0.5432
+GreenbandedGoby,standard,5,10,10,1,v2_standard_9492c85ee9,2.199,2.78,2.78,1.479,2.579,0.3971
+HaiGui_02_00,turtle,8,16,128,8,v2_turtle_1664b9c173,2.036,2.697,2.468,3.296,3.131,0.732
+HaiGui_03_00,turtle,8,16,160,10,v2_turtle_1664b9c173,2.566,2.632,2.466,2.978,2.926,0.7086
+HaiGui_04_00,turtle,8,16,240,15,v2_turtle_1664b9c173,3.056,2.927,2.928,2.757,2.889,0.8144
+HaiMan_01_00,eel,8,16,192,12,v2_eel_a7d6b7ff1e,1.511,1.539,3.186,1.659,2.281,0.7829
+Hell Shark,standard,5,10,90,9,v2_standard_9492c85ee9,2.285,3.756,3.756,1.554,2.858,0.6173
+Inferno Pike,standard,5,10,20,2,v2_standard_9492c85ee9,2.231,3.035,3.035,1.499,2.649,0.6605
+Jadefin,standard,5,10,40,4,v2_standard_9492c85ee9,2.232,3.087,3.087,1.474,2.608,0.6028
+Killer Whale,dolphin,5,10,10,1,v2_dolphin_cf9273bf86,2.981,5.082,4.945,2.043,3.998,0.6657
+Lobster,lobster,8,16,16,1,v2_lobster_41242ad0ee,5.837,11.864,11.864,4.191,7.241,0.5432
+Magma Fury,standard,5,10,10,1,v2_standard_9492c85ee9,2.178,2.61,2.61,1.439,2.495,0.6212
+Mecha Whale,dolphin,5,10,40,4,v2_dolphin_cf9273bf86,2.829,3.31,3.369,1.922,3.425,0.7898
+Moby Whale,dolphin,5,10,10,1,v2_dolphin_cf9273bf86,2.838,3.321,3.337,1.898,3.414,0.7321
+MoorishIdol,standard,5,10,10,1,v2_standard_9492c85ee9,2.266,3.744,3.745,1.579,2.921,0.5407
+Neon Cyber,standard,5,10,10,1,v2_standard_9492c85ee9,2.211,2.865,2.865,1.469,2.578,0.6341
+NurseShark,standard,5,10,10,1,v2_standard_9492c85ee9,2.188,2.679,2.679,1.449,2.515,0.6469
+Obsidian Fang,standard,5,10,10,1,v2_standard_9492c85ee9,2.232,3.051,3.051,1.474,2.607,0.5932
+Omanadzu,standard,5,10,10,1,v2_standard_9492c85ee9,2.164,2.475,2.468,1.431,2.452,0.5689
+PinkDolphin,dolphin,5,10,10,1,v2_dolphin_cf9273bf86,2.828,3.297,3.351,1.91,3.403,0.5838
+PinkSkunkClownfish,standard,5,10,10,1,v2_standard_9492c85ee9,2.204,2.792,2.792,1.461,2.542,0.4445
+PinkSmithDamsel,standard,5,10,10,1,v2_standard_9492c85ee9,2.162,2.484,2.484,1.433,2.454,0.4952
+PrettyRoseGoby,standard,5,10,10,1,v2_standard_9492c85ee9,2.176,2.652,2.652,1.47,2.536,0.5737
+Purplefin,standard,5,10,30,3,v2_standard_9492c85ee9,2.314,4.078,4.078,1.595,2.974,0.6762
+QueenAngelfish,standard,5,10,10,1,v2_standard_9492c85ee9,2.201,2.894,2.894,1.486,2.616,0.6425
+QueenAngelfish_New,standard,5,10,10,1,v2_standard_9492c85ee9,2.177,2.68,2.68,1.45,2.515,0.4809
+RedSeahorse,seahorse,8,16,16,1,v2_seahorse_767c025248,4.045,6.657,7.869,3.764,6.449,0.2911
+SXYu_01_00,ornate,7,14,210,15,v2_ornate_dfa0b431e1,3.099,6.153,4.494,2.49,4.13,0.703
+Saberfish,standard,5,10,30,3,v2_standard_9492c85ee9,2.393,3.789,3.79,1.698,3.113,0.6362
+SaddleButterflyfish,standard,5,10,10,1,v2_standard_9492c85ee9,2.165,2.632,2.632,1.463,2.538,0.4789
+SaddleButterflyfish_New,standard,5,10,10,1,v2_standard_9492c85ee9,2.152,2.447,2.447,1.428,2.443,0.6
+Shatichoko,standard,5,10,10,1,v2_standard_9492c85ee9,2.185,2.613,2.612,1.451,2.507,0.6303
+Silver Tail,standard,5,10,10,1,v2_standard_9492c85ee9,2.184,2.717,2.717,1.472,2.563,0.5277
+SkipjackTuna,standard,5,10,10,1,v2_standard_9492c85ee9,2.204,2.732,2.732,1.457,2.523,0.5652
+SkunkTilefish,standard,5,10,10,1,v2_standard_9492c85ee9,2.163,2.508,2.508,1.433,2.464,0.4618
+SpottedEagleRay,fins,7,14,14,1,v2_fins_533dbdd16c,9.743,11.392,11.392,5.88,11.013,0.5272
+Stone Bass,standard,5,10,10,1,v2_standard_9492c85ee9,2.231,3.046,3.044,1.497,2.652,0.484
+Summertime Elk,longbody,8,16,32,2,v2_longbody_8c3062dd2b,1.614,1.636,3.428,1.772,2.444,0.6846
+Swordfish Skeleton,standard,5,10,10,1,v2_standard_9492c85ee9,2.19,2.664,2.667,1.448,2.509,0.6344
+ThresherShark,longtail,7,14,14,1,v2_longtail_3b4911c52d,1.898,1.891,2.798,1.682,2.578,0.4885
+Thunderfin,standard,5,10,40,4,v2_standard_9492c85ee9,2.235,3.16,3.16,1.503,2.683,0.6636
+TomatoClownfish,standard,5,10,10,1,v2_standard_9492c85ee9,2.192,2.798,2.798,1.479,2.587,0.4742
+Tralalero Tralala,standard,5,10,20,2,v2_standard_9492c85ee9,2.213,2.965,2.965,1.466,2.591,0.6183
+Tropical Butterfly,fins,7,14,210,15,v2_fins_533dbdd16c,3.337,6.854,5.898,2.218,4.202,0.7454
+Turtle Walker,turtle,8,16,48,3,v2_turtle_1d282c30de,3.488,4.54,4.348,3.927,4.105,0.8119
+Twinhead Megalodon,standard,5,10,40,4,v2_standard_9492c85ee9,2.202,2.767,2.77,1.455,2.539,0.5895
+Undead Megalodon,standard,5,10,20,2,v2_standard_9492c85ee9,2.221,3.053,3.053,1.485,2.63,0.6428
+Venomfish,standard,5,10,40,4,v2_standard_9492c85ee9,2.278,3.66,3.66,1.55,2.827,0.6287
+WheelersShrimpGoby,standard,5,10,10,1,v2_standard_9492c85ee9,2.159,2.482,2.482,1.431,2.454,0.2641
+WyomingWhiteClownfish,standard,5,10,10,1,v2_standard_9492c85ee9,2.166,2.497,2.497,1.435,2.457,0.4953
+YaoYu_02_00,ray,7,14,140,10,v2_ray_1aaff9db12,2.081,2.912,2.912,2.459,3.561,0.7979
+YaoYu_03_00,ray,7,14,140,10,v2_ray_1aaff9db12,2.058,2.948,2.948,2.465,3.588,0.8179
+YaoYu_04_00,ray,7,14,154,11,v2_ray_1aaff9db12,2.034,2.824,2.824,2.432,3.501,0.7801
+YellowfinTuna,standard,5,10,10,1,v2_standard_9492c85ee9,2.234,3.077,3.077,1.503,2.657,0.5269
+YouYu_01_00,squid,8,16,144,9,v2_squid_1fd58455dd,1.138,2.009,1.882,3.331,3.636,0.7726
+YouYu_02_00,squid,8,16,368,23,v2_squid_1fd58455dd,1.2,2.22,1.749,3.811,4.054,0.8147
+Yu_GenXin_01,standard,5,10,10,1,v2_standard_9492c85ee9,2.153,2.447,2.447,1.428,2.443,0.4911
+Yu_GenXin_02,standard,5,10,30,3,v2_standard_9492c85ee9,2.25,3.664,3.664,1.529,2.787,0.5531
+Yu_MoFaShiJie_01,standard,5,10,10,1,v2_standard_9492c85ee9,2.194,2.974,2.972,1.481,2.609,0.4918
+Yu_MoFaShiJie_02,standard,5,10,10,1,v2_standard_9492c85ee9,2.2,2.728,2.728,1.454,2.525,0.4385
+Yu_MoFaShiJie_03,standard,5,10,10,1,v2_standard_9492c85ee9,2.215,2.878,2.878,1.469,2.564,0.6327
+Yu_MoFaShiJie_04,standard,5,10,20,2,v2_standard_9492c85ee9,2.195,2.701,2.702,1.45,2.52,0.5907
+Yu_MoFaShiJie_05,standard,5,10,30,3,v2_standard_9492c85ee9,2.175,2.619,2.62,1.436,2.497,0.5312
+ZebraSeahorse,seahorse,8,16,16,1,v2_seahorse_767c025248,4.039,6.588,7.482,3.734,6.453,0.2354
+yu018,standard,5,10,10,1,v2_standard_9492c85ee9,2.169,2.516,2.516,1.436,2.464,0.4913
+yu019,standard,5,10,10,1,v2_standard_9492c85ee9,2.21,2.833,2.833,1.462,2.554,0.4848
+付费_01_00,shark,5,10,110,11,v2_shark_9eff5a3f24,2.169,2.563,2.563,1.419,2.446,0.5359
+付费_02_00,shark,5,10,110,11,v2_shark_9eff5a3f24,2.156,2.501,2.501,1.41,2.428,0.61
+付费_03_00,shark,5,10,150,15,v2_shark_9eff5a3f24,2.206,2.894,2.894,1.442,2.53,0.6208
+付费_04_00,shark,5,10,160,16,v2_shark_9eff5a3f24,2.21,3.008,3.009,1.462,2.568,0.6295
+初始_00_00,shark,5,10,120,12,v2_shark_9eff5a3f24,2.176,2.559,2.559,1.425,2.439,0.5999
+海豚1-0,dolphin,5,10,60,6,v2_dolphin_cf9273bf86,2.821,3.365,3.494,1.964,3.437,0.6077
+海豚2-0,dolphin,5,10,50,5,v2_dolphin_cf9273bf86,2.858,3.436,3.41,1.867,3.394,0.5809
+海豚3-0,dolphin,5,10,50,5,v2_dolphin_cf9273bf86,2.836,3.32,3.3,1.855,3.356,0.6164
+海豚4-0,dolphin,5,10,70,7,v2_dolphin_cf9273bf86,2.841,3.377,3.329,1.858,3.396,0.5655
