@@ -1,0 +1,2547 @@
+{
+  "passed": true,
+  "fish": 59,
+  "sourceMeshes": 116,
+  "publishedMeshes": 118,
+  "blendFiles": 59,
+  "fbxFiles": 354,
+  "results": [
+    {
+      "name": "Attacking Whale",
+      "eyeScale": 2,
+      "bones": 5,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/Attacking Whale/Attacking Whale.blend",
+          "bytes": 565034,
+          "sha256": "8040c899638360235564c2a7625bb7af9830dea6d08c4a2cc52f3bc346b1fd83"
+        },
+        {
+          "file": "models/Attacking Whale/Attacking Whale.fbx",
+          "bytes": 539964,
+          "sha256": "52a1a951500d5cd9d28fcebe59c3d1fa9ba026fdec1ab44b045cf2af7b025307"
+        },
+        {
+          "file": "models/Attacking Whale/SwimLoop.fbx",
+          "bytes": 591084,
+          "sha256": "5185d3956d9ddca5eac143e046db04d1e5d45b2ae89477cc473b9b5161f39bc2"
+        },
+        {
+          "file": "models/Attacking Whale/StruggleLeft.fbx",
+          "bytes": 590956,
+          "sha256": "a6f33a9500ef9c6bd514b4be76eef7ec932af7b4e89a478945c2e19ce896676e"
+        },
+        {
+          "file": "models/Attacking Whale/StruggleRight.fbx",
+          "bytes": 590956,
+          "sha256": "5596a0eb9cc173ba155d2241401d36190a073dd51f164a81f5de89249f967a86"
+        },
+        {
+          "file": "models/Attacking Whale/LiftFlop.fbx",
+          "bytes": 628012,
+          "sha256": "f59116756612b16b4d5f1ac18e8e428d680a1ba3caa2ef79f1d0017e344946b9"
+        },
+        {
+          "file": "models/Attacking Whale/ShowcaseFlop.fbx",
+          "bytes": 599244,
+          "sha256": "9096c3e1f578c2edd4098559c16e9211feffd2ed5485784b2e51f45a4b6ba142"
+        }
+      ]
+    },
+    {
+      "name": "Axolotl",
+      "eyeScale": 1.5,
+      "bones": 8,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/Axolotl/Axolotl.blend",
+          "bytes": 540628,
+          "sha256": "2d92adbb4930b54c8feb48e1d524c8ce935798803a0162f947c918af3e16920e"
+        },
+        {
+          "file": "models/Axolotl/Axolotl.fbx",
+          "bytes": 527660,
+          "sha256": "6e50ab7edd279458fb5345a9b10a3db574fd2af021470ff0ddca24fa7f24ce64"
+        },
+        {
+          "file": "models/Axolotl/SwimLoop.fbx",
+          "bytes": 601868,
+          "sha256": "f12e033ad2280e4c2d0677aba6d39fc6b436c223700011d2c3c1783e34fb21b5"
+        },
+        {
+          "file": "models/Axolotl/StruggleLeft.fbx",
+          "bytes": 604044,
+          "sha256": "3c8603f5da4ca3e4995bdc8fe0cbd1412a361a5d1049442b85e58366ba338736"
+        },
+        {
+          "file": "models/Axolotl/StruggleRight.fbx",
+          "bytes": 604076,
+          "sha256": "b2a9ba191b8a4a1570c9bde5ba4fdb0a23e868792d1c24378e88ee1b7364c3fe"
+        },
+        {
+          "file": "models/Axolotl/LiftFlop.fbx",
+          "bytes": 661260,
+          "sha256": "ee0b25e0213ec4d33cb3713c1982066721254ae60b97a4bc50325701d08289a6"
+        },
+        {
+          "file": "models/Axolotl/ShowcaseFlop.fbx",
+          "bytes": 616748,
+          "sha256": "e2a00bc98b99099e2c756f54abcc09f192843deb831475228b911c98f5208560"
+        }
+      ]
+    },
+    {
+      "name": "Black Whale",
+      "eyeScale": 2,
+      "bones": 5,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/Black Whale/Black Whale.blend",
+          "bytes": 428805,
+          "sha256": "1b2b4abbd85f841a2029a42d8db76b3216e0f31b74f25dfc78b935942c22ab21"
+        },
+        {
+          "file": "models/Black Whale/Black Whale.fbx",
+          "bytes": 379628,
+          "sha256": "d4b28b3e5b2df457b010d95684eb93a3c49d0fd40059cac4b926d415f06a646a"
+        },
+        {
+          "file": "models/Black Whale/SwimLoop.fbx",
+          "bytes": 430732,
+          "sha256": "5c435a4ce73ca5b07860e962a1326689b0047893480395b5fcf193991b4c7ac2"
+        },
+        {
+          "file": "models/Black Whale/StruggleLeft.fbx",
+          "bytes": 430620,
+          "sha256": "48626c80d17672ab74837ada397f23a432354b11fd3cf8f9759cd6ddbe6a43d4"
+        },
+        {
+          "file": "models/Black Whale/StruggleRight.fbx",
+          "bytes": 430620,
+          "sha256": "ac42246c963449a632c79400a50b78a05cd95012dfbf23e0cd802301c0a22804"
+        },
+        {
+          "file": "models/Black Whale/LiftFlop.fbx",
+          "bytes": 467644,
+          "sha256": "b5a54f635205bf1f26d369c03214f981bae840adefdb7dfbfaecbe823e4ad57f"
+        },
+        {
+          "file": "models/Black Whale/ShowcaseFlop.fbx",
+          "bytes": 438908,
+          "sha256": "f5fc9f14c89a1803fa0794a93f238c9f0818a51f4d450f4cff5304dd6102dbb1"
+        }
+      ]
+    },
+    {
+      "name": "Blue Dragon",
+      "eyeScale": 2,
+      "bones": 7,
+      "layers": 2,
+      "files": [
+        {
+          "file": "models/Blue Dragon/Blue Dragon.blend",
+          "bytes": 742084,
+          "sha256": "6cd06100c13b20c2538df5fea4173f2285a91753fe863fb6c3d761070fa254f1"
+        },
+        {
+          "file": "models/Blue Dragon/Blue Dragon.fbx",
+          "bytes": 774940,
+          "sha256": "c9dfef2936661716d7a853305e11131a6bcd06ae4cca11fe03b342f514902401"
+        },
+        {
+          "file": "models/Blue Dragon/SwimLoop.fbx",
+          "bytes": 840716,
+          "sha256": "e9983b2870633d9a4292a6f023fd95cbee5feedeb2499667418d338e999e40ed"
+        },
+        {
+          "file": "models/Blue Dragon/StruggleLeft.fbx",
+          "bytes": 842684,
+          "sha256": "d5e06d299e7d985e46fbdb87e5f1cd946a0ef54420e353dd9a2dfb38c718f594"
+        },
+        {
+          "file": "models/Blue Dragon/StruggleRight.fbx",
+          "bytes": 842700,
+          "sha256": "b19bcb00791b21ee5dc6ee4381d9f1e7582ba59d3a05365f7772024b7b1795b9"
+        },
+        {
+          "file": "models/Blue Dragon/LiftFlop.fbx",
+          "bytes": 893180,
+          "sha256": "548799e57f36ed5564c4e18f6bf77bd4d609311f65881e452a0c692d86a265fd"
+        },
+        {
+          "file": "models/Blue Dragon/ShowcaseFlop.fbx",
+          "bytes": 853980,
+          "sha256": "21b246520827074de5de65fc22be46e0503b42b0391aec8f8c91a380084417c4"
+        }
+      ]
+    },
+    {
+      "name": "Blue Whale",
+      "eyeScale": 2,
+      "bones": 5,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/Blue Whale/Blue Whale.blend",
+          "bytes": 198479,
+          "sha256": "2b8acbf7aeaef9f355dc13ba8ed5260ea3590fa0a68115e9fe058370d570f900"
+        },
+        {
+          "file": "models/Blue Whale/Blue Whale.fbx",
+          "bytes": 113468,
+          "sha256": "61b18dfad6c8578315fdc97bd8adf1ff24f5a1b47f807e806d88fc02f3141fe0"
+        },
+        {
+          "file": "models/Blue Whale/SwimLoop.fbx",
+          "bytes": 164588,
+          "sha256": "7d0421eb530a4125248a00eee47843179e746e694dee077e77c87d5908161404"
+        },
+        {
+          "file": "models/Blue Whale/StruggleLeft.fbx",
+          "bytes": 164460,
+          "sha256": "4beec7872f19e5af593a68cd493a048f09ae014be6fe78f26c998bc8dab61b84"
+        },
+        {
+          "file": "models/Blue Whale/StruggleRight.fbx",
+          "bytes": 164476,
+          "sha256": "34147a86b5becd09948634a325d2b95529fedf4dbc05fe6343c88f0ea532b5d9"
+        },
+        {
+          "file": "models/Blue Whale/LiftFlop.fbx",
+          "bytes": 201516,
+          "sha256": "6baf7150bfa5153ea7099474133fbd6f6257ae6e7063d490536e2ab008cd8398"
+        },
+        {
+          "file": "models/Blue Whale/ShowcaseFlop.fbx",
+          "bytes": 172732,
+          "sha256": "106dbb2325b4c1a603f233abb41c2280ae92135ba7d8224a90e778b1e346969f"
+        }
+      ]
+    },
+    {
+      "name": "Candy Jellyfish",
+      "eyeScale": 1.5,
+      "bones": 8,
+      "layers": 28,
+      "files": [
+        {
+          "file": "models/Candy Jellyfish/Candy Jellyfish.blend",
+          "bytes": 501929,
+          "sha256": "f54a2e459bdcea5e733b7437cb1eb647f95040ede9db88539b9519e28e6185cd"
+        },
+        {
+          "file": "models/Candy Jellyfish/Candy Jellyfish.fbx",
+          "bytes": 787388,
+          "sha256": "4ac4d2eeb44c96620179369401a66ff0d466da6c1074108b8eae60a5366e8e5e"
+        },
+        {
+          "file": "models/Candy Jellyfish/SwimLoop.fbx",
+          "bytes": 862060,
+          "sha256": "cf2370f16fefacaf0a2d2055955fecfffa7468f40d1d3f6575e5e8bd8acbee68"
+        },
+        {
+          "file": "models/Candy Jellyfish/StruggleLeft.fbx",
+          "bytes": 863964,
+          "sha256": "2d1575f2b8894ca255cd104fcdb2acc7b8c08a8288c38198e1b3503f1789dd73"
+        },
+        {
+          "file": "models/Candy Jellyfish/StruggleRight.fbx",
+          "bytes": 863980,
+          "sha256": "bf5c3bd592e6bd5cb2a77e69fa00036a951f74d8d104fbf89e7fbd44eba9e89f"
+        },
+        {
+          "file": "models/Candy Jellyfish/LiftFlop.fbx",
+          "bytes": 922188,
+          "sha256": "e1c00ba5f323f97c249979da9ff673bbf78a0590eedf923fa71ad7697d3d2e66"
+        },
+        {
+          "file": "models/Candy Jellyfish/ShowcaseFlop.fbx",
+          "bytes": 876940,
+          "sha256": "ef7021a0e3fd1356ea27a09884e899991ee197138bc37e3ce15d8e860ae496eb"
+        }
+      ]
+    },
+    {
+      "name": "Dragonfish",
+      "eyeScale": 2,
+      "bones": 8,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/Dragonfish/Dragonfish.blend",
+          "bytes": 567125,
+          "sha256": "5129484ec287d621180123134d5ec04632b298bace0036f80b1ce0a2cf63a781"
+        },
+        {
+          "file": "models/Dragonfish/Dragonfish.fbx",
+          "bytes": 471052,
+          "sha256": "14c4c6e92f9c9d8bceb1a5ed7c53a34fb3d0e396d709eda78b1776396a193983"
+        },
+        {
+          "file": "models/Dragonfish/SwimLoop.fbx",
+          "bytes": 544812,
+          "sha256": "9fef70b172436a055ca896fb320345b3867aad7d60f06ee3429ca04b8c026d0e"
+        },
+        {
+          "file": "models/Dragonfish/StruggleLeft.fbx",
+          "bytes": 547836,
+          "sha256": "0bacb953ba017aa87ac6daf82a6a08fb714a528a17e21b9a5708b50799e99eb3"
+        },
+        {
+          "file": "models/Dragonfish/StruggleRight.fbx",
+          "bytes": 547884,
+          "sha256": "463f824ac34ce0e84aea903c59410a057cb3398b2eda9d190708f4d1410b9d3b"
+        },
+        {
+          "file": "models/Dragonfish/LiftFlop.fbx",
+          "bytes": 605676,
+          "sha256": "b0c751b8c550db7db25f68cdd6968d497294279b3f9b4ec29df282d76e8b9147"
+        },
+        {
+          "file": "models/Dragonfish/ShowcaseFlop.fbx",
+          "bytes": 560812,
+          "sha256": "15539ce8ce7a11c8c064343b2a212972d0140838c79676f2ace8a44a81c0c0df"
+        }
+      ]
+    },
+    {
+      "name": "Flamingo",
+      "eyeScale": 2,
+      "bones": 5,
+      "layers": 4,
+      "files": [
+        {
+          "file": "models/Flamingo/Flamingo.blend",
+          "bytes": 497524,
+          "sha256": "ea52efd89c7d80b6a20248ee2811489c2c421eaae37ac58a5b577721fcb741ef"
+        },
+        {
+          "file": "models/Flamingo/Flamingo.fbx",
+          "bytes": 456140,
+          "sha256": "31f9770ec746bf32b9f43846b0029a17bd6eb7fe6f419a8341d194fdc8239c73"
+        },
+        {
+          "file": "models/Flamingo/SwimLoop.fbx",
+          "bytes": 505676,
+          "sha256": "04f8d6104e5b7a6b3a79bf00d8de87228c3d7a610d76db218b89d7abf2816fc7"
+        },
+        {
+          "file": "models/Flamingo/StruggleLeft.fbx",
+          "bytes": 507164,
+          "sha256": "7c3a7c698c3f8a8923f5280dfd1a79cbeb040dc7a068743316bae1c292eb0b1f"
+        },
+        {
+          "file": "models/Flamingo/StruggleRight.fbx",
+          "bytes": 507180,
+          "sha256": "b20e656b0e55d955d05d5f8b8ab2e6aa97aa0de1ec175f8eaf17ff9bfedf6430"
+        },
+        {
+          "file": "models/Flamingo/LiftFlop.fbx",
+          "bytes": 544108,
+          "sha256": "4819b69c9cf32fa1e981000bc0c424c29e5f356f9cf152cce7e134ea25b4f1a2"
+        },
+        {
+          "file": "models/Flamingo/ShowcaseFlop.fbx",
+          "bytes": 515404,
+          "sha256": "31d2a2bcc2ef40857d208025f738ba664803a515934048ca2d4426d0ee2904e5"
+        }
+      ]
+    },
+    {
+      "name": "Galaxy Megalodon",
+      "eyeScale": 2,
+      "bones": 5,
+      "layers": 3,
+      "files": [
+        {
+          "file": "models/Galaxy Megalodon/Galaxy Megalodon.blend",
+          "bytes": 463747,
+          "sha256": "6a325bc958ed7f605890d51ceb960a491be0d109db66cc3a38df1a862b074f0f"
+        },
+        {
+          "file": "models/Galaxy Megalodon/Galaxy Megalodon.fbx",
+          "bytes": 403036,
+          "sha256": "00feba74d6dbf2e99286e93ea9e258f8d530b19c16fecc371d03df1cecffc532"
+        },
+        {
+          "file": "models/Galaxy Megalodon/SwimLoop.fbx",
+          "bytes": 452556,
+          "sha256": "8b931cf306d95812725a096354bab9de03b71cfebdf3c929f5e51e754cddddd5"
+        },
+        {
+          "file": "models/Galaxy Megalodon/StruggleLeft.fbx",
+          "bytes": 454092,
+          "sha256": "31fe1b71b8fa168fd9c8a113c59f644124d21224cf97b89e1ad9a824b37800f5"
+        },
+        {
+          "file": "models/Galaxy Megalodon/StruggleRight.fbx",
+          "bytes": 454092,
+          "sha256": "5e922037ca543fc1d5126c12867bd88742a548996973fd51a311205603ce84a8"
+        },
+        {
+          "file": "models/Galaxy Megalodon/LiftFlop.fbx",
+          "bytes": 491020,
+          "sha256": "e8b4fad12cb1b771ca3c0b825dcd5263042178fc671e71d7224fb1601e5146e7"
+        },
+        {
+          "file": "models/Galaxy Megalodon/ShowcaseFlop.fbx",
+          "bytes": 462300,
+          "sha256": "6d6f34ff1bb02e9d4a32ed37b37855342e636f0702efab76e8a0e74354d42308"
+        }
+      ]
+    },
+    {
+      "name": "Hell Shark",
+      "eyeScale": 2,
+      "bones": 5,
+      "layers": 9,
+      "files": [
+        {
+          "file": "models/Hell Shark/Hell Shark.blend",
+          "bytes": 967348,
+          "sha256": "54c3ad31da38157501b8ef1de5873971a55d3391bae222713bba6b29fc409616"
+        },
+        {
+          "file": "models/Hell Shark/Hell Shark.fbx",
+          "bytes": 1028204,
+          "sha256": "39422a504ae746ecc79878c253edc510caa1cc954c41755582928e66fbaaa989"
+        },
+        {
+          "file": "models/Hell Shark/SwimLoop.fbx",
+          "bytes": 1077708,
+          "sha256": "19b08782c401770e5f4358e4b3871752f27a9c2bb7bb7ea344fb75ed3ffd61ea"
+        },
+        {
+          "file": "models/Hell Shark/StruggleLeft.fbx",
+          "bytes": 1079260,
+          "sha256": "90da2634fe6f48385272f55ed6bcd7084bcbe1c98c0f36c75f357bcebb870e21"
+        },
+        {
+          "file": "models/Hell Shark/StruggleRight.fbx",
+          "bytes": 1079260,
+          "sha256": "5bb34ce285db88e27643995de2e95c41ea405207b6bffa978dac34a34c8fae92"
+        },
+        {
+          "file": "models/Hell Shark/LiftFlop.fbx",
+          "bytes": 1116172,
+          "sha256": "0d99df874034c3ed077b17d800e0d7c8cdbf644567a16926401eae87bdce6da1"
+        },
+        {
+          "file": "models/Hell Shark/ShowcaseFlop.fbx",
+          "bytes": 1087468,
+          "sha256": "c0c6038f9a104d886fdf181622f56f05223f62d4f3712faf356f673ac8b8dba0"
+        }
+      ]
+    },
+    {
+      "name": "Killer Whale",
+      "eyeScale": 2,
+      "bones": 5,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/Killer Whale/Killer Whale.blend",
+          "bytes": 713566,
+          "sha256": "f1fb7653456bbf428ca2875fd646d6f8d718230f9c2d90f5d7751ac9223f5ca3"
+        },
+        {
+          "file": "models/Killer Whale/Killer Whale.fbx",
+          "bytes": 633644,
+          "sha256": "67c7dde267fb66641be663a1ac7173d5a36955d12ddcd693d6ff31e3bcf64d14"
+        },
+        {
+          "file": "models/Killer Whale/SwimLoop.fbx",
+          "bytes": 684748,
+          "sha256": "eabbc810fa76fd7a973395fc90df6eb9643f6fe801bbeb5e27974419b448ac22"
+        },
+        {
+          "file": "models/Killer Whale/StruggleLeft.fbx",
+          "bytes": 684652,
+          "sha256": "a40f5960b68edeb5238d32a25862f6f582a269d4775bf37cca639633ff0b8611"
+        },
+        {
+          "file": "models/Killer Whale/StruggleRight.fbx",
+          "bytes": 684668,
+          "sha256": "ff1eba61adfa9959c1ef19481a01d1244399209f42a415e6e4f627a08737a6c8"
+        },
+        {
+          "file": "models/Killer Whale/LiftFlop.fbx",
+          "bytes": 721692,
+          "sha256": "39785826d399b96674b594c75b3816afc9715cd2a08bf1f7eefdde319a7014db"
+        },
+        {
+          "file": "models/Killer Whale/ShowcaseFlop.fbx",
+          "bytes": 692908,
+          "sha256": "3be2d19636734d5908da81469a4783c26b69d537dedc0583899f0fddffdf6485"
+        }
+      ]
+    },
+    {
+      "name": "Magma Fury",
+      "eyeScale": 2,
+      "bones": 5,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/Magma Fury/Magma Fury.blend",
+          "bytes": 430803,
+          "sha256": "2d758be01c644482bfa4e446bdf679dc2ba0feff9519ec2406ed16f53a9da532"
+        },
+        {
+          "file": "models/Magma Fury/Magma Fury.fbx",
+          "bytes": 301580,
+          "sha256": "d6437349856813e93d9ea8370f29c393ad7aee8cc51018973bb5de414b31b176"
+        },
+        {
+          "file": "models/Magma Fury/SwimLoop.fbx",
+          "bytes": 351100,
+          "sha256": "49700b64a98d9cca25935e9936683871ae09c0c6bbfb6a53af4eb8291d4af34a"
+        },
+        {
+          "file": "models/Magma Fury/StruggleLeft.fbx",
+          "bytes": 352620,
+          "sha256": "ed51794af73ad41f56404930dfc128a33a57b3fbaf203dea1093568edf5a2417"
+        },
+        {
+          "file": "models/Magma Fury/StruggleRight.fbx",
+          "bytes": 352620,
+          "sha256": "2861198c7e5d0f8daa4ae353a7f1dc3e5648f415d41507d71d77a77f51457c32"
+        },
+        {
+          "file": "models/Magma Fury/LiftFlop.fbx",
+          "bytes": 389580,
+          "sha256": "5da4a33d77c739c6f40667e25daba393d2945621f32a0265065508dc1d87a7f4"
+        },
+        {
+          "file": "models/Magma Fury/ShowcaseFlop.fbx",
+          "bytes": 360844,
+          "sha256": "0a6b26f5dcf5416d2aadd19291b5e8412068b601ab4881d75e15b35e118c1452"
+        }
+      ]
+    },
+    {
+      "name": "Mecha Whale",
+      "eyeScale": 2,
+      "bones": 5,
+      "layers": 4,
+      "files": [
+        {
+          "file": "models/Mecha Whale/Mecha Whale.blend",
+          "bytes": 306567,
+          "sha256": "9a23a69bb91b2b9a44eef97dad404062007ce6d72b192946997fb92d96184348"
+        },
+        {
+          "file": "models/Mecha Whale/Mecha Whale.fbx",
+          "bytes": 189516,
+          "sha256": "523918944fcc4b3d1e744dc7bfaeeaf08382d82777f1bde0349940733733495f"
+        },
+        {
+          "file": "models/Mecha Whale/SwimLoop.fbx",
+          "bytes": 240556,
+          "sha256": "384c1683a160a6c69328ecd5bc2c31b3eb38c9cda8a53abf446f832d9351ad57"
+        },
+        {
+          "file": "models/Mecha Whale/StruggleLeft.fbx",
+          "bytes": 240428,
+          "sha256": "86e865fe2a9fba2b781a7fb9d221ee9c7712ea284819d69f30c35b290d5491d5"
+        },
+        {
+          "file": "models/Mecha Whale/StruggleRight.fbx",
+          "bytes": 240428,
+          "sha256": "74d76438b1207f321622c2bd0dc05a7ed06662b82213aca6f09cb35129b51797"
+        },
+        {
+          "file": "models/Mecha Whale/LiftFlop.fbx",
+          "bytes": 277500,
+          "sha256": "cc08da813b92014e6c34e8023abaae4733c6d9ac5be648701bc39eb058b1229f"
+        },
+        {
+          "file": "models/Mecha Whale/ShowcaseFlop.fbx",
+          "bytes": 248716,
+          "sha256": "e9a26f68412c61f2c86bb00eaa347efd81f965bfb5913b1bc83174f6ce833159"
+        }
+      ]
+    },
+    {
+      "name": "Moby Whale",
+      "eyeScale": 2,
+      "bones": 5,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/Moby Whale/Moby Whale.blend",
+          "bytes": 278771,
+          "sha256": "28bf6927942dc6dc1d77c198c1c10645a2dc32a4a90e41cdd2f9b59afb889dca"
+        },
+        {
+          "file": "models/Moby Whale/Moby Whale.fbx",
+          "bytes": 128444,
+          "sha256": "8e148a9072a8ffba67526eec412f9d841e6553a676770c2dc0668397d44602b8"
+        },
+        {
+          "file": "models/Moby Whale/SwimLoop.fbx",
+          "bytes": 179564,
+          "sha256": "87e11bf78a80bc2d780f91a594ce3c71a623eb2014d96b1fbc90409e26d9ccf1"
+        },
+        {
+          "file": "models/Moby Whale/StruggleLeft.fbx",
+          "bytes": 179420,
+          "sha256": "ce83d9402ee0ba7f20e2028191b56073bb824c4b86c73a9467b6a01ddc9aa83c"
+        },
+        {
+          "file": "models/Moby Whale/StruggleRight.fbx",
+          "bytes": 179436,
+          "sha256": "beafe3a5b255644002f99d09e19a39d90272aced953a9ecb4b7cf92983513b04"
+        },
+        {
+          "file": "models/Moby Whale/LiftFlop.fbx",
+          "bytes": 216508,
+          "sha256": "deae2763572932106fec628e7eaa8985d1326d71f25baec16611fc0120384002"
+        },
+        {
+          "file": "models/Moby Whale/ShowcaseFlop.fbx",
+          "bytes": 187724,
+          "sha256": "925a41b2e7c738d41d5fa57a01131bec883f1cc6199bbb1a1e57ddb937347e10"
+        }
+      ]
+    },
+    {
+      "name": "Neon Cyber",
+      "eyeScale": 2,
+      "bones": 5,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/Neon Cyber/Neon Cyber.blend",
+          "bytes": 538066,
+          "sha256": "4064616446576703519b22675c5f2d09c1a28ea24afca5f6e03f9b2f31c03153"
+        },
+        {
+          "file": "models/Neon Cyber/Neon Cyber.fbx",
+          "bytes": 403516,
+          "sha256": "9d2f6f62a33d71f14a5fd7637088402795537dcc377ef3c59174771548e87ec1"
+        },
+        {
+          "file": "models/Neon Cyber/SwimLoop.fbx",
+          "bytes": 452876,
+          "sha256": "6be73d39e37cbcda7a49515bd755e90d079429c11fe5e57e874274bb7972295d"
+        },
+        {
+          "file": "models/Neon Cyber/StruggleLeft.fbx",
+          "bytes": 454364,
+          "sha256": "da67f9bf57c28ca0c6d46a37593af554c67617c9603f6caee4fac97c3a1d1ad4"
+        },
+        {
+          "file": "models/Neon Cyber/StruggleRight.fbx",
+          "bytes": 454380,
+          "sha256": "e15b34e415e4d44c09504dd17ef7c04483f58f8f86fb77d0095ffc0c49b44cb5"
+        },
+        {
+          "file": "models/Neon Cyber/LiftFlop.fbx",
+          "bytes": 491340,
+          "sha256": "6804afeefc636eff235d0cb8a0eca1558e907e52575a2a9b286071a888d9b62b"
+        },
+        {
+          "file": "models/Neon Cyber/ShowcaseFlop.fbx",
+          "bytes": 462636,
+          "sha256": "e078a296dc4038b57829a8b9930ae82441038ba4d34c31717128d58b2f366e7e"
+        }
+      ]
+    },
+    {
+      "name": "Obsidian Fang",
+      "eyeScale": 2,
+      "bones": 5,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/Obsidian Fang/Obsidian Fang.blend",
+          "bytes": 490743,
+          "sha256": "9748121e5008214f24fb9fccfa870d1acc7c10164e7d1f5bb0d3c3e92b3ca505"
+        },
+        {
+          "file": "models/Obsidian Fang/Obsidian Fang.fbx",
+          "bytes": 360316,
+          "sha256": "38bf8ed979f3f54fb6ec87a7e764cb1d00e1469cdf1e0c1906ad08a8606e782a"
+        },
+        {
+          "file": "models/Obsidian Fang/SwimLoop.fbx",
+          "bytes": 409852,
+          "sha256": "8e2c82cd5989a302f2d4f26bb85b3497a8d1fc84d461bc4b3cb60ef8024b650f"
+        },
+        {
+          "file": "models/Obsidian Fang/StruggleLeft.fbx",
+          "bytes": 411372,
+          "sha256": "f2ce432137db6d3f4ace4cbd5617849040d556abd66e0533779acd6b0e1c7d0b"
+        },
+        {
+          "file": "models/Obsidian Fang/StruggleRight.fbx",
+          "bytes": 411388,
+          "sha256": "110abec56c922821a1921a74cbe0e8ba7e7823841fb6b041e02b0365358ac65a"
+        },
+        {
+          "file": "models/Obsidian Fang/LiftFlop.fbx",
+          "bytes": 448348,
+          "sha256": "438e9606dd920816d58ea15c1ab841c7da75f377a6d7a0e1d980224af98d5f6b"
+        },
+        {
+          "file": "models/Obsidian Fang/ShowcaseFlop.fbx",
+          "bytes": 419596,
+          "sha256": "64005899fd268b95b5749f45554deba8a41f6ce1f4dc31eecaae9beddd34c6c8"
+        }
+      ]
+    },
+    {
+      "name": "Omanadzu",
+      "eyeScale": 2,
+      "bones": 5,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/Omanadzu/Omanadzu.blend",
+          "bytes": 848997,
+          "sha256": "372609481329f0433b03223d04a43bbc9328b20b6ef40973be11e05f95ce5576"
+        },
+        {
+          "file": "models/Omanadzu/Omanadzu.fbx",
+          "bytes": 835436,
+          "sha256": "80547b74b504d08f7d1d950d1b46210eabaa735795b37d3d9f6a63df3864a27b"
+        },
+        {
+          "file": "models/Omanadzu/SwimLoop.fbx",
+          "bytes": 884988,
+          "sha256": "0466f1eb274a48dc0c4cc32e2e68e6db796c22356065f5b4f666e033acb7b7de"
+        },
+        {
+          "file": "models/Omanadzu/StruggleLeft.fbx",
+          "bytes": 886476,
+          "sha256": "64958c03f8ef6855a659b6a19f5ac242a8ef2d948410b9b3ba5568e9d3f1baf6"
+        },
+        {
+          "file": "models/Omanadzu/StruggleRight.fbx",
+          "bytes": 886476,
+          "sha256": "a4cc796dbd1e26161af90d49d40ef29794a06159670cdeb71b536cdc0dda271a"
+        },
+        {
+          "file": "models/Omanadzu/LiftFlop.fbx",
+          "bytes": 923420,
+          "sha256": "c273fd65cb6b38e77b505d6da6d21acbb816a57fef0db80116a128ff3cda5341"
+        },
+        {
+          "file": "models/Omanadzu/ShowcaseFlop.fbx",
+          "bytes": 894700,
+          "sha256": "3a45b7a34e104546e95b3b16eacb80192df266a34b75f2d2a89a1b63afb56cd3"
+        }
+      ]
+    },
+    {
+      "name": "Saberfish",
+      "eyeScale": 2,
+      "bones": 5,
+      "layers": 3,
+      "files": [
+        {
+          "file": "models/Saberfish/Saberfish.blend",
+          "bytes": 1042794,
+          "sha256": "93648e5cd3f5c7206b4deec9ac65d9e938299752d857699178bf46994021a7f8"
+        },
+        {
+          "file": "models/Saberfish/Saberfish.fbx",
+          "bytes": 1136524,
+          "sha256": "3c876b3ae20702105a3a11aa3a10926a4ac7c4fe67ddd0936dc7229836ccbcf5"
+        },
+        {
+          "file": "models/Saberfish/SwimLoop.fbx",
+          "bytes": 1186092,
+          "sha256": "6a05756984af5b0dc91e5dbdd8367cd7bdc4282ccfbd31236ad1771e05d6f29a"
+        },
+        {
+          "file": "models/Saberfish/StruggleLeft.fbx",
+          "bytes": 1187548,
+          "sha256": "69a07beee5482de8719d29cf06efaf136ae6a4d4d23a3ffec30adb968ff09fc3"
+        },
+        {
+          "file": "models/Saberfish/StruggleRight.fbx",
+          "bytes": 1187548,
+          "sha256": "11cbb6dde87e0c30a15008ad88f5190df36023ec393bbeb5f21db7c2c0f6b401"
+        },
+        {
+          "file": "models/Saberfish/LiftFlop.fbx",
+          "bytes": 1224508,
+          "sha256": "0e264368396a118bbd0c40de5cbb4d2ed78af8e845ab2c794686deeec7092f30"
+        },
+        {
+          "file": "models/Saberfish/ShowcaseFlop.fbx",
+          "bytes": 1195788,
+          "sha256": "57b0192c8672664e1501b71a200c30a6a26e48d24f5b438e9241fe3415d37c3f"
+        }
+      ]
+    },
+    {
+      "name": "Shatichoko",
+      "eyeScale": 2,
+      "bones": 5,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/Shatichoko/Shatichoko.blend",
+          "bytes": 923289,
+          "sha256": "b1b0d94368aadc4c4b15e1ffcf68e777b4d2767b31c0517c8e56c45d48759dab"
+        },
+        {
+          "file": "models/Shatichoko/Shatichoko.fbx",
+          "bytes": 907324,
+          "sha256": "155d2ea54eca133ee71ff5e68200198ba36aeb932241bc4103b43afb455c0e36"
+        },
+        {
+          "file": "models/Shatichoko/SwimLoop.fbx",
+          "bytes": 956924,
+          "sha256": "2e99f94b932141d6151b2091d1adce6bb6de57520c94b9a2ea05b60382cbc1be"
+        },
+        {
+          "file": "models/Shatichoko/StruggleLeft.fbx",
+          "bytes": 958364,
+          "sha256": "2ba939787699dd8d6e9e3e1a92bd64138694bd7e464f356e2bf37041a4ecc6fb"
+        },
+        {
+          "file": "models/Shatichoko/StruggleRight.fbx",
+          "bytes": 958364,
+          "sha256": "9ef7ef14d636653c3a77fdda4e8638cc31af739734b7f1d8aa2168c4db0d7be9"
+        },
+        {
+          "file": "models/Shatichoko/LiftFlop.fbx",
+          "bytes": 995308,
+          "sha256": "5d8e2ce167295e3c01131fb98244450d232736d802728c163f8426517c204118"
+        },
+        {
+          "file": "models/Shatichoko/ShowcaseFlop.fbx",
+          "bytes": 966604,
+          "sha256": "d75407340b2b9e4848766c64ce18f53582cbea2a37b52f81e1414f50a8bc6b7c"
+        }
+      ]
+    },
+    {
+      "name": "Summertime Elk",
+      "eyeScale": 2,
+      "bones": 8,
+      "layers": 2,
+      "files": [
+        {
+          "file": "models/Summertime Elk/Summertime Elk.blend",
+          "bytes": 383282,
+          "sha256": "09a050c7a668a752178a3d6d4fbc1319447456a3dc842f301e1c3fd6139e911a"
+        },
+        {
+          "file": "models/Summertime Elk/Summertime Elk.fbx",
+          "bytes": 249980,
+          "sha256": "725ce01a5a8d6479fede586b8d9fe83f3f566bfcf32695d26e5093aa9d1e8fca"
+        },
+        {
+          "file": "models/Summertime Elk/SwimLoop.fbx",
+          "bytes": 323852,
+          "sha256": "48585f9805728dd592af4434d11828d001118238600808d9f5bdea09152e1a0c"
+        },
+        {
+          "file": "models/Summertime Elk/StruggleLeft.fbx",
+          "bytes": 326844,
+          "sha256": "b37b3dd66b575c6321672112da1d8f6524977d31bad4ce48c0091758db354fde"
+        },
+        {
+          "file": "models/Summertime Elk/StruggleRight.fbx",
+          "bytes": 326892,
+          "sha256": "90f2c414d5612122465564fba118893d22439ff2cd01b1372b94528638978117"
+        },
+        {
+          "file": "models/Summertime Elk/LiftFlop.fbx",
+          "bytes": 384684,
+          "sha256": "59d21a04824849a3dbeacd47be934278ce2f1ff9655e8836a1eb5cde276d11b3"
+        },
+        {
+          "file": "models/Summertime Elk/ShowcaseFlop.fbx",
+          "bytes": 339788,
+          "sha256": "4f678a3f74ded881b8653792a9df7b4cef7f84272b3668b12cff00c0eedbaf32"
+        }
+      ]
+    },
+    {
+      "name": "Swordfish Skeleton",
+      "eyeScale": 1,
+      "bones": 5,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/Swordfish Skeleton/Swordfish Skeleton.blend",
+          "bytes": 600483,
+          "sha256": "807b966d5ffbc6443d0fc95778af9a8e6c8aa98a05775c310c0eb944a6c18e92"
+        },
+        {
+          "file": "models/Swordfish Skeleton/Swordfish Skeleton.fbx",
+          "bytes": 501004,
+          "sha256": "23d487e83659796c59b2d4a711527ec3fe7f4ce90fa90fe0fa8310d59856a43a"
+        },
+        {
+          "file": "models/Swordfish Skeleton/SwimLoop.fbx",
+          "bytes": 550444,
+          "sha256": "8abcd920d58e3770158bb3badb2c0dad1d164fd4830989f234730acc82abbd26"
+        },
+        {
+          "file": "models/Swordfish Skeleton/StruggleLeft.fbx",
+          "bytes": 551948,
+          "sha256": "4b9389c09aa3a0f5747762d23e597c53a32d0c80dc309820f6b372fc7cd65e4e"
+        },
+        {
+          "file": "models/Swordfish Skeleton/StruggleRight.fbx",
+          "bytes": 551964,
+          "sha256": "a5479615e602b943b6474e91d5c1dfa4e62a969b70c9b0bce5964bb6a6efffae"
+        },
+        {
+          "file": "models/Swordfish Skeleton/LiftFlop.fbx",
+          "bytes": 588924,
+          "sha256": "17f4c730209f69d41f8ed1881d5b1b657e05a949407cf91d1f0d149a4504d4bf"
+        },
+        {
+          "file": "models/Swordfish Skeleton/ShowcaseFlop.fbx",
+          "bytes": 560156,
+          "sha256": "55be082141ea6037ccb5117bda7b30b1b1b5600d3f1eee22c19f4fba4bbce497"
+        }
+      ]
+    },
+    {
+      "name": "Tralalero Tralala",
+      "eyeScale": 2,
+      "bones": 5,
+      "layers": 2,
+      "files": [
+        {
+          "file": "models/Tralalero Tralala/Tralalero Tralala.blend",
+          "bytes": 529171,
+          "sha256": "c6b8a7261900f2951b3fb081855769c0ff79f2e7aba3c1adaacbf4cb13d749d0"
+        },
+        {
+          "file": "models/Tralalero Tralala/Tralalero Tralala.fbx",
+          "bytes": 432972,
+          "sha256": "5186214bdec3b7d6a1b6f7082079b7026f07ed144292cfb6bcd4efd1829171df"
+        },
+        {
+          "file": "models/Tralalero Tralala/SwimLoop.fbx",
+          "bytes": 482380,
+          "sha256": "255a14389bfbe4de73063b566d03e81c3273ecec8c253b2bec9052d7fe3464a0"
+        },
+        {
+          "file": "models/Tralalero Tralala/StruggleLeft.fbx",
+          "bytes": 483932,
+          "sha256": "6893bd6a52b7d64b5ad6e75c669ed9fabbfcef23d007284f1139738b2b6c71c2"
+        },
+        {
+          "file": "models/Tralalero Tralala/StruggleRight.fbx",
+          "bytes": 483932,
+          "sha256": "bd7131aa84139c2f921afe2deccf56970bb80c7c1efad17024275cfe14d94ad8"
+        },
+        {
+          "file": "models/Tralalero Tralala/LiftFlop.fbx",
+          "bytes": 520876,
+          "sha256": "51c63caa39fb0e39cd8e3005bc59264e31cddc0b44d0557dc0cd58b087dc306f"
+        },
+        {
+          "file": "models/Tralalero Tralala/ShowcaseFlop.fbx",
+          "bytes": 492156,
+          "sha256": "ec9d492e817fb671446cf8144e56bf8d85429504485532bffebde3bc17880a3e"
+        }
+      ]
+    },
+    {
+      "name": "Turtle Walker",
+      "eyeScale": 2,
+      "bones": 8,
+      "layers": 3,
+      "files": [
+        {
+          "file": "models/Turtle Walker/Turtle Walker.blend",
+          "bytes": 981757,
+          "sha256": "fc15cc2ae876f79ad73ff7b680a0d0bb55de8b2e763f5b4050abde08e6ffe2fd"
+        },
+        {
+          "file": "models/Turtle Walker/Turtle Walker.fbx",
+          "bytes": 920588,
+          "sha256": "5c3a726d4a86bdc76c6c2dab6c026f76574384cee251c05b750a00a9385c652e"
+        },
+        {
+          "file": "models/Turtle Walker/SwimLoop.fbx",
+          "bytes": 994876,
+          "sha256": "ae3311b99a0056936bb743f0ae14001a0d934832bf6075d7ef46c701ba1c9ec7"
+        },
+        {
+          "file": "models/Turtle Walker/StruggleLeft.fbx",
+          "bytes": 996956,
+          "sha256": "66d2228a4134c3095064364e02a05a6deff11d95fe35e56829a0acbb043a6aef"
+        },
+        {
+          "file": "models/Turtle Walker/StruggleRight.fbx",
+          "bytes": 996988,
+          "sha256": "7f9e58fd32adad3d27487c286cea9326dac2bc96155e9bae5447ac4d313fc9b9"
+        },
+        {
+          "file": "models/Turtle Walker/LiftFlop.fbx",
+          "bytes": 1054012,
+          "sha256": "7d2b92c5d7718285f0b8e84ff6b3414f675bf5e4d4859c17b082396d4f61806b"
+        },
+        {
+          "file": "models/Turtle Walker/ShowcaseFlop.fbx",
+          "bytes": 1009612,
+          "sha256": "7d90bf08ca79b6dd8c7b374aa074d97dbd00ac873ab2eca6981ab4f1efc36691"
+        }
+      ]
+    },
+    {
+      "name": "Twinhead Megalodon",
+      "eyeScale": 2,
+      "bones": 5,
+      "layers": 4,
+      "files": [
+        {
+          "file": "models/Twinhead Megalodon/Twinhead Megalodon.blend",
+          "bytes": 531167,
+          "sha256": "97ea66df8bbb92345a24eb6b3103e58c4b70d04111c3a86934e1878b333f12d8"
+        },
+        {
+          "file": "models/Twinhead Megalodon/Twinhead Megalodon.fbx",
+          "bytes": 434684,
+          "sha256": "8d9ace88f86972b562635a93efd6e5e418534b14109609ded2e8ed90269ae273"
+        },
+        {
+          "file": "models/Twinhead Megalodon/SwimLoop.fbx",
+          "bytes": 484012,
+          "sha256": "76de77960e4766d9fc94561bbfba66ac60f314e8aa00e7783eb9dab85d674cc8"
+        },
+        {
+          "file": "models/Twinhead Megalodon/StruggleLeft.fbx",
+          "bytes": 485548,
+          "sha256": "988cbe146ffcaf05f4bb58e8c337932236a22e972f7ae070ea913af5ac2b04ce"
+        },
+        {
+          "file": "models/Twinhead Megalodon/StruggleRight.fbx",
+          "bytes": 485548,
+          "sha256": "5de832852956c4de017061b80d09cfc6f2666d8019758c18c482d846d37a4e8a"
+        },
+        {
+          "file": "models/Twinhead Megalodon/LiftFlop.fbx",
+          "bytes": 522492,
+          "sha256": "352a156f65730b7d667160bf51f9ed3c74b6f6e215dc94376697362208aea6b4"
+        },
+        {
+          "file": "models/Twinhead Megalodon/ShowcaseFlop.fbx",
+          "bytes": 493788,
+          "sha256": "a7de61b53614da5498ae7608efbf42a47c6dd045fc39e1ff77bda942d9343bae"
+        }
+      ]
+    },
+    {
+      "name": "Undead Megalodon",
+      "eyeScale": 2,
+      "bones": 5,
+      "layers": 2,
+      "files": [
+        {
+          "file": "models/Undead Megalodon/Undead Megalodon.blend",
+          "bytes": 701725,
+          "sha256": "f1c9de68c4786dbbb259f854d1aa822c11cad3916f045ba7bc44b0503c20e79a"
+        },
+        {
+          "file": "models/Undead Megalodon/Undead Megalodon.fbx",
+          "bytes": 626252,
+          "sha256": "0d0223174e127c88adf310f5bd52d63fd94e75e73b7f00d2603119e2fbed1c21"
+        },
+        {
+          "file": "models/Undead Megalodon/SwimLoop.fbx",
+          "bytes": 675788,
+          "sha256": "fc6f6fc19e42e67ffb4e8e92d65b47dd539e9707e4598a41f243a78cb4e0ecb5"
+        },
+        {
+          "file": "models/Undead Megalodon/StruggleLeft.fbx",
+          "bytes": 677292,
+          "sha256": "f4b2119c935750d869071f5af5672069024250d40ed157622acdda685d160c20"
+        },
+        {
+          "file": "models/Undead Megalodon/StruggleRight.fbx",
+          "bytes": 677308,
+          "sha256": "837618b9c4fe62b73fd6cb60ef42dd457a5f6e07d2f680002ab187c8bdd7b5ba"
+        },
+        {
+          "file": "models/Undead Megalodon/LiftFlop.fbx",
+          "bytes": 714236,
+          "sha256": "ac58a57157e0fbb4ba1a1ad6da70f9d909dd5eb21baa8161b707c84fde8902e1"
+        },
+        {
+          "file": "models/Undead Megalodon/ShowcaseFlop.fbx",
+          "bytes": 685516,
+          "sha256": "ded3f0274908f0345234fe8a387c079b9b0b8448daef93a020c0351dbf2d3436"
+        }
+      ]
+    },
+    {
+      "name": "AzureDamsel_New",
+      "eyeScale": 1.5,
+      "bones": 5,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/AzureDamsel_New/AzureDamsel_New.blend",
+          "bytes": 225474,
+          "sha256": "a83ebd29b6e9fa9a829f3b530bdd3df67e5bfb4c246627df0370dc173763f2ea"
+        },
+        {
+          "file": "models/AzureDamsel_New/AzureDamsel_New.fbx",
+          "bytes": 36156,
+          "sha256": "4dcf17f2c6b639eb3b5f6fd7f8704f4ba06b44e4c8a5032e39a58f8a4fa72418"
+        },
+        {
+          "file": "models/AzureDamsel_New/SwimLoop.fbx",
+          "bytes": 85484,
+          "sha256": "4a40ee0a69c52843f2846db3b91049281cd82a19079e09a3cfcda652043af292"
+        },
+        {
+          "file": "models/AzureDamsel_New/StruggleLeft.fbx",
+          "bytes": 87020,
+          "sha256": "0c94deef96ff9c9c2bb222b679540997944976627a7c4521a135b6eac101e1ef"
+        },
+        {
+          "file": "models/AzureDamsel_New/StruggleRight.fbx",
+          "bytes": 87036,
+          "sha256": "599927e2117aa31e26631476e8eab40f8b57206d6a20d17dedcccae3b1af719e"
+        },
+        {
+          "file": "models/AzureDamsel_New/LiftFlop.fbx",
+          "bytes": 123948,
+          "sha256": "4f56a9d80dc5ba9be1a4bd1f5df4c02dc2823c73f821ae265a1d921195a52dc7"
+        },
+        {
+          "file": "models/AzureDamsel_New/ShowcaseFlop.fbx",
+          "bytes": 95276,
+          "sha256": "e23d019ca77aedd8fcfa62f40e1710988f71493ac8fa318b1593bb70b290babd"
+        }
+      ]
+    },
+    {
+      "name": "BallinaAngelfish_New",
+      "eyeScale": 1.5,
+      "bones": 5,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/BallinaAngelfish_New/BallinaAngelfish_New.blend",
+          "bytes": 229236,
+          "sha256": "d6c66c06a622940b59d8bed0a435cd944eb7af106b1328c4f3237ea8e69f3360"
+        },
+        {
+          "file": "models/BallinaAngelfish_New/BallinaAngelfish_New.fbx",
+          "bytes": 38156,
+          "sha256": "475ccc348857991e60b69589b934d23347c7436f92dcba6e7042e0b34eb9da53"
+        },
+        {
+          "file": "models/BallinaAngelfish_New/SwimLoop.fbx",
+          "bytes": 87676,
+          "sha256": "e7cbc2841b5b33aa1a6096b902c73ca884e7b5037b4ffab497c7f32def5e3808"
+        },
+        {
+          "file": "models/BallinaAngelfish_New/StruggleLeft.fbx",
+          "bytes": 89212,
+          "sha256": "29d25e63de38f2dc37088d46b40aac84f8400409764c3fd62e009f7cd4cd9e3e"
+        },
+        {
+          "file": "models/BallinaAngelfish_New/StruggleRight.fbx",
+          "bytes": 89212,
+          "sha256": "54d18c76bc30673f1ebb4f35f9920f89774c2026756de02ab136972effab8757"
+        },
+        {
+          "file": "models/BallinaAngelfish_New/LiftFlop.fbx",
+          "bytes": 126124,
+          "sha256": "2969d08941dd7a435449e0e23f63f5da0cf2fca66ad2f2a5b05b36142748de5d"
+        },
+        {
+          "file": "models/BallinaAngelfish_New/ShowcaseFlop.fbx",
+          "bytes": 97420,
+          "sha256": "c10db7412c4bca277370ae2d1f126c768e0200fdb4cf566e72b7725a8064ea70"
+        }
+      ]
+    },
+    {
+      "name": "BleekersDamsel",
+      "eyeScale": 1.5,
+      "bones": 5,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/BleekersDamsel/BleekersDamsel.blend",
+          "bytes": 227643,
+          "sha256": "e411aa3f8ec8e25f1bc3eb1b94e894347957fefb2e88d432e33a743c19e91e7a"
+        },
+        {
+          "file": "models/BleekersDamsel/BleekersDamsel.fbx",
+          "bytes": 35436,
+          "sha256": "2142b6587a8b0fc77d092147722c92396cd19f5b257cc26f370586e489273787"
+        },
+        {
+          "file": "models/BleekersDamsel/SwimLoop.fbx",
+          "bytes": 84764,
+          "sha256": "9ef42e9d95d626a3a144c37715ecd5c8bc6343687f95277b9d38e0a8ca83599f"
+        },
+        {
+          "file": "models/BleekersDamsel/StruggleLeft.fbx",
+          "bytes": 86300,
+          "sha256": "5a1c55faa6f900e72dcfd0eca362dfe143afcca22bcfffc2cfed7696c9cd0a29"
+        },
+        {
+          "file": "models/BleekersDamsel/StruggleRight.fbx",
+          "bytes": 86300,
+          "sha256": "efc0693a5297b9d3a644d915ae7f8e698510e57bc80750cd467794c4bf8aa3af"
+        },
+        {
+          "file": "models/BleekersDamsel/LiftFlop.fbx",
+          "bytes": 123244,
+          "sha256": "84bbc15e21cfe0abcc317f97eda70cdd8656d38183a62da0a53033dd84a18938"
+        },
+        {
+          "file": "models/BleekersDamsel/ShowcaseFlop.fbx",
+          "bytes": 94556,
+          "sha256": "b2a9cbc0d9be0157a8e627a4c499f8ba281ee9e9c40682d2c02df6f21663627c"
+        }
+      ]
+    },
+    {
+      "name": "BluefinTuna",
+      "eyeScale": 2,
+      "bones": 5,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/BluefinTuna/BluefinTuna.blend",
+          "bytes": 231622,
+          "sha256": "f184f658b3b23312b226ce0d2418e785dc4dd56360ba4446af99b79f73e5b31c"
+        },
+        {
+          "file": "models/BluefinTuna/BluefinTuna.fbx",
+          "bytes": 38780,
+          "sha256": "19cc4c0c6e4e92cc6d1d969ac1eb4a1dcd20e37d77a4fd7a2ef998d0f6c5cb01"
+        },
+        {
+          "file": "models/BluefinTuna/SwimLoop.fbx",
+          "bytes": 88268,
+          "sha256": "ae07fba7a6f687228aac46ca201e5afdf9dc4059897a9cb9e55187acf88c94d7"
+        },
+        {
+          "file": "models/BluefinTuna/StruggleLeft.fbx",
+          "bytes": 89820,
+          "sha256": "15611a6573f0e4b87aaedfea89dc9ed5be45e3bb3729860180a41d8b89b9df75"
+        },
+        {
+          "file": "models/BluefinTuna/StruggleRight.fbx",
+          "bytes": 89836,
+          "sha256": "ab20acd094ef1bffb8bc99cbaa451632f4b23f976c243f917f52762954d720ca"
+        },
+        {
+          "file": "models/BluefinTuna/LiftFlop.fbx",
+          "bytes": 126748,
+          "sha256": "4e0c1a4d451638e6e38225dcdf4f6b5b0472bee339cfb707ffdd81460afca377"
+        },
+        {
+          "file": "models/BluefinTuna/ShowcaseFlop.fbx",
+          "bytes": 98044,
+          "sha256": "f93cad6bf4209fa15c293bbd7329375f421b44d25f238b3dd629f0b5f3366fc8"
+        }
+      ]
+    },
+    {
+      "name": "BumblebeeGrouper",
+      "eyeScale": 2,
+      "bones": 5,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/BumblebeeGrouper/BumblebeeGrouper.blend",
+          "bytes": 237250,
+          "sha256": "94681cccc54e21db7148a56d7fd08d2a41966ace8042df209b31db71272a9f2b"
+        },
+        {
+          "file": "models/BumblebeeGrouper/BumblebeeGrouper.fbx",
+          "bytes": 44108,
+          "sha256": "a219b7f646fd22ddf24f87f4101f8610935b0f20d74494f33bb58e15ea6b5001"
+        },
+        {
+          "file": "models/BumblebeeGrouper/SwimLoop.fbx",
+          "bytes": 93628,
+          "sha256": "e3042e58d4cab67c7f2f1564dba61fca2fec94bfbf11d46a3f25c14029305328"
+        },
+        {
+          "file": "models/BumblebeeGrouper/StruggleLeft.fbx",
+          "bytes": 95132,
+          "sha256": "6d9ad170b97550b9d506ac3d2bbaa331c217e76c679d51cf4d77533a72393281"
+        },
+        {
+          "file": "models/BumblebeeGrouper/StruggleRight.fbx",
+          "bytes": 95148,
+          "sha256": "ace5d2754b88123f7ec52e7dc40048ea6826605dcb9bb306ce3bce9b88e19c42"
+        },
+        {
+          "file": "models/BumblebeeGrouper/LiftFlop.fbx",
+          "bytes": 132092,
+          "sha256": "958d5ed87ab253d429b868710da85cd22cae880f9b4fc523f61b2161e0ac65be"
+        },
+        {
+          "file": "models/BumblebeeGrouper/ShowcaseFlop.fbx",
+          "bytes": 103372,
+          "sha256": "7226434679e96ce7dd3329c0505788e2fc43205eb9ed04839173472bef9a83ce"
+        }
+      ]
+    },
+    {
+      "name": "FireGoby",
+      "eyeScale": 2,
+      "bones": 5,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/FireGoby/FireGoby.blend",
+          "bytes": 232697,
+          "sha256": "b096f23ad25fdcc5bfaf7538ec46d3baaa73c6982038242c65b0b5ee0b9f244c"
+        },
+        {
+          "file": "models/FireGoby/FireGoby.fbx",
+          "bytes": 36972,
+          "sha256": "0c320e85f5d73c9cb645630b7a3e601a8f715af78b4ff9ec648fae5c3ffe3724"
+        },
+        {
+          "file": "models/FireGoby/SwimLoop.fbx",
+          "bytes": 86492,
+          "sha256": "535c2f6b5cdfb1e61c0bd1cd9d56726fe5aa041c029585b3af0ec86dbe2f5062"
+        },
+        {
+          "file": "models/FireGoby/StruggleLeft.fbx",
+          "bytes": 87996,
+          "sha256": "300f6ce73efad1cbb26f384eb437a8da43dd40c28726542bf1bc9c3fe25fb4b3"
+        },
+        {
+          "file": "models/FireGoby/StruggleRight.fbx",
+          "bytes": 87996,
+          "sha256": "33f1e9dfd7d1e2dfac854f3673702517bc4d9c7b5192a2fd440504b6eb4c74e7"
+        },
+        {
+          "file": "models/FireGoby/LiftFlop.fbx",
+          "bytes": 124924,
+          "sha256": "a1215f96e1f56a51253669c20c897d02af609e9a866aa0e41a663110ac411e21"
+        },
+        {
+          "file": "models/FireGoby/ShowcaseFlop.fbx",
+          "bytes": 96236,
+          "sha256": "6dda3cd41a235225272af8aa5cdab4099f1a86d0ccacd3fe5d873bef95b86ef3"
+        }
+      ]
+    },
+    {
+      "name": "FlameAngelfish",
+      "eyeScale": 1.5,
+      "bones": 5,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/FlameAngelfish/FlameAngelfish.blend",
+          "bytes": 241764,
+          "sha256": "a0e7f41fa11e9ea1ceae0785b099d5613adc4b7da7328ada68981139869031fc"
+        },
+        {
+          "file": "models/FlameAngelfish/FlameAngelfish.fbx",
+          "bytes": 46364,
+          "sha256": "0f0d6d8f978824121e4d200c184a0f28e361fb38b9d09ca60a6ca05fcd69d7dd"
+        },
+        {
+          "file": "models/FlameAngelfish/SwimLoop.fbx",
+          "bytes": 95884,
+          "sha256": "dd2aab38c172e65e47ecbd2ac589a8be9dba63b271da3ce86c50302967dde9ac"
+        },
+        {
+          "file": "models/FlameAngelfish/StruggleLeft.fbx",
+          "bytes": 97388,
+          "sha256": "5830bcaa8a047af52ad9ea6db16f0fd0d7cb2d51cd01981257889971d64b1167"
+        },
+        {
+          "file": "models/FlameAngelfish/StruggleRight.fbx",
+          "bytes": 97404,
+          "sha256": "118d94dd00520aaccb57aa4147ebf9b42151dd5cdfa1a1f54ee1cec1f6e2e747"
+        },
+        {
+          "file": "models/FlameAngelfish/LiftFlop.fbx",
+          "bytes": 134364,
+          "sha256": "d583c6cb455bca118afa069b521d4d63b7827551ef1dfc8d00d0174c84e285bc"
+        },
+        {
+          "file": "models/FlameAngelfish/ShowcaseFlop.fbx",
+          "bytes": 105628,
+          "sha256": "c63aa5a10869f4b3d160218f7f2bef355a098915237ae6e076de0ef97385f057"
+        }
+      ]
+    },
+    {
+      "name": "FoureyeButterflyfish",
+      "eyeScale": 1.5,
+      "bones": 5,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/FoureyeButterflyfish/FoureyeButterflyfish.blend",
+          "bytes": 241103,
+          "sha256": "657a1c1f4effd15770df51bbde064ae9c5e492e8448e184dd1cdf14951157db3"
+        },
+        {
+          "file": "models/FoureyeButterflyfish/FoureyeButterflyfish.fbx",
+          "bytes": 44860,
+          "sha256": "21652ec791cbc600abbbf42b2f7d61c6819bc321942c8cc6fb856bbc48577dd7"
+        },
+        {
+          "file": "models/FoureyeButterflyfish/SwimLoop.fbx",
+          "bytes": 94396,
+          "sha256": "68fc2ffa933b5bf2cb9e0a631e8cd9b2aed49d218885cf0595e90edf78e8334a"
+        },
+        {
+          "file": "models/FoureyeButterflyfish/StruggleLeft.fbx",
+          "bytes": 95900,
+          "sha256": "f3eaacea45f57b8f2357b848cb2a6f74d5e3901429ec769b733007349161ad64"
+        },
+        {
+          "file": "models/FoureyeButterflyfish/StruggleRight.fbx",
+          "bytes": 95900,
+          "sha256": "60aa7c7fefb1e6f065938844ec99c32908a0caa048d95d4e29971f6c7bda1e46"
+        },
+        {
+          "file": "models/FoureyeButterflyfish/LiftFlop.fbx",
+          "bytes": 132844,
+          "sha256": "f854148312f50e195c8d88a442ff40fe0784fa7a4881f0d7b46a34bf827b2da6"
+        },
+        {
+          "file": "models/FoureyeButterflyfish/ShowcaseFlop.fbx",
+          "bytes": 104124,
+          "sha256": "76ffbbb5ab4a1a39aab4e4abb96b5b3e8c27e7037eac6d02887cb0cd696a3791"
+        }
+      ]
+    },
+    {
+      "name": "GreateWhiteShark",
+      "eyeScale": 2,
+      "bones": 5,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/GreateWhiteShark/GreateWhiteShark.blend",
+          "bytes": 245933,
+          "sha256": "5c3348edb438398d19f7ce5e851b30cc1e1888c6feecf018245d484726426777"
+        },
+        {
+          "file": "models/GreateWhiteShark/GreateWhiteShark.fbx",
+          "bytes": 49884,
+          "sha256": "13841d23e304480adc1e768e6d684512aa27f924902690a40528d0898e1a07eb"
+        },
+        {
+          "file": "models/GreateWhiteShark/SwimLoop.fbx",
+          "bytes": 99324,
+          "sha256": "53b922af324074e43e968c7a37a75f2290adb3469cb4363f8a4116dd1e92c7e6"
+        },
+        {
+          "file": "models/GreateWhiteShark/StruggleLeft.fbx",
+          "bytes": 100812,
+          "sha256": "0c2173404cd4b037e0b6c1cde5ef0e79acacb480f28f3f705fadeaf22144deb3"
+        },
+        {
+          "file": "models/GreateWhiteShark/StruggleRight.fbx",
+          "bytes": 100812,
+          "sha256": "8f747a8076537b5e854dab0fb256818f2d91bb66e64229f42b988775a553f890"
+        },
+        {
+          "file": "models/GreateWhiteShark/LiftFlop.fbx",
+          "bytes": 137804,
+          "sha256": "b95b8b49bd4110df37ccc056dd8855b5b5ae724f1cad56650ed5bb4fc4d1937f"
+        },
+        {
+          "file": "models/GreateWhiteShark/ShowcaseFlop.fbx",
+          "bytes": 109084,
+          "sha256": "700010cd2a4795a6d0886660e5cdc9fb4af702efc014daed78cde94d47c0bd23"
+        }
+      ]
+    },
+    {
+      "name": "GreenSeahorse",
+      "eyeScale": 1.5,
+      "bones": 8,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/GreenSeahorse/GreenSeahorse.blend",
+          "bytes": 263474,
+          "sha256": "2fc604570460094933dba56af7ee425d9ab4a1ae77788816fad8cdd673de2b3a"
+        },
+        {
+          "file": "models/GreenSeahorse/GreenSeahorse.fbx",
+          "bytes": 61532,
+          "sha256": "4a286bbe736ad5fb8b8032fc033e1b56927e15f5ae6417ad44e0f88ddd417483"
+        },
+        {
+          "file": "models/GreenSeahorse/SwimLoop.fbx",
+          "bytes": 138796,
+          "sha256": "b2dfa38cbfed5c9ed45e84c8ed011c59f7e9c761c1bf7a2c9a1b97c14c2a88bf"
+        },
+        {
+          "file": "models/GreenSeahorse/StruggleLeft.fbx",
+          "bytes": 137740,
+          "sha256": "6caa112277fbaf954b778842ceeccd6cdfb0124d9697ce5b199bc65d6bbf76d2"
+        },
+        {
+          "file": "models/GreenSeahorse/StruggleRight.fbx",
+          "bytes": 137820,
+          "sha256": "b1858bc26ad0bb29857464f11c8dfba1d2cd1403ce5fcf941b3cca7105c2100d"
+        },
+        {
+          "file": "models/GreenSeahorse/LiftFlop.fbx",
+          "bytes": 194476,
+          "sha256": "b3cea06226754accfa6ac3386c83d378997e30b989bb491afceaa82a24467d82"
+        },
+        {
+          "file": "models/GreenSeahorse/ShowcaseFlop.fbx",
+          "bytes": 150284,
+          "sha256": "2e803c48a1c3219a01c4ac630719550eaff6c01d987b2d5671483cb3930c6940"
+        }
+      ]
+    },
+    {
+      "name": "GreenTurtle",
+      "eyeScale": 1.5,
+      "bones": 8,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/GreenTurtle/GreenTurtle.blend",
+          "bytes": 270350,
+          "sha256": "48df80f78555fb2d79549d096dab9b8ee4eb3b857bf5dddaab645d8eeae9fecf"
+        },
+        {
+          "file": "models/GreenTurtle/GreenTurtle.fbx",
+          "bytes": 69884,
+          "sha256": "11ab9e3be7da6689d97be80ea902e02eb16c798113f589adf0c72dba3c5332e6"
+        },
+        {
+          "file": "models/GreenTurtle/SwimLoop.fbx",
+          "bytes": 144172,
+          "sha256": "fe0acd28a6471e034161aa1a883312c9c381fe683ef255b83abadb2ba8e9bbb9"
+        },
+        {
+          "file": "models/GreenTurtle/StruggleLeft.fbx",
+          "bytes": 146156,
+          "sha256": "9698a2ab7c9b8c18bb45ba6d528e8b4cbafc4be719816bf91830e8bda90d4aa0"
+        },
+        {
+          "file": "models/GreenTurtle/StruggleRight.fbx",
+          "bytes": 146188,
+          "sha256": "56afc01665df7dafceeeaa4eaddcd30fdda3922cdff696f06eb0e03a816921ea"
+        },
+        {
+          "file": "models/GreenTurtle/LiftFlop.fbx",
+          "bytes": 203052,
+          "sha256": "c9bfab786efb8aaa3c812274c22f1cf5e25f6f00e0ec0fd7143e939f0198284b"
+        },
+        {
+          "file": "models/GreenTurtle/ShowcaseFlop.fbx",
+          "bytes": 158700,
+          "sha256": "a1ffc467d32b93ecea61f6b08b3e790555785f37eff11afe9b438009d92f1ee5"
+        }
+      ]
+    },
+    {
+      "name": "Lobster",
+      "eyeScale": 2,
+      "bones": 8,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/Lobster/Lobster.blend",
+          "bytes": 274249,
+          "sha256": "4d514b79e9121a1f02f897a6cbd4665fad700d0ed58e0ef1e6d2b55c47d7cd5c"
+        },
+        {
+          "file": "models/Lobster/Lobster.fbx",
+          "bytes": 73820,
+          "sha256": "98748e7a9371be5b4ddc0daccc8370fce6d48f5480a2262e4f48ee83dbd80d05"
+        },
+        {
+          "file": "models/Lobster/SwimLoop.fbx",
+          "bytes": 147580,
+          "sha256": "2f5d2b8c1522c5854811741f0f8fb38d4198a63111c13479f4419aaf40f1036a"
+        },
+        {
+          "file": "models/Lobster/StruggleLeft.fbx",
+          "bytes": 150348,
+          "sha256": "ecd067eaf01afcacb0e2bdeb42569546ffc27ef60ca89813adf1aecd21cd77ce"
+        },
+        {
+          "file": "models/Lobster/StruggleRight.fbx",
+          "bytes": 150380,
+          "sha256": "f70fefe0c414c51a6e356a912052a072b962a37531ec1cf038cc6e7712333aa1"
+        },
+        {
+          "file": "models/Lobster/LiftFlop.fbx",
+          "bytes": 207644,
+          "sha256": "31317b1fc5f4fbd5ffbd5a258ec99ca4926bc3607100ee006481209266e0e55c"
+        },
+        {
+          "file": "models/Lobster/ShowcaseFlop.fbx",
+          "bytes": 163196,
+          "sha256": "346accd71e60eb7c1aca153fc761a250807f4d99db0cb32a193d63760da8ca94"
+        }
+      ]
+    },
+    {
+      "name": "NurseShark",
+      "eyeScale": 2,
+      "bones": 5,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/NurseShark/NurseShark.blend",
+          "bytes": 254691,
+          "sha256": "11c0995f533726b0a85b98f7c5c213d7973b2d4832722a923933af65ad383633"
+        },
+        {
+          "file": "models/NurseShark/NurseShark.fbx",
+          "bytes": 53052,
+          "sha256": "78749bb697dbb1cb0d96166ea33884b71acecea6e0a2e63a175e4d7dd4aeb19b"
+        },
+        {
+          "file": "models/NurseShark/SwimLoop.fbx",
+          "bytes": 102540,
+          "sha256": "649e5a8e8b5ab896859165b03356659701012323c1a1b3e720e2f81809a7758b"
+        },
+        {
+          "file": "models/NurseShark/StruggleLeft.fbx",
+          "bytes": 104076,
+          "sha256": "5e6ec47571637b76126da60c74a9e257089cdb40d8dd61ace41c2bd71c307607"
+        },
+        {
+          "file": "models/NurseShark/StruggleRight.fbx",
+          "bytes": 104092,
+          "sha256": "adabbf8ffb628b324fcabbb90f20198853cc213f4b46e31da831e78016489169"
+        },
+        {
+          "file": "models/NurseShark/LiftFlop.fbx",
+          "bytes": 141004,
+          "sha256": "ca2d0277d54cf9c21050a82e41cffc0fd37e6488ff130a14a7f4531dfdcb512b"
+        },
+        {
+          "file": "models/NurseShark/ShowcaseFlop.fbx",
+          "bytes": 112332,
+          "sha256": "f1bd0e4dad37e4cf257708511db868b6425f521f3facbb8a504cac81983e1019"
+        }
+      ]
+    },
+    {
+      "name": "PinkDolphin",
+      "eyeScale": 2,
+      "bones": 5,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/PinkDolphin/PinkDolphin.blend",
+          "bytes": 251010,
+          "sha256": "765dc3552f14d94db8c753f68724e24bbbbbbd3ba3621a447f013f6973738339"
+        },
+        {
+          "file": "models/PinkDolphin/PinkDolphin.fbx",
+          "bytes": 47324,
+          "sha256": "3f1d2bb6c1aca1769115e99e41df5aa4a464abfff66936df890945e163051dc1"
+        },
+        {
+          "file": "models/PinkDolphin/SwimLoop.fbx",
+          "bytes": 98428,
+          "sha256": "1925cef838b422f5214a01f9214e0eb4038f372f86b28547259465f0ff7a9839"
+        },
+        {
+          "file": "models/PinkDolphin/StruggleLeft.fbx",
+          "bytes": 98348,
+          "sha256": "5c84f974ae2fbc5fd8a2e1105366a146cc905321ed8e31b023ad835fc3570102"
+        },
+        {
+          "file": "models/PinkDolphin/StruggleRight.fbx",
+          "bytes": 98348,
+          "sha256": "2f01639730d9221fc24e73ab507a68ee3eb1f5e31a123ae4ee91fcf7e9e84a03"
+        },
+        {
+          "file": "models/PinkDolphin/LiftFlop.fbx",
+          "bytes": 135420,
+          "sha256": "95b1904ed16624bb9f590aa1c71c395fc7aa12d7b8024f774a31a33b841cafc5"
+        },
+        {
+          "file": "models/PinkDolphin/ShowcaseFlop.fbx",
+          "bytes": 106620,
+          "sha256": "970a249bd5070984effb792774cd15304c71bda873ec6a8d0820b968882b82d1"
+        }
+      ]
+    },
+    {
+      "name": "PinkSkunkClownfish",
+      "eyeScale": 1.5,
+      "bones": 5,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/PinkSkunkClownfish/PinkSkunkClownfish.blend",
+          "bytes": 250531,
+          "sha256": "2a788c3a7e55b9386d4862a9ce4059179f14a0244f6d5136281b95413adfb325"
+        },
+        {
+          "file": "models/PinkSkunkClownfish/PinkSkunkClownfish.fbx",
+          "bytes": 45372,
+          "sha256": "bd55480dec0935953ce17a0dbd43aa8088ea68276d05468c176a7c23db15a59b"
+        },
+        {
+          "file": "models/PinkSkunkClownfish/SwimLoop.fbx",
+          "bytes": 94684,
+          "sha256": "f01ba41fbbd00c847991dde9bbc6038337855c2b86465681805c98658153b199"
+        },
+        {
+          "file": "models/PinkSkunkClownfish/StruggleLeft.fbx",
+          "bytes": 96236,
+          "sha256": "54a0aa7663c616539fd11650c14c347ff208a996bad190f096b967cdbb073638"
+        },
+        {
+          "file": "models/PinkSkunkClownfish/StruggleRight.fbx",
+          "bytes": 96236,
+          "sha256": "e20a038eeb621fc3e3ca44b56a0aa7ff4c6c77b10a978d34db6d71580896a71c"
+        },
+        {
+          "file": "models/PinkSkunkClownfish/LiftFlop.fbx",
+          "bytes": 133180,
+          "sha256": "b97c66f935b3f45abade80ceea04df44ece2d9e922df8b556b1495bf2bc3eb04"
+        },
+        {
+          "file": "models/PinkSkunkClownfish/ShowcaseFlop.fbx",
+          "bytes": 104476,
+          "sha256": "aba21f6ca8696dec0de4cbc97564c7c064c4c9804e9a5874a37628f5d6fedf66"
+        }
+      ]
+    },
+    {
+      "name": "PinkSmithDamsel",
+      "eyeScale": 1.5,
+      "bones": 5,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/PinkSmithDamsel/PinkSmithDamsel.blend",
+          "bytes": 243661,
+          "sha256": "205989dc65ea677080eca3822d7e40425794c151635e158e2b61b55dca9516be"
+        },
+        {
+          "file": "models/PinkSmithDamsel/PinkSmithDamsel.fbx",
+          "bytes": 34716,
+          "sha256": "846df5b962a1f9d236f2734059d49af43c66061919880f0c09ec52483ef4a34a"
+        },
+        {
+          "file": "models/PinkSmithDamsel/SwimLoop.fbx",
+          "bytes": 84236,
+          "sha256": "77a8cfeec85f5b9be922d68788d3b1470f2ba9cc491f394846be8465023a0d7a"
+        },
+        {
+          "file": "models/PinkSmithDamsel/StruggleLeft.fbx",
+          "bytes": 85740,
+          "sha256": "b684c32a63537fbb1554af11996d46a92c81f3a11adf5ae3f057de7d740330a6"
+        },
+        {
+          "file": "models/PinkSmithDamsel/StruggleRight.fbx",
+          "bytes": 85740,
+          "sha256": "bdf9af56549b2ddce2f3f912f92d4e7fd09d5cde088eb392509f5392b0b6fefc"
+        },
+        {
+          "file": "models/PinkSmithDamsel/LiftFlop.fbx",
+          "bytes": 122668,
+          "sha256": "8761507c92d38c087309eef19c51324737305e6e60f9b7fb74039a1534908c17"
+        },
+        {
+          "file": "models/PinkSmithDamsel/ShowcaseFlop.fbx",
+          "bytes": 93964,
+          "sha256": "f765632be155115970b2790518756a4e6c3a2add32f5891e01027d17cab0b17b"
+        }
+      ]
+    },
+    {
+      "name": "QueenAngelfish_New",
+      "eyeScale": 1.5,
+      "bones": 5,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/QueenAngelfish_New/QueenAngelfish_New.blend",
+          "bytes": 248551,
+          "sha256": "dc20e687e88bdfd8437a5d0d73dd2fab1746c613fa61279986acc65013c01450"
+        },
+        {
+          "file": "models/QueenAngelfish_New/QueenAngelfish_New.fbx",
+          "bytes": 39052,
+          "sha256": "8fc7310308f2667f798901f95b43406c517ceb5628ff1080155d71b0ec4c60b1"
+        },
+        {
+          "file": "models/QueenAngelfish_New/SwimLoop.fbx",
+          "bytes": 88572,
+          "sha256": "8ff3da1752c08333ec2afc9d312e956a03192fa31df39c89f0938f9f703489e3"
+        },
+        {
+          "file": "models/QueenAngelfish_New/StruggleLeft.fbx",
+          "bytes": 90076,
+          "sha256": "86e469345b9b9b8c0b0569be997a2de81d47b4f3fc8fbcf50a53c41916ab649e"
+        },
+        {
+          "file": "models/QueenAngelfish_New/StruggleRight.fbx",
+          "bytes": 90076,
+          "sha256": "a386f5ca1d92dbe57b08481e7065060ebaa3b329856573dbebd7f99f305b606c"
+        },
+        {
+          "file": "models/QueenAngelfish_New/LiftFlop.fbx",
+          "bytes": 126988,
+          "sha256": "dc9e3493732bf42e8b8a19753287f0a810180bf07adc37e64c30778344ec6f9b"
+        },
+        {
+          "file": "models/QueenAngelfish_New/ShowcaseFlop.fbx",
+          "bytes": 98316,
+          "sha256": "f659e6570307a26e48c419e914749b3c7c094fc5d42c3f9d09d4d4e3b23c4aa5"
+        }
+      ]
+    },
+    {
+      "name": "RedSeahorse",
+      "eyeScale": 1.5,
+      "bones": 8,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/RedSeahorse/RedSeahorse.blend",
+          "bytes": 276485,
+          "sha256": "ae99054711639372b2f1e9d0d9404a2ee8d55a4ffad3e2fac0a7e3ab0bad2897"
+        },
+        {
+          "file": "models/RedSeahorse/RedSeahorse.fbx",
+          "bytes": 62956,
+          "sha256": "785a0b875ccd820f6de1b2ff0c7c4721acd037b21f8a352d22c832ca36f643f1"
+        },
+        {
+          "file": "models/RedSeahorse/SwimLoop.fbx",
+          "bytes": 140172,
+          "sha256": "b06c3cf157a1d0079059e98cbdefb0d6db92d0e4b0386e5b87eb2edc3b06616a"
+        },
+        {
+          "file": "models/RedSeahorse/StruggleLeft.fbx",
+          "bytes": 139148,
+          "sha256": "c2527de2cd77bdd079167fdb877d8ae1942c487b9c0c818a687f4f196625297f"
+        },
+        {
+          "file": "models/RedSeahorse/StruggleRight.fbx",
+          "bytes": 139196,
+          "sha256": "1eee032f80df981bf20a6099e5df2209ad082efa97821733e628d78d511fa84b"
+        },
+        {
+          "file": "models/RedSeahorse/LiftFlop.fbx",
+          "bytes": 195820,
+          "sha256": "995d789585d694d304d9bcb27cb301ff0b3a6e1aba94629cc81a392315b09296"
+        },
+        {
+          "file": "models/RedSeahorse/ShowcaseFlop.fbx",
+          "bytes": 151708,
+          "sha256": "0a1c9559bfc867a08476697b5815aa3f581223c24f48548ca591f08c3db884ff"
+        }
+      ]
+    },
+    {
+      "name": "SaddleButterflyfish_New",
+      "eyeScale": 1.5,
+      "bones": 5,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/SaddleButterflyfish_New/SaddleButterflyfish_New.blend",
+          "bytes": 133704,
+          "sha256": "357f6dbf61c9ad7c8d4dabb389d3157db748e4a7a32d997f393c5c1142500d0a"
+        },
+        {
+          "file": "models/SaddleButterflyfish_New/SaddleButterflyfish_New.fbx",
+          "bytes": 41212,
+          "sha256": "7bc25557ded232051e145ef8f11e75d06c67ba80340fdccc0fe9fdd98daca7dc"
+        },
+        {
+          "file": "models/SaddleButterflyfish_New/SwimLoop.fbx",
+          "bytes": 90732,
+          "sha256": "2883e7e1084e4624b00bcba3873f215012340bec51d6b2c22d1b5c306ad13d70"
+        },
+        {
+          "file": "models/SaddleButterflyfish_New/StruggleLeft.fbx",
+          "bytes": 92268,
+          "sha256": "836acad6d12137302c383c602c7dbac3f8b9dc83aa069aa1a8fdafee05bc80dc"
+        },
+        {
+          "file": "models/SaddleButterflyfish_New/StruggleRight.fbx",
+          "bytes": 92268,
+          "sha256": "6d574513f1b7565bb488d00b7154978c9a4a0b6f38ad62d2ac4d2254b90f076a"
+        },
+        {
+          "file": "models/SaddleButterflyfish_New/LiftFlop.fbx",
+          "bytes": 129196,
+          "sha256": "90e66e5b27f674b72b8368b0f6c17521c728e3e2c57ba79daf1178e3dd4b1b7b"
+        },
+        {
+          "file": "models/SaddleButterflyfish_New/ShowcaseFlop.fbx",
+          "bytes": 100444,
+          "sha256": "ade6b8db86161a59d695fd89875355fb75c406803cbbd426e34de2a04b15707a"
+        }
+      ]
+    },
+    {
+      "name": "SkipjackTuna",
+      "eyeScale": 2,
+      "bones": 5,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/SkipjackTuna/SkipjackTuna.blend",
+          "bytes": 259411,
+          "sha256": "62ca7af20f60630abca1173b7ec965716589394ebff343fab1151d1bab9bd778"
+        },
+        {
+          "file": "models/SkipjackTuna/SkipjackTuna.fbx",
+          "bytes": 47644,
+          "sha256": "6d3f7833ba0c44ea14c969218c6386ddff650e842a087697bbc6f0f67676e728"
+        },
+        {
+          "file": "models/SkipjackTuna/SwimLoop.fbx",
+          "bytes": 97180,
+          "sha256": "ae482ea8799a571eefbf35207b4c84d6e6d8919b2df243363fa8f582f4a225d8"
+        },
+        {
+          "file": "models/SkipjackTuna/StruggleLeft.fbx",
+          "bytes": 98684,
+          "sha256": "c756fa11be3e215d4a8780adfbbaae65e0195f40b8761db0c1b6471ed2445d15"
+        },
+        {
+          "file": "models/SkipjackTuna/StruggleRight.fbx",
+          "bytes": 98700,
+          "sha256": "8c0e485303d4b3fc0c9cdd2ddd54df5ce721633dd36d4b08e49d9d7d36b8fa77"
+        },
+        {
+          "file": "models/SkipjackTuna/LiftFlop.fbx",
+          "bytes": 135628,
+          "sha256": "6d3ef7aaed99f1ec818a261e09ab7a32628084f3f23a96ad67c9f32c0387b2f3"
+        },
+        {
+          "file": "models/SkipjackTuna/ShowcaseFlop.fbx",
+          "bytes": 106908,
+          "sha256": "45f9876a3ed5bf4eaa531084651f13df2074e85276f23e8a9eb5d875ed30ca60"
+        }
+      ]
+    },
+    {
+      "name": "SkunkTilefish",
+      "eyeScale": 2,
+      "bones": 5,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/SkunkTilefish/SkunkTilefish.blend",
+          "bytes": 251897,
+          "sha256": "661883dda5e5a00facca33ce49f9a71fd3a3e7bc7977b35818af292ae7b79f95"
+        },
+        {
+          "file": "models/SkunkTilefish/SkunkTilefish.fbx",
+          "bytes": 36940,
+          "sha256": "d0fb14d678dda6f208d4c7e5264b8a8379b01708e591c03295abdab0a255b9c6"
+        },
+        {
+          "file": "models/SkunkTilefish/SwimLoop.fbx",
+          "bytes": 86428,
+          "sha256": "d9266d23e75479be7ddde8cd8959246bfca8899897117771ef0a1ce633d0066b"
+        },
+        {
+          "file": "models/SkunkTilefish/StruggleLeft.fbx",
+          "bytes": 87996,
+          "sha256": "b1a12fd9f80a2738fa1c61b73fa3996676e634ed3bb6d6ff565fc7335a9ccef5"
+        },
+        {
+          "file": "models/SkunkTilefish/StruggleRight.fbx",
+          "bytes": 88012,
+          "sha256": "e8f9b59e94c389fff11cd77e82c02950176b17a35873c3076c1f94d3a0c22785"
+        },
+        {
+          "file": "models/SkunkTilefish/LiftFlop.fbx",
+          "bytes": 124924,
+          "sha256": "c8c26fb61f2638529705c450666d42cc74ecc87e82a8817358b98e922c550e1c"
+        },
+        {
+          "file": "models/SkunkTilefish/ShowcaseFlop.fbx",
+          "bytes": 96204,
+          "sha256": "99887bfb8f64dc955788a4a789bb4db51aeed037789c5f0c30f239386aed2272"
+        }
+      ]
+    },
+    {
+      "name": "SpottedEagleRay",
+      "eyeScale": 2,
+      "bones": 7,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/SpottedEagleRay/SpottedEagleRay.blend",
+          "bytes": 275463,
+          "sha256": "efcd8d1fd2a8536d5eb9725677e2a5a0972ecb07639a83f46f16e5b12c4ae613"
+        },
+        {
+          "file": "models/SpottedEagleRay/SpottedEagleRay.fbx",
+          "bytes": 61564,
+          "sha256": "b330d748d0dc994de50823da6208363e1078e6bdbe4d603117d6ca58fafe2352"
+        },
+        {
+          "file": "models/SpottedEagleRay/SwimLoop.fbx",
+          "bytes": 127628,
+          "sha256": "8a27a9ebe6426099d0951e3aad2618f2474095d4e62de51a665418d527ff92c4"
+        },
+        {
+          "file": "models/SpottedEagleRay/StruggleLeft.fbx",
+          "bytes": 129580,
+          "sha256": "0d35e9c79da91f9b4a33581bf26fbd6ddc30ea692c1a384c3eec758505d4c076"
+        },
+        {
+          "file": "models/SpottedEagleRay/StruggleRight.fbx",
+          "bytes": 129596,
+          "sha256": "c07c976e26b84dd4f80e796d8e64bf76eafcb9f0ce2d97afdac280ddeaa216c2"
+        },
+        {
+          "file": "models/SpottedEagleRay/LiftFlop.fbx",
+          "bytes": 180092,
+          "sha256": "cff30ecea96157852f935ecc6ee571d95133fe09310c6552b28e4bc156faf671"
+        },
+        {
+          "file": "models/SpottedEagleRay/ShowcaseFlop.fbx",
+          "bytes": 140796,
+          "sha256": "343ebbd220392cc025af7d9190482463fb1947458817c5b22af1eeb115a645ac"
+        }
+      ]
+    },
+    {
+      "name": "WheelersShrimpGoby",
+      "eyeScale": 2,
+      "bones": 5,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/WheelersShrimpGoby/WheelersShrimpGoby.blend",
+          "bytes": 256153,
+          "sha256": "ff9143f5a2cab5face1eaeef9a3722b45b0fe539d0494f946f5c1ac36eb41c8f"
+        },
+        {
+          "file": "models/WheelersShrimpGoby/WheelersShrimpGoby.fbx",
+          "bytes": 38684,
+          "sha256": "0637c391ffe6861e79fe48452eb62246e4ac5aa63f136c75de40e69ab276553c"
+        },
+        {
+          "file": "models/WheelersShrimpGoby/SwimLoop.fbx",
+          "bytes": 88204,
+          "sha256": "d6915dd2dde2703e7192ab98c11df0da21589d10b8a6f4361f1dbf0af8ae57d0"
+        },
+        {
+          "file": "models/WheelersShrimpGoby/StruggleLeft.fbx",
+          "bytes": 89708,
+          "sha256": "9a016117dad89f2c1a908cd44d9be329a6a70a0bc489b2755c39a5316c891686"
+        },
+        {
+          "file": "models/WheelersShrimpGoby/StruggleRight.fbx",
+          "bytes": 89708,
+          "sha256": "9f5fcc551c740d52d76adcdd903b67deb48b85516894fbbd4b60fdcaf96257c9"
+        },
+        {
+          "file": "models/WheelersShrimpGoby/LiftFlop.fbx",
+          "bytes": 126636,
+          "sha256": "b9a44d481f6c5b75f593faf780a51be4d55d2150f11831d3bdbc1483f3b9b67a"
+        },
+        {
+          "file": "models/WheelersShrimpGoby/ShowcaseFlop.fbx",
+          "bytes": 97932,
+          "sha256": "5d62847cb26f30fbd5c053353868ba5dee82568af773a408410d6ee93d500b9b"
+        }
+      ]
+    },
+    {
+      "name": "WyomingWhiteClownfish",
+      "eyeScale": 1.5,
+      "bones": 5,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/WyomingWhiteClownfish/WyomingWhiteClownfish.blend",
+          "bytes": 263436,
+          "sha256": "40d998f3d7eab74ffa1545cb4089eb0ca0f1ebde9dacf048d4716a45ce7b5ff0"
+        },
+        {
+          "file": "models/WyomingWhiteClownfish/WyomingWhiteClownfish.fbx",
+          "bytes": 46956,
+          "sha256": "51659bf7ef44a421a9a9d9f5c0f74f1f33aaac94a769f81a5454dc2185714f7a"
+        },
+        {
+          "file": "models/WyomingWhiteClownfish/SwimLoop.fbx",
+          "bytes": 96476,
+          "sha256": "4e113a952e6dc57fcee8b63dbe40458c6843f974c6ffeb19ad880808a2a69645"
+        },
+        {
+          "file": "models/WyomingWhiteClownfish/StruggleLeft.fbx",
+          "bytes": 97996,
+          "sha256": "a3978a8034b371dfa26f98a1a6f8f511f9aa6ba1712a36c1fc67198662865558"
+        },
+        {
+          "file": "models/WyomingWhiteClownfish/StruggleRight.fbx",
+          "bytes": 98012,
+          "sha256": "7aaa2e09447dcb94fa02c0786f4a02176b01af88a397a5720858458db18d11b5"
+        },
+        {
+          "file": "models/WyomingWhiteClownfish/LiftFlop.fbx",
+          "bytes": 134924,
+          "sha256": "f7679e4459cf48d78ccfd4c9f86de9604191b78e65e97b176906e3aa6fea11a9"
+        },
+        {
+          "file": "models/WyomingWhiteClownfish/ShowcaseFlop.fbx",
+          "bytes": 106204,
+          "sha256": "771802557ca6301847899d59fb808e8e59777b551e6b68e4b54a1deb9fbaa3f0"
+        }
+      ]
+    },
+    {
+      "name": "Yu_GenXin_01",
+      "eyeScale": 1.5,
+      "bones": 5,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/Yu_GenXin_01/Yu_GenXin_01.blend",
+          "bytes": 263039,
+          "sha256": "e247a2c8037378f79d31e1ab3a8c3f1308de0987f34ab474ccf85c4b46c1859c"
+        },
+        {
+          "file": "models/Yu_GenXin_01/Yu_GenXin_01.fbx",
+          "bytes": 42092,
+          "sha256": "05b2e13d62d1b3d67f0062a800a8a49dd329936d4d0e3a0fd19923c1b1dd4365"
+        },
+        {
+          "file": "models/Yu_GenXin_01/SwimLoop.fbx",
+          "bytes": 91628,
+          "sha256": "caac18e5f570bbed17fa92aa5feaed581923ad7d197581bbc6ff0f99bf07ea18"
+        },
+        {
+          "file": "models/Yu_GenXin_01/StruggleLeft.fbx",
+          "bytes": 93132,
+          "sha256": "4796489526ff4ce42eacfadd2143205ceb56869ea6d275b368c6d09cda7e645d"
+        },
+        {
+          "file": "models/Yu_GenXin_01/StruggleRight.fbx",
+          "bytes": 93148,
+          "sha256": "a5679c6f04e37fe3539b935f122e14be597e25d518ab60c46392e61e8144b8e2"
+        },
+        {
+          "file": "models/Yu_GenXin_01/LiftFlop.fbx",
+          "bytes": 130044,
+          "sha256": "f969c30554e070d5ddce49bfc79249af262f49c0c64f48352084b3719eebedf1"
+        },
+        {
+          "file": "models/Yu_GenXin_01/ShowcaseFlop.fbx",
+          "bytes": 101356,
+          "sha256": "5da2db8939e6a7927bb2149da5b5dca92de15096cfe8944fafa441551878b02f"
+        }
+      ]
+    },
+    {
+      "name": "Yu_GenXin_02",
+      "eyeScale": 2,
+      "bones": 5,
+      "layers": 3,
+      "files": [
+        {
+          "file": "models/Yu_GenXin_02/Yu_GenXin_02.blend",
+          "bytes": 298580,
+          "sha256": "f942bf830f8ba90796b0e09abf0844366906b2b19032860a643a707ed843f9f6"
+        },
+        {
+          "file": "models/Yu_GenXin_02/Yu_GenXin_02.fbx",
+          "bytes": 103116,
+          "sha256": "09a6af7c9b43d3cbcef92c1aaaafdd74768f0d1158f53d3d10f9070e1cdcdc94"
+        },
+        {
+          "file": "models/Yu_GenXin_02/SwimLoop.fbx",
+          "bytes": 152652,
+          "sha256": "a58cf7c72bea07703d1b5846a49054e7b2febad6318007d36f260f321a385754"
+        },
+        {
+          "file": "models/Yu_GenXin_02/StruggleLeft.fbx",
+          "bytes": 154156,
+          "sha256": "befaf7df4361bad9e0a389fade63a1c2d05c679e68b8378874fa774e6284d859"
+        },
+        {
+          "file": "models/Yu_GenXin_02/StruggleRight.fbx",
+          "bytes": 154156,
+          "sha256": "114eec7c31e296cb60f185c8022508812c5d66f71b9b764b52442a0a2d73bbd2"
+        },
+        {
+          "file": "models/Yu_GenXin_02/LiftFlop.fbx",
+          "bytes": 191084,
+          "sha256": "79e2964f925cec571954fdf11db2b7f874aa2419b84cb29f5d2b50e9db98d70c"
+        },
+        {
+          "file": "models/Yu_GenXin_02/ShowcaseFlop.fbx",
+          "bytes": 162380,
+          "sha256": "30b5433ea6ac909a4b4563b716db9af583045427a3f9214363554fd0a81cafb6"
+        }
+      ]
+    },
+    {
+      "name": "Yu_MoFaShiJie_01",
+      "eyeScale": 2,
+      "bones": 5,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/Yu_MoFaShiJie_01/Yu_MoFaShiJie_01.blend",
+          "bytes": 275918,
+          "sha256": "56254e96fa22e10613d7c615fe1ef6c14303e7470936bab3b18425f460461a1a"
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_01/Yu_MoFaShiJie_01.fbx",
+          "bytes": 53740,
+          "sha256": "4882a4ff6a938e3b29deff888709aab0b03b2ca833fc6bad705c5047803f5a15"
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_01/SwimLoop.fbx",
+          "bytes": 103164,
+          "sha256": "c1704a7ecdad00fbb508253c9c065ae7dd567d58af2fe2a87648cb9c3fae3e0c"
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_01/StruggleLeft.fbx",
+          "bytes": 104668,
+          "sha256": "975e9698392bffa99e58e1025e63199b2bc497bf25d7790bdbba0a73aaf770f4"
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_01/StruggleRight.fbx",
+          "bytes": 104684,
+          "sha256": "f51dd3c2b85497b5e9fa7ff2369fc843f1c70d94e809051b004828ede532e19b"
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_01/LiftFlop.fbx",
+          "bytes": 141628,
+          "sha256": "9afe611a118d7386fd11f4f177bac6cc7e64085b5d50e6b4d73e66f58688388e"
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_01/ShowcaseFlop.fbx",
+          "bytes": 112940,
+          "sha256": "8a5ca65b2d94dbc44fdb2c76c651b15aec534f966f353a7a20c1030f6e3cde71"
+        }
+      ]
+    },
+    {
+      "name": "Yu_MoFaShiJie_02",
+      "eyeScale": 2,
+      "bones": 5,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/Yu_MoFaShiJie_02/Yu_MoFaShiJie_02.blend",
+          "bytes": 286380,
+          "sha256": "dcc9b2fa255323748a2b1d3e8bec2e9470d5858efd8784a6b902d6d3e08f4468"
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_02/Yu_MoFaShiJie_02.fbx",
+          "bytes": 65004,
+          "sha256": "cfd17711c302b670042e6facb7bb049bf66a3dd00930484ac703983bb560937c"
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_02/SwimLoop.fbx",
+          "bytes": 114428,
+          "sha256": "34e8e54dc292030f4ddd50a8825066bac343f9f7af5a3002c294d9856660d008"
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_02/StruggleLeft.fbx",
+          "bytes": 115980,
+          "sha256": "917927a8a991e4bf73bdc04c6c4b691c969c460d6dd78398a9233645c45bc13a"
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_02/StruggleRight.fbx",
+          "bytes": 115996,
+          "sha256": "222883be4f79099953ce18dd2d9e666bb5d5b3fa1ad9404a1615ac47921a4b98"
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_02/LiftFlop.fbx",
+          "bytes": 152924,
+          "sha256": "772530490cf7aa2b36a3e02654569fc3abe1c7ffc1556f2e5a82919bc1e3e693"
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_02/ShowcaseFlop.fbx",
+          "bytes": 124236,
+          "sha256": "fa0d747aa213daf79714c843d2580c37abee84cea6c18910731e63f4a6bef8d3"
+        }
+      ]
+    },
+    {
+      "name": "Yu_MoFaShiJie_03",
+      "eyeScale": 2,
+      "bones": 5,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/Yu_MoFaShiJie_03/Yu_MoFaShiJie_03.blend",
+          "bytes": 283856,
+          "sha256": "07eb9aba25ce3396e0aaf7484087a9344ab32accabbc8b9cdbb76fba6772321a"
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_03/Yu_MoFaShiJie_03.fbx",
+          "bytes": 59292,
+          "sha256": "20d89ebec489c1c68ce5d70df44abdac6af672003294d06f85e923eb5e5b76b1"
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_03/SwimLoop.fbx",
+          "bytes": 108812,
+          "sha256": "b4408c1b6c73388255e748b8b69547be87390205ad1283cd618a5157e1b8e8bf"
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_03/StruggleLeft.fbx",
+          "bytes": 110348,
+          "sha256": "db90ee766ee724287b566026444688d2b932024f95b6982f95b92466e62d40e1"
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_03/StruggleRight.fbx",
+          "bytes": 110348,
+          "sha256": "518f6d5e586d371ef0af0b2696f72c46326ba94c48d160b7847b4b04a041c0c4"
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_03/LiftFlop.fbx",
+          "bytes": 147276,
+          "sha256": "9dc0157fa989f012b76bf9a23871c0a2a5f541d933199ea2cdb0f6c2c53b6235"
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_03/ShowcaseFlop.fbx",
+          "bytes": 118556,
+          "sha256": "5857281213df6a6cfe09275831c955fef07a9a959da60cdfd1be1012a750bb19"
+        }
+      ]
+    },
+    {
+      "name": "Yu_MoFaShiJie_04",
+      "eyeScale": 2,
+      "bones": 5,
+      "layers": 2,
+      "files": [
+        {
+          "file": "models/Yu_MoFaShiJie_04/Yu_MoFaShiJie_04.blend",
+          "bytes": 372636,
+          "sha256": "389c6d14059310b5c0ec543de6a2f60cbc2774afdf7fba7dfc2d1a8bbfd7200d"
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_04/Yu_MoFaShiJie_04.fbx",
+          "bytes": 175948,
+          "sha256": "4c7cf6365bba86d1090d8577bad5e75ecf581e8214efba71ceb997e4ed26471c"
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_04/SwimLoop.fbx",
+          "bytes": 225452,
+          "sha256": "aaf42230e441d55468238d8425e145e2673ea4b123f2259d9d74f1b900c5b0a3"
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_04/StruggleLeft.fbx",
+          "bytes": 227004,
+          "sha256": "7ffd18dd737e9fd06ad4f820a25caef05129a6caac0c6d302dd169a0b474ab88"
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_04/StruggleRight.fbx",
+          "bytes": 227004,
+          "sha256": "bb1ef050d8bed42328f852763157e1eb20ce53e2a6f0e1e90a4a6fbb43d9705d"
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_04/LiftFlop.fbx",
+          "bytes": 263916,
+          "sha256": "d9af4c6b013c25e15fd03ae639385724c973971e0832d2386f8b07fcf8d4294b"
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_04/ShowcaseFlop.fbx",
+          "bytes": 235196,
+          "sha256": "d8be1f536e9215f46c51b786c372f0e2c37c21d9f995a094bfcbcf42fc8ea5e6"
+        }
+      ]
+    },
+    {
+      "name": "Yu_MoFaShiJie_05",
+      "eyeScale": 2,
+      "bones": 5,
+      "layers": 3,
+      "files": [
+        {
+          "file": "models/Yu_MoFaShiJie_05/Yu_MoFaShiJie_05.blend",
+          "bytes": 314750,
+          "sha256": "61b8240c678c854ca16fa9734b93ffae0980a7f32b8eb7bc3f9b884af723fb57"
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_05/Yu_MoFaShiJie_05.fbx",
+          "bytes": 109084,
+          "sha256": "3c20a893a64adb7be5551cf6e57d4cad3d5978bce64e235e43b28bf7b030aa80"
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_05/SwimLoop.fbx",
+          "bytes": 158460,
+          "sha256": "b0cf8cc62532bdce7e8a9a7a9062c82c8c551d97f9edff403d165ad0f2eab15d"
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_05/StruggleLeft.fbx",
+          "bytes": 159932,
+          "sha256": "1500fb8d22b6c99d877ab3eb5f7f28c7cf538cf67357b34318d3a9ac1722ab4f"
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_05/StruggleRight.fbx",
+          "bytes": 159948,
+          "sha256": "608e966d6af3fe7b77ddaf16b49b9f2d09edca3c7ee2730139b1d1fa9c010a79"
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_05/LiftFlop.fbx",
+          "bytes": 196876,
+          "sha256": "5427c61ea80cc1963dcce0e420f5977acd463c529c5e8ceea4d09acc9d5e0a21"
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_05/ShowcaseFlop.fbx",
+          "bytes": 168188,
+          "sha256": "29c235624f79b862f61a2b1bc31d11f1ea966516c93c58af01b1b34f7c1e879e"
+        }
+      ]
+    },
+    {
+      "name": "ZebraSeahorse",
+      "eyeScale": 1.5,
+      "bones": 8,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/ZebraSeahorse/ZebraSeahorse.blend",
+          "bytes": 309700,
+          "sha256": "d3bbb5b8da0abdb3cc7f65fbb2bc3a3100ab5615e0882d1a1548ade56b4eb3cf"
+        },
+        {
+          "file": "models/ZebraSeahorse/ZebraSeahorse.fbx",
+          "bytes": 75836,
+          "sha256": "92b5010e86009b3e729a02c36d753b13a0be8bd2b7d40f2542aee2d054c06304"
+        },
+        {
+          "file": "models/ZebraSeahorse/SwimLoop.fbx",
+          "bytes": 153100,
+          "sha256": "c25721b5b691bb5cbe0c71d0a2712ec41cb5bf07f28ef29009e6630fa640b82e"
+        },
+        {
+          "file": "models/ZebraSeahorse/StruggleLeft.fbx",
+          "bytes": 152044,
+          "sha256": "e802630570652886bb8ad17d45cff0202283ddb93753ac33e48a73e659940c37"
+        },
+        {
+          "file": "models/ZebraSeahorse/StruggleRight.fbx",
+          "bytes": 152108,
+          "sha256": "7868999f839db99cff7fd66748a06651d4167038cad28856e90cd00e429f4c7d"
+        },
+        {
+          "file": "models/ZebraSeahorse/LiftFlop.fbx",
+          "bytes": 208764,
+          "sha256": "e02f992679aa6f8d1735aa5080c364fb703a926eb4cb988c469311d70b2dfc35"
+        },
+        {
+          "file": "models/ZebraSeahorse/ShowcaseFlop.fbx",
+          "bytes": 164620,
+          "sha256": "07d7abf1f3932ba239005f87b5c3af5ee45054ece5c27a766c5b5a27223a8f99"
+        }
+      ]
+    },
+    {
+      "name": "yu018",
+      "eyeScale": 2,
+      "bones": 5,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/yu018/yu018.blend",
+          "bytes": 280809,
+          "sha256": "75aac3f1685cd2eaffddcb6a25605c13c173eb326d4fe715c6892ed69936376f"
+        },
+        {
+          "file": "models/yu018/yu018.fbx",
+          "bytes": 46092,
+          "sha256": "25009c9af966dea32504497f1e5cc201b01d1b23ed339ff964ac021abb1389e1"
+        },
+        {
+          "file": "models/yu018/SwimLoop.fbx",
+          "bytes": 95596,
+          "sha256": "cb561ed8ce6604bba7fda8245733218fab6705bb2c60cd658dae90b4e8719955"
+        },
+        {
+          "file": "models/yu018/StruggleLeft.fbx",
+          "bytes": 97116,
+          "sha256": "04eeb613d653e472c394fcffa27817fc23535373edd36189bc76d39572f93344"
+        },
+        {
+          "file": "models/yu018/StruggleRight.fbx",
+          "bytes": 97132,
+          "sha256": "22864da4bf88748f371c1e810e77d204288309fa9efcd2bbe01a2096c7a231f8"
+        },
+        {
+          "file": "models/yu018/LiftFlop.fbx",
+          "bytes": 134076,
+          "sha256": "0931d062ebff12af988fcfc6107d0306b96cf83117b83f651a538aa20fb09000"
+        },
+        {
+          "file": "models/yu018/ShowcaseFlop.fbx",
+          "bytes": 105340,
+          "sha256": "8c760c1d81b2620f3f43c07566b50246b53d0ae928edb8e613416ef3f4d3dabe"
+        }
+      ]
+    },
+    {
+      "name": "yu019",
+      "eyeScale": 2,
+      "bones": 5,
+      "layers": 1,
+      "files": [
+        {
+          "file": "models/yu019/yu019.blend",
+          "bytes": 287565,
+          "sha256": "1f3bb33f45d9c2278a9a4296b2978e17caffabda9a33901c9e438c295ce41eaf"
+        },
+        {
+          "file": "models/yu019/yu019.fbx",
+          "bytes": 51388,
+          "sha256": "733de98cdc8be32dbea4f9d5c0a43777598a60c219424f051f82b2b24a6a9f12"
+        },
+        {
+          "file": "models/yu019/SwimLoop.fbx",
+          "bytes": 100812,
+          "sha256": "769335b83fce553e19e696f6f8883dbaf3d53def1b8af17b879b3c8bf12eceba"
+        },
+        {
+          "file": "models/yu019/StruggleLeft.fbx",
+          "bytes": 102300,
+          "sha256": "de660d7ae1047a13bb30eb8c13ac1da5e7fde274418310ea05ad1f5c5a896851"
+        },
+        {
+          "file": "models/yu019/StruggleRight.fbx",
+          "bytes": 102316,
+          "sha256": "38322670637cbf927aba12dd08bde10ed5ebff1988b7c078fa5ac9e0dff135d4"
+        },
+        {
+          "file": "models/yu019/LiftFlop.fbx",
+          "bytes": 139244,
+          "sha256": "bc0fead55e5145ff9a186e2dac5449797d3b3dd1ccc57441208c8a316fec65b3"
+        },
+        {
+          "file": "models/yu019/ShowcaseFlop.fbx",
+          "bytes": 110540,
+          "sha256": "c1156e422e83eedad519fcf007e12667bf1d4c59e3ddd197e3d4143f5a36aa3c"
+        }
+      ]
+    }
+  ]
+}

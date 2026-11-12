@@ -1,0 +1,2426 @@
+{
+  "passed": true,
+  "fish": 59,
+  "files": 354,
+  "results": [
+    {
+      "name": "Attacking Whale",
+      "files": [
+        {
+          "file": "models/Attacking Whale/Attacking Whale.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Attacking Whale/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Attacking Whale/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Attacking Whale/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Attacking Whale/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Attacking Whale/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "Axolotl",
+      "files": [
+        {
+          "file": "models/Axolotl/Axolotl.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        },
+        {
+          "file": "models/Axolotl/SwimLoop.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        },
+        {
+          "file": "models/Axolotl/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        },
+        {
+          "file": "models/Axolotl/StruggleRight.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        },
+        {
+          "file": "models/Axolotl/LiftFlop.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        },
+        {
+          "file": "models/Axolotl/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "Black Whale",
+      "files": [
+        {
+          "file": "models/Black Whale/Black Whale.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Black Whale/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Black Whale/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Black Whale/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Black Whale/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Black Whale/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "Blue Dragon",
+      "files": [
+        {
+          "file": "models/Blue Dragon/Blue Dragon.fbx",
+          "passed": true,
+          "bones": 7,
+          "meshes": 2
+        },
+        {
+          "file": "models/Blue Dragon/SwimLoop.fbx",
+          "passed": true,
+          "bones": 7,
+          "meshes": 2
+        },
+        {
+          "file": "models/Blue Dragon/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 7,
+          "meshes": 2
+        },
+        {
+          "file": "models/Blue Dragon/StruggleRight.fbx",
+          "passed": true,
+          "bones": 7,
+          "meshes": 2
+        },
+        {
+          "file": "models/Blue Dragon/LiftFlop.fbx",
+          "passed": true,
+          "bones": 7,
+          "meshes": 2
+        },
+        {
+          "file": "models/Blue Dragon/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 7,
+          "meshes": 2
+        }
+      ]
+    },
+    {
+      "name": "Blue Whale",
+      "files": [
+        {
+          "file": "models/Blue Whale/Blue Whale.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Blue Whale/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Blue Whale/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Blue Whale/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Blue Whale/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Blue Whale/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "Candy Jellyfish",
+      "files": [
+        {
+          "file": "models/Candy Jellyfish/Candy Jellyfish.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 28
+        },
+        {
+          "file": "models/Candy Jellyfish/SwimLoop.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 28
+        },
+        {
+          "file": "models/Candy Jellyfish/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 28
+        },
+        {
+          "file": "models/Candy Jellyfish/StruggleRight.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 28
+        },
+        {
+          "file": "models/Candy Jellyfish/LiftFlop.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 28
+        },
+        {
+          "file": "models/Candy Jellyfish/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 28
+        }
+      ]
+    },
+    {
+      "name": "Dragonfish",
+      "files": [
+        {
+          "file": "models/Dragonfish/Dragonfish.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        },
+        {
+          "file": "models/Dragonfish/SwimLoop.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        },
+        {
+          "file": "models/Dragonfish/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        },
+        {
+          "file": "models/Dragonfish/StruggleRight.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        },
+        {
+          "file": "models/Dragonfish/LiftFlop.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        },
+        {
+          "file": "models/Dragonfish/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "Flamingo",
+      "files": [
+        {
+          "file": "models/Flamingo/Flamingo.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 4
+        },
+        {
+          "file": "models/Flamingo/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 4
+        },
+        {
+          "file": "models/Flamingo/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 4
+        },
+        {
+          "file": "models/Flamingo/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 4
+        },
+        {
+          "file": "models/Flamingo/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 4
+        },
+        {
+          "file": "models/Flamingo/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 4
+        }
+      ]
+    },
+    {
+      "name": "Galaxy Megalodon",
+      "files": [
+        {
+          "file": "models/Galaxy Megalodon/Galaxy Megalodon.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 3
+        },
+        {
+          "file": "models/Galaxy Megalodon/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 3
+        },
+        {
+          "file": "models/Galaxy Megalodon/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 3
+        },
+        {
+          "file": "models/Galaxy Megalodon/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 3
+        },
+        {
+          "file": "models/Galaxy Megalodon/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 3
+        },
+        {
+          "file": "models/Galaxy Megalodon/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 3
+        }
+      ]
+    },
+    {
+      "name": "Hell Shark",
+      "files": [
+        {
+          "file": "models/Hell Shark/Hell Shark.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 9
+        },
+        {
+          "file": "models/Hell Shark/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 9
+        },
+        {
+          "file": "models/Hell Shark/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 9
+        },
+        {
+          "file": "models/Hell Shark/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 9
+        },
+        {
+          "file": "models/Hell Shark/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 9
+        },
+        {
+          "file": "models/Hell Shark/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 9
+        }
+      ]
+    },
+    {
+      "name": "Killer Whale",
+      "files": [
+        {
+          "file": "models/Killer Whale/Killer Whale.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Killer Whale/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Killer Whale/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Killer Whale/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Killer Whale/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Killer Whale/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "Magma Fury",
+      "files": [
+        {
+          "file": "models/Magma Fury/Magma Fury.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Magma Fury/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Magma Fury/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Magma Fury/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Magma Fury/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Magma Fury/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "Mecha Whale",
+      "files": [
+        {
+          "file": "models/Mecha Whale/Mecha Whale.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 4
+        },
+        {
+          "file": "models/Mecha Whale/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 4
+        },
+        {
+          "file": "models/Mecha Whale/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 4
+        },
+        {
+          "file": "models/Mecha Whale/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 4
+        },
+        {
+          "file": "models/Mecha Whale/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 4
+        },
+        {
+          "file": "models/Mecha Whale/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 4
+        }
+      ]
+    },
+    {
+      "name": "Moby Whale",
+      "files": [
+        {
+          "file": "models/Moby Whale/Moby Whale.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Moby Whale/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Moby Whale/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Moby Whale/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Moby Whale/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Moby Whale/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "Neon Cyber",
+      "files": [
+        {
+          "file": "models/Neon Cyber/Neon Cyber.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Neon Cyber/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Neon Cyber/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Neon Cyber/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Neon Cyber/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Neon Cyber/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "Obsidian Fang",
+      "files": [
+        {
+          "file": "models/Obsidian Fang/Obsidian Fang.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Obsidian Fang/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Obsidian Fang/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Obsidian Fang/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Obsidian Fang/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Obsidian Fang/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "Omanadzu",
+      "files": [
+        {
+          "file": "models/Omanadzu/Omanadzu.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Omanadzu/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Omanadzu/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Omanadzu/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Omanadzu/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Omanadzu/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "Saberfish",
+      "files": [
+        {
+          "file": "models/Saberfish/Saberfish.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 3
+        },
+        {
+          "file": "models/Saberfish/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 3
+        },
+        {
+          "file": "models/Saberfish/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 3
+        },
+        {
+          "file": "models/Saberfish/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 3
+        },
+        {
+          "file": "models/Saberfish/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 3
+        },
+        {
+          "file": "models/Saberfish/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 3
+        }
+      ]
+    },
+    {
+      "name": "Shatichoko",
+      "files": [
+        {
+          "file": "models/Shatichoko/Shatichoko.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Shatichoko/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Shatichoko/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Shatichoko/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Shatichoko/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Shatichoko/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "Summertime Elk",
+      "files": [
+        {
+          "file": "models/Summertime Elk/Summertime Elk.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 2
+        },
+        {
+          "file": "models/Summertime Elk/SwimLoop.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 2
+        },
+        {
+          "file": "models/Summertime Elk/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 2
+        },
+        {
+          "file": "models/Summertime Elk/StruggleRight.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 2
+        },
+        {
+          "file": "models/Summertime Elk/LiftFlop.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 2
+        },
+        {
+          "file": "models/Summertime Elk/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 2
+        }
+      ]
+    },
+    {
+      "name": "Swordfish Skeleton",
+      "files": [
+        {
+          "file": "models/Swordfish Skeleton/Swordfish Skeleton.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Swordfish Skeleton/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Swordfish Skeleton/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Swordfish Skeleton/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Swordfish Skeleton/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Swordfish Skeleton/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "Tralalero Tralala",
+      "files": [
+        {
+          "file": "models/Tralalero Tralala/Tralalero Tralala.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 2
+        },
+        {
+          "file": "models/Tralalero Tralala/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 2
+        },
+        {
+          "file": "models/Tralalero Tralala/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 2
+        },
+        {
+          "file": "models/Tralalero Tralala/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 2
+        },
+        {
+          "file": "models/Tralalero Tralala/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 2
+        },
+        {
+          "file": "models/Tralalero Tralala/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 2
+        }
+      ]
+    },
+    {
+      "name": "Turtle Walker",
+      "files": [
+        {
+          "file": "models/Turtle Walker/Turtle Walker.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 3
+        },
+        {
+          "file": "models/Turtle Walker/SwimLoop.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 3
+        },
+        {
+          "file": "models/Turtle Walker/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 3
+        },
+        {
+          "file": "models/Turtle Walker/StruggleRight.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 3
+        },
+        {
+          "file": "models/Turtle Walker/LiftFlop.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 3
+        },
+        {
+          "file": "models/Turtle Walker/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 3
+        }
+      ]
+    },
+    {
+      "name": "Twinhead Megalodon",
+      "files": [
+        {
+          "file": "models/Twinhead Megalodon/Twinhead Megalodon.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 4
+        },
+        {
+          "file": "models/Twinhead Megalodon/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 4
+        },
+        {
+          "file": "models/Twinhead Megalodon/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 4
+        },
+        {
+          "file": "models/Twinhead Megalodon/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 4
+        },
+        {
+          "file": "models/Twinhead Megalodon/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 4
+        },
+        {
+          "file": "models/Twinhead Megalodon/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 4
+        }
+      ]
+    },
+    {
+      "name": "Undead Megalodon",
+      "files": [
+        {
+          "file": "models/Undead Megalodon/Undead Megalodon.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 2
+        },
+        {
+          "file": "models/Undead Megalodon/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 2
+        },
+        {
+          "file": "models/Undead Megalodon/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 2
+        },
+        {
+          "file": "models/Undead Megalodon/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 2
+        },
+        {
+          "file": "models/Undead Megalodon/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 2
+        },
+        {
+          "file": "models/Undead Megalodon/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 2
+        }
+      ]
+    },
+    {
+      "name": "AzureDamsel_New",
+      "files": [
+        {
+          "file": "models/AzureDamsel_New/AzureDamsel_New.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/AzureDamsel_New/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/AzureDamsel_New/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/AzureDamsel_New/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/AzureDamsel_New/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/AzureDamsel_New/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "BallinaAngelfish_New",
+      "files": [
+        {
+          "file": "models/BallinaAngelfish_New/BallinaAngelfish_New.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/BallinaAngelfish_New/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/BallinaAngelfish_New/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/BallinaAngelfish_New/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/BallinaAngelfish_New/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/BallinaAngelfish_New/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "BleekersDamsel",
+      "files": [
+        {
+          "file": "models/BleekersDamsel/BleekersDamsel.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/BleekersDamsel/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/BleekersDamsel/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/BleekersDamsel/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/BleekersDamsel/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/BleekersDamsel/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "BluefinTuna",
+      "files": [
+        {
+          "file": "models/BluefinTuna/BluefinTuna.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/BluefinTuna/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/BluefinTuna/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/BluefinTuna/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/BluefinTuna/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/BluefinTuna/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "BumblebeeGrouper",
+      "files": [
+        {
+          "file": "models/BumblebeeGrouper/BumblebeeGrouper.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/BumblebeeGrouper/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/BumblebeeGrouper/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/BumblebeeGrouper/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/BumblebeeGrouper/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/BumblebeeGrouper/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "FireGoby",
+      "files": [
+        {
+          "file": "models/FireGoby/FireGoby.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/FireGoby/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/FireGoby/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/FireGoby/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/FireGoby/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/FireGoby/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "FlameAngelfish",
+      "files": [
+        {
+          "file": "models/FlameAngelfish/FlameAngelfish.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/FlameAngelfish/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/FlameAngelfish/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/FlameAngelfish/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/FlameAngelfish/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/FlameAngelfish/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "FoureyeButterflyfish",
+      "files": [
+        {
+          "file": "models/FoureyeButterflyfish/FoureyeButterflyfish.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/FoureyeButterflyfish/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/FoureyeButterflyfish/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/FoureyeButterflyfish/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/FoureyeButterflyfish/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/FoureyeButterflyfish/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "GreateWhiteShark",
+      "files": [
+        {
+          "file": "models/GreateWhiteShark/GreateWhiteShark.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/GreateWhiteShark/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/GreateWhiteShark/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/GreateWhiteShark/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/GreateWhiteShark/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/GreateWhiteShark/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "GreenSeahorse",
+      "files": [
+        {
+          "file": "models/GreenSeahorse/GreenSeahorse.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        },
+        {
+          "file": "models/GreenSeahorse/SwimLoop.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        },
+        {
+          "file": "models/GreenSeahorse/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        },
+        {
+          "file": "models/GreenSeahorse/StruggleRight.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        },
+        {
+          "file": "models/GreenSeahorse/LiftFlop.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        },
+        {
+          "file": "models/GreenSeahorse/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "GreenTurtle",
+      "files": [
+        {
+          "file": "models/GreenTurtle/GreenTurtle.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        },
+        {
+          "file": "models/GreenTurtle/SwimLoop.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        },
+        {
+          "file": "models/GreenTurtle/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        },
+        {
+          "file": "models/GreenTurtle/StruggleRight.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        },
+        {
+          "file": "models/GreenTurtle/LiftFlop.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        },
+        {
+          "file": "models/GreenTurtle/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "Lobster",
+      "files": [
+        {
+          "file": "models/Lobster/Lobster.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        },
+        {
+          "file": "models/Lobster/SwimLoop.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        },
+        {
+          "file": "models/Lobster/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        },
+        {
+          "file": "models/Lobster/StruggleRight.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        },
+        {
+          "file": "models/Lobster/LiftFlop.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        },
+        {
+          "file": "models/Lobster/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "NurseShark",
+      "files": [
+        {
+          "file": "models/NurseShark/NurseShark.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/NurseShark/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/NurseShark/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/NurseShark/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/NurseShark/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/NurseShark/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "PinkDolphin",
+      "files": [
+        {
+          "file": "models/PinkDolphin/PinkDolphin.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/PinkDolphin/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/PinkDolphin/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/PinkDolphin/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/PinkDolphin/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/PinkDolphin/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "PinkSkunkClownfish",
+      "files": [
+        {
+          "file": "models/PinkSkunkClownfish/PinkSkunkClownfish.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/PinkSkunkClownfish/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/PinkSkunkClownfish/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/PinkSkunkClownfish/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/PinkSkunkClownfish/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/PinkSkunkClownfish/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "PinkSmithDamsel",
+      "files": [
+        {
+          "file": "models/PinkSmithDamsel/PinkSmithDamsel.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/PinkSmithDamsel/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/PinkSmithDamsel/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/PinkSmithDamsel/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/PinkSmithDamsel/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/PinkSmithDamsel/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "QueenAngelfish_New",
+      "files": [
+        {
+          "file": "models/QueenAngelfish_New/QueenAngelfish_New.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/QueenAngelfish_New/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/QueenAngelfish_New/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/QueenAngelfish_New/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/QueenAngelfish_New/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/QueenAngelfish_New/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "RedSeahorse",
+      "files": [
+        {
+          "file": "models/RedSeahorse/RedSeahorse.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        },
+        {
+          "file": "models/RedSeahorse/SwimLoop.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        },
+        {
+          "file": "models/RedSeahorse/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        },
+        {
+          "file": "models/RedSeahorse/StruggleRight.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        },
+        {
+          "file": "models/RedSeahorse/LiftFlop.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        },
+        {
+          "file": "models/RedSeahorse/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "SaddleButterflyfish_New",
+      "files": [
+        {
+          "file": "models/SaddleButterflyfish_New/SaddleButterflyfish_New.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/SaddleButterflyfish_New/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/SaddleButterflyfish_New/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/SaddleButterflyfish_New/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/SaddleButterflyfish_New/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/SaddleButterflyfish_New/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "SkipjackTuna",
+      "files": [
+        {
+          "file": "models/SkipjackTuna/SkipjackTuna.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/SkipjackTuna/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/SkipjackTuna/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/SkipjackTuna/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/SkipjackTuna/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/SkipjackTuna/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "SkunkTilefish",
+      "files": [
+        {
+          "file": "models/SkunkTilefish/SkunkTilefish.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/SkunkTilefish/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/SkunkTilefish/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/SkunkTilefish/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/SkunkTilefish/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/SkunkTilefish/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "SpottedEagleRay",
+      "files": [
+        {
+          "file": "models/SpottedEagleRay/SpottedEagleRay.fbx",
+          "passed": true,
+          "bones": 7,
+          "meshes": 1
+        },
+        {
+          "file": "models/SpottedEagleRay/SwimLoop.fbx",
+          "passed": true,
+          "bones": 7,
+          "meshes": 1
+        },
+        {
+          "file": "models/SpottedEagleRay/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 7,
+          "meshes": 1
+        },
+        {
+          "file": "models/SpottedEagleRay/StruggleRight.fbx",
+          "passed": true,
+          "bones": 7,
+          "meshes": 1
+        },
+        {
+          "file": "models/SpottedEagleRay/LiftFlop.fbx",
+          "passed": true,
+          "bones": 7,
+          "meshes": 1
+        },
+        {
+          "file": "models/SpottedEagleRay/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 7,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "WheelersShrimpGoby",
+      "files": [
+        {
+          "file": "models/WheelersShrimpGoby/WheelersShrimpGoby.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/WheelersShrimpGoby/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/WheelersShrimpGoby/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/WheelersShrimpGoby/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/WheelersShrimpGoby/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/WheelersShrimpGoby/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "WyomingWhiteClownfish",
+      "files": [
+        {
+          "file": "models/WyomingWhiteClownfish/WyomingWhiteClownfish.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/WyomingWhiteClownfish/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/WyomingWhiteClownfish/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/WyomingWhiteClownfish/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/WyomingWhiteClownfish/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/WyomingWhiteClownfish/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "Yu_GenXin_01",
+      "files": [
+        {
+          "file": "models/Yu_GenXin_01/Yu_GenXin_01.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Yu_GenXin_01/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Yu_GenXin_01/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Yu_GenXin_01/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Yu_GenXin_01/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Yu_GenXin_01/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "Yu_GenXin_02",
+      "files": [
+        {
+          "file": "models/Yu_GenXin_02/Yu_GenXin_02.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 3
+        },
+        {
+          "file": "models/Yu_GenXin_02/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 3
+        },
+        {
+          "file": "models/Yu_GenXin_02/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 3
+        },
+        {
+          "file": "models/Yu_GenXin_02/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 3
+        },
+        {
+          "file": "models/Yu_GenXin_02/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 3
+        },
+        {
+          "file": "models/Yu_GenXin_02/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 3
+        }
+      ]
+    },
+    {
+      "name": "Yu_MoFaShiJie_01",
+      "files": [
+        {
+          "file": "models/Yu_MoFaShiJie_01/Yu_MoFaShiJie_01.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_01/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_01/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_01/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_01/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_01/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "Yu_MoFaShiJie_02",
+      "files": [
+        {
+          "file": "models/Yu_MoFaShiJie_02/Yu_MoFaShiJie_02.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_02/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_02/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_02/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_02/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_02/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "Yu_MoFaShiJie_03",
+      "files": [
+        {
+          "file": "models/Yu_MoFaShiJie_03/Yu_MoFaShiJie_03.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_03/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_03/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_03/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_03/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_03/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "Yu_MoFaShiJie_04",
+      "files": [
+        {
+          "file": "models/Yu_MoFaShiJie_04/Yu_MoFaShiJie_04.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 2
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_04/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 2
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_04/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 2
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_04/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 2
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_04/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 2
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_04/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 2
+        }
+      ]
+    },
+    {
+      "name": "Yu_MoFaShiJie_05",
+      "files": [
+        {
+          "file": "models/Yu_MoFaShiJie_05/Yu_MoFaShiJie_05.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 3
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_05/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 3
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_05/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 3
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_05/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 3
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_05/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 3
+        },
+        {
+          "file": "models/Yu_MoFaShiJie_05/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 3
+        }
+      ]
+    },
+    {
+      "name": "ZebraSeahorse",
+      "files": [
+        {
+          "file": "models/ZebraSeahorse/ZebraSeahorse.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        },
+        {
+          "file": "models/ZebraSeahorse/SwimLoop.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        },
+        {
+          "file": "models/ZebraSeahorse/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        },
+        {
+          "file": "models/ZebraSeahorse/StruggleRight.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        },
+        {
+          "file": "models/ZebraSeahorse/LiftFlop.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        },
+        {
+          "file": "models/ZebraSeahorse/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 8,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "yu018",
+      "files": [
+        {
+          "file": "models/yu018/yu018.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/yu018/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/yu018/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/yu018/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/yu018/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/yu018/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        }
+      ]
+    },
+    {
+      "name": "yu019",
+      "files": [
+        {
+          "file": "models/yu019/yu019.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/yu019/SwimLoop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/yu019/StruggleLeft.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/yu019/StruggleRight.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/yu019/LiftFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        },
+        {
+          "file": "models/yu019/ShowcaseFlop.fbx",
+          "passed": true,
+          "bones": 5,
+          "meshes": 1
+        }
+      ]
+    }
+  ]
+}

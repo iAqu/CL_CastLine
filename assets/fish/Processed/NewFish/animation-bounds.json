@@ -1,0 +1,415 @@
+{
+  "Attacking Whale": {
+    "measuredRadius": 14.010024883743721,
+    "presentationRadius": 15.411027372118095,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Axolotl": {
+    "measuredRadius": 3.2771658456959423,
+    "presentationRadius": 3.604882430265537,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "AzureDamsel_New": {
+    "measuredRadius": 3.1850592458099443,
+    "presentationRadius": 3.503565170390939,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "BallinaAngelfish_New": {
+    "measuredRadius": 2.5982048602628467,
+    "presentationRadius": 2.8580253462891316,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Black Whale": {
+    "measuredRadius": 7.971397764096472,
+    "presentationRadius": 8.76853754050612,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "BleekersDamsel": {
+    "measuredRadius": 2.011902276713679,
+    "presentationRadius": 2.213092504385047,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Blue Dragon": {
+    "measuredRadius": 5.417889878428451,
+    "presentationRadius": 5.959678866271296,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Blue Whale": {
+    "measuredRadius": 7.814345404348001,
+    "presentationRadius": 8.595779944782802,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "BluefinTuna": {
+    "measuredRadius": 3.100280883680916,
+    "presentationRadius": 3.410308972049008,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "BumblebeeGrouper": {
+    "measuredRadius": 2.884161265995024,
+    "presentationRadius": 3.1725773925945266,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Candy Jellyfish": {
+    "measuredRadius": 7.116275955097917,
+    "presentationRadius": 7.82790355060771,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Dragonfish": {
+    "measuredRadius": 19.07998670012732,
+    "presentationRadius": 20.987985370140056,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "FireGoby": {
+    "measuredRadius": 2.1609612598064585,
+    "presentationRadius": 2.3770573857871047,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "FlameAngelfish": {
+    "measuredRadius": 2.897894791153839,
+    "presentationRadius": 3.187684270269223,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Flamingo": {
+    "measuredRadius": 8.757990368662604,
+    "presentationRadius": 9.764955479460093,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "FoureyeButterflyfish": {
+    "measuredRadius": 2.3809943149182655,
+    "presentationRadius": 2.6190937464100923,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Galaxy Megalodon": {
+    "measuredRadius": 10.219589510972423,
+    "presentationRadius": 11.241548462069666,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "GreateWhiteShark": {
+    "measuredRadius": 10.53915828268245,
+    "presentationRadius": 11.593074110950697,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "GreenSeahorse": {
+    "measuredRadius": 1.5805891674254127,
+    "presentationRadius": 1.7386480841679541,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "GreenTurtle": {
+    "measuredRadius": 3.309016375251294,
+    "presentationRadius": 3.639918012776424,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Hell Shark": {
+    "measuredRadius": 10.313942759188212,
+    "presentationRadius": 11.345337035107034,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Killer Whale": {
+    "measuredRadius": 8.272089098158144,
+    "presentationRadius": 9.099298007973958,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Lobster": {
+    "measuredRadius": 4.0653658914451425,
+    "presentationRadius": 4.471902480589657,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Magma Fury": {
+    "measuredRadius": 12.415841908340024,
+    "presentationRadius": 13.657426099174028,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Mecha Whale": {
+    "measuredRadius": 12.023379079715218,
+    "presentationRadius": 13.320286629928571,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Moby Whale": {
+    "measuredRadius": 8.9367639998851,
+    "presentationRadius": 9.830440399873611,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Neon Cyber": {
+    "measuredRadius": 9.571336166753223,
+    "presentationRadius": 10.528469783428546,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "NurseShark": {
+    "measuredRadius": 8.818915561443948,
+    "presentationRadius": 9.700807117588344,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Obsidian Fang": {
+    "measuredRadius": 11.6153830875866,
+    "presentationRadius": 12.776921396345262,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Omanadzu": {
+    "measuredRadius": 8.796765558839237,
+    "presentationRadius": 9.67644211472316,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "PinkDolphin": {
+    "measuredRadius": 10.402961457635161,
+    "presentationRadius": 11.443257603398678,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "PinkSkunkClownfish": {
+    "measuredRadius": 2.97991024073969,
+    "presentationRadius": 3.277901264813659,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "PinkSmithDamsel": {
+    "measuredRadius": 3.6407005932536087,
+    "presentationRadius": 4.00477065257897,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "QueenAngelfish_New": {
+    "measuredRadius": 3.715126134165824,
+    "presentationRadius": 4.086638747582406,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "RedSeahorse": {
+    "measuredRadius": 2.231686212437151,
+    "presentationRadius": 2.454854833680866,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Saberfish": {
+    "measuredRadius": 7.325538951482006,
+    "presentationRadius": 8.058092846630208,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "SaddleButterflyfish_New": {
+    "measuredRadius": 3.493718435220806,
+    "presentationRadius": 3.8430902787428867,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Shatichoko": {
+    "measuredRadius": 6.1846869870445325,
+    "presentationRadius": 6.803155685748986,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "SkipjackTuna": {
+    "measuredRadius": 4.528027763402057,
+    "presentationRadius": 4.980830539742263,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "SkunkTilefish": {
+    "measuredRadius": 3.1531116059749418,
+    "presentationRadius": 3.468422766572436,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "SpottedEagleRay": {
+    "measuredRadius": 6.431356211266383,
+    "presentationRadius": 7.074491832393022,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Summertime Elk": {
+    "measuredRadius": 16.606115586580685,
+    "presentationRadius": 18.35194652274122,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Swordfish Skeleton": {
+    "measuredRadius": 12.179019067907218,
+    "presentationRadius": 13.396920974697942,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Tralalero Tralala": {
+    "measuredRadius": 12.683093000888663,
+    "presentationRadius": 13.95140230097753,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Turtle Walker": {
+    "measuredRadius": 9.008961401637475,
+    "presentationRadius": 9.909857541801223,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Twinhead Megalodon": {
+    "measuredRadius": 7.433966837273948,
+    "presentationRadius": 8.211465941360023,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Undead Megalodon": {
+    "measuredRadius": 10.495970253595862,
+    "presentationRadius": 11.545567278955449,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "WheelersShrimpGoby": {
+    "measuredRadius": 1.7819079869480738,
+    "presentationRadius": 1.9600987856428813,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "WyomingWhiteClownfish": {
+    "measuredRadius": 3.7810338033393687,
+    "presentationRadius": 4.159137183673306,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Yu_GenXin_01": {
+    "measuredRadius": 3.834939654985536,
+    "presentationRadius": 4.21843362048409,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Yu_GenXin_02": {
+    "measuredRadius": 7.449509791513265,
+    "presentationRadius": 8.194460770664591,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Yu_MoFaShiJie_01": {
+    "measuredRadius": 3.7894320563381547,
+    "presentationRadius": 4.1683752619719705,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Yu_MoFaShiJie_02": {
+    "measuredRadius": 2.9363415377573037,
+    "presentationRadius": 3.2299756915330344,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Yu_MoFaShiJie_03": {
+    "measuredRadius": 4.295597503798339,
+    "presentationRadius": 4.725157254178173,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Yu_MoFaShiJie_04": {
+    "measuredRadius": 8.352585163210005,
+    "presentationRadius": 9.187843679531007,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "Yu_MoFaShiJie_05": {
+    "measuredRadius": 7.158483009018863,
+    "presentationRadius": 7.87433130992075,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "ZebraSeahorse": {
+    "measuredRadius": 1.6648116239786699,
+    "presentationRadius": 1.831292786376537,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "yu018": {
+    "measuredRadius": 3.858859949647793,
+    "presentationRadius": 4.244745944612573,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  },
+  "yu019": {
+    "measuredRadius": 3.544410998730518,
+    "presentationRadius": 3.89885209860357,
+    "center": "PrimaryPart",
+    "poseSamples": 125,
+    "interpolationMargin": 1.1
+  }
+}
