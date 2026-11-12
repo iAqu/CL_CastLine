@@ -7,6 +7,7 @@ local Workspace = game:GetService("Workspace")
 local Knit = require(ReplicatedStorage.Packages.Knit)
 local PetsData = require(game:GetService("ReplicatedFirst").Data.PetsData)
 local PetInventory = require(ReplicatedStorage.Modules.PetInventory)
+local PetFeatureConfig = require(ReplicatedStorage.Modules.PetFeatureConfig)
 
 local LOCAL_PLAYER = Players.LocalPlayer
 local RESOURCE_TIMEOUT = 10
@@ -198,6 +199,7 @@ function PetFollowController:_ApplyRoster(userId, roster)
 end
 
 function PetFollowController:KnitStart()
+	if not PetFeatureConfig.Enabled then return end
 	self._states, self._rosters, self._connections = {}, {}, {}
 	self._showYourPets, self._showOtherPets = true, true
 	local folder = Instance.new("Folder")

@@ -42,6 +42,7 @@ local tweenService = {
 }
 local errors, successes, hoverHides = {}, {}, 0
 local modules = {
+	PetFeatureConfig = { Enabled = true },
 	PetInventory = inventory,
 	NotificationClient = {
 		RedNotify = function(message)

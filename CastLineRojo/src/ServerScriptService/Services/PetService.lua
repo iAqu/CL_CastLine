@@ -4,6 +4,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local Knit = require(ReplicatedStorage.Packages.Knit)
 local Inventory = require(ReplicatedStorage.Modules.PetInventory)
+local PetFeatureConfig = require(ReplicatedStorage.Modules.PetFeatureConfig)
 local PetsData = require(ReplicatedFirst.Data.PetsData)
 local PlayerDataService = require(script.Parent.PlayerDataService)
 
@@ -31,13 +32,14 @@ function PetService:GetState(player)
 	return {
 		Pets = copyRecords(profile.Data.Pets),
 		PetIndex = table.clone(profile.Data.PetIndex),
-		LuckMultiplier = Inventory.GetLuckMultiplier(profile.Data, PetsData),
+		LuckMultiplier = self:GetLuckMultiplier(player),
 		MaxEquipped = Inventory.MAX_EQUIPPED,
 		MaxStored = Inventory.MAX_STORED,
 	}
 end
 
 function PetService:_changed(player)
+	if not PetFeatureConfig.Enabled then return end
 	local state = self:GetState(player)
 	if not state then
 		return
@@ -59,15 +61,20 @@ function PetService:GivePet(player, petId)
 end
 
 function PetService:GetLuckMultiplier(player)
+	if not PetFeatureConfig.Enabled then return 1 end
 	local profile = PlayerDataService:GetProfile(player)
 	return if profile then Inventory.GetLuckMultiplier(profile.Data, PetsData) else 1
 end
 
 function PetService.Client:GetState(player)
+	if not PetFeatureConfig.Enabled then
+		return { Pets = {}, PetIndex = {}, LuckMultiplier = 1, MaxEquipped = Inventory.MAX_EQUIPPED, MaxStored = Inventory.MAX_STORED }
+	end
 	return self.Server:GetState(player)
 end
 
 function PetService.Client:GetAllPlayersEquippedPets(_player)
+	if not PetFeatureConfig.Enabled then return {} end
 	local result = {}
 	for _, player in ipairs(Players:GetPlayers()) do
 		local state = self.Server:GetState(player)
@@ -79,6 +86,7 @@ function PetService.Client:GetAllPlayersEquippedPets(_player)
 end
 
 function PetService.Client:EquipPet(player, uuid, equipped)
+	if not PetFeatureConfig.Enabled then return { ok = false, message = PetFeatureConfig.DisabledMessage } end
 	if typeof(uuid) ~= "string" or typeof(equipped) ~= "boolean" then
 		return { ok = false, message = "Invalid request" }
 	end
@@ -94,6 +102,7 @@ function PetService.Client:EquipPet(player, uuid, equipped)
 end
 
 function PetService.Client:EquipBest(player)
+	if not PetFeatureConfig.Enabled then return false end
 	local profile = PlayerDataService:GetProfile(player)
 	if not profile then
 		return false
@@ -104,6 +113,7 @@ function PetService.Client:EquipBest(player)
 end
 
 function PetService.Client:UnequipAll(player)
+	if not PetFeatureConfig.Enabled then return false end
 	local profile = PlayerDataService:GetProfile(player)
 	if not profile then
 		return false
@@ -116,6 +126,7 @@ function PetService.Client:UnequipAll(player)
 end
 
 function PetService.Client:LockPet(player, uuid, locked)
+	if not PetFeatureConfig.Enabled then return false end
 	if typeof(uuid) ~= "string" or typeof(locked) ~= "boolean" then
 		return false
 	end
@@ -130,6 +141,7 @@ function PetService.Client:LockPet(player, uuid, locked)
 end
 
 function PetService.Client:LockPets(player, uuids)
+	if not PetFeatureConfig.Enabled then return { ok = false, message = PetFeatureConfig.DisabledMessage } end
 	if typeof(uuids) ~= "table" then
 		return { ok = false, message = "Invalid lock request" }
 	end
@@ -165,6 +177,7 @@ function PetService.Client:LockPets(player, uuids)
 end
 
 function PetService.Client:DeletePets(player, uuids)
+	if not PetFeatureConfig.Enabled then return { ok = false, message = PetFeatureConfig.DisabledMessage, deleted = 0 } end
 	if typeof(uuids) ~= "table" or #uuids > Inventory.MAX_STORED then
 		return { ok = false, message = "Invalid request" }
 	end
@@ -190,6 +203,7 @@ function PetService.Client:DeletePets(player, uuids)
 end
 
 function PetService.Client:CraftPet(player, uuid, expectedSize)
+	if not PetFeatureConfig.Enabled then return { ok = false, message = PetFeatureConfig.DisabledMessage, craftedCount = 0 } end
 	if typeof(uuid) ~= "string" or (expectedSize ~= 0 and expectedSize ~= 1) then
 		return { ok = false, message = "Invalid craft request", craftedCount = 0 }
 	end
@@ -205,6 +219,7 @@ function PetService.Client:CraftPet(player, uuid, expectedSize)
 end
 
 function PetService.Client:CraftAllPets(player)
+	if not PetFeatureConfig.Enabled then return { ok = false, message = PetFeatureConfig.DisabledMessage, craftedCount = 0 } end
 	local profile = PlayerDataService:GetProfile(player)
 	if not profile then
 		return { ok = false, message = "Your data is still loading", craftedCount = 0 }
@@ -217,6 +232,7 @@ function PetService.Client:CraftAllPets(player)
 end
 
 function PetService:KnitStart()
+	if not PetFeatureConfig.Enabled then return end
 	PlayerDataService.ProfileLoaded:Connect(function(player)
 		self:_changed(player)
 	end)

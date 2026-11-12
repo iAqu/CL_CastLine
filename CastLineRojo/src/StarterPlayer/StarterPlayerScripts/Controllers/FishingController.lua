@@ -26,7 +26,8 @@ local fishingData = ReplicatedFirst:WaitForChild("Data")
 local RodsData = require(fishingData:WaitForChild("RodsData"))
 local BaitsData = require(fishingData:WaitForChild("BaitsData"))
 local FishesData = require(fishingData:WaitForChild("FishesData"))
-local EggsData = require(fishingData:WaitForChild("EggsData"))
+local PetFeatureConfig = require(ReplicatedStorage.Modules.PetFeatureConfig)
+local EggsData = if PetFeatureConfig.Enabled then require(fishingData:WaitForChild("EggsData")) else {}
 
 local localPlayer = Players.LocalPlayer
 local CAMERA_BINDING = "CastLineFishingCamera"
@@ -71,6 +72,25 @@ local function hold(state, instance: Instance, property: string, value)
 				end
 			end)
 		)
+	end
+end
+
+local function hideSceneBillboards(state, playerGui: PlayerGui)
+	local function hideBillboard(instance: Instance)
+		if
+			session == state
+			and not state.restored
+			and instance:IsA("BillboardGui")
+			and instance:GetAttribute("FishingBillboardExempt") ~= true
+		then
+			hold(state, instance, "Enabled", false)
+		end
+	end
+	for _, container in ipairs({ Workspace, playerGui }) do
+		table.insert(state.connections, container.DescendantAdded:Connect(hideBillboard))
+		for _, descendant in ipairs(container:GetDescendants()) do
+			hideBillboard(descendant)
+		end
 	end
 end
 
@@ -380,6 +400,7 @@ local function begin(entry)
 	session = state
 	FishingAudio.ClearTails()
 	local ok, err = xpcall(function()
+		hideSceneBillboards(state, playerGui)
 		state.coverGui = Instance.new("ScreenGui")
 		state.coverGui.Name, state.coverGui.DisplayOrder = "FishingTransitionGui", 10000
 		state.coverGui.IgnoreGuiInset, state.coverGui.ResetOnSpawn = true, false

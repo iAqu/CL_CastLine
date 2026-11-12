@@ -7,9 +7,11 @@ end
 
 local prefix = "src/ReplicatedStorage/Modules/"
 local config = assert(loadstring(read(prefix .. "FishingConfig.lua")))()
+local petFeatureConfig = assert(loadstring(read(prefix .. "PetFeatureConfig.lua")))()
+assert(not petFeatureConfig.Enabled, "The first release must disable pet gameplay")
 local rarities = { ByName = { Common = { Index = 1 } }, Normalize = function(name) return name end }
 local roll = assert(load(read(prefix .. "FishingRoll.lua"), "FishingRoll", "t", setmetatable({
-	script = { Parent = { FishingConfig = config, RarityConfig = rarities } },
+	script = { Parent = { FishingConfig = config, PetFeatureConfig = petFeatureConfig, RarityConfig = rarities } },
 	require = function(value) return value end,
 }, { __index = getfenv() })))()
 local function near(actual, expected, message)
@@ -54,18 +56,22 @@ local Knit = {
 	end,
 }
 local fishingRoll = roll
+function fishingRoll.GetEggPool()
+	error("Disabled fishing must not build or validate the egg pool")
+end
 local originalChoose = roll.Choose
 function fishingRoll.Choose(pool, luck, random)
 	chosenLuck = luck
 	return originalChoose(pool, luck, random)
 end
 local modules = {
+	PetFeatureConfig = petFeatureConfig,
 	FishingConfig = config,
 	FishingRoll = fishingRoll,
 	FishingAssets = {
 		GetBait = function() return { Size = { X = 1, Y = 1, Z = 1 } } end,
 		GetFish = function() return {} end,
-		GetEgg = function() return {} end,
+		GetEgg = function() error("Disabled fishing must not resolve egg models") end,
 	},
 	FishingBiteSequence = { GetBiteWindow = function(_, _, startedAt, readyAt)
 		return math.max(startedAt, readyAt) + 1, math.max(startedAt, readyAt) + 2
@@ -78,10 +84,12 @@ local modules = {
 	},
 }
 local data = {
-	EggsData = { Draw001 = {EggId="Draw001",Model="Draw001",RollWeight=1,DefaultWeight=1,LuckExponent=0} },
 	FishesData = { Fish_Test = fish }, BaitsData = { Bait_Test = paidBait }, RodsData = { Rod_Test = rod }, MutationsData = {},
 }
-local dataFolder = { WaitForChild = function(_, name) return data[name] end }
+local dataFolder = { WaitForChild = function(_, name)
+	assert(name ~= "EggsData", "Disabled fishing must not wait for egg data")
+	return data[name]
+end }
 local services = {
 	Players = { PlayerAdded = signal(), PlayerRemoving = signal(), GetPlayers = function() return { player } end },
 	ReplicatedFirst = { WaitForChild = function(_, name)
@@ -115,7 +123,7 @@ local service = assert(load(read("src/ServerScriptService/Services/FishingServic
 	} },
 	Random = { new = function()
 		return {
-			NextNumber = function() return 0.5 end,
+			NextNumber = function() return 0.05 end,
 			NextInteger = function(_, low) return low end,
 		}
 	end },
@@ -138,6 +146,8 @@ for _, discoveryFlag in { true, false, "missing" } do
 	now += 5
 	local round = client:NextRound(player, token, 0)
 	assert(round.ok)
+	assert(round.catchKind == "Fish" and round.catchId == fish.FishID,
+		"A roll inside the former egg interval must still produce fish")
 	now = math.max(round.startedAt, round.readyAt) + 1.1
 	grantResult = { Weight = 1, MutationId = "Golden",
 		IsNewDiscovery = if discoveryFlag == "missing" then nil else discoveryFlag }
@@ -234,6 +244,22 @@ local fresh = prepare()
 assert(not client:Cast(player, cancelled, 0.5).ok, "An old token must not affect a new preparation")
 assert(client:Cast(player, fresh, 0.5).ok, "Cancellation must allow a fresh preparation")
 client:Cancel(player, fresh)
+
+-- Even a stale or incorrectly constructed egg round must not reach the Admin grant path.
+local originalChooseCatch, originalGetEgg = roll.ChooseCatch, modules.FishingAssets.GetEgg
+roll.ChooseCatch = function() return "Egg", { EggId = "StaleEgg", Model = "StaleEgg" } end
+modules.FishingAssets.GetEgg = function() return {} end
+local staleToken = prepare()
+assert(client:Cast(player, staleToken, 1).ok)
+now += 5
+local staleRound = client:NextRound(player, staleToken, 0)
+assert(staleRound.ok and staleRound.catchKind == "Egg", "Fixture must reach the egg award branch")
+now = math.max(staleRound.startedAt, staleRound.readyAt) + 1.1
+local staleAward = client:Hook(player, staleToken, staleRound.round, now)
+assert(not staleAward.ok and staleAward.message == petFeatureConfig.DisabledMessage,
+	"Fishing must reject egg awards while Admin grants remain available")
+client:Cancel(player, staleToken)
+roll.ChooseCatch, modules.FishingAssets.GetEgg = originalChooseCatch, originalGetEgg
 
 service:KnitStart()
 local removedCharacter = prepare()

@@ -88,7 +88,7 @@ local config = loadSource(root .. "FishingConfig.lua")
 local roll = loadSource(
 	root .. "FishingRoll.lua",
 	setmetatable({
-		script = { Parent = { FishingConfig = config, RarityConfig = {} } },
+		script = { Parent = { FishingConfig = config, PetFeatureConfig = { Enabled = true }, RarityConfig = {} } },
 		require = function(value)
 			return value
 		end,

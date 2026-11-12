@@ -86,6 +86,7 @@ end
 for _, name in ipairs({
 	"FishingRodCast",
 	"FishBiteHeavey",
+	"FishBite",
 	"FishReelLoop",
 	"FishWaterOut",
 	"FishDrop",
@@ -193,12 +194,13 @@ assert(not cast.Looped and cast ~= templates.FishingRodCast)
 cast.Ended:Fire()
 assert(cast.destroyed and not next(audio.sounds), "Ended must release one-shots and their timers")
 audio:SetPhase("Nibbling")
-assert(count("FishBiteHeavey") == 0, "False bites must not play the true-bite cue")
+assert(count("FishBiteHeavey") == 0 and count("FishBite") == 0, "False bites must not play true-bite cues")
 audio:SetPhase("Bite")
 audio:SetPhase("Bite")
 audio:SetPhase("Struggling")
 audio:SetPhase("Struggling")
-assert(count("FishBiteHeavey") == 1 and count("FishReelLoop") == 1)
+assert(count("FishBiteHeavey") == 1 and count("FishBite") == 1 and count("FishReelLoop") == 1,
+	"A true bite must play both cues exactly once")
 local loop = audio.loops.FishReelLoop
 assert(loop.Looped and not templates.FishReelLoop.Looped, "Loop only the playback clone")
 enabled = false
@@ -207,7 +209,8 @@ assert(loop.destroyed and not next(audio.sounds), "Muting must immediately relea
 enabled = true
 audio:RefreshSoundSetting()
 audio:RefreshSoundSetting()
-assert(count("FishReelLoop") == 2 and count("FishBiteHeavey") == 1, "Restore only the current loop, once")
+assert(count("FishReelLoop") == 2 and count("FishBiteHeavey") == 1 and count("FishBite") == 1,
+	"Restore only the current loop, once")
 loop = audio.loops.FishReelLoop
 audio:SetPhase("Lifting")
 assert(loop.destroyed and count("FishWaterOut") == 1)
@@ -279,7 +282,7 @@ audio:SetPhase("Bite")
 enabled = true
 audio:SetPhase("Bite")
 audio:RefreshSoundSetting()
-assert(count("FishBiteHeavey") == 1, "Muted one-shots must not be replayed")
+assert(count("FishBiteHeavey") == 1 and count("FishBite") == 1, "Muted one-shots must not be replayed")
 audio:SetPhase("Escaped")
 audio:SetPhase("Waiting")
 audio:SetPhase("Reeling")

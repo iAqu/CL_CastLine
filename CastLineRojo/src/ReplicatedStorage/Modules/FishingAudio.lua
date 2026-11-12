@@ -173,6 +173,7 @@ function FishingAudio:SetPhase(phase)
 	end
 	if phase == "Bite" then
 		self:Play("FishBiteHeavey")
+		self:Play("FishBite")
 	elseif phase == "Lifting" then
 		self:Play("FishWaterOut")
 	elseif phase == "Caught" then

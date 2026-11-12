@@ -38,7 +38,7 @@ local services = {
 	Players = {},
 	HttpService = {},
 	ReplicatedFirst = { Data = { PetsData = configs } },
-	ReplicatedStorage = { Packages = { Knit = knit }, Modules = { PetInventory = inventory } },
+	ReplicatedStorage = { Packages = { Knit = knit }, Modules = { PetInventory = inventory, PetFeatureConfig = { Enabled = true } } },
 }
 local chunk = assert(loadstring(read("src/ServerScriptService/Services/PetService.lua")))
 setfenv(

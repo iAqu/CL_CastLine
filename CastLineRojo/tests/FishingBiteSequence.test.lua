@@ -68,6 +68,79 @@ local Bite = assert(
 )()
 local settings = config.Bite
 
+-- 高游速不能把可读动作压缩到一两帧；同一输入仍使用同一绝对时钟。
+do
+	local rng = {
+		NextInteger = function(_, low) return low end,
+		NextNumber = function(_, low, high) return (low + high) / 2 end,
+	}
+	for _, speed in ipairs({ 8, 25.1, 44.5, 1000 }) do
+		local state = Bite.NewTimeline(0, rng, 0, { SwimSpeed = speed, HookWindow = 0.55 })
+		assert(state.approachTime >= 0.75, "Fast fish approached before their appearance could be read")
+		assert(state.swimSpeed == speed and state.hookWindow == 0.55, "Motion limits changed fish data or hook difficulty")
+		local motion = Bite.NewMotion(0, rng, 6, 3, speed)
+		for _, entry in ipairs(motion.nibbles) do
+			assert(entry.attackTime >= 0.12 and entry.attackTime <= 0.20, "Nibble attack escaped readable timing bounds")
+		end
+	end
+end
+
+-- 验证真实建路入口传入的半径，同时保留鱼蛋的原始规则和路径时序。
+do
+	local path = environment.require("reposition")
+	local originalNew, originalSample = path.new, Elastic.Sample
+	local capturedRadius, capturedSpeed, capturedTurnRate
+	path.new = function(_, _, radius, speed, _, _, turnRate)
+		capturedRadius, capturedSpeed, capturedTurnRate = radius, speed, turnRate
+		return { duration = 2.5 }
+	end
+	Elastic.Sample = function()
+		return nil, 1
+	end
+	local baitSize = setmetatable({ Y = 1 }, { __mul = function(value)
+		return value
+	end })
+	for _, fixture in ipairs({
+		{ halfLength = 0.1, scale = 1, multiplier = 1, expected = 0.5 },
+		{ halfLength = 5, scale = 2, multiplier = 0.35, expected = 3.5 },
+		{ halfLength = 20, scale = 1, multiplier = 0.3, expected = 6 },
+		{ halfLength = 20, scale = 2, multiplier = 0.95, expected = 6 },
+		{ halfLength = 20, scale = 2, multiplier = 0.95, expected = 38, isEgg = true },
+		{ halfLength = 0.1, scale = 1, multiplier = 1, expected = 0.5, isEgg = true },
+		{ halfLength = 5, scale = 2, multiplier = 0.35, expected = 3.5, speed = 44.5, returnSpeed = 1.2 },
+		{ halfLength = 5, scale = 2, multiplier = 0.35, expected = 3.5, speed = 44.5, returnSpeed = 0.8 },
+		{ halfLength = 5, scale = 2, multiplier = 0.35, expected = 3.5, speed = 44.5, returnSpeed = 1.2, isEgg = true },
+	}) do
+		local round = setmetatable({
+			halfLength = fixture.halfLength,
+			defaultScale = fixture.scale,
+			isEgg = fixture.isEgg,
+			owner = { baitBaseSize = baitSize },
+			timeline = { swimSpeed = fixture.speed or 8, turnRadiusScale = fixture.multiplier },
+			motion = { nibbles = { {
+				beforeGap = 1, beforeYaw = 0, gap = 1, yaw = 0,
+				returnAt = 0.18, nibbleSpeed = 1, attackTime = 0.12, depth = 0.06, returnSpeed = fixture.returnSpeed or 1,
+			} } },
+			_restMouth = function()
+				return { Y = 0 }
+			end,
+			_contactOffset = function()
+				return { X = 0, Z = 0 }
+			end,
+			_frameAtMouth = function(_, mouth)
+				return { Position = mouth, LookVector = { X = 1, Z = 0 } }
+			end,
+		}, Bite)
+		round:_prepareRepositions()
+		assert(capturedRadius == fixture.expected, "Return radius violated fish/egg bounds")
+		local rawSpeed = (fixture.speed or 8) * settings.Nibble.ReturnSpeedScale * (fixture.returnSpeed or 1)
+		assert(capturedSpeed == (if fixture.isEgg then rawSpeed else math.min(rawSpeed, 10)), "Return speed cap missed per-nibble variation")
+		assert(capturedTurnRate == (if fixture.isEgg then nil else math.rad(140)), "Fish turn limit leaked into egg motion")
+		assert(round.timeline.repositionDurations[1] == 2.5, "Do not replace the planned path duration")
+	end
+	path.new, Elastic.Sample = originalNew, originalSample
+end
+
 local caught = setmetatable({}, Bite)
 caught:SetCaughtWeight(64000)
 assert(caught:_scaleAt("Bite", 0) == 1, "Keep the pre-catch size for bite timing")
@@ -239,7 +312,7 @@ for _, rate in ipairs({ 30, 60, 144 }) do
 			"Shadow outline did not retain contrast through the fade"
 		)
 		assert(instance.highlight.OutlineColor == environment.Color3.fromRGB(254, 254, 254), "Shadow outline changed")
-		assert(instance.highlight.DepthMode == "always-on-top", "Shadow depth mode changed")
+		assert(instance.highlight.DepthMode == "occluded", "Shadow highlight must respect scene occlusion")
 		assert(part.Transparency >= previous, "Fade reversed")
 		assert(instance.highlight.Enabled == (fade < 1), "Fully transparent shadow is still enabled")
 		assert(part.Material == (if fade < 1 then "neon" else "plastic"), "Shadow rendering material is wrong")
@@ -498,13 +571,13 @@ for _, bound in ipairs({ "low", "high" }) do
 		assert(math.abs(turn) >= math.rad(15) - 1e-6 and math.abs(turn) <= math.rad(45) + 1e-6)
 		assert(entry.nibbleSpeed == (if bound == "low" then 0.8 else 1.3))
 		assert(entry.returnSpeed == (if bound == "low" then 0.8 else 1.2))
-		assert(math.abs(entry.duration * entry.nibbleSpeed - settings.NibbleTime) < 1e-9)
-		assert(math.abs(entry.returnAt * entry.nibbleSpeed - 0.18) < 1e-9)
+		assert(math.abs(entry.duration - entry.attackTime - (settings.NibbleTime - settings.Nibble.AttackTime) / entry.nibbleSpeed) < 1e-9)
+		assert(math.abs(entry.returnAt - entry.attackTime - settings.Nibble.ContactTime / entry.nibbleSpeed) < 1e-9)
 		for _, rate in ipairs({ 15, 30, 60, 144 }) do
 			for frame = 0, math.ceil(settings.NibbleTime * rate) do
 				sampled:SampleNibble(index, frame / rate)
 			end
-			local progress, pressure = sampled:SampleNibble(index, 0.15 / entry.nibbleSpeed)
+			local progress, pressure = sampled:SampleNibble(index, entry.attackTime + settings.Nibble.ContactTime * 0.5 / entry.nibbleSpeed)
 			assert(progress == 1 and pressure == entry.depth, "Contact is not settled")
 			local _, rebounded = sampled:SampleNibble(index, entry.reboundEnd + 1e-6)
 			assert(rebounded == 0, "Bait did not rebound immediately")
@@ -731,7 +804,7 @@ do
 		state.repositionDurations = { 2, 3, 4, 2 }
 		assert(state:Advance(11.99) == "Settling" and state:Advance(13.29) == "Waiting")
 		assert(state:Advance(13.3) == "Approaching")
-		assert(math.abs(state.endsAt - state.startedAt - settings.ApproachDistance / speed) < 1e-9)
+		assert(math.abs(state.endsAt - state.startedAt - math.max(settings.ApproachTimeMin, settings.ApproachDistance / speed)) < 1e-9)
 		assert(state.turnRadiusScale == 0.85)
 		while state.phase ~= "Bite" do
 			state:Advance(state.endsAt)
@@ -745,7 +818,7 @@ do
 	local fast, fastMotion = run(16)
 	assert(fast.startedAt < slow.startedAt and fast.completedNibbles == slow.completedNibbles)
 	local a, b = slowMotion.nibbles[1], fastMotion.nibbles[1]
-	assert(math.abs(a.attackTime - b.attackTime * 2) < 1e-9)
+	assert(a.attackTime >= b.attackTime and b.attackTime >= settings.Nibble.AttackTimeMin)
 	assert(math.abs((a.returnAt - a.attackTime) - (b.returnAt - b.attackTime)) < 1e-9)
 	assert(math.abs((a.reboundEnd - a.returnAt) - (b.reboundEnd - b.returnAt)) < 1e-9)
 	local _, slowScale = Elastic.Sample("Nibbling", a.returnAt, nil, a.nibbleSpeed, a.attackTime)

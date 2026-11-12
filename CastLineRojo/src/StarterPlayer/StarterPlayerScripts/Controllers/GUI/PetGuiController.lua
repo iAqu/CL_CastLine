@@ -6,6 +6,7 @@ local Knit = require(ReplicatedStorage.Packages.Knit)
 local PetsData = require(ReplicatedFirst.Data.PetsData)
 local EggsData = require(ReplicatedFirst.Data.EggsData)
 local PetInventory = require(ReplicatedStorage.Modules.PetInventory)
+local PetFeatureConfig = require(ReplicatedStorage.Modules.PetFeatureConfig)
 local ItemBoundsUtil = require(ReplicatedStorage.Modules.ItemBoundsUtil)
 local EggToolUtil = require(ReplicatedStorage.Modules.EggToolUtil)
 local GuiAnimation = require(ReplicatedStorage.Modules.GuiAnimation)
@@ -567,7 +568,7 @@ function Controller:ResetGui()
 end
 
 function Controller:OpenGui()
-	if not self._ready or not GuiHelper.CanOpenGui() then
+	if not PetFeatureConfig.Enabled or not self._ready or not GuiHelper.CanOpenGui() then
 		return
 	end
 	self:ResetGui()
@@ -583,7 +584,7 @@ function Controller:CloseGui()
 end
 
 function Controller:ToggleGui()
-	if not self._ready then
+	if not PetFeatureConfig.Enabled or not self._ready then
 		return
 	end
 	if self._gui.Enabled then
@@ -594,6 +595,7 @@ function Controller:ToggleGui()
 end
 
 function Controller:_setup()
+	if not PetFeatureConfig.Enabled then return end
 	local playerGui = player:WaitForChild("PlayerGui")
 	self._gui = playerGui:WaitForChild("PetGui", 60)
 	self._resultGui = playerGui:WaitForChild("EggHatchResultGui", 60)
@@ -734,6 +736,19 @@ function Controller:_setup()
 end
 
 function Controller:KnitStart()
+	if not PetFeatureConfig.Enabled then
+		local playerGui = player:WaitForChild("PlayerGui")
+		local function hidePanel(gui)
+			if (gui.Name == "PetGui" or gui.Name == "EggHatchResultGui") and gui:IsA("ScreenGui") then
+				gui.Enabled = false
+			end
+		end
+		playerGui.ChildAdded:Connect(hidePanel)
+		for _, gui in ipairs(playerGui:GetChildren()) do
+			hidePanel(gui)
+		end
+		return
+	end
 	self._state = { Pets = {}, PetIndex = {}, LuckMultiplier = 1 }
 	self._selectedDelete, self._draftLocks, self._hatchQueue = {}, {}, {}
 	self._session = 0

@@ -6,6 +6,7 @@ local Workspace = game:GetService("Workspace")
 
 local Modules = ReplicatedStorage.Modules
 local Config = require(Modules.FishingConfig)
+local PetFeatureConfig = require(Modules.PetFeatureConfig)
 local Assets = require(Modules.FishingAssets)
 local BiteSequence = require(Modules.FishingBiteSequence)
 local ProjectileMath = require(Modules.FishingProjectileMath)
@@ -18,7 +19,7 @@ local PlayerDataService = require(script.Parent.PlayerDataService)
 
 local data = ReplicatedFirst:WaitForChild("Data")
 local FishesData = require(data:WaitForChild("FishesData"))
-local EggsData = require(data:WaitForChild("EggsData"))
+local EggsData = if PetFeatureConfig.Enabled then require(data:WaitForChild("EggsData")) else {}
 local BaitsData = require(data:WaitForChild("BaitsData"))
 local RodsData = require(data:WaitForChild("RodsData"))
 local mutationRanges = FishingRoll.BuildMutationRanges(require(data:WaitForChild("MutationsData")))
@@ -106,11 +107,11 @@ function FishingService.Client:SelectBait(player: Player, token, baitId)
 		return failure("Bait model unavailable")
 	end
 	local pool = FishingRoll.GetPool(FishesData, state.rod.MaxWeight, bait, Assets.GetFish)
-	local eggPool = FishingRoll.GetEggPool(EggsData, state.rod.MaxWeight, Assets.GetEgg)
+	local eggPool = if PetFeatureConfig.Enabled then FishingRoll.GetEggPool(EggsData, state.rod.MaxWeight, Assets.GetEgg) else {}
 	if #pool == 0 then
 		return failure("No fish match this bait within your rod's weight limit")
 	end
-	if #eggPool == 0 then return failure("No eggs are available for this rod") end
+	if PetFeatureConfig.Enabled and #eggPool == 0 then return failure("No eggs are available for this rod") end
 	local profile = PlayerDataService:GetProfile(player)
 	local price = if bait then bait.Price else 0
 	if not profile or profile.Data.Wins < price then
@@ -216,6 +217,7 @@ function FishingService.Client:Hook(player: Player, token, round, pressedAt)
 	state.phase = "Claimed"
 	state.expiresAt = now + START_TIMEOUT
 	if state.catchKind == "Egg" then
+		if not PetFeatureConfig.Enabled then return failure(PetFeatureConfig.DisabledMessage) end
 		local uuid, err = Knit.GetService("EggService"):GiveEgg(player, state.catchId)
 		if not uuid then return failure(err or "Could not store the egg") end
 		return { ok = true, catchKind = "Egg", catchId = state.catchId, eggUid = uuid }

@@ -132,7 +132,7 @@ local function createLocalHeldItemTitle(tool: Tool)
 
 	local playerGui = LOCAL_PLAYER:FindFirstChildOfClass("PlayerGui")
 	local titleGui = playerGui and playerGui:FindFirstChild("TitleGui")
-	local title = FishTitleUtil.Create(titleGui, item, mutationId)
+	local title = FishTitleUtil.Create(titleGui, item, mutationId, LOCAL_PLAYER)
 	if not title then
 		return
 	end

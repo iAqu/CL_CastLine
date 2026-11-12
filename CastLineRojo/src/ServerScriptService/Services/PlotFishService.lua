@@ -135,12 +135,13 @@ local function defaultEntry(slot: number): Vector3
 	return Vector3.new(math.cos(angle) * 9, 0, math.sin(angle) * 9)
 end
 
-local function getIncome(item, data): number
-	return PlotFishIncome.GetCpsPrice(item, MutationDataUtil.GetEarnCashRate(data.MutationId))
+local function getIncome(item, data, bestBaseCps: number): number
+	return PlotFishIncome.GetCpsPrice(item, MutationDataUtil.GetEarnCashRate(data.MutationId), bestBaseCps)
 end
 
 local function getEquippedFish(player: Player, data)
 	local fish = {}
+	local bestBaseCps = PlotFishIncome.GetBestOwnedBaseCps(data)
 	local seen = {}
 	for slot = 1, PlotPlacementUtil.CAPACITY do
 		local uid = PlotPlacementUtil.GetItemUid(data.PlotPlacements, slot)
@@ -153,7 +154,7 @@ local function getEquippedFish(player: Player, data)
 					itemId = item.ItemID,
 					weight = record.Weight,
 					mutationId = record.MutationId,
-					income = getIncome(item, record),
+					income = getIncome(item, record, bestBaseCps),
 				})
 			end
 		end
@@ -171,10 +172,13 @@ local function settle(player: Player, data, now: number)
 		production[player] = state
 	end
 	local elapsed = now - state.at
-	if elapsed > 0 then
+	if elapsed > 0 or state.credit >= 1 then
 		local credit = state.credit + state.rate * elapsed
 		local payout = math.floor(credit)
 		if payout > 0 and not PlayerDataService:AdjustWins(player, payout, false) then
+			-- Preserve unpaid credit before switching an inventory-dependent rate.
+			state.at = now
+			state.credit = credit
 			return nil
 		end
 		state.at = now
@@ -186,9 +190,20 @@ end
 
 local function rosterChanged(player: Player, data, state)
 	state.rate = PlotFishIncome.GetRate(data)
+	player:SetAttribute(PlotFishIncome.BEST_CPS_ATTRIBUTE, PlotFishIncome.GetBestOwnedBaseCps(data))
 	Knit.GetService("PlayerLuckService"):RefreshPlayerLuck(player)
 	rosterRevisions[player] = (rosterRevisions[player] or 0) + 1
 	PlotFishService.Client.EquippedFishChanged:Fire(player, getEquippedFish(player, data))
+end
+
+-- Call once after an inventory transaction commits (or finishes rolling back).
+function PlotFishService:RefreshInventoryIncome(player: Player)
+	local profile = PlayerDataService:GetProfile(player)
+	if not profile then
+		return
+	end
+	local state = settle(player, profile.Data, Workspace:GetServerTimeNow()) or production[player]
+	rosterChanged(player, profile.Data, state)
 end
 
 function PlotFishService:_restore(player: Player)
@@ -337,7 +352,7 @@ local function commitMenuRoster(player: Player, context, desired)
 
 	local returnTools = {}
 	for slot, fish in pairs(outgoing) do
-		local ok, tool = pcall(ItemToolUtil.Create, fish.uid, fish.item, fish.record)
+		local ok, tool = pcall(ItemToolUtil.Create, fish.uid, fish.item, fish.record, player)
 		if not ok or not tool then
 			destroyPrepared(returnTools)
 			if not ok then
@@ -407,11 +422,12 @@ function PlotFishService:RequestEquipBest(player: Player)
 	end
 	local placements = context.data.PlotPlacements
 	local candidates, seen = {}, {}
+	local bestBaseCps = PlotFishIncome.GetBestOwnedBaseCps(context.data)
 	local function addCandidate(uid: string, slot: number?)
 		local item, record = readItemRecord(context.data.Items[uid])
 		if item and record then
 			seen[uid] = true
-			table.insert(candidates, { uid = uid, slot = slot, income = getIncome(item, record) })
+			table.insert(candidates, { uid = uid, slot = slot, income = getIncome(item, record, bestBaseCps) })
 		end
 	end
 	for slot = 1, PlotPlacementUtil.CAPACITY do
@@ -512,17 +528,16 @@ function PlotFishService:KnitStart()
 		end
 	end)
 
-	local function initialize(player, data)
+	local function initialize(player)
 		slotService:EnsurePlayerSlot(player)
 		self:_restore(player)
-		settle(player, data, Workspace:GetServerTimeNow())
-		self.Client.EquippedFishChanged:Fire(player, getEquippedFish(player, data))
+		self:RefreshInventoryIncome(player)
 	end
 	PlayerDataService.ProfileLoaded:Connect(initialize)
 	for _, player in Players:GetPlayers() do
 		local profile = PlayerDataService:GetProfile(player)
 		if profile then
-			initialize(player, profile.Data)
+			initialize(player)
 		end
 	end
 	Players.PlayerRemoving:Connect(function(player)

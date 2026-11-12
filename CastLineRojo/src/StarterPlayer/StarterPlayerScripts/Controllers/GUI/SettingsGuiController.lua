@@ -8,6 +8,7 @@ local NotificationClient = require(ReplicatedStorage.Modules.NotificationClient)
 local NumberUtil = require(ReplicatedStorage.Modules.NumberUtil)
 local GuiAnimation = require(ReplicatedStorage.Modules.GuiAnimation)
 local Constants = require(ReplicatedStorage.Modules.Constants)
+local PetFeatureConfig = require(ReplicatedStorage.Modules.PetFeatureConfig)
 local LogHelper = require(ReplicatedStorage.Modules.LogHelper)
 
 local Players = game:GetService("Players")
@@ -55,7 +56,9 @@ function SettingsGuiController:UpdateSettingButtons()
     for _, name in ipairs({ "ShowYourPets", "ShowOtherPets" }) do
         local row = ScrollingFrame:FindFirstChild(name)
         local button = row and row:FindFirstChild("SwitchButton")
-        if button then self:SetButtonState(button, playerData.Settings[name] ~= false) end
+        if PetFeatureConfig.Enabled and button then
+            self:SetButtonState(button, playerData.Settings[name] ~= false)
+        end
     end
 end
 
@@ -133,8 +136,10 @@ function SettingsGuiController:KnitStart()
     for _, name in ipairs({ "ShowYourPets", "ShowOtherPets" }) do
         local row = ScrollingFrame:FindFirstChild(name)
         local button = row and row:FindFirstChild("SwitchButton")
-        if button and button:IsA("GuiButton") then
-            row.Visible = true
+        if row then
+            row.Visible = PetFeatureConfig.Enabled
+        end
+        if PetFeatureConfig.Enabled and button and button:IsA("GuiButton") then
             button.Activated:Connect(function() self:ChangeSetting(name) end)
         end
     end

@@ -397,7 +397,7 @@ function DrownDropService:_claimDrop(player: Player, state: DropState)
 		state.prompt.Enabled = true
 		return
 	end
-	local tool = ItemToolUtil.Create(state.instanceId, state.item, state.record)
+	local tool = ItemToolUtil.Create(state.instanceId, state.item, state.record, player)
 	if not tool then
 		warn("DrownDropService: could not recreate claimed item", state.instanceId)
 		state.claimed = false
@@ -407,6 +407,7 @@ function DrownDropService:_claimDrop(player: Player, state: DropState)
 
 	profile.Data.Items[state.instanceId] = table.clone(state.record)
 	tool.Parent = backpack
+	Knit.GetService("PlotFishService"):RefreshInventoryIncome(player)
 	self:_removeDrop(state)
 end
 
@@ -578,6 +579,7 @@ function DrownDropService:DropCarriedItems(player: Player, deathPosition: Vector
 	end
 
 	if #droppedIds > 0 then
+		Knit.GetService("PlotFishService"):RefreshInventoryIncome(player)
 		local hotbarLayoutService = Knit.GetService("HotbarLayoutService")
 		hotbarLayoutService:RemoveItemDescriptors(player, droppedIds)
 	end

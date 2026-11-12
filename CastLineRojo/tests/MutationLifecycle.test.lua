@@ -48,7 +48,7 @@ assert(visualUtil:find("for _, descendant in target:GetDescendants()", 1, true),
 
 assert(toolUtil:find("MutationVisualUtil.Apply", 1, true), "Held tools must keep their Mutation particles")
 assert(drownController:find("MutationTitleUtil.Show", 1, true), "Drowned item titles must retain the Mutation label")
-assert(plotFishController:find("FishTitleUtil.Create(titleGui, item, mutationId)", 1, true), "Roaming fish must use the shared fish title")
+assert(plotFishController:find("FishTitleUtil.Create(titleGui, item, mutationId, owner)", 1, true), "Roaming fish must use the shared fish title")
 assert(plotFishController:find("MutationVisualUtil.Apply", 1, true), "Roaming fish must keep their Mutation particles")
 
 local function loadSource(path, globals)

@@ -52,6 +52,10 @@ return {
 		},
 	},
 	Camera = {
+		FollowFishEnabled = true, -- 设为 false 可切回鱼饵固定近景。
+		FollowFishMaxDistance = 24,
+		WaterViewSmoothSpeed = 5, -- 约 0.6 秒完成 95% 的水面镜头过渡。
+		BaitView = { Distance = 12, Height = 8, Fov = 60 },
 		Attack = 0.05,
 		-- 在 1.8 秒挥竿爆发前完成环绕，留出能容纳 Impact 的身后全景。
 		CastOrbit = { Duration = 0.3, Distance = 18, Height = 4.5, FocusHeight = -2 },
@@ -99,7 +103,8 @@ return {
 		Land = "FishingCast_Land",
 		Wind = "FishingCast_Wind",
 		Impact = "FishingCast_Impact",
-		SwingTime = 1.8,
+		-- 前挥开始（1.8 秒）到鱼饵脱竿（2.05 秒）的中点，Impact 音画同步触发。
+		SwingTime = 1.925,
 		CleanupPadding = 0.1,
 	},
 	RarityVFX = {
@@ -151,12 +156,14 @@ return {
 		HoldTime = 0.5,
 	},
 	Bite = {
+		Prompt = { PopTime = 0.16, StartScale = 0.2, HeightOffset = 3.2 },
 		-- 独立演出测试可用 FishName 指定鱼种；正式钓鱼使用服务器抽取结果。
 		-- 相对鱼身尺寸的嘴部连接位置。
 		MouthOffset = { 0, -0.1, -0.485 },
 		AppearDelayMin = 1,
 		AppearDelayMax = 3,
 		ApproachTime = 1.2,
+		ApproachTimeMin = 0.75, -- 保留完整显形和末段减速，不随高游速继续缩短。
 		ApproachDistance = 14,
 		SpawnAngleJitter = 20,
 		AppearTime = 0.65,
@@ -168,6 +175,8 @@ return {
 		NibbleGap = 1.5,
 		Nibble = {
 			AttackTime = 0.12,
+			AttackTimeMin = 0.12,
+			AttackTimeMax = 0.20,
 			RippleTriggerRatio = 0.7,
 			ContactTime = 0.06,
 			ReboundTime = 0.08,
@@ -180,7 +189,10 @@ return {
 			ReturnSpeedMin = 0.8,
 			ReturnSpeedMax = 1.2,
 			ReturnRadiusScale = 0.5,
+			ReturnRadiusMax = 6, -- 鱼的路径输入半径上限（studs），平滑规划仍可扩大半径。
 			ReturnSpeedScale = 0.65,
+			ReturnSpeedMaxStuds = 10,
+			ReturnTurnRateMax = 140, -- 度/秒；弯道减速，直线恢复。
 			ReturnRampTime = 0.15,
 			ReturnTurnBlendTime = 0.3,
 			SettleTime = 0.2,
@@ -281,7 +293,7 @@ return {
 		ShowcasePadding = 0.5,
 		ShowcaseMinDistance = 10,
 		ShowcaseCloseupDistance = 24,
-		ShowcaseCloseupHold = 0.55,
+		ShowcaseCloseupHold = 0,
 		ShowcasePullbackTime = 0.9,
 		EscapeTime = 0.7,
 		ShadowTransparency = 0.55,

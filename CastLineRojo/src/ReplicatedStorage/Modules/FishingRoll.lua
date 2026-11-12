@@ -1,4 +1,5 @@
 local Config = require(script.Parent.FishingConfig)
+local PetFeatureConfig = require(script.Parent.PetFeatureConfig)
 local RarityConfig = require(script.Parent.RarityConfig)
 
 local FishingRoll = {}
@@ -29,7 +30,7 @@ function FishingRoll.GetPool(fishes, maxWeight: number, bait, hasModel)
 	local candidates = {}
 	for _, fish in pairs(fishes) do
 		local rarity = RarityConfig.ByName[RarityConfig.Normalize(fish.Rarity)]
-		if fish.DefaultWeight > maxWeight or not rarity or fish.RollWeight <= 0 then
+		if fish.Rarity == "Event" or fish.DefaultWeight > maxWeight or not rarity or fish.RollWeight <= 0 then
 			continue
 		end
 		local multiplier = 1
@@ -67,7 +68,11 @@ function FishingRoll.Choose(pool, luck: number, random: Random)
 	local total = 0
 	local cumulative = {}
 	for index, entry in ipairs(pool) do
-		total += entry.weight * luck ^ entry.fish.LuckExponent
+		local exponent = entry.fish.LuckExponent
+		if exponent == nil then
+			exponent = math.max((entry.fish.LayoutOrder or 1) - 1, 0) * 0.05
+		end
+		total += entry.weight * luck ^ exponent
 		cumulative[index] = total
 	end
 	if total <= 0 then
@@ -97,7 +102,8 @@ end
 
 function FishingRoll.ChooseCatch(fishPool, eggPool, baseLuck, petMultiplier, random)
 	-- Category selection consumes one independent roll. Luck only affects the chosen pool.
-	if random:NextNumber() < Config.EggCatchChance then
+	local categoryRoll = random:NextNumber()
+	if PetFeatureConfig.Enabled and categoryRoll < Config.EggCatchChance then
 		return "Egg", FishingRoll.Choose(eggPool, baseLuck, random)
 	end
 	return "Fish", FishingRoll.Choose(fishPool, baseLuck * petMultiplier, random)

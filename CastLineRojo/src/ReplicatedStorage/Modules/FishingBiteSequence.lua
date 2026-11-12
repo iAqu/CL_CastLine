@@ -22,7 +22,10 @@ Timeline.__index = Timeline
 
 local function nibbleTiming(speed, swimSpeed)
 	local settings = Settings.Nibble
-	local attackTime = settings.AttackTime / speed * (DEFAULT_SWIM_SPEED / (swimSpeed or DEFAULT_SWIM_SPEED))
+	local attackTime = math.clamp(
+		settings.AttackTime / speed * (DEFAULT_SWIM_SPEED / (swimSpeed or DEFAULT_SWIM_SPEED)),
+		settings.AttackTimeMin, settings.AttackTimeMax
+	)
 	local returnAt = attackTime + settings.ContactTime / speed
 	return {
 		nibbleSpeed = speed,
@@ -86,7 +89,7 @@ function FishingBiteSequence.NewTimeline(startedAt, random, readyAt, fish)
 		appearAt = if appearTime then readyAt + appearTime
 			else startedAt + rng:NextNumber(Settings.AppearDelayMin, Settings.AppearDelayMax),
 		swimSpeed = swimSpeed,
-		approachTime = Settings.ApproachDistance / swimSpeed,
+		approachTime = math.max(Settings.ApproachTimeMin, Settings.ApproachDistance / swimSpeed),
 		turnRadiusScale = turnRadiusScale,
 		hookWindow = hookWindow,
 		struggleTime = struggleTime,
@@ -383,7 +386,7 @@ function FishingBiteSequence.new(owner, startedAt, readyAt, random, visualRandom
 	highlight.Name, highlight.Adornee = "FishShadow", fish
 	highlight.FillColor, highlight.OutlineColor = Color3.new(0, 0, 0), Color3.fromRGB(254, 254, 254)
 	highlight.FillTransparency, highlight.OutlineTransparency = 1, 1
-	highlight.DepthMode, highlight.Enabled = Enum.HighlightDepthMode.AlwaysOnTop, false
+	highlight.DepthMode, highlight.Enabled = Enum.HighlightDepthMode.Occluded, false
 	highlight.Parent, self.highlight = fish, highlight
 	self.animation = if self.isEgg then EggMotion.Animator() else FishAnimationController.new(
 		fish, startedAt, self.motion.random, nil, self.timeline.struggleTime, self.timeline.approachTime
@@ -500,9 +503,7 @@ function FishingBiteSequence:_appearance(visible, original, fade, phase, elapsed
 		elseif shadow
 			then Settings.ShadowOutlineTransparency + (1 - Settings.ShadowOutlineTransparency) * highlightFade ^ 3
 		else 1
-	self.highlight.DepthMode = if original
-		then Enum.HighlightDepthMode.Occluded
-		else Enum.HighlightDepthMode.AlwaysOnTop
+	self.highlight.DepthMode = Enum.HighlightDepthMode.Occluded
 	for part, saved in pairs(self.originals) do
 		-- 纯黑 Neon 避免鱼影随光照泛亮。
 		part.Material = if shadow then Enum.Material.Neon else saved.material
@@ -615,7 +616,8 @@ function FishingBiteSequence:_prepareRepositions()
 	self.timeline.repositionDurations = {}
 	local settings = Settings.Nibble
 	local speed = self.timeline.swimSpeed * settings.ReturnSpeedScale
-	local radius = math.max(0.5, self.halfLength * self.defaultScale * self.timeline.turnRadiusScale)
+	local radius = self.halfLength * self.defaultScale * self.timeline.turnRadiusScale
+	radius = if self.isEgg then math.max(0.5, radius) else math.clamp(radius, 0.5, settings.ReturnRadiusMax)
 	for index, entry in ipairs(self.motion.nibbles) do
 		local rest = self:_restMouth(Vector3.zero, entry.beforeGap, entry.beforeYaw)
 		local _, contactScale = BaitElasticMotion.Sample("Nibbling", entry.returnAt, nil, entry.nibbleSpeed, entry.attackTime)
@@ -631,7 +633,10 @@ function FishingBiteSequence:_prepareRepositions()
 			}
 		end
 		local path = FishRepositionPath.new(
-			planar(first), planar(last), radius, speed * entry.returnSpeed, settings.ReturnRampTime, settings.ReturnTurnBlendTime
+			planar(first), planar(last), radius,
+			if self.isEgg then speed * entry.returnSpeed else math.min(speed * entry.returnSpeed, settings.ReturnSpeedMaxStuds),
+			settings.ReturnRampTime, settings.ReturnTurnBlendTime,
+			if self.isEgg then nil else math.rad(settings.ReturnTurnRateMax)
 		)
 		self.repositions[index] = { path = path, first = first, last = last }
 		self.timeline.repositionDurations[index] = path.duration

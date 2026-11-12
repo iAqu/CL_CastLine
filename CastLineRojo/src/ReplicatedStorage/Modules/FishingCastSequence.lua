@@ -139,6 +139,8 @@ end
 
 function FishingCastSequence:_shot(mode, duration, now)
 	self.shotFrom, self.fovFrom = self.cameraFrame, self.cameraFov
+	self.shotFocusFrom = self.cameraFocus or self.biteFocus
+	self.landingCameraTransition = mode == "Landing" and duration > 0
 	self.shotMode, self.shotStarted, self.shotDuration = mode, now, duration
 	if mode == "Chase" then
 		self.chaseEye = self.cameraFrame.Position
@@ -266,6 +268,18 @@ function FishingCastSequence:_bindCastMeter(meter)
 	end
 end
 
+function FishingCastSequence:_initBitePrompt()
+	local template = guiChild(self.gui, "BitePromptTemplate", "BillboardGui")
+	local prompt = template:Clone()
+	self.bitePrompt = prompt
+	self.bitePromptScale = guiChild(guiChild(prompt, "Icon", "ImageLabel"), "UIScale", "UIScale")
+	prompt.Name, prompt.Enabled, prompt.Adornee = "BitePrompt", false, self.bait
+	self.bitePromptScale.Scale = Config.Bite.Prompt.StartScale
+	prompt.StudsOffsetWorldSpace = Vector3.new(0, self.baitBaseSize.Y * 0.5 + Config.Bite.Prompt.HeightOffset, 0)
+	prompt:SetAttribute("FishingBillboardExempt", true)
+	prompt.Parent = self.folder
+end
+
 function FishingCastSequence:_init(rig, playerGui, meter, animation, baitTemplate, options)
 	self.options, self.sounds = options or {}, {}
 	self.fixedCast = self.options.fixedCast
@@ -327,6 +341,7 @@ function FishingCastSequence:_init(rig, playerGui, meter, animation, baitTemplat
 		Vector3.one
 	)
 	visual.Parent = self.folder
+	self:_initBitePrompt()
 	self.baitHighlight = Instance.new("Highlight")
 	self.baitHighlight.Name, self.baitHighlight.Adornee = "BaitOutline", visual
 	self.baitHighlight.OutlineColor, self.baitHighlight.OutlineTransparency = Color3.new(1, 1, 1), 0
@@ -741,6 +756,13 @@ function FishingCastSequence:_setBaitVisible(visible)
 end
 
 function FishingCastSequence:_presentBait(phase, elapsed)
+	if self.bitePrompt then
+		local settings = Config.Bite.Prompt
+		local alpha = if phase == "Bite" then math.clamp((elapsed or 0) / settings.PopTime, 0, 1) else 0
+		local pop = TweenService:GetValue(alpha, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+		self.bitePromptScale.Scale = settings.StartScale + (1 - settings.StartScale) * pop
+		self.bitePrompt.Enabled = phase == "Bite"
+	end
 	local visible = phase ~= "Lifting" and phase ~= "Caught"
 	self:_setBaitVisible(visible)
 	local fade = if phase == "Struggling"
@@ -1046,6 +1068,7 @@ function FishingCastSequence:_updateCamera(now, dt)
 	local elapsed = now - self.shotStarted
 	local shot, fov
 	local focus = self.bait.Position
+	local waterView = false
 	local showcasing = self.bite and (self.bite.timeline.phase == "Lifting" or self.bite.timeline.phase == "Caught")
 	local showcasePullback = 1
 	local reeling = self.bite and (self.bite.timeline.phase == "Reeling" or self.bite.timeline.phase == "Reeled")
@@ -1104,37 +1127,51 @@ function FishingCastSequence:_updateCamera(now, dt)
 		focus = (target + self.showcaseFocus):Lerp(fishFocus, entry)
 		shot = CFrame.lookAt(position, focus)
 		fov = Config.Bite.ShowcaseFov
-	elseif self.bite and self.bite.lastPosition and self.bite.timeline.phase ~= "Settling" then
+	elseif Config.Camera.FollowFishEnabled and self.bite and self.bite.lastPosition and self.bite.timeline.phase ~= "Settling" then
+		waterView = true
 		local target = self:_waterTarget()
 		local fishPosition = self.bite.lastPosition
 		local waiting = self.bite.timeline.phase == "Escaped" or self.bite.timeline.phase == "Waiting"
-		local desiredFocus = if waiting then target else target:Lerp(fishPosition, 0.5)
-		self.biteFocus = (self.biteFocus or target):Lerp(desiredFocus, 1 - math.exp(-6 * dt))
-		focus = self.biteFocus
+		focus = if waiting then target else target:Lerp(fishPosition, 0.5)
 		local viewport = Workspace.CurrentCamera.ViewportSize
 		local aspect = viewport.X / math.max(viewport.Y, 1)
 		local halfAngle = math.atan(math.tan(math.rad(30)) * math.min(aspect, 1))
 		local fishRadius = math.max(self.bite.halfLength, self.bite.presentationRadius) * self.bite.scale
 		local radius = fishRadius + 2 + (if waiting then 0 else (fishPosition - target).Magnitude * 0.5)
 		local distance = math.max(16, radius / math.sin(halfAngle))
-		shot = CFrame.lookAt(focus - self.forward * distance * 0.8 + Vector3.yAxis * distance * 0.65, focus)
-		shot = self.cameraFrame:Lerp(shot, 1 - math.exp(-5 * dt))
+		local offset = -self.forward * distance * 0.8 + Vector3.yAxis * distance * 0.65
+		if offset.Magnitude > Config.Camera.FollowFishMaxDistance then
+			offset = offset.Unit * Config.Camera.FollowFishMaxDistance
+		end
+		shot = CFrame.lookAt(focus + offset, focus)
 		fov = 60
 	else
-		-- 跟随水面升降，不跟随鱼饵的短促回弹，保留回弹在画面中的幅度。
-		local target = self:_waterTarget()
-		local waterDelta = target - self.landingPosition
-		shot = CFrame.lookAt(
-			self.landingEye + waterDelta + Vector3.new(0, math.min(elapsed, 1) * 0.4, 0),
-			target + Vector3.new(0, 0.5, 0)
-		)
-		focus = target
-		fov = 60
+		waterView = true
+		local settings = Config.Camera.BaitView
+		-- 固定看向落水点，仅随水面升降，不追随鱼和鱼饵的短促动作。
+		focus = self:_waterTarget()
+		shot = CFrame.lookAt(focus - self.forward * settings.Distance + Vector3.yAxis * settings.Height, focus)
+		fov = settings.Fov
 	end
 	local alpha = if self.shotDuration <= 0 then 1 else math.clamp(elapsed / self.shotDuration, 0, 1)
 	alpha = TweenService:GetValue(alpha, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+	if waterView then
+		if self.landingCameraTransition then
+			-- 落水继续使用原有的定时过渡，不再叠加指数插值延长到位时间。
+			focus = (self.shotFocusFrom or focus):Lerp(focus, alpha)
+			if alpha >= 1 then
+				self.landingCameraTransition = false
+			end
+		else
+			-- 两种水面视角共用当前镜头与实际注视点，出现、离开及换轮都连续过渡。
+			local amount = 1 - math.exp(-Config.Camera.WaterViewSmoothSpeed * dt)
+			shot = self.cameraFrame:Lerp(shot, amount)
+			focus = (self.cameraFocus or self.biteFocus or self:_waterTarget()):Lerp(focus, amount)
+		end
+		self.biteFocus = focus
+	end
 	shot, fov = self.shotFrom:Lerp(shot, alpha), self.fovFrom + (fov - self.fovFrom) * alpha
-	self.cameraFrame, self.cameraFov = shot, fov
+	self.cameraFrame, self.cameraFov, self.cameraFocus = shot, fov, focus
 	local x, y, rx, ry, rz, fovOffset = self:_sampleImpulses(now)
 	if self.bite and self.bite.timeline.phase == "Struggling" then
 		local settings = Config.Camera.Struggle
@@ -1299,6 +1336,10 @@ function FishingCastSequence:Destroy(keepFail)
 		return
 	end
 	self.destroyed = true
+	if self.bitePrompt then
+		self.bitePrompt:Destroy()
+		self.bitePrompt, self.bitePromptScale = nil, nil
+	end
 	if self.characterVFX then
 		self.characterVFX:Destroy()
 	end

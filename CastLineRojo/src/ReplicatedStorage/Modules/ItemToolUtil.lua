@@ -102,7 +102,8 @@ local function createHeldItemTitle(
 	visual: Model,
 	handle: BasePart,
 	item: ItemConfig,
-	instanceData: ItemInstanceData
+	instanceData: ItemInstanceData,
+	owner: Player?
 )
 	local titleGui = StarterGui:FindFirstChild("TitleGui")
 
@@ -111,7 +112,7 @@ local function createHeldItemTitle(
 	titleAnchor.Position = Vector3.zero
 	titleAnchor.Parent = handle
 
-	local title = FishTitleUtil.Create(titleGui, item, instanceData.MutationId)
+	local title = FishTitleUtil.Create(titleGui, item, instanceData.MutationId, owner)
 	if not title then
 		warn("ItemToolUtil: missing held fish title template")
 		return
@@ -123,7 +124,7 @@ local function createHeldItemTitle(
 	ItemTitlePositionUtil.ApplyBottomOffset(title, visual)
 end
 
-function ItemToolUtil.Create(instanceId: string, item: ItemConfig, instanceData: ItemInstanceData): Tool?
+function ItemToolUtil.Create(instanceId: string, item: ItemConfig, instanceData: ItemInstanceData, owner: Player?): Tool?
 	local template = FishingAssets.GetFish(item.Model)
 	if not template then
 		warn("ItemToolUtil: missing item model", item.Model)
@@ -185,7 +186,7 @@ function ItemToolUtil.Create(instanceId: string, item: ItemConfig, instanceData:
 			descendant.Massless = true
 		end
 	end
-	createHeldItemTitle(visual, handle, item, instanceData)
+	createHeldItemTitle(visual, handle, item, instanceData, owner)
 	visual.Parent = tool
 	tool.Grip = getBottomRearGrip(visual, handle)
 	-- Equipped Tools replicate their direct parts reliably to the owning client.

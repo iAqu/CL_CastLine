@@ -7,13 +7,14 @@ end
 
 local modules = "src/ReplicatedStorage/Modules/"
 local config = loadSource(modules .. "FishingConfig.lua")
+local petFeatureConfig = loadSource(modules .. "PetFeatureConfig.lua")
 local rarityNames = { "Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythic", "Secret", "Divine", "Celestial", "Eternal", "Cosmic", "Exclusive" }
 local rarities = {}
 for index, name in ipairs(rarityNames) do
 	rarities[name] = { Index = index }
 end
 local roll = loadSource(modules .. "FishingRoll.lua", setmetatable({
-	script = { Parent = { FishingConfig = config, RarityConfig = { ByName = rarities, Normalize = function(name) return name end } } },
+	script = { Parent = { FishingConfig = config, PetFeatureConfig = petFeatureConfig, RarityConfig = { ByName = rarities, Normalize = function(name) return name end } } },
 	require = function(value) return value end,
 }, { __index = getfenv() }))
 local function data(name)
@@ -174,6 +175,7 @@ function fishingRoll.RollMutation(ranges, rng)
 	return roll.RollMutation(ranges, rng)
 end
 services.ReplicatedStorage.Modules = {
+	PetFeatureConfig = petFeatureConfig,
 	FishingConfig = config,
 	FishingBiteSequence = { GetBiteWindow = function(_, size, _, readyAt, _, _, _, fish)
 		biteSize, biteFish = size, fish

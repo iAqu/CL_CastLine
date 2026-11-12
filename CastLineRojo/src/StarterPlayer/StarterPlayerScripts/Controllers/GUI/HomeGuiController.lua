@@ -11,6 +11,7 @@ local PlayerDataController = require(StarterPlayer.StarterPlayerScripts.Controll
 local GuiAnimation = require(ReplicatedStorage.Modules.GuiAnimation)
 local NotificationClient = require(ReplicatedStorage.Modules.NotificationClient)
 local Constants = require(ReplicatedStorage.Modules.Constants)
+local PetFeatureConfig = require(ReplicatedStorage.Modules.PetFeatureConfig)
 local SoundHelper = require(ReplicatedStorage.Modules.SoundHelper)
 local LogHelper = require(ReplicatedStorage.Modules.LogHelper)
 local NumberUtil = require(ReplicatedStorage.Modules.NumberUtil)
@@ -112,6 +113,23 @@ local IndexButton = IndexFrame and IndexFrame:FindFirstChild("IndexButton")
 local IndexDot = IndexButton and IndexButton:FindFirstChild("Dot")
 local PetFrame = LeftMenuFrame:FindFirstChild("PetFrame")
 local PetButton = PetFrame and PetFrame:FindFirstChild("PetButton")
+
+if not PetFeatureConfig.Enabled then
+    if PetFrame then
+        PetFrame.Visible = false
+    end
+    local menu = RightFrame:FindFirstChild("MenuFrame_b")
+    local pets = menu and menu:FindFirstChild("PetsFrame")
+    if pets then
+        pets.Visible = false
+    end
+    for _, name in ipairs({ "MyPetButton", "MyEggButton" }) do
+        local entry = RightFrame:FindFirstChild(name)
+        if entry then
+            entry.Visible = false
+        end
+    end
+end
 
 local SpinningWheelGui = PlayerGUI:WaitForChild("SpinningWheelGui")
 local IndexGui = PlayerGUI:WaitForChild("IndexGui")
@@ -587,6 +605,7 @@ function HomeGuiController:ShowIndexNotif(enable: boolean)
 end
 
 function HomeGuiController:ShowPetNotif(enable: boolean)
+    if not PetFeatureConfig.Enabled then return end
     local rightMenu = RightFrame:FindFirstChild("MenuFrame_b")
     local rightPets = rightMenu and rightMenu:FindFirstChild("PetsFrame")
     local rightButton = rightPets and rightPets:FindFirstChild("PetsButton")
@@ -994,7 +1013,7 @@ function HomeGuiController:KnitStart()
         end)
     end
 
-    if PetButton then
+    if PetFeatureConfig.Enabled and PetButton then
         PetButton.Activated:Connect(function()
             Knit.GetController("PetGuiController"):ToggleGui()
         end)

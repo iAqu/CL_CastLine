@@ -363,4 +363,43 @@ assert(data.Wins == balance + 182, "Settle the new 124/s until remote unequip")
 assert(#client:GetEquippedFish(player).fish == 9 and not folder:FindFirstChild("golden-large"))
 assert(backpack:FindFirstChild("golden-large") and not plotService:RequestUnequip(player, "golden-large").ok)
 
+-- Event production must settle the old rate before a carried baseline changes.
+inventory.Event = { ItemID = "Event", Rarity = "Event", CpsPrice = 1.5 }
+inventory.Fish_101 = { ItemID = "Fish_101", Rarity = "Common", CpsPrice = 1 }
+root.Position = position(0)
+data.Items, data.PlotPlacements = {}, {}
+plot:FindFirstChild("PlacedFish"):Destroy()
+plotService:RefreshInventoryIncome(player)
+hold("event", nil, "Event", "Normal")
+hold("base", backpack, "Small", "Golden")
+plotService:RefreshInventoryIncome(player)
+assert(player:GetAttribute("BestOwnedFishBaseCps") == 4, "Use base CPS, not the strongest fish's mutation")
+assert(plotService:RequestPlace(player, "event").rate == 6)
+local eventBalance = data.Wins
+now += 2
+local stronger = hold("new-best", backpack, "Large", "Normal")
+plotService:RefreshInventoryIncome(player)
+assert(data.Wins == eventBalance + 12 and player:GetAttribute("BestOwnedFishBaseCps") == 20)
+assert(client:GetEquippedFish(player).fish[1].income == 30)
+now += 1
+data.Items["new-best"] = nil
+stronger:Destroy()
+plotService:RefreshInventoryIncome(player)
+assert(data.Wins == eventBalance + 42 and client:GetEquippedFish(player).fish[1].income == 6)
+-- A failed payout must retain the old credit while switching to the new rate.
+now += 1
+payoutAvailable = false
+data.Items.base = nil
+plotService:RefreshInventoryIncome(player)
+assert(player:GetAttribute("BestOwnedFishBaseCps") == 1 and client:GetEquippedFish(player).fish[1].income == 1)
+payoutAvailable = true
+plotService:RefreshInventoryIncome(player)
+assert(data.Wins == eventBalance + 48, "Retry unpaid credit even if no additional time has elapsed")
+-- Equip-best ranking must use the same dynamic rate as real production.
+hold("best-again", backpack, "Large", "Normal")
+plotService:RefreshInventoryIncome(player)
+assert(plotService:RequestEquipBest(player).ok)
+local eventRoster = client:GetEquippedFish(player).fish
+assert(eventRoster[1].uid == "event" and eventRoster[1].income == 30 and eventRoster[2].income == 20)
+
 print("PlotFishService.test.lua passed")

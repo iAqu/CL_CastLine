@@ -6,6 +6,7 @@ local Workspace = game:GetService("Workspace")
 local Knit = require(ReplicatedStorage.Packages.Knit)
 local EggsData = require(ReplicatedFirst.Data.EggsData)
 local PetInventory = require(ReplicatedStorage.Modules.PetInventory)
+local PetFeatureConfig = require(ReplicatedStorage.Modules.PetFeatureConfig)
 local EggInventory = require(ReplicatedStorage.Modules.EggInventory)
 local EggToolUtil = require(ReplicatedStorage.Modules.EggToolUtil)
 local Placement = require(ReplicatedStorage.Modules.EggPlacementUtil)
@@ -95,6 +96,7 @@ function EggService:GetState(player)
 end
 
 function EggService:_changed(player)
+	if not PetFeatureConfig.Enabled then return end
 	local state = self:GetState(player)
 	if state then
 		self.Client.InventoryChanged:Fire(player, state)
@@ -102,6 +104,7 @@ function EggService:_changed(player)
 end
 
 function EggService:_giveTool(player, uuid)
+	if not PetFeatureConfig.Enabled then return end
 	local profile = PlayerDataService:GetProfile(player)
 	local record = profile and profile.Data.Eggs[uuid]
 	local backpack = player:FindFirstChildOfClass("Backpack")
@@ -117,7 +120,7 @@ end
 
 function EggService:GiveEgg(player, eggId)
 	local profile = PlayerDataService:GetProfile(player)
-	if not profile or not EggsData[eggId] or not metrics(eggId) then
+	if not profile or not EggsData[eggId] or (PetFeatureConfig.Enabled and not metrics(eggId)) then
 		return nil, "Egg is unavailable"
 	end
 	local uuid = HttpService:GenerateGUID(false)
@@ -128,6 +131,7 @@ function EggService:GiveEgg(player, eggId)
 end
 
 function EggService:_renderEgg(player, uuid)
+	if not PetFeatureConfig.Enabled then return end
 	local ctx = context(player)
 	if not ctx then
 		return
@@ -195,6 +199,7 @@ function EggService:_renderEgg(player, uuid)
 end
 
 function EggService:PlaceEgg(player, uuid, worldPosition, yaw)
+	if not PetFeatureConfig.Enabled then return { ok = false, message = PetFeatureConfig.DisabledMessage } end
 	if typeof(uuid) ~= "string" or typeof(worldPosition) ~= "Vector3" or not Placement.IsFinite(yaw) then
 		return { ok = false, message = "Invalid placement" }
 	end
@@ -270,6 +275,7 @@ local function interactContext(player, uuid)
 end
 
 function EggService:PickupEgg(player, uuid)
+	if not PetFeatureConfig.Enabled then return { ok = false, message = PetFeatureConfig.DisabledMessage } end
 	local ctx = interactContext(player, uuid)
 	if not ctx then
 		return { ok = false, message = "Move closer to your egg" }
@@ -284,6 +290,7 @@ function EggService:PickupEgg(player, uuid)
 end
 
 function EggService:HatchEgg(player, uuid)
+	if not PetFeatureConfig.Enabled then return { ok = false, message = PetFeatureConfig.DisabledMessage } end
 	local ctx, record = interactContext(player, uuid)
 	if not ctx then
 		return { ok = false, message = "Move closer to your egg" }
@@ -312,6 +319,7 @@ function EggService:HatchEgg(player, uuid)
 end
 
 function EggService.Client:GetState(player)
+	if not PetFeatureConfig.Enabled then return { Eggs = {}, MaxPlaced = EggInventory.MAX_PLACED } end
 	return self.Server:GetState(player)
 end
 function EggService.Client:PlaceEgg(player, uuid, position, yaw)
@@ -325,6 +333,7 @@ function EggService.Client:HatchEgg(player, uuid)
 end
 
 function EggService:_restore(player)
+	if not PetFeatureConfig.Enabled then return end
 	local profile = PlayerDataService:GetProfile(player)
 	if not profile then
 		return
@@ -340,6 +349,7 @@ function EggService:_restore(player)
 end
 
 function EggService:KnitStart()
+	if not PetFeatureConfig.Enabled then return end
 	local slots = Knit.GetService("PlotSlotService")
 	slots.SlotAssigned:Connect(function(player)
 		self:_restore(player)

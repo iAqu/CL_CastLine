@@ -332,7 +332,30 @@ local function parameterAt(value, distance)
 	return u
 end
 
-function FishRepositionPath.new(first, last, radius, speed, ramp, blendTime)
+-- 把弧长转换为带弯道成本的行程。积分后仍可按绝对时间随机访问，不逐帧累计。
+local function buildTravelProfile(path, maxTurnRate)
+	local count = math.clamp(math.ceil(path.length / math.min(0.25, path.radius * 0.1)), 1, 4096)
+	local nodes, stretches = {}, {}
+	for index = 0, count do
+		local distance = path.length * index / count
+		local _, _, _, curvature = path:Sample(distance)
+		stretches[index + 1] = math.sqrt(1 + (path.speed * curvature / maxTurnRate) ^ 2)
+	end
+	local travel = 0
+	for index = 1, count + 1 do
+		-- 保守取邻域成本，提前减速，并让线性插值的速度在节点处连续。
+		local stretch = math.max(stretches[math.max(1, index - 1)], stretches[index], stretches[math.min(count + 1, index + 1)])
+		local distance = path.length * (index - 1) / count
+		local previous = nodes[index - 1]
+		if previous then
+			travel += (distance - previous.distance) * (previous.stretch + stretch) * 0.5
+		end
+		nodes[index] = { distance = distance, travel = travel, stretch = stretch }
+	end
+	path.travelProfile, path.travelLength = nodes, travel
+end
+
+function FishRepositionPath.new(first, last, radius, speed, ramp, blendTime, maxTurnRate)
 	assert(radius > 0 and speed > 0 and ramp > 0 and blendTime > 0, "Forward path requires positive settings")
 	local chosen, planningRadius
 	local candidateKinds = {}
@@ -366,13 +389,19 @@ function FishRepositionPath.new(first, last, radius, speed, ramp, blendTime)
 			table.insert(joins, length)
 		end
 	end
-	local acceleration = math.min(ramp, length / speed)
 	chosen.first, chosen.last = first, last
 	chosen.radius, chosen.planningRadius, chosen.length = radius, planningRadius, length
-	chosen.speed, chosen.ramp, chosen.duration = speed, acceleration, length / speed + acceleration
+	chosen.speed, chosen.travelLength = speed, length
 	chosen.joins = joins
 	chosen.candidateKinds = candidateKinds
-	return setmetatable(chosen, FishRepositionPath)
+	local path = setmetatable(chosen, FishRepositionPath)
+	if maxTurnRate and length > 0 then
+		assert(maxTurnRate > 0, "Turn rate must be positive")
+		buildTravelProfile(path, maxTurnRate)
+	end
+	path.ramp = math.min(ramp, path.travelLength / speed)
+	path.duration = path.travelLength / speed + path.ramp
+	return path
 end
 
 function FishRepositionPath:Sample(distance)
@@ -398,22 +427,51 @@ function FishRepositionPath:Sample(distance)
 	return arcSample(part, localDistance)
 end
 
--- 首尾平滑加减速，速度非负；积分位移恰好等于路径总长度。
-function FishRepositionPath:DistanceAt(elapsed)
+-- 首尾平滑加减速，速度非负；积分行程恰好覆盖整条路径。
+local function travelAt(self, elapsed)
 	if elapsed <= 0 or self.length == 0 then
 		return 0, 0
 	end
 	if elapsed >= self.duration then
-		return self.length, 0
+		return self.travelLength, 0
 	end
 	local reverse = elapsed > self.duration - self.ramp
 	local time = if reverse then self.duration - elapsed else elapsed
 	if time < self.ramp then
 		local u = time / self.ramp
 		local distance = self.speed * self.ramp * (u ^ 3 - u ^ 4 / 2)
-		return if reverse then self.length - distance else distance, self.speed * u * u * (3 - 2 * u)
+		return if reverse then self.travelLength - distance else distance, self.speed * u * u * (3 - 2 * u)
 	end
 	return self.speed * (time - self.ramp / 2), self.speed
+end
+
+function FishRepositionPath:DistanceAt(elapsed)
+	if elapsed <= 0 or self.length == 0 then
+		return 0, 0
+	elseif elapsed >= self.duration then
+		return self.length, 0
+	end
+	local travel, speed = travelAt(self, elapsed)
+	local nodes = self.travelProfile
+	if not nodes then
+		return travel, speed
+	end
+	local low, high = 1, #nodes - 1
+	while low < high do
+		local middle = math.floor((low + high) / 2)
+		if travel > nodes[middle + 1].travel then
+			low = middle + 1
+		else
+			high = middle
+		end
+	end
+	local first, last = nodes[low], nodes[low + 1]
+	local slope = (last.stretch - first.stretch) / (last.distance - first.distance)
+	local cost = math.max(0, travel - first.travel)
+	-- 稳定求解线性成本的二次积分，避免近直线段相减丢失精度。
+	local offset = 2 * cost / (first.stretch + math.sqrt(math.max(0, first.stretch ^ 2 + 2 * slope * cost)))
+	offset = math.clamp(offset, 0, last.distance - first.distance)
+	return first.distance + offset, speed / (first.stretch + slope * offset)
 end
 
 return FishRepositionPath

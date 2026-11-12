@@ -109,6 +109,7 @@ local function finishSale(player: Player, itemIds: { string }, totalCash: number
 		profile.Data.Items[instanceId] = nil
 		soldIds[instanceId] = true
 	end
+	Knit.GetService("PlotFishService"):RefreshInventoryIncome(player)
 	destroyItemTools(player, soldIds)
 	Knit.GetService("HotbarLayoutService"):RemoveItemDescriptors(player, itemIds)
 	local earnedCash = math.round(totalCash * GamePassEffectUtil.GetSaleMultiplier(profile.Data))

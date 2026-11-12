@@ -5,6 +5,7 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
 local Knit = require(ReplicatedStorage.Packages.Knit)
+local PetFeatureConfig = require(ReplicatedStorage.Modules.PetFeatureConfig)
 local EggsData = require(ReplicatedFirst.Data.EggsData)
 local EggToolUtil = require(ReplicatedStorage.Modules.EggToolUtil)
 local Placement = require(ReplicatedStorage.Modules.EggPlacementUtil)
@@ -157,6 +158,7 @@ function Controller:_updateWorld()
 end
 
 function Controller:KnitStart()
+	if not PetFeatureConfig.Enabled then return end
 	self._eggs = {}
 	self._service = Knit.GetService("EggService")
 	local received = false

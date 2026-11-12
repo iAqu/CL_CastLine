@@ -8,14 +8,14 @@ local FishTitleUtil = {}
 
 local MUTATION_LABEL_IDS = { "Golden", "Diamond", "Mint", "Rainbow" }
 
-type FishTitleItem = { DisplayName: string, CpsPrice: number }
+type FishTitleItem = { DisplayName: string, CpsPrice: number, Rarity: string? }
 
 local function findLabel(frame: Instance, name: string): TextLabel?
 	local label = frame:FindFirstChild(name)
 	return if label and label:IsA("TextLabel") then label else nil
 end
 
-function FishTitleUtil.Create(titleGui: Instance?, item: FishTitleItem, mutationId: unknown): BillboardGui?
+function FishTitleUtil.Create(titleGui: Instance?, item: FishTitleItem, mutationId: unknown, owner: Player?): BillboardGui?
 	local template = titleGui and titleGui:FindFirstChild("FishTitleTemplate")
 	if not template or not template:IsA("BillboardGui") then
 		return nil
@@ -36,8 +36,18 @@ function FishTitleUtil.Create(titleGui: Instance?, item: FishTitleItem, mutation
 	local normalizedId = MutationDataUtil.NormalizeMutationId(mutationId)
 	local cpsLabel = findLabel(frame, "CpsLabel")
 	if cpsLabel then
-		local cpsPrice = PlotFishIncome.GetCpsPrice(item, MutationDataUtil.GetEarnCashRate(normalizedId))
-		cpsLabel.Text = "$" .. NumberUtil.FormatItemPriceCompact(cpsPrice) .. "/s"
+		local function refreshIncome()
+			local base = owner and owner:GetAttribute(PlotFishIncome.BEST_CPS_ATTRIBUTE)
+			local cpsPrice = PlotFishIncome.GetCpsPrice(item, MutationDataUtil.GetEarnCashRate(normalizedId), base)
+			cpsLabel.Text = "$" .. NumberUtil.FormatItemPriceCompact(cpsPrice) .. "/s"
+		end
+		refreshIncome()
+		if item.Rarity == "Event" and owner then
+			local changed = owner:GetAttributeChangedSignal(PlotFishIncome.BEST_CPS_ATTRIBUTE):Connect(refreshIncome)
+			title.Destroying:Once(function()
+				changed:Disconnect()
+			end)
+		end
 		cpsLabel.Visible = true
 	end
 

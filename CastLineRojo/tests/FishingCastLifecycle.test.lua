@@ -6,6 +6,7 @@ local function read(path)
 end
 
 local modules = {
+	petFeature = { Enabled = true },
 	config = assert(loadstring(read("src/ReplicatedStorage/Modules/FishingConfig.lua")))(),
 	rig = {},
 	water = {},
@@ -20,6 +21,7 @@ local modules = {
 	confetti = { play = function() end, clear = function() end },
 }
 local workspace = {}
+local tweenService = {}
 local function vector(x, y, z)
 	return setmetatable({ X = x, Y = y, Z = z }, {
 		__add = function(a, b) return vector(a.X + b.X, a.Y + b.Y, a.Z + b.Z) end,
@@ -30,6 +32,7 @@ local environment = setmetatable({
 	Vector3 = { new = vector },
 	script = {
 		Parent = {
+			PetFeatureConfig = "petFeature",
 			FishingConfig = "config",
 			FishingProjectileMath = "math",
 			FishingRigUtil = "rig",
@@ -45,6 +48,7 @@ local environment = setmetatable({
 	},
 	game = {
 		GetService = function(_, name)
+			if name == "TweenService" then return tweenService end
 			return if name == "Workspace" then workspace else {}
 		end,
 	},
@@ -137,11 +141,26 @@ do
 	local startedAt = 100
 	local timeline = { phase = "Lifting", startedAt = startedAt }
 	local sequence = setmetatable({ bite = { timeline = timeline } }, Sequence)
-	local pullbackAt = settings.LiftTime * settings.LiftRiseEnd + settings.ShowcaseCloseupHold
+	local pullbackAt = settings.LiftTime * settings.LiftRiseEnd
 	local entry, pullback = sequence:_showcaseProgress(startedAt)
 	assert(entry == 0 and pullback == 0, "Start the closeup from the incoming camera")
+	local _, rising = sequence:_showcaseProgress(startedAt + pullbackAt - 1 / 60)
+	assert(rising == 0, "Keep the closeup while the fish rises")
 	entry, pullback = sequence:_showcaseProgress(startedAt + pullbackAt)
-	assert(entry == 1 and pullback == 0, "Hold the fixed closeup before pulling back")
+	assert(entry == 1 and math.abs(pullback) < 0.00001, "Join the pullback at the fish's peak")
+	local previous = pullback
+	local frames = math.ceil(settings.ShowcasePullbackTime * 60)
+	for frame = 1, frames do
+		local elapsed = settings.ShowcasePullbackTime * frame / frames
+		local _, progress = sequence:_showcaseProgress(startedAt + pullbackAt + elapsed)
+		assert(progress > previous, "Pullback must advance every frame immediately after the peak")
+		previous = progress
+	end
+	assert(math.abs(previous - 1) < 0.00001, "Finish pulling back within the existing duration")
+	for _, delay in ipairs({ 1 / 60, 0.2 }) do
+		local _, settled = sequence:_showcaseProgress(startedAt + pullbackAt + settings.ShowcasePullbackTime + delay)
+		assert(settled == 1, "Keep the completed pullback stable")
+	end
 	local _, halfway = sequence:_showcaseProgress(startedAt + pullbackAt + settings.ShowcasePullbackTime * 0.5)
 	assert(math.abs(halfway - 0.5) < 0.00001, "Pull back continuously from the closeup")
 	local _, beforeCaught = sequence:_showcaseProgress(startedAt + settings.LiftTime)
@@ -262,15 +281,19 @@ do
 	assert(starts == 1 and cues.FishingRodCast == 1 and cues.FishingCastWind == 1 and effects == 1,
 		"Start animation, VFX and both cast sounds once")
 	assert(not cues.FishingCastImpact, "Do not play impact at animation start")
-	local swingAt = modules.config.CastLeadTime + modules.config.CharacterVFX.SwingTime
-	probe:_updateAction(swingAt - 0.01)
-	assert(swings == 0 and releases == 0, "Do not swing during charging")
-	assert(not cues.FishingCastImpact, "Do not play impact before the swing")
-	probe:_updateAction(swingAt + 0.03)
-	probe:_updateAction(swingAt + 0.04)
+	local swingAt = modules.config.CastLeadTime + 1.925
+	probe:_updateAction(modules.config.CastLeadTime + 1.8)
+	assert(swings == 0 and not cues.FishingCastImpact, "Do not play impact at the start of the forward swing")
+	probe:_updateAction(swingAt - 0.001)
+	assert(swings == 0 and releases == 0, "Wait until the midpoint of the forward swing")
+	assert(not cues.FishingCastImpact, "Do not play impact before the swing midpoint")
+	probe:_updateAction(swingAt + 0.001)
+	probe:_updateAction(swingAt + 0.002)
 	assert(swings == 1 and releases == 0, "Crossing the swing time must trigger once before release")
 	assert(cues.FishingCastImpact == 1, "Crossing the swing time must play impact once")
-	probe:_updateAction(modules.config.CastLeadTime + modules.config.ReleaseTime + 0.01)
+	probe:_updateAction(modules.config.CastLeadTime + 2.05 - 0.001)
+	assert(releases == 0, "Do not release the bait before 2.05 seconds")
+	probe:_updateAction(modules.config.CastLeadTime + 2.05 + 0.001)
 	assert(swings == 1 and releases == 1 and effects == 1, "Keep release timing and VFX deduplication")
 	assert(cues.FishingRodCast == 1 and cues.FishingCastWind == 1 and cues.FishingCastImpact == 1,
 		"Repeated updates must not replay cast sounds")
@@ -713,6 +736,66 @@ do
 	popup.children.UIStroke, popup.children.UIScale = node("UIStroke", "UIStroke"), node("UIScale", "UIScale")
 	popup.children.UIStroke.Transparency, popup.children.UIScale.Scale = 0.1, 1.1
 	local playerGui = node("PlayerGui", "PlayerGui", { FishingSequenceGui = gui })
+	do
+		local template = node("BitePromptTemplate", "BillboardGui")
+		template.Enabled = false
+		gui.children.BitePromptTemplate = template
+		local clones, destroyed = 0, 0
+		function template:Clone()
+			clones += 1
+			local scale = node("UIScale", "UIScale")
+			local icon = node("Icon", "ImageLabel", { UIScale = scale })
+			local prompt = node("BitePromptTemplate", "BillboardGui", { Icon = icon })
+			function prompt:SetAttribute(name, value)
+				assert(self.Parent == true, "Exempt the bite prompt before parenting it into the scene")
+				self[name] = value
+			end
+			function prompt:Destroy() destroyed += 1; self.Parent = nil end
+			return prompt
+		end
+		environment.Enum = { EasingStyle = { Back = "Back" }, EasingDirection = { Out = "Out" } }
+		function tweenService:GetValue(alpha, style, direction)
+			assert(style == "Back" and direction == "Out")
+			return 1 + 2.70158 * (alpha - 1) ^ 3 + 1.70158 * (alpha - 1) ^ 2
+		end
+		local owner = setmetatable({
+			gui = gui, folder = {}, bait = {}, baitBaseSize = vector(1, 4, 1),
+			baitHighlight = {}, baitAppearance = {},
+		}, Sequence)
+		owner:_initBitePrompt()
+		local prompt, scale = owner.bitePrompt, owner.bitePromptScale
+		local settings = modules.config.Bite.Prompt
+		assert(prompt ~= template and prompt.Parent == owner.folder and prompt.Adornee == owner.bait)
+		assert(prompt.FishingBillboardExempt == true and template.FishingBillboardExempt == nil,
+			"Exempt only the runtime bite prompt from fishing billboard suppression")
+		assert(not prompt.Enabled and scale.Scale == settings.StartScale)
+		assert(prompt.StudsOffsetWorldSpace.Y == 2 + settings.HeightOffset, "Place the icon above this bait's top")
+		for _, phase in ipairs({ "Waiting", "Approaching", "Holding", "Nibbling" }) do
+			owner:_presentBait(phase, 0.1)
+			assert(not prompt.Enabled, "Only a true bite may display the prompt")
+		end
+		owner:_presentBait("Bite", 0)
+		assert(prompt.Enabled and math.abs(scale.Scale - settings.StartScale) < 1e-6)
+		owner:_presentBait("Bite", settings.PopTime * 0.6)
+		assert(scale.Scale > 1, "The popup must briefly overshoot")
+		for _, elapsed in ipairs({ settings.PopTime, settings.PopTime + 0.1, 2 }) do
+			owner:_presentBait("Bite", elapsed)
+			assert(prompt.Enabled and scale.Scale == 1, "Keep the icon settled throughout the bite window")
+		end
+		for _, phase in ipairs({ "Struggling", "Escaped", "Reeling", "Waiting", "Caught" }) do
+			owner:_presentBait(phase, 0)
+			assert(not prompt.Enabled and math.abs(scale.Scale - settings.StartScale) < 1e-6,
+				"Hooking, timeout and retry must immediately hide and reset the icon")
+		end
+		owner:_presentBait("Bite", 0)
+		assert(prompt.Enabled and clones == 1, "A new round must reuse the clone and replay the popup")
+		owner.folder = nil
+		owner:Destroy()
+		owner:Destroy()
+		assert(destroyed == 1 and prompt.Parent == nil and not owner.bitePrompt and not owner.bitePromptScale,
+			"Cleanup must release the prompt once, even after partial initialization")
+		assert(template.Parent and not template.Enabled, "Never modify or destroy the Studio template")
+	end
 	local function create()
 		return setmetatable({ originals = {}, createdScales = {} }, Sequence)
 	end

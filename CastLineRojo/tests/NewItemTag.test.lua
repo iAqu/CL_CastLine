@@ -68,6 +68,7 @@ local knit = {
 	end,
 	GetService = function(name)
 		if name == "IndexService" then return index end
+		if name == "PlotFishService" then return { RefreshInventoryIncome = function() end } end
 		assert(name == "PlayerLuckService")
 		return { RefreshPlayerLuck = function() end }
 	end,

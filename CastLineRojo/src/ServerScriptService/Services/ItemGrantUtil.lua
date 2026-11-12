@@ -93,7 +93,7 @@ function ItemGrantUtil.Grant(player: Player, itemId: string, options: GrantOptio
 		Price = price,
 		MutationId = mutationId,
 	}
-	local tool = ItemToolUtil.Create("pending", item, instanceData)
+	local tool = ItemToolUtil.Create("pending", item, instanceData, player)
 	if not tool then
 		return nil, "Item model is unavailable: " .. tostring(item.Model)
 	end
@@ -116,6 +116,7 @@ function ItemGrantUtil.Grant(player: Player, itemId: string, options: GrantOptio
 		MutationId = mutationId,
 	}
 	tool.Parent = backpack
+	Knit.GetService("PlotFishService"):RefreshInventoryIncome(player)
 	if typeof(profile.Data.NewItemTagSeenLog) ~= "table" then
 		profile.Data.NewItemTagSeenLog = {}
 	end

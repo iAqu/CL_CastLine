@@ -6,8 +6,31 @@ local PlotFishIncome = {}
 
 PlotFishIncome.OFFLINE_RATE = 0.5
 PlotFishIncome.MAX_OFFLINE_SECONDS = 8 * 60 * 60
+PlotFishIncome.BEST_CPS_ATTRIBUTE = "BestOwnedFishBaseCps"
 
-function PlotFishIncome.GetCpsPrice(itemData, mutationEarnCashRate: number?): number
+local function finiteNonnegative(value): number?
+	local numberValue = tonumber(value)
+	return if numberValue and numberValue == numberValue and numberValue >= 0 and numberValue < math.huge
+		then numberValue else nil
+end
+
+function PlotFishIncome.GetDefaultBaseCps(): number
+	return finiteNonnegative(FishInventoryData.Fish_101 and FishInventoryData.Fish_101.CpsPrice) or 1
+end
+
+function PlotFishIncome.GetBestOwnedBaseCps(data): number
+	local best
+	for _, record in pairs(data.Items or {}) do
+		local item = if typeof(record) == "table" then FishInventoryData[record.ItemId] else nil
+		local cps = item and item.Rarity ~= "Event" and finiteNonnegative(item.CpsPrice)
+		if cps and (not best or cps > best) then
+			best = cps
+		end
+	end
+	return best or PlotFishIncome.GetDefaultBaseCps()
+end
+
+function PlotFishIncome.GetCpsPrice(itemData, mutationEarnCashRate: number?, bestBaseCps: number?): number
 	local cpsPrice = tonumber(itemData and itemData.CpsPrice) or 0
 	local mutationRate = math.max(0, tonumber(mutationEarnCashRate) or 1)
 	if cpsPrice ~= cpsPrice or cpsPrice == math.huge or cpsPrice == -math.huge then
@@ -15,6 +38,10 @@ function PlotFishIncome.GetCpsPrice(itemData, mutationEarnCashRate: number?): nu
 	end
 	if mutationRate ~= mutationRate or mutationRate == math.huge then
 		mutationRate = 1
+	end
+	if itemData and itemData.Rarity == "Event" then
+		local base = finiteNonnegative(bestBaseCps) or PlotFishIncome.GetDefaultBaseCps()
+		return math.max(1, math.floor(base * math.max(0, cpsPrice) * mutationRate))
 	end
 	return math.max(0, math.floor(cpsPrice * mutationRate))
 end
@@ -35,6 +62,7 @@ end
 
 function PlotFishIncome.GetRate(data): number
 	local rate = 0
+	local bestBaseCps = PlotFishIncome.GetBestOwnedBaseCps(data)
 	local counted = {}
 	for slot = 1, PlotPlacementUtil.CAPACITY do
 		local uid = PlotPlacementUtil.GetItemUid(data.PlotPlacements, slot)
@@ -43,7 +71,8 @@ function PlotFishIncome.GetRate(data): number
 			counted[uid] = true
 			rate += PlotFishIncome.GetCpsPrice(
 				FishInventoryData[record.ItemId],
-				MutationDataUtil.GetEarnCashRate(record.MutationId)
+				MutationDataUtil.GetEarnCashRate(record.MutationId),
+				bestBaseCps
 			)
 		end
 	end

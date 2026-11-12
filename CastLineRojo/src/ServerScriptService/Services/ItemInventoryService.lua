@@ -89,7 +89,7 @@ function ItemInventoryService:RestoreItemTools(player: Player)
 			warn("ItemInventoryService: invalid stored item", tostring(instanceId))
 			continue
 		end
-		local tool = ItemToolUtil.Create(instanceId, item, instanceData)
+		local tool = ItemToolUtil.Create(instanceId, item, instanceData, player)
 		if tool then
 			tool.Parent = backpack
 		end

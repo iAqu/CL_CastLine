@@ -77,6 +77,7 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 	}
 	local function object(class, children)
 		local obj = { Parent = true, ClassName = class, children = children or {}, DescendantAdded = signal() }
+		local attributes = {}
 		local properties, propertySignals = {}, {}
 		setmetatable(obj, {
 			__index = properties,
@@ -115,7 +116,20 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 			return result
 		end
 		function obj:GetDescendants()
-			return {}
+			local result = {}
+			for _, child in pairs(self.children) do
+				table.insert(result, child)
+				for _, descendant in ipairs(child:GetDescendants()) do
+					table.insert(result, descendant)
+				end
+			end
+			return result
+		end
+		function obj:GetAttribute(name)
+			return attributes[name]
+		end
+		function obj:SetAttribute(name, value)
+			attributes[name] = value
 		end
 		function obj:IsDescendantOf(_)
 			return self.Parent ~= nil
@@ -191,6 +205,13 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 	function plot:GetAttribute() return self.owner end
 	local workspace = object("Workspace", { Areas = object("Folder", { Plot = object("Folder", { Plot_1 = plot }) }) })
 	workspace.CurrentCamera = camera
+	local billboards = {}
+	for _, container in ipairs({ workspace, playerGui }) do
+		local visible, hidden = object("BillboardGui"), object("BillboardGui")
+		visible.Enabled, hidden.Enabled = true, false
+		container.children.SceneLabels = object("Folder", { Visible = visible, Hidden = hidden })
+		table.insert(billboards, { visible = visible, hidden = hidden })
+	end
 	local input, heartbeat = signal(), signal()
 	local sequence, failCreate = nil, false
 	local chooseBait
@@ -258,6 +279,7 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 		SettingsGuiController = { ToggleSound = signal() },
 	}
 	local modules = {
+		PetFeatureConfig = { Enabled = false },
 		Knit = {
 			CreateController = function(value)
 				return value
@@ -376,6 +398,7 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 	})
 	storage.Packages = { Knit = "Knit" }
 	storage.Modules = {
+		PetFeatureConfig = "PetFeatureConfig",
 		FishingRigUtil = "FishingRigUtil",
 		FishingCastSequence = "FishingCastSequence",
 		FishingAudio = "FishingAudio",
@@ -509,6 +532,16 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 		character = character,
 		camera = camera,
 		warnings = warnings,
+		billboards = billboards,
+		addBillboard = function(inPlayerGui, enabled, exempt)
+			local container = if inPlayerGui then playerGui else workspace
+			local billboard = object("BillboardGui")
+			billboard.Enabled = enabled
+			billboard:SetAttribute("FishingBillboardExempt", exempt)
+			container.children[billboard] = billboard
+			container.DescendantAdded:Fire(billboard)
+			return billboard
+		end,
 		requests = requests,
 		cancellations = cancellations,
 		notices = notices,
@@ -570,6 +603,60 @@ end
 local function revealPicker(fishing)
 	fishing.advance(0.121)
 	fishing.advance(0.101)
+end
+
+do
+	local fishing = fixture()
+	for _, pair in ipairs(fishing.billboards) do
+		assert(not pair.visible.Enabled and not pair.hidden.Enabled, "Hide nested scene billboards at session start")
+		pair.visible.Enabled, pair.hidden.Enabled = true, true
+		assert(not pair.visible.Enabled and not pair.hidden.Enabled, "Hold both original states hidden")
+	end
+	revealPicker(fishing)
+	local addedWorld = fishing.addBillboard(false, true)
+	local addedGui = fishing.addBillboard(true, false)
+	local bitePrompt = fishing.addBillboard(false, false, true)
+	bitePrompt.Enabled = true
+	assert(not addedWorld.Enabled and not addedGui.Enabled and bitePrompt.Enabled,
+		"Hide newly added scene billboards while allowing the bite prompt")
+	addedWorld.Enabled, addedGui.Enabled = true, true
+	assert(not addedWorld.Enabled and not addedGui.Enabled, "Keep new billboards hidden when enabled externally")
+	fishing.controller:ReturnToSpawn()
+	fishing.advance(0.15)
+	assert(not fishing.billboards[1].visible.Enabled, "Keep billboards hidden until return is covered")
+	fishing.advance(0.16)
+	for _, pair in ipairs(fishing.billboards) do
+		assert(pair.visible.Enabled and not pair.hidden.Enabled, "Restore each billboard's original Enabled state")
+		pair.hidden.Enabled = true
+		assert(pair.hidden.Enabled, "Release the property listener during covered return")
+	end
+	assert(addedWorld.Enabled and not addedGui.Enabled, "Restore original states for billboards added during fishing")
+	addedGui.Enabled = true
+	assert(addedGui.Enabled and fishing.addBillboard(false, true).Enabled and fishing.addBillboard(true, true).Enabled,
+		"Release property and descendant listeners before the return reveal finishes")
+	fishing.advance(0.36)
+	assert(not fishing.controller:IsPreparing() and #fishing.warnings == 0)
+end
+
+for _, exit in ipairs({ "abort", "die", "prepareFailure", "sequenceFailure" }) do
+	local fishing = fixture()
+	if exit == "prepareFailure" then
+		fishing.failCreate()
+		fishing.advance(0.121)
+	elseif exit == "sequenceFailure" then
+		revealPicker(fishing)
+		fishing.choose()
+		fishing.sequence().Update = function() error("Sequence update failed") end
+		fishing.advance(0.016)
+	else
+		revealPicker(fishing)
+		fishing[exit]()
+	end
+	for _, pair in ipairs(fishing.billboards) do
+		assert(pair.visible.Enabled and not pair.hidden.Enabled, "Restore billboards after " .. exit)
+	end
+	assert(fishing.addBillboard(false, true).Enabled and fishing.addBillboard(true, true).Enabled,
+		"Stop watching new billboards after " .. exit)
 end
 
 local normal = fixture()
