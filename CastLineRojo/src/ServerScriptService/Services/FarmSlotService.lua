@@ -25,6 +25,8 @@ local PlotSlotService = Knit.CreateService({
 	_PlotSlots = {}, -- [slotId] = plot instance
 	_PlayerToSlot = {}, -- [player] = slotId
 	_SlotToPlayer = {}, -- [slotId] = player
+	_CharacterConnections = {}, -- [player] = CharacterAdded connection
+	_SpawnRequests = {}, -- [player] = 当前角色的出生任务，完成后保留以去重
 	SlotReleased = Signal.new(), -- (plot: Instance) 服务端槽位释放信号
 	SlotAssigned = Signal.new(), -- (player: Player, slotId: number) 服务端槽位分配信号
 })
@@ -69,6 +71,65 @@ function PlotSlotService:_setPlotOwner(slotId: number, player: Player?)
 	end
 end
 
+function PlotSlotService:_spawnPlayerAtPlot(player: Player, request)
+	local slotId, character = request.slotId, request.character
+	local plot = self._PlotSlots[slotId]
+	local spawnPoint = plot and plot:FindFirstChild("AreaSpawnPoint")
+	if not spawnPoint or not spawnPoint:IsA("BasePart") then
+		warn("[PlotSlotService] Missing AreaSpawnPoint for plot slot", slotId)
+		return
+	end
+
+	while player.Parent == Players
+		and player.Character == character
+		and self._SpawnRequests[player] == request
+		and self._PlayerToSlot[player] == slotId
+		and self._SlotToPlayer[slotId] == player
+	do
+		if not plot:IsDescendantOf(workspace) or not spawnPoint:IsDescendantOf(plot) then
+			return
+		end
+		local humanoid = character:FindFirstChildOfClass("Humanoid")
+		if humanoid and humanoid.Health <= 0 then
+			return
+		end
+		local root = character:FindFirstChild("HumanoidRootPart")
+		if character:IsDescendantOf(workspace) and root and root:IsA("BasePart") then
+			character:PivotTo(spawnPoint.CFrame)
+			root.AssemblyLinearVelocity = Vector3.zero
+			root.AssemblyAngularVelocity = Vector3.zero
+			return
+		end
+		task.wait()
+	end
+end
+
+function PlotSlotService:_queuePlayerSpawn(player: Player, character: Model?)
+	local slotId = self._PlayerToSlot[player]
+	if not character or not slotId or player.Parent ~= Players or player.Character ~= character then
+		return
+	end
+	local previous = self._SpawnRequests[player]
+	if previous and previous.character == character and previous.slotId == slotId then
+		return
+	end
+
+	local request = { character = character, slotId = slotId }
+	self._SpawnRequests[player] = request
+	task.defer(self._spawnPlayerAtPlot, self, player, request)
+end
+
+function PlotSlotService:_bindPlayer(player: Player)
+	if self._CharacterConnections[player] then
+		return
+	end
+	self._CharacterConnections[player] = player.CharacterAdded:Connect(function(character: Model)
+		self:_queuePlayerSpawn(player, character)
+	end)
+	self:EnsurePlayerSlot(player)
+	self:_queuePlayerSpawn(player, player.Character)
+end
+
 function PlotSlotService:AssignPlayerSlot(player: Player): number?
 	if self._PlayerToSlot[player] then
 		return self._PlayerToSlot[player]
@@ -89,6 +150,7 @@ function PlotSlotService:AssignPlayerSlot(player: Player): number?
 
 			self.SlotAssigned:Fire(player, slotId)
 			self.Client.PlotSlotAssigned:Fire(player, slotId)
+			self:_queuePlayerSpawn(player, player.Character)
 			return slotId
 		end
 	end
@@ -108,6 +170,7 @@ function PlotSlotService:EnsurePlayerSlot(player: Player): number?
 end
 
 function PlotSlotService:ReleasePlayerSlot(player: Player)
+	self._SpawnRequests[player] = nil
 	local slotId = self._PlayerToSlot[player]
 	if not slotId then
 		return
@@ -167,18 +230,22 @@ function PlotSlotService:KnitInit()
 	end
 
 	Players.PlayerRemoving:Connect(function(player: Player)
+		local connection = self._CharacterConnections[player]
+		if connection then
+			connection:Disconnect()
+			self._CharacterConnections[player] = nil
+		end
 		self:ReleasePlayerSlot(player)
 	end)
 end
 
 function PlotSlotService:KnitStart()
-	for _, player in ipairs(Players:GetPlayers()) do
-		self:EnsurePlayerSlot(player)
-	end
-
 	Players.PlayerAdded:Connect(function(player: Player)
-		self:EnsurePlayerSlot(player)
+		self:_bindPlayer(player)
 	end)
+	for _, player in ipairs(Players:GetPlayers()) do
+		self:_bindPlayer(player)
+	end
 end
 
 return PlotSlotService

@@ -32,8 +32,4 @@ function GamePassEffectUtil.GetItemLuckMultiplier(playerData): number
 	return 1 + bonus
 end
 
-function GamePassEffectUtil.GetCarryCapacityMultiplier(playerData): number
-	return if ownsGamePass(playerData, Constants.GAMEPASS.DOUBLE_CARRY) then 2 else 1
-end
-
 return GamePassEffectUtil

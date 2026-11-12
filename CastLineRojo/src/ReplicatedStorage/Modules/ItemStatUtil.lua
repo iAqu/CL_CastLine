@@ -5,6 +5,7 @@ local ItemStatUtil = {}
 export type ItemConfig = {
 	DefaultPrice: number,
 	DefaultWeight: number,
+	ModelDefaultScale: number?,
 	MinWeight: number,
 	MaxWeight: number,
 	Rarity: string,
@@ -45,6 +46,25 @@ function ItemStatUtil.RollWeight(item: ItemConfig, random: Random?): number
 	end
 	local rawWeight = (random or Random.new()):NextNumber(minWeight, maxWeight)
 	return math.round(rawWeight * 10) / 10
+end
+
+local SIZE_TITLES = { "Big", "Large", "Huge", "Colossal", "Gigantic", "Titanic", "Monstrous", "Cosmic", "Infinite" }
+
+function ItemStatUtil.GetSizeTitle(item: ItemConfig, actualWeight: number?): string?
+	local weight, defaultWeight = tonumber(actualWeight), tonumber(item.DefaultWeight)
+	if not weight or not defaultWeight
+		or weight ~= weight or defaultWeight ~= defaultWeight
+		or weight == math.huge or defaultWeight == math.huge
+		or defaultWeight <= 0 or weight <= defaultWeight
+	then
+		return nil
+	end
+	local size = getWeightRatio(item, weight) ^ (1 / 3)
+	if size <= 1.0001 then
+		return nil
+	end
+	local level = math.max(1, math.floor(math.log(size) / math.log(1.5) + 0.5))
+	return SIZE_TITLES[math.min(level, #SIZE_TITLES)]
 end
 
 function ItemStatUtil.CalculatePrice(
@@ -107,17 +127,60 @@ function ItemStatUtil.CalculateMaxHealth(
 	)
 end
 
-function ItemStatUtil.GetScaleRatio(item: ItemConfig, actualWeight: number): number
-	local weightRatio = getWeightRatio(item, actualWeight)
-	return 1 + (weightRatio - 1) * 0.7
+local MAX_FISH_LENGTH = 50
+-- A 45-stud plot must leave at least one stud of travel on either side of center.
+local MAX_FISH_RADIUS = 45 / 2 - 1
+local modelBounds = setmetatable({}, { __mode = "k" })
+
+function ItemStatUtil.GetModelBounds(template: Model)
+	local cached = modelBounds[template]
+	if cached then
+		return cached
+	end
+
+	local bounds, size = template:GetBoundingBox()
+	local body = template.PrimaryPart
+	local offset = (if body then body.CFrame else template:GetPivot()):ToObjectSpace(bounds)
+	local radius, framingRadius, bottom = 0, 0, math.huge
+	local minimum = Vector3.new(math.huge, math.huge, math.huge)
+	local maximum = Vector3.new(-math.huge, -math.huge, -math.huge)
+	for x = -1, 1, 2 do
+		for y = -1, 1, 2 do
+			for z = -1, 1, 2 do
+				local corner = offset:PointToWorldSpace(size * Vector3.new(x, y, z) * 0.5)
+				radius = math.max(radius, Vector2.new(corner.X, corner.Z).Magnitude)
+				framingRadius = math.max(framingRadius, corner.Magnitude)
+				bottom = math.min(bottom, corner.Y)
+				minimum = Vector3.new(math.min(minimum.X, corner.X), math.min(minimum.Y, corner.Y), math.min(minimum.Z, corner.Z))
+				maximum = Vector3.new(math.max(maximum.X, corner.X), math.max(maximum.Y, corner.Y), math.max(maximum.Z, corner.Z))
+			end
+		end
+	end
+	local animatedRadius = template:GetAttribute("PresentationRadius")
+	animatedRadius = if typeof(animatedRadius) == "number" then animatedRadius else 0
+	local metrics = {
+		longest = math.max(size.X, size.Y, size.Z),
+		radius = math.max(radius, animatedRadius),
+		framingRadius = math.max(framingRadius, animatedRadius),
+		bottom = bottom,
+		minimum = minimum,
+		maximum = maximum,
+	}
+	modelBounds[template] = metrics
+	return metrics
 end
 
-function ItemStatUtil.ScaleModel(model: Model, item: ItemConfig, actualWeight: number, templateScale: number?)
-	local ratio = ItemStatUtil.GetScaleRatio(item, actualWeight)
-	if ratio > 0 then
-		local baseScale = if templateScale and templateScale > 0 then templateScale else model:GetScale()
-		model:ScaleTo(baseScale * ratio)
-	end
+function ItemStatUtil.GetScaleRatio(item: ItemConfig, actualWeight: number, template: Model): (number, number)
+	local metrics = ItemStatUtil.GetModelBounds(template)
+	local cap = math.min(MAX_FISH_LENGTH / math.max(metrics.longest, 0.01), MAX_FISH_RADIUS / math.max(metrics.radius, 0.01))
+	local weightRatio = getWeightRatio(item, actualWeight)
+	local ratio = if weightRatio > 0 then weightRatio ^ (1 / 3) else 1
+	return math.min(getPositiveMultiplier(item.ModelDefaultScale) * ratio, cap), cap
+end
+
+function ItemStatUtil.ScaleModel(model: Model, item: ItemConfig, actualWeight: number, template: Model)
+	local ratio = ItemStatUtil.GetScaleRatio(item, actualWeight, template)
+	model:ScaleTo(template:GetScale() * ratio)
 end
 
 return ItemStatUtil

@@ -1,9 +1,11 @@
+local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
 local Knit = require(ReplicatedStorage.Packages.Knit)
 local PlayerDataService = require(ServerScriptService.Services.PlayerDataService)
 local Constants = require(ReplicatedStorage.Modules.Constants)
+local PurchaseDataHelper = require(ReplicatedFirst.DataHelpers.PurchaseDataHelper)
 
 local GamePassService = Knit.CreateService {
     Name = "GamePassService",
@@ -13,6 +15,7 @@ local GamePassService = Knit.CreateService {
 }
 
 function GamePassService:GiveGamePass(player: Player, gamePassId: string)
+    if PurchaseDataHelper.IsRetired(gamePassId) then return end
     local profile = PlayerDataService:GetProfile(player)
     if not profile then return end
 
@@ -20,12 +23,6 @@ function GamePassService:GiveGamePass(player: Player, gamePassId: string)
 
     profile.Data.GamePasses[gamePassId] = true
 	if gamePassId == "VIP" then player:SetAttribute("HasVIP", true) end
-	if gamePassId == Constants.GAMEPASS.FAST_MOVE then
-		Knit.GetService("MovementSpeedService"):RefreshPlayer(player)
-	end
-	if gamePassId == Constants.GAMEPASS.DOUBLE_CARRY then
-		Knit.GetService("CarryCapacityService"):RefreshPlayer(player)
-	end
 	if gamePassId == Constants.GAMEPASS.SUPER_LUCK or gamePassId == Constants.GAMEPASS.MEGA_LUCK then
 		Knit.GetService("PlayerLuckService"):RefreshPlayerLuck(player)
 	end

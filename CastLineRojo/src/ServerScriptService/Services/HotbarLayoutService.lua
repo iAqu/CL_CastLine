@@ -15,7 +15,7 @@ local HotbarLayoutService = Knit.CreateService({
 	},
 })
 
-local VALID_KINDS = { Potion = true, Item = true }
+local VALID_KINDS = { Potion = true, Item = true, Egg = true }
 
 local function cloneLayout(layout)
 	local clone = {}
@@ -26,6 +26,12 @@ local function cloneLayout(layout)
 end
 
 local function isOwnedDescriptor(data, descriptor, usages)
+	if descriptor.Kind == "Egg" then
+		local egg = data.Eggs and data.Eggs[descriptor.Id]
+		if usages.Egg[descriptor.Id] or not egg or egg.Placement then return false end
+		usages.Egg[descriptor.Id] = true
+		return true
+	end
 	if descriptor.Kind == "Potion" then
 		if usages.Potion[descriptor.Id] then return false end
 		local potion = data.Potions and data.Potions[descriptor.Id]
@@ -62,7 +68,7 @@ local function normalizeLayout(data, layout)
 	end)
 
 	local result = {}
-	local usages = { Potion = {}, Item = {} }
+	local usages = { Potion = {}, Item = {}, Egg = {} }
 	local function firstFree()
 		for slot = FIRST_ITEM_SLOT, LAST_ITEM_SLOT do
 			if not result[tostring(slot)] then return slot end

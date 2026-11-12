@@ -1,4 +1,5 @@
 local Players = game:GetService("Players")
+local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
@@ -7,7 +8,9 @@ local Signal = require(ReplicatedStorage.Packages.Signal)
 local Template = require(ReplicatedStorage.PlayerData.Template)
 local ProfileService = require(ServerScriptService.Libs.ProfileService)
 local LogHelper = require(ReplicatedStorage.Modules.LogHelper)
+local PlotFishIncome = require(ReplicatedStorage.Modules.PlotFishIncome)
 local PlotPlacementUtil = require(ReplicatedStorage.Modules.PlotPlacementUtil)
+local RodInventory = require(ReplicatedStorage.Modules.RodInventory)
 local TimeUtil = require(ReplicatedStorage.Modules.TimeUtil)
 
 local DATA_BASE_NAME = "RELEASE_230724"
@@ -27,7 +30,7 @@ local function sanitizeHotbarLayout(playerData)
     local sanitized = {}
     for slotKey, entry in pairs(playerData.HotbarLayout) do
         if typeof(entry) == "table"
-            and (entry.Kind == "Potion" or entry.Kind == "Item")
+            and (entry.Kind == "Potion" or entry.Kind == "Item" or entry.Kind == "Egg")
             and typeof(entry.Id) == "string"
         then
             sanitized[slotKey] = entry
@@ -123,8 +126,6 @@ local REMOVED_PROFILE_FIELDS = {
     "AutoFightArea",
     "Tutorial_Is_Dig",
     -- 宠物/蛋
-    "Pets",
-    "PetIndex",
     "HatchNum",
     "HatchNumByChallenge",
     "AutoDeletePets",
@@ -188,6 +189,7 @@ local REMOVED_PROFILE_FIELDS = {
     "FruitStock",
     "FruitNextRestock",
     "CashPools",
+    "PlotCashPools",
     -- 建造玩法
     "Props",
     "PlacedProps",
@@ -206,22 +208,37 @@ local function migrateRemovedLegacyFields(playerData)
     for _, fieldName in REMOVED_PROFILE_FIELDS do
         playerData[fieldName] = nil
     end
+    if typeof(playerData.Upgrades) == "table" then
+        playerData.Upgrades.Upgrade_CarryWeight = nil
+        playerData.Upgrades.Upgrade_MoveSpeed = nil
+    end
+    if typeof(playerData.GamePasses) == "table" then
+        playerData.GamePasses.DoubleCarry = nil
+        playerData.GamePasses.FastMove = nil
+    end
 end
 
 local function migratePlotHome(playerData)
     if playerData.LastPlotSlotId == nil and typeof(playerData.LastFarmSlotId) == "number" then
         playerData.LastPlotSlotId = playerData.LastFarmSlotId
     end
-    if typeof(playerData.PlotPlacements) ~= "table" then
-        playerData.PlotPlacements = {}
-    else
-        playerData.PlotPlacements = PlotPlacementUtil.CoerceNumericKeys(playerData.PlotPlacements)
+    local placements = PlotPlacementUtil.CoerceNumericKeys(playerData.PlotPlacements)
+    for slot in pairs(placements) do
+        if slot < 1 or slot > PlotPlacementUtil.CAPACITY then
+            placements[slot] = nil
+        end
     end
-    if typeof(playerData.PlotCashPools) ~= "table" then
-        playerData.PlotCashPools = {}
-    else
-        playerData.PlotCashPools = PlotPlacementUtil.CoerceNumericKeys(playerData.PlotCashPools)
+    local items = if typeof(playerData.Items) == "table" then playerData.Items else {}
+    local seen = {}
+    for slot = 1, PlotPlacementUtil.CAPACITY do
+        local uid = PlotPlacementUtil.GetItemUid(placements, slot)
+        if not uid or seen[uid] or typeof(items[uid]) ~= "table" then
+            placements[slot] = nil
+        else
+            seen[uid] = true
+        end
     end
+    playerData.PlotPlacements = placements
 end
 
 function PlayerDataService:GetProfile(player: Player)
@@ -530,7 +547,10 @@ function PlayerDataService:LoadProfile(player: Player)
     profile:AddUserId(player.UserId)
 
     profile:Reconcile()
+    RodInventory.Reconcile(profile.Data)
     migrateRemovedLegacyFields(profile.Data)
+	require(ReplicatedStorage.Modules.PetInventory).Reconcile(profile.Data, require(ReplicatedFirst.Data.PetsData))
+	require(ReplicatedStorage.Modules.EggInventory).Reconcile(profile.Data, require(ReplicatedFirst.Data.EggsData))
     migratePlotHome(profile.Data)
     sanitizeHotbarLayout(profile.Data)
 
@@ -566,6 +586,10 @@ function PlayerDataService:LoadProfile(player: Player)
 	self._PendingProfiles[player] = nil
 	self._Profiles[player] = profile
 	self:CreateLeaderstats(player)
+	player:SetAttribute("EquippedRodId", profile.Data.EquippedRodId)
+	local offline = PlotFishIncome.PrepareOffline(profile.Data, os.time())
+	player:SetAttribute("PlotOfflineAwaySeconds", offline.away)
+	player:SetAttribute("PlotOfflineCountedSeconds", offline.counted)
 	self.ProfileLoaded:Fire(player, profile.Data)
 	self.Client.DataLoaded:Fire(player, profile.Data)
 end

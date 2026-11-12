@@ -16,8 +16,7 @@ local ok, result = xpcall(function()
 		folder = folder,
 		bait = bait,
 		forward = Vector3.zAxis,
-		statusLabel = {},
-		returnLabel = {},
+		continueLabel = {},
 		_waterTarget = function()
 			return target
 		end,

@@ -3,6 +3,10 @@ local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local PurchaseData = require(ReplicatedFirst.Data.PurchaseData)
 local PurchaseDataHelper = {}
 
+function PurchaseDataHelper.IsRetired(purchaseId: unknown): boolean
+    return purchaseId == "DoubleCarry" or purchaseId == "FastMove"
+end
+
 function PurchaseDataHelper.GetAllData(): {string: PurchaseData.PurchaseConfig}
     return PurchaseData
 end
@@ -14,7 +18,7 @@ end
 function PurchaseDataHelper.GetGamePassesData(): {string: PurchaseData.PurchaseConfig}
     local gamePasses = {}
     for purchaseId, purchaseData in pairs(PurchaseData) do
-        if purchaseData.Type == "GamePass" then
+        if purchaseData.Type == "GamePass" and not PurchaseDataHelper.IsRetired(purchaseId) then
             gamePasses[purchaseId] = purchaseData
         end
     end

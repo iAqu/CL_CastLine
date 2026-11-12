@@ -29,6 +29,8 @@ local GM_COMMANDS = {       -- gm limited commands
     "givePotion",
     "giveItem",
     "giveRandomItem",
+    "givePet",
+    "giveEgg",
     "giveAnimal",
     "giveFruit",
 	"giveProp",
@@ -36,8 +38,6 @@ local GM_COMMANDS = {       -- gm limited commands
     "adjustPlayerStrength",
     "adjustPlayerWin",
     "adjustPlayerDiamond",
-    "setMoveSpeedLevel",
-    "setBackpackLevel",
     "removeLeaderboard"
 }
 

@@ -1,0 +1,784 @@
+<roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="4">
+  <External>null</External>
+  <External>nil</External>
+  <Item class="ScreenGui" referent="RBX0">
+    <Properties>
+      <bool name="ClipToDeviceSafeArea">false</bool>
+      <int name="DisplayOrder">139</int>
+      <bool name="Enabled">false</bool>
+      <bool name="IgnoreGuiInset">true</bool>
+      <string name="Name">FishingVignetteGui</string>
+      <bool name="ResetOnSpawn">false</bool>
+      <token name="ScreenInsets">0</token>
+      <token name="ZIndexBehavior">1</token>
+    </Properties>
+    <Item class="Frame" referent="RBX1">
+      <Properties>
+        <bool name="Active">false</bool>
+        <Vector2 name="AnchorPoint"><Y>0</Y><X>0</X></Vector2>
+        <float name="BackgroundTransparency">1</float>
+        <int name="BorderSizePixel">0</int>
+        <bool name="ClipsDescendants">true</bool>
+        <bool name="Interactable">false</bool>
+        <string name="Name">Vignette</string>
+        <UDim2 name="Position"><YS>0</YS><XS>0</XS><XO>0</XO><YO>0</YO></UDim2>
+        <UDim2 name="Size"><YS>1</YS><XS>1</XS><XO>0</XO><YO>0</YO></UDim2>
+        <int name="ZIndex">1</int>
+      </Properties>
+      <Item class="Frame" referent="RBX2">
+        <Properties>
+          <bool name="Active">false</bool>
+          <Vector2 name="AnchorPoint"><Y>0.5</Y><X>0.5</X></Vector2>
+          <float name="BackgroundTransparency">1</float>
+          <int name="BorderSizePixel">0</int>
+          <bool name="ClipsDescendants">false</bool>
+          <bool name="Interactable">false</bool>
+          <string name="Name">Ring1</string>
+          <UDim2 name="Position"><YS>0.5</YS><XS>0.5</XS><XO>0</XO><YO>0</YO></UDim2>
+          <UDim2 name="Size"><YS>0</YS><XS>0</XS><XO>1267</XO><YO>1267</YO></UDim2>
+          <int name="ZIndex">1</int>
+        </Properties>
+        <Item class="UICorner" referent="RBX3">
+          <Properties>
+            <UDim name="CornerRadius"><S>0.5</S><O>0</O></UDim>
+            <string name="Name">UICorner</string>
+          </Properties>
+        </Item>
+        <Item class="UIStroke" referent="RBX4">
+          <Properties>
+            <token name="ApplyStrokeMode">1</token>
+            <Color3 name="Color"><B>1</B><G>1</G><R>1</R></Color3>
+            <string name="Name">UIStroke</string>
+            <float name="Thickness">88.49961853027344</float>
+            <float name="Transparency">1</float>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="Frame" referent="RBX5">
+        <Properties>
+          <bool name="Active">false</bool>
+          <Vector2 name="AnchorPoint"><Y>0.5</Y><X>0.5</X></Vector2>
+          <float name="BackgroundTransparency">1</float>
+          <int name="BorderSizePixel">0</int>
+          <bool name="ClipsDescendants">false</bool>
+          <bool name="Interactable">false</bool>
+          <string name="Name">Ring2</string>
+          <UDim2 name="Position"><YS>0.5</YS><XS>0.5</XS><XO>0</XO><YO>0</YO></UDim2>
+          <UDim2 name="Size"><YS>0</YS><XS>0</XS><XO>1314</XO><YO>1314</YO></UDim2>
+          <int name="ZIndex">1</int>
+        </Properties>
+        <Item class="UICorner" referent="RBX6">
+          <Properties>
+            <UDim name="CornerRadius"><S>0.5</S><O>0</O></UDim>
+            <string name="Name">UICorner</string>
+          </Properties>
+        </Item>
+        <Item class="UIStroke" referent="RBX7">
+          <Properties>
+            <token name="ApplyStrokeMode">1</token>
+            <Color3 name="Color"><B>1</B><G>1</G><R>1</R></Color3>
+            <string name="Name">UIStroke</string>
+            <float name="Thickness">88.49961853027344</float>
+            <float name="Transparency">1</float>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="Frame" referent="RBX8">
+        <Properties>
+          <bool name="Active">false</bool>
+          <Vector2 name="AnchorPoint"><Y>0.5</Y><X>0.5</X></Vector2>
+          <float name="BackgroundTransparency">1</float>
+          <int name="BorderSizePixel">0</int>
+          <bool name="ClipsDescendants">false</bool>
+          <bool name="Interactable">false</bool>
+          <string name="Name">Ring3</string>
+          <UDim2 name="Position"><YS>0.5</YS><XS>0.5</XS><XO>0</XO><YO>0</YO></UDim2>
+          <UDim2 name="Size"><YS>0</YS><XS>0</XS><XO>1360</XO><YO>1360</YO></UDim2>
+          <int name="ZIndex">1</int>
+        </Properties>
+        <Item class="UICorner" referent="RBX9">
+          <Properties>
+            <UDim name="CornerRadius"><S>0.5</S><O>0</O></UDim>
+            <string name="Name">UICorner</string>
+          </Properties>
+        </Item>
+        <Item class="UIStroke" referent="RBX10">
+          <Properties>
+            <token name="ApplyStrokeMode">1</token>
+            <Color3 name="Color"><B>1</B><G>1</G><R>1</R></Color3>
+            <string name="Name">UIStroke</string>
+            <float name="Thickness">88.49961853027344</float>
+            <float name="Transparency">1</float>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="Frame" referent="RBX11">
+        <Properties>
+          <bool name="Active">false</bool>
+          <Vector2 name="AnchorPoint"><Y>0.5</Y><X>0.5</X></Vector2>
+          <float name="BackgroundTransparency">1</float>
+          <int name="BorderSizePixel">0</int>
+          <bool name="ClipsDescendants">false</bool>
+          <bool name="Interactable">false</bool>
+          <string name="Name">Ring4</string>
+          <UDim2 name="Position"><YS>0.5</YS><XS>0.5</XS><XO>0</XO><YO>0</YO></UDim2>
+          <UDim2 name="Size"><YS>0</YS><XS>0</XS><XO>1407</XO><YO>1407</YO></UDim2>
+          <int name="ZIndex">1</int>
+        </Properties>
+        <Item class="UICorner" referent="RBX12">
+          <Properties>
+            <UDim name="CornerRadius"><S>0.5</S><O>0</O></UDim>
+            <string name="Name">UICorner</string>
+          </Properties>
+        </Item>
+        <Item class="UIStroke" referent="RBX13">
+          <Properties>
+            <token name="ApplyStrokeMode">1</token>
+            <Color3 name="Color"><B>1</B><G>1</G><R>1</R></Color3>
+            <string name="Name">UIStroke</string>
+            <float name="Thickness">88.49961853027344</float>
+            <float name="Transparency">1</float>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="Frame" referent="RBX14">
+        <Properties>
+          <bool name="Active">false</bool>
+          <Vector2 name="AnchorPoint"><Y>0.5</Y><X>0.5</X></Vector2>
+          <float name="BackgroundTransparency">1</float>
+          <int name="BorderSizePixel">0</int>
+          <bool name="ClipsDescendants">false</bool>
+          <bool name="Interactable">false</bool>
+          <string name="Name">Ring5</string>
+          <UDim2 name="Position"><YS>0.5</YS><XS>0.5</XS><XO>0</XO><YO>0</YO></UDim2>
+          <UDim2 name="Size"><YS>0</YS><XS>0</XS><XO>1453</XO><YO>1453</YO></UDim2>
+          <int name="ZIndex">1</int>
+        </Properties>
+        <Item class="UICorner" referent="RBX15">
+          <Properties>
+            <UDim name="CornerRadius"><S>0.5</S><O>0</O></UDim>
+            <string name="Name">UICorner</string>
+          </Properties>
+        </Item>
+        <Item class="UIStroke" referent="RBX16">
+          <Properties>
+            <token name="ApplyStrokeMode">1</token>
+            <Color3 name="Color"><B>1</B><G>1</G><R>1</R></Color3>
+            <string name="Name">UIStroke</string>
+            <float name="Thickness">88.49961853027344</float>
+            <float name="Transparency">1</float>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="Frame" referent="RBX17">
+        <Properties>
+          <bool name="Active">false</bool>
+          <Vector2 name="AnchorPoint"><Y>0.5</Y><X>0.5</X></Vector2>
+          <float name="BackgroundTransparency">1</float>
+          <int name="BorderSizePixel">0</int>
+          <bool name="ClipsDescendants">false</bool>
+          <bool name="Interactable">false</bool>
+          <string name="Name">Ring6</string>
+          <UDim2 name="Position"><YS>0.5</YS><XS>0.5</XS><XO>0</XO><YO>0</YO></UDim2>
+          <UDim2 name="Size"><YS>0</YS><XS>0</XS><XO>1500</XO><YO>1500</YO></UDim2>
+          <int name="ZIndex">1</int>
+        </Properties>
+        <Item class="UICorner" referent="RBX18">
+          <Properties>
+            <UDim name="CornerRadius"><S>0.5</S><O>0</O></UDim>
+            <string name="Name">UICorner</string>
+          </Properties>
+        </Item>
+        <Item class="UIStroke" referent="RBX19">
+          <Properties>
+            <token name="ApplyStrokeMode">1</token>
+            <Color3 name="Color"><B>1</B><G>1</G><R>1</R></Color3>
+            <string name="Name">UIStroke</string>
+            <float name="Thickness">88.49961853027344</float>
+            <float name="Transparency">1</float>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="Frame" referent="RBX20">
+        <Properties>
+          <bool name="Active">false</bool>
+          <Vector2 name="AnchorPoint"><Y>0.5</Y><X>0.5</X></Vector2>
+          <float name="BackgroundTransparency">1</float>
+          <int name="BorderSizePixel">0</int>
+          <bool name="ClipsDescendants">false</bool>
+          <bool name="Interactable">false</bool>
+          <string name="Name">Ring7</string>
+          <UDim2 name="Position"><YS>0.5</YS><XS>0.5</XS><XO>0</XO><YO>0</YO></UDim2>
+          <UDim2 name="Size"><YS>0</YS><XS>0</XS><XO>1547</XO><YO>1547</YO></UDim2>
+          <int name="ZIndex">1</int>
+        </Properties>
+        <Item class="UICorner" referent="RBX21">
+          <Properties>
+            <UDim name="CornerRadius"><S>0.5</S><O>0</O></UDim>
+            <string name="Name">UICorner</string>
+          </Properties>
+        </Item>
+        <Item class="UIStroke" referent="RBX22">
+          <Properties>
+            <token name="ApplyStrokeMode">1</token>
+            <Color3 name="Color"><B>1</B><G>1</G><R>1</R></Color3>
+            <string name="Name">UIStroke</string>
+            <float name="Thickness">88.49961853027344</float>
+            <float name="Transparency">1</float>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="Frame" referent="RBX23">
+        <Properties>
+          <bool name="Active">false</bool>
+          <Vector2 name="AnchorPoint"><Y>0.5</Y><X>0.5</X></Vector2>
+          <float name="BackgroundTransparency">1</float>
+          <int name="BorderSizePixel">0</int>
+          <bool name="ClipsDescendants">false</bool>
+          <bool name="Interactable">false</bool>
+          <string name="Name">Ring8</string>
+          <UDim2 name="Position"><YS>0.5</YS><XS>0.5</XS><XO>0</XO><YO>0</YO></UDim2>
+          <UDim2 name="Size"><YS>0</YS><XS>0</XS><XO>1593</XO><YO>1593</YO></UDim2>
+          <int name="ZIndex">1</int>
+        </Properties>
+        <Item class="UICorner" referent="RBX24">
+          <Properties>
+            <UDim name="CornerRadius"><S>0.5</S><O>0</O></UDim>
+            <string name="Name">UICorner</string>
+          </Properties>
+        </Item>
+        <Item class="UIStroke" referent="RBX25">
+          <Properties>
+            <token name="ApplyStrokeMode">1</token>
+            <Color3 name="Color"><B>1</B><G>1</G><R>1</R></Color3>
+            <string name="Name">UIStroke</string>
+            <float name="Thickness">88.49961853027344</float>
+            <float name="Transparency">1</float>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="Frame" referent="RBX26">
+        <Properties>
+          <bool name="Active">false</bool>
+          <Vector2 name="AnchorPoint"><Y>0.5</Y><X>0.5</X></Vector2>
+          <float name="BackgroundTransparency">1</float>
+          <int name="BorderSizePixel">0</int>
+          <bool name="ClipsDescendants">false</bool>
+          <bool name="Interactable">false</bool>
+          <string name="Name">Ring9</string>
+          <UDim2 name="Position"><YS>0.5</YS><XS>0.5</XS><XO>0</XO><YO>0</YO></UDim2>
+          <UDim2 name="Size"><YS>0</YS><XS>0</XS><XO>1640</XO><YO>1640</YO></UDim2>
+          <int name="ZIndex">1</int>
+        </Properties>
+        <Item class="UICorner" referent="RBX27">
+          <Properties>
+            <UDim name="CornerRadius"><S>0.5</S><O>0</O></UDim>
+            <string name="Name">UICorner</string>
+          </Properties>
+        </Item>
+        <Item class="UIStroke" referent="RBX28">
+          <Properties>
+            <token name="ApplyStrokeMode">1</token>
+            <Color3 name="Color"><B>1</B><G>1</G><R>1</R></Color3>
+            <string name="Name">UIStroke</string>
+            <float name="Thickness">88.49961853027344</float>
+            <float name="Transparency">1</float>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="Frame" referent="RBX29">
+        <Properties>
+          <bool name="Active">false</bool>
+          <Vector2 name="AnchorPoint"><Y>0.5</Y><X>0.5</X></Vector2>
+          <float name="BackgroundTransparency">1</float>
+          <int name="BorderSizePixel">0</int>
+          <bool name="ClipsDescendants">false</bool>
+          <bool name="Interactable">false</bool>
+          <string name="Name">Ring10</string>
+          <UDim2 name="Position"><YS>0.5</YS><XS>0.5</XS><XO>0</XO><YO>0</YO></UDim2>
+          <UDim2 name="Size"><YS>0</YS><XS>0</XS><XO>1686</XO><YO>1686</YO></UDim2>
+          <int name="ZIndex">1</int>
+        </Properties>
+        <Item class="UICorner" referent="RBX30">
+          <Properties>
+            <UDim name="CornerRadius"><S>0.5</S><O>0</O></UDim>
+            <string name="Name">UICorner</string>
+          </Properties>
+        </Item>
+        <Item class="UIStroke" referent="RBX31">
+          <Properties>
+            <token name="ApplyStrokeMode">1</token>
+            <Color3 name="Color"><B>1</B><G>1</G><R>1</R></Color3>
+            <string name="Name">UIStroke</string>
+            <float name="Thickness">88.49961853027344</float>
+            <float name="Transparency">1</float>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="Frame" referent="RBX32">
+        <Properties>
+          <bool name="Active">false</bool>
+          <Vector2 name="AnchorPoint"><Y>0.5</Y><X>0.5</X></Vector2>
+          <float name="BackgroundTransparency">1</float>
+          <int name="BorderSizePixel">0</int>
+          <bool name="ClipsDescendants">false</bool>
+          <bool name="Interactable">false</bool>
+          <string name="Name">Ring11</string>
+          <UDim2 name="Position"><YS>0.5</YS><XS>0.5</XS><XO>0</XO><YO>0</YO></UDim2>
+          <UDim2 name="Size"><YS>0</YS><XS>0</XS><XO>1733</XO><YO>1733</YO></UDim2>
+          <int name="ZIndex">1</int>
+        </Properties>
+        <Item class="UICorner" referent="RBX33">
+          <Properties>
+            <UDim name="CornerRadius"><S>0.5</S><O>0</O></UDim>
+            <string name="Name">UICorner</string>
+          </Properties>
+        </Item>
+        <Item class="UIStroke" referent="RBX34">
+          <Properties>
+            <token name="ApplyStrokeMode">1</token>
+            <Color3 name="Color"><B>1</B><G>1</G><R>1</R></Color3>
+            <string name="Name">UIStroke</string>
+            <float name="Thickness">88.49961853027344</float>
+            <float name="Transparency">1</float>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="Frame" referent="RBX35">
+        <Properties>
+          <bool name="Active">false</bool>
+          <Vector2 name="AnchorPoint"><Y>0.5</Y><X>0.5</X></Vector2>
+          <float name="BackgroundTransparency">1</float>
+          <int name="BorderSizePixel">0</int>
+          <bool name="ClipsDescendants">false</bool>
+          <bool name="Interactable">false</bool>
+          <string name="Name">Ring12</string>
+          <UDim2 name="Position"><YS>0.5</YS><XS>0.5</XS><XO>0</XO><YO>0</YO></UDim2>
+          <UDim2 name="Size"><YS>0</YS><XS>0</XS><XO>1779</XO><YO>1779</YO></UDim2>
+          <int name="ZIndex">1</int>
+        </Properties>
+        <Item class="UICorner" referent="RBX36">
+          <Properties>
+            <UDim name="CornerRadius"><S>0.5</S><O>0</O></UDim>
+            <string name="Name">UICorner</string>
+          </Properties>
+        </Item>
+        <Item class="UIStroke" referent="RBX37">
+          <Properties>
+            <token name="ApplyStrokeMode">1</token>
+            <Color3 name="Color"><B>1</B><G>1</G><R>1</R></Color3>
+            <string name="Name">UIStroke</string>
+            <float name="Thickness">88.49961853027344</float>
+            <float name="Transparency">1</float>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="Frame" referent="RBX38">
+        <Properties>
+          <bool name="Active">false</bool>
+          <Vector2 name="AnchorPoint"><Y>0.5</Y><X>0.5</X></Vector2>
+          <float name="BackgroundTransparency">1</float>
+          <int name="BorderSizePixel">0</int>
+          <bool name="ClipsDescendants">false</bool>
+          <bool name="Interactable">false</bool>
+          <string name="Name">Ring13</string>
+          <UDim2 name="Position"><YS>0.5</YS><XS>0.5</XS><XO>0</XO><YO>0</YO></UDim2>
+          <UDim2 name="Size"><YS>0</YS><XS>0</XS><XO>1826</XO><YO>1826</YO></UDim2>
+          <int name="ZIndex">1</int>
+        </Properties>
+        <Item class="UICorner" referent="RBX39">
+          <Properties>
+            <UDim name="CornerRadius"><S>0.5</S><O>0</O></UDim>
+            <string name="Name">UICorner</string>
+          </Properties>
+        </Item>
+        <Item class="UIStroke" referent="RBX40">
+          <Properties>
+            <token name="ApplyStrokeMode">1</token>
+            <Color3 name="Color"><B>1</B><G>1</G><R>1</R></Color3>
+            <string name="Name">UIStroke</string>
+            <float name="Thickness">88.49961853027344</float>
+            <float name="Transparency">1</float>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="Frame" referent="RBX41">
+        <Properties>
+          <bool name="Active">false</bool>
+          <Vector2 name="AnchorPoint"><Y>0.5</Y><X>0.5</X></Vector2>
+          <float name="BackgroundTransparency">1</float>
+          <int name="BorderSizePixel">0</int>
+          <bool name="ClipsDescendants">false</bool>
+          <bool name="Interactable">false</bool>
+          <string name="Name">Ring14</string>
+          <UDim2 name="Position"><YS>0.5</YS><XS>0.5</XS><XO>0</XO><YO>0</YO></UDim2>
+          <UDim2 name="Size"><YS>0</YS><XS>0</XS><XO>1873</XO><YO>1873</YO></UDim2>
+          <int name="ZIndex">1</int>
+        </Properties>
+        <Item class="UICorner" referent="RBX42">
+          <Properties>
+            <UDim name="CornerRadius"><S>0.5</S><O>0</O></UDim>
+            <string name="Name">UICorner</string>
+          </Properties>
+        </Item>
+        <Item class="UIStroke" referent="RBX43">
+          <Properties>
+            <token name="ApplyStrokeMode">1</token>
+            <Color3 name="Color"><B>1</B><G>1</G><R>1</R></Color3>
+            <string name="Name">UIStroke</string>
+            <float name="Thickness">88.49961853027344</float>
+            <float name="Transparency">1</float>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="Frame" referent="RBX44">
+        <Properties>
+          <bool name="Active">false</bool>
+          <Vector2 name="AnchorPoint"><Y>0.5</Y><X>0.5</X></Vector2>
+          <float name="BackgroundTransparency">1</float>
+          <int name="BorderSizePixel">0</int>
+          <bool name="ClipsDescendants">false</bool>
+          <bool name="Interactable">false</bool>
+          <string name="Name">Ring15</string>
+          <UDim2 name="Position"><YS>0.5</YS><XS>0.5</XS><XO>0</XO><YO>0</YO></UDim2>
+          <UDim2 name="Size"><YS>0</YS><XS>0</XS><XO>1919</XO><YO>1919</YO></UDim2>
+          <int name="ZIndex">1</int>
+        </Properties>
+        <Item class="UICorner" referent="RBX45">
+          <Properties>
+            <UDim name="CornerRadius"><S>0.5</S><O>0</O></UDim>
+            <string name="Name">UICorner</string>
+          </Properties>
+        </Item>
+        <Item class="UIStroke" referent="RBX46">
+          <Properties>
+            <token name="ApplyStrokeMode">1</token>
+            <Color3 name="Color"><B>1</B><G>1</G><R>1</R></Color3>
+            <string name="Name">UIStroke</string>
+            <float name="Thickness">88.49961853027344</float>
+            <float name="Transparency">1</float>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="Frame" referent="RBX47">
+        <Properties>
+          <bool name="Active">false</bool>
+          <Vector2 name="AnchorPoint"><Y>0.5</Y><X>0.5</X></Vector2>
+          <float name="BackgroundTransparency">1</float>
+          <int name="BorderSizePixel">0</int>
+          <bool name="ClipsDescendants">false</bool>
+          <bool name="Interactable">false</bool>
+          <string name="Name">Ring16</string>
+          <UDim2 name="Position"><YS>0.5</YS><XS>0.5</XS><XO>0</XO><YO>0</YO></UDim2>
+          <UDim2 name="Size"><YS>0</YS><XS>0</XS><XO>1966</XO><YO>1966</YO></UDim2>
+          <int name="ZIndex">1</int>
+        </Properties>
+        <Item class="UICorner" referent="RBX48">
+          <Properties>
+            <UDim name="CornerRadius"><S>0.5</S><O>0</O></UDim>
+            <string name="Name">UICorner</string>
+          </Properties>
+        </Item>
+        <Item class="UIStroke" referent="RBX49">
+          <Properties>
+            <token name="ApplyStrokeMode">1</token>
+            <Color3 name="Color"><B>1</B><G>1</G><R>1</R></Color3>
+            <string name="Name">UIStroke</string>
+            <float name="Thickness">88.49961853027344</float>
+            <float name="Transparency">1</float>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="Frame" referent="RBX50">
+        <Properties>
+          <bool name="Active">false</bool>
+          <Vector2 name="AnchorPoint"><Y>0.5</Y><X>0.5</X></Vector2>
+          <float name="BackgroundTransparency">1</float>
+          <int name="BorderSizePixel">0</int>
+          <bool name="ClipsDescendants">false</bool>
+          <bool name="Interactable">false</bool>
+          <string name="Name">Ring17</string>
+          <UDim2 name="Position"><YS>0.5</YS><XS>0.5</XS><XO>0</XO><YO>0</YO></UDim2>
+          <UDim2 name="Size"><YS>0</YS><XS>0</XS><XO>2012</XO><YO>2012</YO></UDim2>
+          <int name="ZIndex">1</int>
+        </Properties>
+        <Item class="UICorner" referent="RBX51">
+          <Properties>
+            <UDim name="CornerRadius"><S>0.5</S><O>0</O></UDim>
+            <string name="Name">UICorner</string>
+          </Properties>
+        </Item>
+        <Item class="UIStroke" referent="RBX52">
+          <Properties>
+            <token name="ApplyStrokeMode">1</token>
+            <Color3 name="Color"><B>1</B><G>1</G><R>1</R></Color3>
+            <string name="Name">UIStroke</string>
+            <float name="Thickness">88.49961853027344</float>
+            <float name="Transparency">1</float>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="Frame" referent="RBX53">
+        <Properties>
+          <bool name="Active">false</bool>
+          <Vector2 name="AnchorPoint"><Y>0.5</Y><X>0.5</X></Vector2>
+          <float name="BackgroundTransparency">1</float>
+          <int name="BorderSizePixel">0</int>
+          <bool name="ClipsDescendants">false</bool>
+          <bool name="Interactable">false</bool>
+          <string name="Name">Ring18</string>
+          <UDim2 name="Position"><YS>0.5</YS><XS>0.5</XS><XO>0</XO><YO>0</YO></UDim2>
+          <UDim2 name="Size"><YS>0</YS><XS>0</XS><XO>2059</XO><YO>2059</YO></UDim2>
+          <int name="ZIndex">1</int>
+        </Properties>
+        <Item class="UICorner" referent="RBX54">
+          <Properties>
+            <UDim name="CornerRadius"><S>0.5</S><O>0</O></UDim>
+            <string name="Name">UICorner</string>
+          </Properties>
+        </Item>
+        <Item class="UIStroke" referent="RBX55">
+          <Properties>
+            <token name="ApplyStrokeMode">1</token>
+            <Color3 name="Color"><B>1</B><G>1</G><R>1</R></Color3>
+            <string name="Name">UIStroke</string>
+            <float name="Thickness">88.49961853027344</float>
+            <float name="Transparency">1</float>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="Frame" referent="RBX56">
+        <Properties>
+          <bool name="Active">false</bool>
+          <Vector2 name="AnchorPoint"><Y>0.5</Y><X>0.5</X></Vector2>
+          <float name="BackgroundTransparency">1</float>
+          <int name="BorderSizePixel">0</int>
+          <bool name="ClipsDescendants">false</bool>
+          <bool name="Interactable">false</bool>
+          <string name="Name">Ring19</string>
+          <UDim2 name="Position"><YS>0.5</YS><XS>0.5</XS><XO>0</XO><YO>0</YO></UDim2>
+          <UDim2 name="Size"><YS>0</YS><XS>0</XS><XO>2105</XO><YO>2105</YO></UDim2>
+          <int name="ZIndex">1</int>
+        </Properties>
+        <Item class="UICorner" referent="RBX57">
+          <Properties>
+            <UDim name="CornerRadius"><S>0.5</S><O>0</O></UDim>
+            <string name="Name">UICorner</string>
+          </Properties>
+        </Item>
+        <Item class="UIStroke" referent="RBX58">
+          <Properties>
+            <token name="ApplyStrokeMode">1</token>
+            <Color3 name="Color"><B>1</B><G>1</G><R>1</R></Color3>
+            <string name="Name">UIStroke</string>
+            <float name="Thickness">88.49961853027344</float>
+            <float name="Transparency">1</float>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="Frame" referent="RBX59">
+        <Properties>
+          <bool name="Active">false</bool>
+          <Vector2 name="AnchorPoint"><Y>0.5</Y><X>0.5</X></Vector2>
+          <float name="BackgroundTransparency">1</float>
+          <int name="BorderSizePixel">0</int>
+          <bool name="ClipsDescendants">false</bool>
+          <bool name="Interactable">false</bool>
+          <string name="Name">Ring20</string>
+          <UDim2 name="Position"><YS>0.5</YS><XS>0.5</XS><XO>0</XO><YO>0</YO></UDim2>
+          <UDim2 name="Size"><YS>0</YS><XS>0</XS><XO>2152</XO><YO>2152</YO></UDim2>
+          <int name="ZIndex">1</int>
+        </Properties>
+        <Item class="UICorner" referent="RBX60">
+          <Properties>
+            <UDim name="CornerRadius"><S>0.5</S><O>0</O></UDim>
+            <string name="Name">UICorner</string>
+          </Properties>
+        </Item>
+        <Item class="UIStroke" referent="RBX61">
+          <Properties>
+            <token name="ApplyStrokeMode">1</token>
+            <Color3 name="Color"><B>1</B><G>1</G><R>1</R></Color3>
+            <string name="Name">UIStroke</string>
+            <float name="Thickness">88.49961853027344</float>
+            <float name="Transparency">1</float>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="Frame" referent="RBX62">
+        <Properties>
+          <bool name="Active">false</bool>
+          <Vector2 name="AnchorPoint"><Y>0.5</Y><X>0.5</X></Vector2>
+          <float name="BackgroundTransparency">1</float>
+          <int name="BorderSizePixel">0</int>
+          <bool name="ClipsDescendants">false</bool>
+          <bool name="Interactable">false</bool>
+          <string name="Name">Ring21</string>
+          <UDim2 name="Position"><YS>0.5</YS><XS>0.5</XS><XO>0</XO><YO>0</YO></UDim2>
+          <UDim2 name="Size"><YS>0</YS><XS>0</XS><XO>2199</XO><YO>2199</YO></UDim2>
+          <int name="ZIndex">1</int>
+        </Properties>
+        <Item class="UICorner" referent="RBX63">
+          <Properties>
+            <UDim name="CornerRadius"><S>0.5</S><O>0</O></UDim>
+            <string name="Name">UICorner</string>
+          </Properties>
+        </Item>
+        <Item class="UIStroke" referent="RBX64">
+          <Properties>
+            <token name="ApplyStrokeMode">1</token>
+            <Color3 name="Color"><B>1</B><G>1</G><R>1</R></Color3>
+            <string name="Name">UIStroke</string>
+            <float name="Thickness">88.49961853027344</float>
+            <float name="Transparency">1</float>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="Frame" referent="RBX65">
+        <Properties>
+          <bool name="Active">false</bool>
+          <Vector2 name="AnchorPoint"><Y>0.5</Y><X>0.5</X></Vector2>
+          <float name="BackgroundTransparency">1</float>
+          <int name="BorderSizePixel">0</int>
+          <bool name="ClipsDescendants">false</bool>
+          <bool name="Interactable">false</bool>
+          <string name="Name">Ring22</string>
+          <UDim2 name="Position"><YS>0.5</YS><XS>0.5</XS><XO>0</XO><YO>0</YO></UDim2>
+          <UDim2 name="Size"><YS>0</YS><XS>0</XS><XO>2245</XO><YO>2245</YO></UDim2>
+          <int name="ZIndex">1</int>
+        </Properties>
+        <Item class="UICorner" referent="RBX66">
+          <Properties>
+            <UDim name="CornerRadius"><S>0.5</S><O>0</O></UDim>
+            <string name="Name">UICorner</string>
+          </Properties>
+        </Item>
+        <Item class="UIStroke" referent="RBX67">
+          <Properties>
+            <token name="ApplyStrokeMode">1</token>
+            <Color3 name="Color"><B>1</B><G>1</G><R>1</R></Color3>
+            <string name="Name">UIStroke</string>
+            <float name="Thickness">88.49961853027344</float>
+            <float name="Transparency">1</float>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="Frame" referent="RBX68">
+        <Properties>
+          <bool name="Active">false</bool>
+          <Vector2 name="AnchorPoint"><Y>0.5</Y><X>0.5</X></Vector2>
+          <float name="BackgroundTransparency">1</float>
+          <int name="BorderSizePixel">0</int>
+          <bool name="ClipsDescendants">false</bool>
+          <bool name="Interactable">false</bool>
+          <string name="Name">Ring23</string>
+          <UDim2 name="Position"><YS>0.5</YS><XS>0.5</XS><XO>0</XO><YO>0</YO></UDim2>
+          <UDim2 name="Size"><YS>0</YS><XS>0</XS><XO>2292</XO><YO>2292</YO></UDim2>
+          <int name="ZIndex">1</int>
+        </Properties>
+        <Item class="UICorner" referent="RBX69">
+          <Properties>
+            <UDim name="CornerRadius"><S>0.5</S><O>0</O></UDim>
+            <string name="Name">UICorner</string>
+          </Properties>
+        </Item>
+        <Item class="UIStroke" referent="RBX70">
+          <Properties>
+            <token name="ApplyStrokeMode">1</token>
+            <Color3 name="Color"><B>1</B><G>1</G><R>1</R></Color3>
+            <string name="Name">UIStroke</string>
+            <float name="Thickness">88.49961853027344</float>
+            <float name="Transparency">1</float>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="Frame" referent="RBX71">
+        <Properties>
+          <bool name="Active">false</bool>
+          <Vector2 name="AnchorPoint"><Y>0.5</Y><X>0.5</X></Vector2>
+          <float name="BackgroundTransparency">1</float>
+          <int name="BorderSizePixel">0</int>
+          <bool name="ClipsDescendants">false</bool>
+          <bool name="Interactable">false</bool>
+          <string name="Name">Ring24</string>
+          <UDim2 name="Position"><YS>0.5</YS><XS>0.5</XS><XO>0</XO><YO>0</YO></UDim2>
+          <UDim2 name="Size"><YS>0</YS><XS>0</XS><XO>2338</XO><YO>2338</YO></UDim2>
+          <int name="ZIndex">1</int>
+        </Properties>
+        <Item class="UICorner" referent="RBX72">
+          <Properties>
+            <UDim name="CornerRadius"><S>0.5</S><O>0</O></UDim>
+            <string name="Name">UICorner</string>
+          </Properties>
+        </Item>
+        <Item class="UIStroke" referent="RBX73">
+          <Properties>
+            <token name="ApplyStrokeMode">1</token>
+            <Color3 name="Color"><B>1</B><G>1</G><R>1</R></Color3>
+            <string name="Name">UIStroke</string>
+            <float name="Thickness">88.49961853027344</float>
+            <float name="Transparency">1</float>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="Frame" referent="RBX74">
+        <Properties>
+          <bool name="Active">false</bool>
+          <Vector2 name="AnchorPoint"><Y>0.5</Y><X>0.5</X></Vector2>
+          <float name="BackgroundTransparency">1</float>
+          <int name="BorderSizePixel">0</int>
+          <bool name="ClipsDescendants">false</bool>
+          <bool name="Interactable">false</bool>
+          <string name="Name">Ring25</string>
+          <UDim2 name="Position"><YS>0.5</YS><XS>0.5</XS><XO>0</XO><YO>0</YO></UDim2>
+          <UDim2 name="Size"><YS>0</YS><XS>0</XS><XO>2385</XO><YO>2385</YO></UDim2>
+          <int name="ZIndex">1</int>
+        </Properties>
+        <Item class="UICorner" referent="RBX75">
+          <Properties>
+            <UDim name="CornerRadius"><S>0.5</S><O>0</O></UDim>
+            <string name="Name">UICorner</string>
+          </Properties>
+        </Item>
+        <Item class="UIStroke" referent="RBX76">
+          <Properties>
+            <token name="ApplyStrokeMode">1</token>
+            <Color3 name="Color"><B>1</B><G>1</G><R>1</R></Color3>
+            <string name="Name">UIStroke</string>
+            <float name="Thickness">88.49961853027344</float>
+            <float name="Transparency">1</float>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="Frame" referent="RBX77">
+        <Properties>
+          <bool name="Active">false</bool>
+          <Vector2 name="AnchorPoint"><Y>0.5</Y><X>0.5</X></Vector2>
+          <float name="BackgroundTransparency">1</float>
+          <int name="BorderSizePixel">0</int>
+          <bool name="ClipsDescendants">false</bool>
+          <bool name="Interactable">false</bool>
+          <string name="Name">Ring26</string>
+          <UDim2 name="Position"><YS>0.5</YS><XS>0.5</XS><XO>0</XO><YO>0</YO></UDim2>
+          <UDim2 name="Size"><YS>0</YS><XS>0</XS><XO>2432</XO><YO>2432</YO></UDim2>
+          <int name="ZIndex">1</int>
+        </Properties>
+        <Item class="UICorner" referent="RBX78">
+          <Properties>
+            <UDim name="CornerRadius"><S>0.5</S><O>0</O></UDim>
+            <string name="Name">UICorner</string>
+          </Properties>
+        </Item>
+        <Item class="UIStroke" referent="RBX79">
+          <Properties>
+            <token name="ApplyStrokeMode">1</token>
+            <Color3 name="Color"><B>1</B><G>1</G><R>1</R></Color3>
+            <string name="Name">UIStroke</string>
+            <float name="Thickness">88.49961853027344</float>
+            <float name="Transparency">1</float>
+          </Properties>
+        </Item>
+      </Item>
+    </Item>
+  </Item>
+</roblox>

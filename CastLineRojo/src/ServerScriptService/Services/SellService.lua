@@ -111,7 +111,6 @@ local function finishSale(player: Player, itemIds: { string }, totalCash: number
 	end
 	destroyItemTools(player, soldIds)
 	Knit.GetService("HotbarLayoutService"):RemoveItemDescriptors(player, itemIds)
-	Knit.GetService("CarryCapacityService"):RefreshPlayer(player)
 	local earnedCash = math.round(totalCash * GamePassEffectUtil.GetSaleMultiplier(profile.Data))
 	PlayerDataService:AdjustWins(player, earnedCash, false)
 

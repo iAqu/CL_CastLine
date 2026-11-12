@@ -156,6 +156,11 @@ end
 -- end
 
 function StoreGuiController:GenerateGamePassList()
+    for _, card in GamePassContainer:GetChildren() do
+        if card:IsA("GuiObject") and PurchaseDataHelper.IsRetired(card.Name) then
+            card.Visible = false
+        end
+    end
     local gamePasses = PurchaseDataHelper.GetGamePassesData()
     local purchaseIds = {}
     for purchaseId in pairs(gamePasses) do
@@ -201,6 +206,7 @@ function StoreGuiController:GenerateGamePassList()
 end
 
 function StoreGuiController:UpdateGamePass(purchaseId)
+    if PurchaseDataHelper.IsRetired(purchaseId) then return end
     local playerData = PlayerDataController:GetData()
     if not playerData then warn("No player data found!") return end
 

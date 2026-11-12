@@ -3,20 +3,26 @@ local storage = game:GetService("ReplicatedStorage")
 local Audio = require(storage.Modules.FishingAudio)
 local Cast = require(storage.Modules.FishingCastSequence)
 local Bite = require(storage.Modules.FishingBiteSequence)
-local templates = storage.Sound.Fish
+local templates = storage.Sound.Fishing
+local function sourceFor(name)
+	return if name == "Gui_Fuse_Success" then storage.Sound.Gui.Gui_Fuse_Success else templates[name]
+end
 local names = {
 	"FishingRodCast",
+	"FishingCastWind",
+	"FishingCastImpact",
 	"FishBiteHeavey",
 	"FishReelLoop",
 	"FishWaterOut",
 	"FishDrop",
 	"FishSuccess",
+	"Gui_Fuse_Success",
 	"FishFlap",
 	"FishFail",
 }
 local assets, originals = {}, {}
 for _, name in ipairs(names) do
-	local source = templates[name]
+	local source = sourceFor(name)
 	originals[name] = { volume = source.Volume, speed = source.PlaybackSpeed, looped = source.Looped }
 	table.insert(assets, source)
 end
@@ -52,7 +58,7 @@ local ok, err = xpcall(function()
 		local sound = play(self, name, looped)
 		if sound then
 			report.played[name] = (report.played[name] or 0) + 1
-			local source = templates[name]
+			local source = sourceFor(name)
 			assert(
 				sound.Volume == source.Volume and sound.PlaybackSpeed == source.PlaybackSpeed,
 				"Template mix changed"
@@ -62,6 +68,10 @@ local ok, err = xpcall(function()
 		return sound
 	end
 	audio:Play("FishingRodCast")
+	local wind = assert(audio:Play("FishingCastWind"), "Cast wind sound is missing")
+	local impact = assert(audio:Play("FishingCastImpact"), "Cast impact sound is missing")
+	assert(not wind.Looped and not impact.Looped and wind.IsPlaying and impact.IsPlaying,
+		"Cast wind and impact must play once")
 	owner:_setPhase("Nibbling")
 	assert(not report.played.FishBiteHeavey, "False bite played the true-bite cue")
 	local bite = setmetatable({ owner = owner }, Bite)
@@ -77,13 +87,16 @@ local ok, err = xpcall(function()
 	enabled = false
 	owner:RefreshSoundSetting()
 	assert(not loop.Parent, "Muting left the loop alive")
+	assert(not wind.Parent and not impact.Parent, "Muting left cast sounds alive")
 	enabled = true
 	owner:RefreshSoundSetting()
 	loop = assert(audio.loops.FishReelLoop, "Struggle loop is missing")
 	owner:_setPhase("Lifting")
 	assert(not loop.Parent and report.played.FishWaterOut == 1, "Lift did not stop the loop and play exit audio")
+	audio:PlayShowcase()
 	owner:_setPhase("Caught")
-	assert(report.played.FishDrop == 1 and report.played.FishSuccess == 1, "Showcase cues missing")
+	assert(report.played.FishDrop == 1 and report.played.FishSuccess == 1
+		and report.played.Gui_Fuse_Success == 1, "Showcase cues missing or repeated")
 	audio:UpdateFlap("Caught", { name = "ShowcaseFlop", token = 1, position = 0.15 }, true)
 	audio:UpdateFlap("Caught", { name = "ShowcaseFlop", token = 1, position = 0.2 }, true)
 	audio:UpdateFlap("Caught", { name = "ShowcaseFlop", token = 2, position = 0.4 }, true)
@@ -120,8 +133,13 @@ local ok, err = xpcall(function()
 	loop = assert(audio.loops.FishReelLoop, "Struggle loop is missing")
 	audio:Destroy(false)
 	assert(not loop.Parent, "Abort left a struggle loop playing")
+	create()
+	wind = assert(audio:Play("FishingCastWind"), "Cast wind sound is missing")
+	impact = assert(audio:Play("FishingCastImpact"), "Cast impact sound is missing")
+	audio:Destroy(false)
+	assert(not wind.Parent and not impact.Parent, "Abort left cast sounds playing")
 	for _, name in ipairs(names) do
-		local source, before = templates[name], originals[name]
+		local source, before = sourceFor(name), originals[name]
 		assert(
 			source.Volume == before.volume and source.PlaybackSpeed == before.speed and source.Looped == before.looped,
 			"Studio sound template changed"

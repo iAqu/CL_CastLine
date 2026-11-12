@@ -1,14 +1,22 @@
 --# selene: allow(global_usage)
 -- Edit-time authoring; only cloned templates are changed.
-return function(onlyPilots)
+return function(onlyPilots, options)
+	options = options or {}
 	local http, assets = game:GetService("HttpService"), game:GetService("AssetService")
 	local base = "http://127.0.0.1:18776/"
 	assert(game.PlaceId == 84106335829275 and game.CreatorId == 598797612, "Wrong development place")
 	assert(not (_G.RigV2Publication and not _G.RigV2Publication.done), "Publication already running")
 	local function read(path)
+		if options.read then
+			return options.read(path)
+		end
 		return http:JSONDecode(http:GetAsync(base .. path))
 	end
 	local function post(path, data)
+		if options.post then
+			options.post(path, data)
+			return
+		end
 		http:PostAsync(base .. path, http:JSONEncode(data), Enum.HttpContentType.ApplicationJson)
 	end
 	local function folder(parent, name)
@@ -16,11 +24,11 @@ return function(onlyPilots)
 		f.Name, f.Parent = name, parent
 		return f
 	end
-	local stage = folder(workspace, "_RigV2Stage")
+	local stage = folder(workspace, options.stageName or "_RigV2Stage")
 	local sources = folder(game.ServerStorage.FishAnimationSources, "RigV2")
 	local libraries = folder(game.ReplicatedStorage.Animation.Fishing, "RigV2")
-	local templates = game.ReplicatedStorage.Models.Fish
-	local listParts = assert(_G.RigV2ListParts, "Run the source capture first")
+	local templates = options.templates or game.ReplicatedStorage.Models.Fish
+	local listParts = assert(options.listParts or _G.RigV2ListParts, "Run the source capture first")
 	local okCache, cache = pcall(read, "asset-cache.json")
 	if not okCache then
 		cache = {}
@@ -110,7 +118,7 @@ return function(onlyPilots)
 	end
 	local function upgradePart(part, primary, rig, index)
 		local spec = rig.parts[index]
-		assert(part.Name == spec.name and part.MeshId == spec.mesh, "Source changed during build")
+		assert(part.Name == spec.name and part.MeshId == (spec.baseMesh or spec.mesh), "Source changed during build")
 		local definition = read(("payload/%s/part%03d.json"):format(rig.key, index))
 		local localFrame = CFrame.new(table.unpack(spec.frame))
 		local size, meshSize = part.Size, part.MeshSize
@@ -124,10 +132,9 @@ return function(onlyPilots)
 		end
 		local id = cache[spec.recipe]
 		if not id then
-			local editable = assert(
-				assets:CreateEditableMeshAsync(part.MeshContent, { FixedSize = false }),
-				"Source mesh unreadable"
-			)
+			local content = if spec.baseMesh then Content.fromUri(spec.mesh) else part.MeshContent
+			local editable =
+				assert(assets:CreateEditableMeshAsync(content, { FixedSize = false }), "Source mesh unreadable")
 			local ok, value = xpcall(function()
 				local oldBones = editable:GetBones()
 				for i = #oldBones, 1, -1 do
@@ -144,6 +151,13 @@ return function(onlyPilots)
 				end
 				local vertices = editable:GetVertices()
 				assert(#vertices == spec.vertexCount, "Vertex order changed")
+				for i, position in spec.vertexChecks or {} do
+					assert(
+						(editable:GetPosition(vertices[tonumber(i)]) - Vector3.new(table.unpack(position))).Magnitude
+							< 0.00002,
+						"Vertex order changed"
+					)
+				end
 				for i, vertex in vertices do
 					local jointIds, values = {}, {}
 					for j = (i - 1) * 4 + 1, i * 4 do

@@ -306,9 +306,6 @@ local function transferItem(sender: Player, recipient: Player, instanceId: strin
 	end
 	recipientProfile.Data.NewItemTagSeenLog[item.ItemID] = true
 
-	local carryCapacityService = Knit.GetService("CarryCapacityService")
-	carryCapacityService:RefreshPlayer(sender)
-	carryCapacityService:RefreshPlayer(recipient)
 	Knit.GetService("IndexService"):DiscoverItem(recipient, item.ItemID)
 
 	return true, nil

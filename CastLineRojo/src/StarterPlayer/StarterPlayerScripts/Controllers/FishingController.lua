@@ -15,7 +15,8 @@ local FishingAudio = require(ReplicatedStorage.Modules.FishingAudio)
 local Config = require(ReplicatedStorage.Modules.FishingConfig)
 local FishingAssets = require(ReplicatedStorage.Modules.FishingAssets)
 local FishingBaitSelect = require(ReplicatedStorage.Modules.FishingBaitSelect)
-local ProjectileMath = require(ReplicatedStorage.Modules.FishingProjectileMath)
+local FishingSpotUtil = require(ReplicatedStorage.Modules.FishingSpotUtil)
+local PlotWorkspaceUtil = require(ReplicatedStorage.Modules.PlotWorkspaceUtil)
 local NotificationClient = require(ReplicatedStorage.Modules.NotificationClient)
 local Constants = require(ReplicatedStorage.Modules.Constants)
 local GameplayInputGate = require(ReplicatedStorage.Modules.GameplayInputGate)
@@ -25,12 +26,17 @@ local fishingData = ReplicatedFirst:WaitForChild("Data")
 local RodsData = require(fishingData:WaitForChild("RodsData"))
 local BaitsData = require(fishingData:WaitForChild("BaitsData"))
 local FishesData = require(fishingData:WaitForChild("FishesData"))
+local EggsData = require(fishingData:WaitForChild("EggsData"))
 
 local localPlayer = Players.LocalPlayer
 local CAMERA_BINDING = "CastLineFishingCamera"
 local MOVEMENT_BINDING = "CastLineFishingMovement"
+local ENTRY_RETRY_SECONDS = 0.1
+local ENTRY_TIMEOUT_SECONDS = 1
+local ACTIVE_DISPLACEMENT_LIMIT = 20
 local FishingController = Knit.CreateController({ Name = "FishingController" })
 local session = nil
+local pendingEntry = nil
 local mustLeaveArea = false
 local warned = {}
 
@@ -66,6 +72,34 @@ local function hold(state, instance: Instance, property: string, value)
 			end)
 		)
 	end
+end
+
+local function bindBaitCash(state, playerGui: PlayerGui, baitGui: ScreenGui): ScreenGui?
+	local homeGui = playerGui:FindFirstChild("HomeGui")
+	local bottom = homeGui and homeGui:FindFirstChild("BottomFrame")
+	local currency = bottom and bottom:FindFirstChild("CurrencyFrame")
+	local wins = currency and currency:FindFirstChild("Wins")
+	if not (homeGui and homeGui:IsA("ScreenGui") and wins and wins:IsA("GuiObject")) then
+		return nil
+	end
+
+	for _, branch in ipairs({ bottom, currency, wins }) do
+		for _, child in ipairs(branch.Parent:GetChildren()) do
+			if child:IsA("GuiObject") then
+				hold(state, child, "Visible", child == branch)
+			end
+		end
+	end
+
+	remember(state, homeGui, "Enabled", baitGui.Enabled)
+	local function syncCash()
+		if session == state and not state.restored and homeGui.Enabled ~= baitGui.Enabled then
+			homeGui.Enabled = baitGui.Enabled
+		end
+	end
+	table.insert(state.connections, baitGui:GetPropertyChangedSignal("Enabled"):Connect(syncCash))
+	table.insert(state.connections, homeGui:GetPropertyChangedSignal("Enabled"):Connect(syncCash))
+	return homeGui
 end
 
 local function hideDescendant(state, instance: Instance)
@@ -114,28 +148,13 @@ local function hidePlayer(state, player: Player)
 	end
 end
 
-local function getStartPart(): BasePart?
-	local areas = Workspace:FindFirstChild("Areas")
-	local part = areas and areas:FindFirstChild("CastStartPart")
-	return if part and part:IsA("BasePart") then part else nil
+local function getOwnPlot(): Instance?
+	local slotId = localPlayer:GetAttribute("PlotSlotId")
+	local plot = if typeof(slotId) == "number" then PlotWorkspaceUtil.getPlotBySlot(slotId) else nil
+	return if plot and plot:GetAttribute("OwnerUserId") == localPlayer.UserId then plot else nil
 end
 
-local function isInside(part: BasePart, root: BasePart, humanoid: Humanoid): boolean
-	-- 触发区是薄地板，不能用 HRP 是否位于 Part 体积内判断。
-	local feet = root.Position - Vector3.new(0, humanoid.HipHeight + root.Size.Y / 2, 0)
-	if humanoid.RigType == Enum.HumanoidRigType.R6 then
-		local leg = root.Parent:FindFirstChild("Left Leg")
-		if leg and leg:IsA("BasePart") then
-			feet -= Vector3.new(0, leg.Size.Y, 0)
-		end
-	end
-	local point = part.CFrame:PointToObjectSpace(feet)
-	return math.abs(point.X) <= part.Size.X / 2
-		and math.abs(point.Z) <= part.Size.Z / 2
-		and math.abs(point.Y - part.Size.Y / 2) <= 2.5
-end
-
-local function getMeter()
+local function getCastPrompt()
 	local playerGui = localPlayer:FindFirstChildOfClass("PlayerGui")
 	local gui = playerGui and playerGui:FindFirstChild("CastMeterGui")
 	local meter = gui and gui:FindFirstChild("Meter")
@@ -143,36 +162,20 @@ local function getMeter()
 	local marker = bar and bar:FindFirstChild("Marker")
 	local label = marker and marker:FindFirstChild("MultLabel")
 	local prompt = meter and meter:FindFirstChild("Prompt")
-	local scale = prompt and prompt:FindFirstChildOfClass("UIScale")
-	local glow = marker and marker:FindFirstChild("Glow")
-	if
-		not (
-			gui
-			and gui:IsA("ScreenGui")
-			and meter
-			and meter:IsA("GuiObject")
-			and marker
-			and marker:IsA("GuiObject")
-			and label
-			and label:IsA("TextLabel")
-			and prompt
-			and prompt:IsA("TextLabel")
-			and scale
-			and glow
-			and glow:IsA("GuiObject")
-		)
+	if not (gui and gui:IsA("ScreenGui") and meter and meter:IsA("GuiObject")
+		and bar and bar:IsA("GuiObject") and marker and marker:IsA("GuiObject")
+		and label and label:IsA("TextLabel") and prompt and prompt:IsA("TextLabel"))
 	then
-		warnOnce("CastMeterGui.Meter/Bar/Marker/MultLabel/Glow or Prompt.UIScale is missing")
 		return nil
 	end
-	return { gui = gui, holder = meter, marker = marker, label = label, prompt = prompt, scale = scale, glow = glow }
+	return { gui = gui, holder = meter, bar = bar, marker = marker, label = label, prompt = prompt }
 end
 
 local function cancelServerSession(state)
 	if state.token then
 		local token = state.token
 		state.token = nil
-		state.service:Cancel(token):catch(function() end)
+		return state.service:Cancel(token):catch(function() end)
 	end
 end
 
@@ -200,13 +203,11 @@ local function restore(state, returnToSpawn: boolean)
 	end
 	if state.character.Parent and state.root.Parent and localPlayer.Character == state.character then
 		if returnToSpawn then
-			local spawn = Workspace:FindFirstChild("SpawnLocation")
+			local plot = getOwnPlot()
+			local spawn = plot and plot:FindFirstChild("AreaSpawnPoint")
 			local target = state.originalRootCFrame
 			if spawn and spawn:IsA("BasePart") then
-				local height = state.root.Position.Y - state.feetY
-				target = spawn.CFrame * CFrame.new(0, spawn.Size.Y / 2 + height + 0.1, 0)
-			else
-				warnOnce("Workspace.SpawnLocation is missing; returning to entry position")
+				target = spawn.CFrame * CFrame.new(0, spawn.Size.Y / 2 + state.footHeight + 0.1, 0)
 			end
 			-- 以 HRP 为基准传送，兼容 Model pivot 与 HRP 不重合的角色。
 			state.character:PivotTo(target * state.root.CFrame:ToObjectSpace(state.character:GetPivot()))
@@ -282,8 +283,9 @@ local function updateTransition(state, now)
 	if not transition then
 		return
 	end
+	local timing = Config.Transition[transition.mode]
 	if not transition.revealedAt then
-		local alpha = math.clamp((now - transition.started) / Config.Transition.Cover, 0, 1)
+		local alpha = math.clamp((now - transition.started) / timing.Cover, 0, 1)
 		state.cover.BackgroundTransparency = 1 - alpha
 		if alpha == 1 then
 			if transition.mode == "Entering" then
@@ -295,7 +297,7 @@ local function updateTransition(state, now)
 			transition.revealedAt = now
 		end
 	else
-		local alpha = math.clamp((now - transition.revealedAt) / Config.Transition.Reveal, 0, 1)
+		local alpha = math.clamp((now - transition.revealedAt) / timing.Reveal, 0, 1)
 		state.cover.BackgroundTransparency = alpha
 		if alpha == 1 then
 			state.transition = nil
@@ -304,10 +306,7 @@ local function updateTransition(state, now)
 				finish(false, true)
 			else
 				state.readyAt = now
-				if state.showBaitSelection then
-					state.showBaitSelection()
-					state.showBaitSelection = nil
-				end
+				state.baitSelection.Show()
 			end
 		end
 	end
@@ -323,13 +322,14 @@ function FishingController:ReturnToSpawn()
 	end
 end
 
-local function begin(part: BasePart, character: Model, root: BasePart, humanoid: Humanoid)
-	local meter = getMeter()
+local function begin(entry)
+	local part, character, root, humanoid = entry.part, entry.character, entry.root, entry.humanoid
+	local meter = getCastPrompt()
 	local characters = ReplicatedStorage:FindFirstChild("Character")
 	local template = characters and characters:FindFirstChild("PoseDefaultCharacter")
 	local models = ReplicatedStorage:FindFirstChild("Models")
 	local rods = models and models:FindFirstChild("FishRod")
-	local rodData = RodsData[Config.DefaultRodId]
+	local rodData = RodsData[entry.rodId]
 	local rod = rods and rodData and rods:FindFirstChild(rodData.Model)
 	local playerGui = localPlayer:FindFirstChildOfClass("PlayerGui")
 	local baitGui = playerGui and playerGui:FindFirstChild("BaitSelectGui")
@@ -337,38 +337,38 @@ local function begin(part: BasePart, character: Model, root: BasePart, humanoid:
 	fishingAnimations = fishingAnimations and fishingAnimations:FindFirstChild("Fishing")
 	local animation = fishingAnimations and fishingAnimations:FindFirstChild("CastRod")
 	if not meter or not baitGui or not baitGui:IsA("ScreenGui") then
-		warnOnce("Fishing meter or BaitSelectGui is missing")
+		warnOnce("Fishing cast prompt or BaitSelectGui is missing")
 		return
 	end
 	if not (template and template:IsA("Model") and rod and rod:IsA("Tool")) then
-		warnOnce("PoseDefaultCharacter or default rod model is missing")
+		warnOnce("PoseDefaultCharacter or equipped rod model is missing")
 		return
 	end
-	if not (animation and animation:IsA("Animation") and FishingAssets.GetBait("1")) then
-		warnOnce("Animation.Fishing.CastRod or default float is missing")
+	if not (animation and animation:IsA("Animation")) then
+		warnOnce("Animation.Fishing.CastRod is missing")
 		return
 	end
 	local camera = Workspace.CurrentCamera
 	if not camera then
 		return
 	end
-	local feetY = root.Position.Y - humanoid.HipHeight - root.Size.Y / 2
-	if humanoid.RigType == Enum.HumanoidRigType.R6 then
-		local leg = character:FindFirstChild("Left Leg")
-		if leg and leg:IsA("BasePart") then
-			feetY -= leg.Size.Y
-		end
+	local look = part.CFrame.LookVector
+	local forward = Vector3.new(look.X, 0, look.Z)
+	if forward.Magnitude < 0.001 then
+		warnOnce("FishingStartPart must face horizontally")
+		return
 	end
 	local state = {
 		character = character,
 		root = root,
 		humanoid = humanoid,
 		originalRootCFrame = root.CFrame,
-		feetY = feetY,
+		footHeight = FishingSpotUtil.GetFootHeight(root, humanoid),
 		saved = {},
 		connections = {},
 		meter = meter,
-		service = Knit.GetService("FishingService"),
+		service = entry.service,
+		token = entry.token,
 		camera = {
 			subject = camera.CameraSubject,
 			fov = camera.FieldOfView,
@@ -376,6 +376,7 @@ local function begin(part: BasePart, character: Model, root: BasePart, humanoid:
 			focus = camera.Focus,
 		},
 	}
+	entry.token = nil
 	session = state
 	FishingAudio.ClearTails()
 	local ok, err = xpcall(function()
@@ -401,8 +402,6 @@ local function begin(part: BasePart, character: Model, root: BasePart, humanoid:
 				finish(false)
 			end)
 		)
-		state.value = 0
-		local direction = 1
 		state.prepare = function()
 			state.rig = FishingRigUtil.Create(template, character, rod)
 			local rig = state.rig
@@ -410,7 +409,7 @@ local function begin(part: BasePart, character: Model, root: BasePart, humanoid:
 			local rigHumanoid = rig:FindFirstChildOfClass("Humanoid")
 			local ground = part.Position + part.CFrame.UpVector * part.Size.Y / 2
 			local position = ground + Vector3.new(0, rigHumanoid.HipHeight + rigRoot.Size.Y / 2, 0)
-			rig:PivotTo(CFrame.lookAt(position, position + Vector3.zAxis))
+			rig:PivotTo(CFrame.lookAt(position, position + forward))
 			rig.Parent = Workspace
 			local dataController = Knit.GetController("PlayerDataController")
 			local function isSoundEnabled()
@@ -434,7 +433,7 @@ local function begin(part: BasePart, character: Model, root: BasePart, humanoid:
 					return
 				end
 				local baitData = BaitsData[baitId]
-				local bait = FishingAssets.GetBait(if baitData then baitData.Model else "1")
+				local bait, baitModel = FishingAssets.GetBait(if baitData then baitData.Model else nil)
 				if not bait then
 					NotificationClient.RedNotify("Bait model unavailable")
 					return
@@ -454,13 +453,20 @@ local function begin(part: BasePart, character: Model, root: BasePart, humanoid:
 					state.baitSelection.Destroy()
 					state.baitSelection = nil
 					state.audio = FishingAudio.new(isSoundEnabled)
-					state.sequence = FishingCastSequence.new(rig, playerGui, meter, animation, bait, {
+					state.sequence = FishingCastSequence.new(rig, playerGui, meter, animation, baitModel or bait, {
 						isSoundEnabled = isSoundEnabled,
 						audio = state.audio,
 						initialYaw = result.initialYaw,
+						initialLuck = result.luck,
+						fixedCast = true,
+						launchPosition = part.Position,
 						resolveFish = function(fishId)
 							local fish = FishesData[fishId]
 							return fish, fish and FishingAssets.GetFish(fish.Model)
+						end,
+						resolveCatch = function(kind, id)
+							local config = if kind == "Egg" then EggsData[id] else FishesData[id]
+							return config, config and (if kind == "Egg" then FishingAssets.GetEgg(config.Model) else FishingAssets.GetFish(config.Model))
 						end,
 						requestRound = function(previousRound)
 							return state.service:NextRound(state.token, previousRound)
@@ -485,26 +491,7 @@ local function begin(part: BasePart, character: Model, root: BasePart, humanoid:
 					FishingController:ReturnToSpawn()
 				end
 			end)
-			state.showBaitSelection = function()
-				baitGui.Enabled = true
-				state.baitSelection.SetBusy(true)
-				state.service:Begin():andThen(function(result)
-					if session ~= state or state.transition or state.restored then
-						if result.ok then
-							state.service:Cancel(result.token):catch(function() end)
-						end
-						return
-					end
-					if not result.ok then
-						fail(result.message)
-						return
-					end
-					state.token = result.token
-					state.baitSelection.SetBusy(false)
-				end):catch(function()
-					fail("Could not start fishing")
-				end)
-			end
+			local cashHome = bindBaitCash(state, playerGui, baitGui)
 			-- 真实角色留在进入处，演出角色独立居中，避免多人在中心发生物理挤压。
 			for _, player in ipairs(Players:GetPlayers()) do
 				hidePlayer(state, player)
@@ -522,8 +509,10 @@ local function begin(part: BasePart, character: Model, root: BasePart, humanoid:
 					gui:IsA("ScreenGui")
 					and gui ~= meter.gui
 					and gui.Name ~= "FishingSequenceGui"
+					and gui.Name ~= "FishingVignetteGui"
 					and gui.Name ~= "NotificationGui"
 					and gui ~= baitGui
+					and gui ~= cashHome
 					and gui ~= state.coverGui
 				then
 					hold(state, gui, "Enabled", false)
@@ -562,26 +551,11 @@ local function begin(part: BasePart, character: Model, root: BasePart, humanoid:
 						and root.Parent
 						and meter.gui.Parent
 						and meter.holder:IsDescendantOf(meter.gui)
+						and meter.bar:IsDescendantOf(meter.gui)
 						and meter.marker:IsDescendantOf(meter.gui)
-						and meter.label:IsDescendantOf(meter.gui)
-						and meter.prompt:IsDescendantOf(meter.gui)
-						and meter.scale:IsDescendantOf(meter.gui)
-						and meter.glow:IsDescendantOf(meter.gui),
-					"Fishing meter or rig disappeared"
+					and meter.prompt:IsDescendantOf(meter.gui),
+					"Fishing cast prompt or rig disappeared"
 				)
-				if state.sequence.phase == "Preparing" and not state.transition and not state.castPending then
-					-- 限制单帧步长，避免窗口卡顿时跳过滚动区间。
-					state.value += direction * 0.55 * (1 + 1.6 * state.value) * math.min(dt, 0.1)
-					if state.value >= 1 then
-						state.value, direction = 1, -1
-					elseif state.value <= 0 then
-						state.value, direction = 0, 1
-					end
-					meter.marker.Position = UDim2.fromScale(0.5, 1 - state.value)
-					local distance = ProjectileMath.Distance(state.value, rodData.DistanceMin, rodData.DistanceMax)
-					meter.label.Text = string.format("+%d", distance - rodData.DistanceMin)
-					state.sequence:UpdateMeter(state.value)
-				end
 				state.sequence:Update(now, dt)
 				if not state.transition and state.sequence.phase == "Reeled" and state.sequence:CanReturn(now) then
 					FishingController:ReturnToSpawn()
@@ -599,7 +573,100 @@ local function begin(part: BasePart, character: Model, root: BasePart, humanoid:
 	end
 end
 
+local function clearEntry(entry)
+	if pendingEntry == entry then
+		pendingEntry = nil
+	end
+end
+
+local function abandonEntry(entry, message: string?)
+	if not entry.abandoned then
+		entry.abandoned = true
+		if message then
+			NotificationClient.RedNotify(message)
+		end
+	end
+	if not entry.inFlight then
+		clearEntry(entry)
+	end
+end
+
+local function releaseEntry(entry)
+	local cancellation = cancelServerSession(entry)
+	if cancellation then
+		-- Finish cancelling a late token before allowing another Begin.
+		entry.inFlight = true
+		cancellation:andThen(function()
+			clearEntry(entry)
+		end)
+	else
+		clearEntry(entry)
+	end
+end
+
+local function canCompleteEntry(entry): boolean
+	local character = localPlayer.Character
+	return character == entry.character
+		and character:FindFirstChild("HumanoidRootPart") == entry.root
+		and character:FindFirstChildOfClass("Humanoid") == entry.humanoid
+		and entry.humanoid.Health > 0
+		and not entry.root.Anchored
+		and FishingSpotUtil.GetStartPart(getOwnPlot()) == entry.part
+		and FishingSpotUtil.Contains(entry.part, entry.root, entry.humanoid)
+		and GameplayInputGate.IsWorldActionAllowed()
+end
+
+local function updateEntry(entry, now: number)
+	if entry.abandoned then
+		return
+	end
+	if now >= entry.deadline then
+		abandonEntry(entry, entry.lastMessage or "Could not start fishing")
+		return
+	end
+	if entry.inFlight or now < entry.nextAttemptAt then
+		return
+	end
+
+	entry.inFlight = true
+	entry.nextAttemptAt = now + ENTRY_RETRY_SECONDS
+	entry.service:Begin():andThen(function(result)
+		entry.inFlight = false
+		if result.ok then
+			entry.token = result.token
+			entry.rodId = result.rodId
+		end
+		if entry.abandoned or not canCompleteEntry(entry) then
+			entry.abandoned = true
+			releaseEntry(entry)
+			return
+		end
+		if os.clock() >= entry.deadline then
+			-- Retain the pending entry until a late successful reply is cancelled.
+			entry.inFlight = entry.token ~= nil
+			abandonEntry(entry, entry.lastMessage or "Could not start fishing")
+			releaseEntry(entry)
+			return
+		end
+		if result.ok then
+			begin(entry)
+			releaseEntry(entry)
+		elseif result.code == "ProfileNotReady" or result.code == "OutsideFishingSpot" then
+			-- The server can briefly lag behind the locally controlled character.
+			entry.lastMessage = result.message
+		else
+			abandonEntry(entry, result.message)
+		end
+	end):catch(function()
+		entry.inFlight = entry.token ~= nil
+		local message = if canCompleteEntry(entry) then "Could not start fishing" else nil
+		abandonEntry(entry, message)
+		releaseEntry(entry)
+	end)
+end
+
 function FishingController:KnitInit()
+	FishingAudio.PreloadLuckSounds()
 	local gui = localPlayer:FindFirstChildOfClass("PlayerGui")
 	local baitGui = gui and gui:FindFirstChild("BaitSelectGui")
 	if baitGui and baitGui:IsA("ScreenGui") then
@@ -608,6 +675,14 @@ function FishingController:KnitInit()
 	local meter = gui and gui:FindFirstChild("CastMeterGui")
 	if meter and meter:IsA("ScreenGui") then
 		meter.Enabled = false
+	end
+	local sequenceGui = gui and gui:FindFirstChild("FishingSequenceGui")
+	if sequenceGui and sequenceGui:IsA("ScreenGui") then
+		sequenceGui.Enabled = false
+	end
+	local vignetteGui = gui and gui:FindFirstChild("FishingVignetteGui")
+	if vignetteGui and vignetteGui:IsA("ScreenGui") then
+		vignetteGui.Enabled = false
 	end
 end
 
@@ -619,6 +694,10 @@ function FishingController:KnitStart()
 		end
 	end)
 	localPlayer.CharacterRemoving:Connect(function()
+		if pendingEntry then
+			mustLeaveArea = false
+			abandonEntry(pendingEntry)
+		end
 		finish(false)
 	end)
 	UserInputService.InputBegan:Connect(function(input, processed)
@@ -652,14 +731,14 @@ function FishingController:KnitStart()
 					return
 				end
 				state.castPending = true
-				local value = state.value
-				state.service:Cast(state.token, value):andThen(function(result)
+				local progress = sequence:LockCastMeter()
+				state.service:Cast(state.token, progress):andThen(function(result)
 					if session ~= state or state.restored or state.transition then
 						return
 					end
 					state.castPending = false
 					if result.ok then
-						sequence:Cast(value, result.distance)
+						sequence:Cast(progress, result.distance, result.luck)
 					else
 						state.fail(result.message)
 					end
@@ -688,28 +767,36 @@ function FishingController:KnitStart()
 				or not root
 				or not humanoid
 				or humanoid.Health <= 0
-				or (not session.restored and (root.Position - session.originalRootCFrame.Position).Magnitude > 2)
+				or (not session.restored and (root.Position - session.originalRootCFrame.Position).Magnitude > ACTIVE_DISPLACEMENT_LIMIT)
 			then
 				finish(false)
 			end
 			return
 		end
-		if not (root and root:IsA("BasePart") and humanoid and humanoid.Health > 0) then
+		local alive = root and root:IsA("BasePart") and humanoid and humanoid.Health > 0
+		local part = if alive then FishingSpotUtil.GetStartPart(getOwnPlot()) else nil
+		local inside = part ~= nil and FishingSpotUtil.Contains(part, root, humanoid)
+		if not inside then
+			mustLeaveArea = false
+		end
+		if pendingEntry then
+			if not canCompleteEntry(pendingEntry) then
+				abandonEntry(pendingEntry)
+			else
+				updateEntry(pendingEntry, os.clock())
+			end
+			return
+		end
+		if not alive then
 			FishingAudio.ClearTails()
 			return
 		end
-		local part = getStartPart()
 		if not part then
-			warnOnce("Workspace.Areas.CastStartPart is missing")
-			return
-		end
-		local inside = isInside(part, root, humanoid)
-		if not inside then
-			mustLeaveArea = false
 			return
 		end
 		if
-			mustLeaveArea
+			not inside
+			or mustLeaveArea
 			or root.Anchored
 			or localPlayer:GetAttribute(LoadingAttributes.LOADING_SCREEN_DONE) ~= true
 			or not GameplayInputGate.IsWorldActionAllowed()
@@ -717,7 +804,18 @@ function FishingController:KnitStart()
 			return
 		end
 		mustLeaveArea = true
-		begin(part, character, root, humanoid)
+		local now = os.clock()
+		local entry = {
+			part = part,
+			character = character,
+			root = root,
+			humanoid = humanoid,
+			service = Knit.GetService("FishingService"),
+			deadline = now + ENTRY_TIMEOUT_SECONDS,
+			nextAttemptAt = now,
+		}
+		pendingEntry = entry
+		updateEntry(entry, now)
 	end)
 end
 

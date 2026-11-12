@@ -44,7 +44,7 @@ local function fade(elapsed, duration)
 end
 
 -- offset 为原始饵高的倍数；收竿位移由弹簧驱动，提鱼另用共享 Rebound 采样。
-function BaitElasticMotion.Sample(phase, elapsed, duration, nibbleSpeed)
+function BaitElasticMotion.Sample(phase, elapsed, duration, nibbleSpeed, nibbleAttackTime)
 	elapsed = math.max(0, elapsed)
 	local offset, stretch = 0, 1
 	if phase == "Preparing" or phase == "Waiting" or phase == "Holding" or phase == "Approaching" then
@@ -73,8 +73,13 @@ function BaitElasticMotion.Sample(phase, elapsed, duration, nibbleSpeed)
 				+ (Settings.MaxStretch - 1) * BaitElasticMotion.Settle((elapsed - reboundEnd) / landing.SettleTime)
 		end
 	elseif phase == "Nibbling" then
-		elapsed *= nibbleSpeed or 1
 		local nibble = Config.Bite.Nibble
+		local speed = nibbleSpeed or 1
+		local attackTime = nibbleAttackTime or nibble.AttackTime / speed
+		-- 前冲按实际用时采样，触碰后的回弹继续使用原来的节奏。
+		elapsed = if elapsed < attackTime
+			then elapsed / attackTime * nibble.AttackTime
+			else nibble.AttackTime + (elapsed - attackTime) * speed
 		local retreatAt = nibble.AttackTime + nibble.ContactTime
 		local release = smooth((elapsed - retreatAt) / nibble.ReboundTime)
 		local pressure = smooth(elapsed / nibble.AttackTime) * (1 - release)
@@ -84,7 +89,7 @@ function BaitElasticMotion.Sample(phase, elapsed, duration, nibbleSpeed)
 		stretch = 1 + (Settings.MinStretch - 1) * pressure + (Settings.MaxStretch - 1) * wave
 	elseif phase == "Bite" then
 		local sinkTime = Config.Bite.BiteSinkTime
-		local recovery = math.min(Settings.BiteRecoverTime, Config.Bite.HookWindow - sinkTime)
+		local recovery = math.clamp((duration or Config.Bite.HookWindow) - sinkTime, 0.001, Settings.BiteRecoverTime)
 		local alpha = (elapsed - sinkTime) / recovery
 		local pressure = smooth(elapsed / sinkTime) * (1 - smooth(alpha))
 		local wave = BaitElasticMotion.Rebound(alpha)
@@ -92,7 +97,7 @@ function BaitElasticMotion.Sample(phase, elapsed, duration, nibbleSpeed)
 		stretch = 1 + (Settings.MinStretch - 1) * pressure + (Settings.MaxStretch - 1) * wave
 	elseif phase == "Struggling" then
 		local wave = BaitElasticMotion.Rebound((elapsed % Settings.StrugglePulseTime) / Settings.StrugglePulseTime)
-		wave *= fade(elapsed, Config.Bite.StruggleTime)
+		wave *= fade(elapsed, duration or Config.Bite.StruggleTime)
 		offset, stretch = Settings.StruggleHeight * wave, 1 + Settings.StruggleStretch * wave
 	elseif phase == "Escaped" then
 		local recover = smooth(elapsed / Settings.BlendTime)
@@ -124,6 +129,15 @@ function BaitElasticMotion.Apply(owner, frame, scale)
 	owner.baitVisualScale = scale
 	owner.bait.Size = owner.baitBaseSize * scale
 	owner.bait.CFrame = frame
+	if owner.baitParts then
+		for part, original in pairs(owner.baitParts) do
+			part.Size = original.size * scale
+			part.CFrame = frame * CFrame.new(original.offset.Position * scale) * original.offset.Rotation
+		end
+	end
+	if owner.baitTop then
+		owner.baitTop.Position = owner.baitTopOffset * scale
+	end
 	if owner.trailA then
 		owner.trailA.Position = Vector3.yAxis * owner.bait.Size.Y * 0.25
 		owner.trailB.Position = -owner.trailA.Position

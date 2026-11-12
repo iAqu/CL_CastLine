@@ -5,6 +5,7 @@ local UserInputService = game:GetService("UserInputService")
 
 local PurchaseDataHelper = require(ReplicatedFirst.DataHelpers.PurchaseDataHelper)
 local ItemToolUtil = require(ReplicatedStorage.Modules.ItemToolUtil)
+local EggToolUtil = require(ReplicatedStorage.Modules.EggToolUtil)
 local PotionToolUtil = require(ReplicatedStorage.Modules.PotionToolUtil)
 
 local LOCAL_PLAYER = Players.LocalPlayer
@@ -65,7 +66,7 @@ local function getCharacter(): Model?
 end
 
 local function categoryForTool(tool: Instance): string?
-	if PotionToolUtil.IsPotionTool(tool) or ItemToolUtil.IsItemTool(tool) then
+	if PotionToolUtil.IsPotionTool(tool) or ItemToolUtil.IsItemTool(tool) or EggToolUtil.IsEggTool(tool) then
 		return CATEGORY_ITEMS
 	end
 	return nil

@@ -1,29 +1,19 @@
 local Players = game:GetService("Players")
-local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
-local ConditionsData = require(ReplicatedFirst.Data.ConditionsData)
 local FishInventoryData = require(ReplicatedStorage.Modules.FishInventoryData)
+local FishTitleUtil = require(ReplicatedStorage.Modules.FishTitleUtil)
 local Knit = require(ReplicatedStorage.Packages.Knit)
-local ConditionLabelUtil = require(ReplicatedStorage.Modules.ConditionLabelUtil)
-local GuiUtil = require(ReplicatedStorage.Modules.GuiUtil)
-local RarityConfig = require(ReplicatedStorage.Modules.RarityConfig)
-local ItemStatUtil = require(ReplicatedStorage.Modules.ItemStatUtil)
 local ItemTitlePositionUtil = require(ReplicatedStorage.Modules.ItemTitlePositionUtil)
 local ItemToolUtil = require(ReplicatedStorage.Modules.ItemToolUtil)
-local MutationTitleUtil = require(ReplicatedStorage.Modules.MutationTitleUtil)
-local NumberUtil = require(ReplicatedStorage.Modules.NumberUtil)
 local PotionToolUtil = require(ReplicatedStorage.Modules.PotionToolUtil)
-local WeightFormat = require(ReplicatedStorage.Modules.WeightFormat)
 
 local LOCAL_PLAYER = Players.LocalPlayer
 local VISUAL_NAME = "HeldItemVisual"
 local HELD_ITEM_TITLE_NAME = "HeldItemTitle"
 local HELD_ITEM_TITLE_ANCHOR_NAME = "HeldItemTitleAnchor"
 local LOCAL_TITLE_NAME = "LocalHeldItemTitle"
-local TITLE_TEMPLATE_NAME = "ItemTitleTemplate_New"
-local TITLE_WEIGHT_COLOR = "#B1DAF8"
 
 type HeldItemDescriptor = {
 	kind: "potion",
@@ -89,23 +79,16 @@ local function isHeldItemVisual(instance: Instance): boolean
 	return instance:IsA("Model") and instance.Name == VISUAL_NAME
 end
 
-local function findLabel(gui: BillboardGui, name: string): TextLabel?
-	local label = gui:FindFirstChild(name, true)
-	return if label and label:IsA("TextLabel") then label else nil
-end
-
 local function clearLocalHeldItemTitle()
 	if localHeldItemTitle then
+		local titleAnchor = localHeldItemTitle.Parent
+		local serverTitle = titleAnchor and titleAnchor:FindFirstChild(HELD_ITEM_TITLE_NAME)
+		if serverTitle and serverTitle:IsA("BillboardGui") then
+			serverTitle.Enabled = true
+		end
 		localHeldItemTitle:Destroy()
 		localHeldItemTitle = nil
 	end
-end
-
-local function getLocalTitleTemplate(): BillboardGui?
-	local playerGui = LOCAL_PLAYER:FindFirstChildOfClass("PlayerGui")
-	local titleGui = playerGui and playerGui:FindFirstChild("TitleGui")
-	local template = titleGui and titleGui:FindFirstChild(TITLE_TEMPLATE_NAME)
-	return if template and template:IsA("BillboardGui") then template else nil
 end
 
 local function getHeldTitleAdornee(tool: Tool): Instance?
@@ -135,67 +118,35 @@ local function createLocalHeldItemTitle(tool: Tool)
 	if not titleAnchor or not titleAnchor:IsA("Attachment") then
 		return
 	end
-	local template = getLocalTitleTemplate()
-	if not template then
-		return
-	end
 	local heldTitleAdornee = getHeldTitleAdornee(tool)
 	if not heldTitleAdornee then
 		return
 	end
 
+	local itemId = tool:GetAttribute(ItemToolUtil.ITEM_ID_ATTRIBUTE)
+	local mutationId = tool:GetAttribute(ItemToolUtil.MUTATION_ID_ATTRIBUTE)
+	local item = if typeof(itemId) == "string" then FishInventoryData[itemId] else nil
+	if not item then
+		return
+	end
+
+	local playerGui = LOCAL_PLAYER:FindFirstChildOfClass("PlayerGui")
+	local titleGui = playerGui and playerGui:FindFirstChild("TitleGui")
+	local title = FishTitleUtil.Create(titleGui, item, mutationId)
+	if not title then
+		return
+	end
+	title.Name = LOCAL_TITLE_NAME
+	title.Adornee = heldTitleAdornee
+	title.Enabled = true
+	title.Parent = titleAnchor
+	ItemTitlePositionUtil.ApplyBottomOffset(title, tool)
+	localHeldItemTitle = title
+
 	local serverTitle = titleAnchor:FindFirstChild(HELD_ITEM_TITLE_NAME)
 	if serverTitle and serverTitle:IsA("BillboardGui") then
 		serverTitle.Enabled = false
 	end
-
-	local itemId = tool:GetAttribute(ItemToolUtil.ITEM_ID_ATTRIBUTE)
-	local weight = tool:GetAttribute(ItemToolUtil.WEIGHT_ATTRIBUTE)
-	local conditionId = tool:GetAttribute(ItemToolUtil.CONDITION_ID_ATTRIBUTE)
-	local price = tool:GetAttribute(ItemToolUtil.PRICE_ATTRIBUTE)
-	local item = if typeof(itemId) == "string" then FishInventoryData[itemId] else nil
-	if not item
-		or typeof(weight) ~= "number"
-		or typeof(conditionId) ~= "string"
-		or typeof(price) ~= "number"
-	then
-		return
-	end
-
-	local title = template:Clone()
-	title.Name = LOCAL_TITLE_NAME
-	title.Adornee = heldTitleAdornee
-	title.Enabled = true
-
-	local nameLabel = findLabel(title, "NameLabel")
-	if nameLabel then
-		nameLabel.RichText = true
-		nameLabel.Text = `{item.DisplayName} <font color="{TITLE_WEIGHT_COLOR}">[{WeightFormat.FormatKg(weight)}]</font>`
-	end
-	local rarityLabel = findLabel(title, "RarityLabel")
-	if rarityLabel then
-		rarityLabel.Text = RarityConfig.Normalize(item.Rarity)
-		GuiUtil.SetRarityGradient(rarityLabel, item.Rarity)
-	end
-	local priceLabel = findLabel(title, "PriceLabel")
-	if priceLabel then
-		priceLabel.Text = "$" .. NumberUtil.FormatItemPriceCompact(price)
-	end
-	local frame = title:FindFirstChild("Frame")
-	if frame then
-		ConditionLabelUtil.Show(frame, conditionId)
-		MutationTitleUtil.Show(frame, tool:GetAttribute(ItemToolUtil.MUTATION_ID_ATTRIBUTE))
-	end
-	local luckLabel = findLabel(title, "LuckLabel")
-	if luckLabel then
-		local condition = ConditionsData[conditionId]
-		local luck = ItemStatUtil.CalculateLuck(item, weight, condition and condition.LuckMult or 1)
-		luckLabel.Text = "Luck: " .. ItemStatUtil.FormatLuckPercent(luck)
-	end
-
-	title.Parent = titleAnchor
-	ItemTitlePositionUtil.ApplyBottomOffset(title, tool)
-	localHeldItemTitle = title
 end
 
 local function refreshLocalHeldItemTitle()
@@ -316,7 +267,9 @@ local function bindCharacter(character: Model)
 	end)
 
 	character.DescendantAdded:Connect(function(descendant)
-		if descendant.Name == HELD_ITEM_TITLE_ANCHOR_NAME and descendant:IsA("Attachment") then
+		if (descendant.Name == HELD_ITEM_TITLE_ANCHOR_NAME and descendant:IsA("Attachment"))
+			or (descendant.Name == HELD_ITEM_TITLE_NAME and descendant:IsA("BillboardGui"))
+		then
 			queueLocalHeldItemTitleRefresh()
 		end
 	end)

@@ -13,7 +13,7 @@ local ok, result = xpcall(function()
 	local target = Vector3.new(0, 1000, 0)
 	local owner = {
 		folder = folder, bait = bait, forward = Vector3.zAxis,
-		statusLabel = {}, returnLabel = {},
+		continueLabel = {},
 		_waterTarget = function() return target end,
 		_presentBait = function() end, _setPhase = function() end, _impulse = function() end,
 	}

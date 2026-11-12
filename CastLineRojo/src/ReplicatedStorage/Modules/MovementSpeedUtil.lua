@@ -1,19 +1,30 @@
 local ReplicatedFirst = game:GetService("ReplicatedFirst")
 
-local Constants = require(script.Parent.Constants)
 local EventStateUtil = require(script.Parent.EventStateUtil)
-local UpgradeShopConfig = require(script.Parent.UpgradeShopConfig)
 local ZonesData = require(ReplicatedFirst.Data.ZonesData)
 
 local MovementSpeedUtil = {}
 
-MovementSpeedUtil.DEFAULT_WALK_SPEED = UpgradeShopConfig.BASE_WALK_SPEED
+MovementSpeedUtil.DEFAULT_WALK_SPEED = 16
 MovementSpeedUtil.MIN_WALK_SPEED = 8
 MovementSpeedUtil.ZONE_BASE_WALK_SPEED = 15
-MovementSpeedUtil.FREE_WALK_SPEED_BONUS_EXPONENT = 0.8
 MovementSpeedUtil.ZONE_WALK_SPEED_PERCENT_ATTRIBUTE = "ZoneWalkSpeedPercent"
 MovementSpeedUtil.IS_IN_DIG_ZONE_ATTRIBUTE = "IsInDigZone"
 MovementSpeedUtil.CURRENT_DIG_ZONE_ATTRIBUTE = "CurrentDigZone"
+
+-- Studio owns ZonesData, and older places omit the walk-speed fields.
+local DEFAULT_ZONE_SPEED_RULES = {
+	Zone_1 = { RequiredWalkSpeed = 20, WalkSpeedPercent = 0.5 },
+	Zone_2 = { RequiredWalkSpeed = 35, WalkSpeedPercent = 0.4 },
+	Zone_3 = { RequiredWalkSpeed = 60, WalkSpeedPercent = 0.3 },
+	Zone_4 = { RequiredWalkSpeed = 90, WalkSpeedPercent = 0.2 },
+	Zone_5 = { RequiredWalkSpeed = 120, WalkSpeedPercent = 0.1 },
+	Zone_6 = { RequiredWalkSpeed = 150, WalkSpeedPercent = 0.1 },
+	Zone_7 = { RequiredWalkSpeed = 180, WalkSpeedPercent = 0.1 },
+	Zone_8 = { RequiredWalkSpeed = 210, WalkSpeedPercent = 0.1 },
+	Zone_9 = { RequiredWalkSpeed = 240, WalkSpeedPercent = 0.1 },
+	Zone_10 = { RequiredWalkSpeed = 270, WalkSpeedPercent = 0.1 },
+}
 
 local function isFiniteNumber(value: unknown): boolean
 	return typeof(value) == "number"
@@ -34,22 +45,7 @@ function MovementSpeedUtil.HasZoneConfig(zoneId: string): boolean
 	return typeof(ZonesData[zoneId]) == "table"
 end
 
-function MovementSpeedUtil.GetSpeedAttribute(playerData): number
-	local speedAttribute = UpgradeShopConfig.GetWalkSpeed(playerData)
-	if playerData.GamePasses[Constants.GAMEPASS.FAST_MOVE] then
-		speedAttribute += MovementSpeedUtil.DEFAULT_WALK_SPEED * 0.5
-	end
-	return speedAttribute
-end
-
-function MovementSpeedUtil.GetFreeWalkSpeed(playerData): number
-	local speedAttribute = MovementSpeedUtil.GetSpeedAttribute(playerData)
-	local speedBonus = speedAttribute - MovementSpeedUtil.DEFAULT_WALK_SPEED
-	return MovementSpeedUtil.DEFAULT_WALK_SPEED
-		+ speedBonus ^ MovementSpeedUtil.FREE_WALK_SPEED_BONUS_EXPONENT
-end
-
-function MovementSpeedUtil.GetZoneWalkSpeedPercent(playerData, zoneId: string?): number
+function MovementSpeedUtil.GetZoneWalkSpeedPercent(zoneId: string?): number
 	if typeof(zoneId) ~= "string" then
 		return 1
 	end
@@ -57,6 +53,12 @@ function MovementSpeedUtil.GetZoneWalkSpeedPercent(playerData, zoneId: string?):
 	local zoneData = ZonesData[zoneId]
 	if typeof(zoneData) ~= "table" then
 		return 1
+	end
+	if zoneData.RequiredWalkSpeed == nil and zoneData.WalkSpeedPercent == nil then
+		zoneData = DEFAULT_ZONE_SPEED_RULES[zoneId]
+		if not zoneData then
+			return 1
+		end
 	end
 
 	local requiredWalkSpeed = zoneData.RequiredWalkSpeed
@@ -66,25 +68,20 @@ function MovementSpeedUtil.GetZoneWalkSpeedPercent(playerData, zoneId: string?):
 	end
 	zoneWalkSpeedPercent = math.clamp(zoneWalkSpeedPercent, 0, 1)
 
-	local speedAttribute = MovementSpeedUtil.GetSpeedAttribute(playerData)
-	local freeWalkSpeed = MovementSpeedUtil.GetFreeWalkSpeed(playerData)
-	if freeWalkSpeed <= 0 then
-		return 1
-	end
-
+	local baseWalkSpeed = MovementSpeedUtil.DEFAULT_WALK_SPEED
 	local zoneWalkSpeed = math.clamp(
 		MovementSpeedUtil.ZONE_BASE_WALK_SPEED
-			+ (speedAttribute - requiredWalkSpeed) * zoneWalkSpeedPercent,
+			+ (baseWalkSpeed - requiredWalkSpeed) * zoneWalkSpeedPercent,
 		MovementSpeedUtil.MIN_WALK_SPEED,
-		freeWalkSpeed
+		baseWalkSpeed
 	)
 
-	return normalizeZoneWalkSpeedPercent(zoneWalkSpeed / freeWalkSpeed)
+	return zoneWalkSpeed / baseWalkSpeed
 end
 
-function MovementSpeedUtil.CalculateWalkSpeed(playerData, zoneWalkSpeedPercent: unknown): number
+function MovementSpeedUtil.CalculateWalkSpeed(zoneWalkSpeedPercent: unknown): number
 	local eventMultiplier = EventStateUtil.GetMoveSpeedMultiplier(EventStateUtil.GetStateFolder())
-	return MovementSpeedUtil.GetFreeWalkSpeed(playerData) * normalizeZoneWalkSpeedPercent(zoneWalkSpeedPercent)
+	return MovementSpeedUtil.DEFAULT_WALK_SPEED * normalizeZoneWalkSpeedPercent(zoneWalkSpeedPercent)
 		* eventMultiplier
 end
 

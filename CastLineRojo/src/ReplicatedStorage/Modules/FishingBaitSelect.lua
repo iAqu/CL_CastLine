@@ -1,4 +1,10 @@
+local TweenService = game:GetService("TweenService")
+
 local NumberUtil = require(script.Parent.NumberUtil)
+local RarityConfig = require(script.Parent.RarityConfig)
+
+local POPUP_TWEEN_INFO = TweenInfo.new(0.20, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+local POPUP_START_SCALE = 0.82
 
 local FishingBaitSelect = {}
 
@@ -34,6 +40,7 @@ function FishingBaitSelect.Bind(gui: ScreenGui, rod, baits, choose, close)
 		table.insert(rows, row)
 		local button = row:FindFirstChild("Button")
 		assert(button and button:IsA("GuiButton"), "BaitSelectGui item button missing")
+		button.BackgroundColor3 = RarityConfig.Get(bait.Rarity).Color
 		local name, price, icon = button:FindFirstChild("Name"), button:FindFirstChild("Price"), button:FindFirstChild("ImageLabel")
 		if name and name:IsA("TextLabel") then
 			name.Text = bait.DisplayName
@@ -54,7 +61,17 @@ function FishingBaitSelect.Bind(gui: ScreenGui, rod, baits, choose, close)
 		table.insert(buttons, button)
 		row.Parent = list
 	end
+
+	local popupScale = Instance.new("UIScale")
+	popupScale.Scale = POPUP_START_SCALE
+	popupScale.Parent = frame
+	local popupTween = TweenService:Create(popupScale, POPUP_TWEEN_INFO, { Scale = 1 })
+
 	return {
+		Show = function()
+			gui.Enabled = true
+			popupTween:Play()
+		end,
 		SetBusy = function(busy: boolean)
 			for _, button in ipairs(buttons) do
 				button.Interactable = not busy
@@ -62,6 +79,9 @@ function FishingBaitSelect.Bind(gui: ScreenGui, rod, baits, choose, close)
 		end,
 		Destroy = function()
 			gui.Enabled = false
+			popupTween:Cancel()
+			popupTween:Destroy()
+			popupScale:Destroy()
 			noneButton.Interactable, exit.Interactable = true, true
 			for _, connection in ipairs(connections) do
 				connection:Disconnect()

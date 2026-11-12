@@ -6,7 +6,7 @@ local function read(path)
 end
 
 local playerLuckService = read("src/ServerScriptService/Services/PlayerLuckService.lua")
-local plotPedestalService = read("src/ServerScriptService/Services/PlotPedestalService.lua")
+local plotFishService = read("src/ServerScriptService/Services/PlotFishService.lua")
 local indexService = read("src/ServerScriptService/Services/IndexService.lua")
 local gamePassService = read("src/ServerScriptService/Services/GamePassService.lua")
 local homeGuiController = read("src/StarterPlayer/StarterPlayerScripts/Controllers/GUI/HomeGuiController.lua")
@@ -19,7 +19,7 @@ assert(playerLuckService:find("self.Client.LuckChanged:Fire(player, luck)", 1, t
 assert(homeGuiController:find("playerLuckService.LuckChanged:Connect(setLuckAmountText)", 1, true))
 assert(homeGuiController:find("playerLuckService:GetPlayerRollLuck()", 1, true))
 
-for _, source in ipairs({ plotPedestalService, indexService }) do
+for _, source in ipairs({ plotFishService, indexService }) do
 	assert(source:find('Knit.GetService("PlayerLuckService"):RefreshPlayerLuck(player)', 1, true), "Luck sources must refresh the displayed total")
 end
 assert(gamePassService:find("Constants.GAMEPASS.SUPER_LUCK", 1, true), "Super Luck must refresh the total")

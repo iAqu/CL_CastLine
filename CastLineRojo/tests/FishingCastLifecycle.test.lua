@@ -10,9 +10,24 @@ local modules = {
 	rig = {},
 	water = {},
 	bite = {},
+	info = { new = function()
+		return { Destroy = function() end }
+	end },
+	vignette = { new = function()
+		return { Update = function() end, Destroy = function() end }
+	end },
+	characterVFX = {},
+	confetti = { play = function() end, clear = function() end },
 }
 local workspace = {}
+local function vector(x, y, z)
+	return setmetatable({ X = x, Y = y, Z = z }, {
+		__add = function(a, b) return vector(a.X + b.X, a.Y + b.Y, a.Z + b.Z) end,
+		__mul = function(a, scale) return vector(a.X * scale, a.Y * scale, a.Z * scale) end,
+	})
+end
 local environment = setmetatable({
+	Vector3 = { new = vector },
 	script = {
 		Parent = {
 			FishingConfig = "config",
@@ -20,6 +35,12 @@ local environment = setmetatable({
 			FishingRigUtil = "rig",
 			WaterSurfaceUtil = "water",
 			FishingBiteSequence = "bite",
+			FishingSequenceInfo = "info",
+			FishingRoll = "roll",
+			RarityConfig = "rarity",
+			FishingVignette = "vignette",
+			FishingCharacterVFX = "characterVFX",
+			UiConfettiUtil = "confetti",
 		},
 	},
 	game = {
@@ -53,30 +74,206 @@ end
 modules.math = assert(
 	load(read("src/ReplicatedStorage/Modules/FishingProjectileMath.lua"), "FishingProjectileMath", "t", environment)
 )()
+modules.water = assert(
+	load(read("src/ReplicatedStorage/Modules/WaterSurfaceUtil.lua"), "WaterSurfaceUtil", "t", environment)
+)()
+modules.rarity = {}
+modules.roll = assert(
+	load(read("src/ReplicatedStorage/Modules/FishingRoll.lua"), "FishingRoll", "t", environment)
+)()
 local Sequence = assert(
 	load(read("src/ReplicatedStorage/Modules/FishingCastSequence.lua"), "FishingCastSequence", "t", environment)
 )()
 
--- 抛竿音跟随实际动画起播；动画未加载、前摇等待和重复帧不能提前或重复播放。
 do
-	local starts, cues, phases = 0, 0, {}
+	local bursts, showcases, eggSuccess, drops, clears = 0, 0, 0, 0, 0
+	local gui = { Parent = {}, Enabled = true }
+	local fish = { Destroy = function() end }
+	local egg = { isEgg = true }
+	modules.confetti.play = function(parent, preset)
+		assert(parent == gui and preset == "sideCannons", "Use the fishing GUI and side cannons preset")
+		bursts += 1
+	end
+	modules.confetti.clear = function(parent)
+		assert(parent == gui)
+		clears += 1
+	end
+	local audio = {
+		PlayShowcase = function() showcases += 1 end,
+		Play = function(_, name)
+			assert(name == "FishSuccess", "Preserve the egg's original success cue")
+			eggSuccess += 1
+		end,
+		SetPhase = function(_, phase) if phase == "Caught" then drops += 1 end end,
+		Destroy = function() end,
+	}
+	local sequence = setmetatable({ gui = gui, bite = fish, fishAudio = audio,
+		folder = { SetAttribute = function() end, Destroy = function() end } }, Sequence)
+	sequence:_celebrateCatch(egg)
+	assert(bursts == 0 and showcases == 0, "Eggs must not receive fish celebrations")
+	sequence:_celebrateCatch(fish)
+	sequence:_celebrateCatch(fish)
+	sequence:_setPhase("Caught")
+	assert(bursts == 1 and showcases == 1 and eggSuccess == 0 and drops == 1,
+		"Celebrate once per fish, without replaying success on Caught")
+	sequence.bite = egg
+	sequence:_setPhase("Lifting")
+	sequence:_setPhase("Caught")
+	sequence:_setPhase("Caught")
+	assert(eggSuccess == 1 and showcases == 1, "Egg success must remain at Caught, once")
+	sequence.bite = fish
+	sequence:_celebrateCatch({})
+	assert(bursts == 2 and showcases == 2, "The next fish must have its own celebration")
+	sequence:Destroy()
+	sequence:Destroy()
+	sequence:_celebrateCatch({})
+	assert(clears == 1 and bursts == 2 and not gui.Enabled and not sequence.celebratedBite,
+		"Abort must clear the layer once and prevent further celebrations")
+	modules.confetti.play, modules.confetti.clear = function() end, function() end
+end
+
+do
+	local settings = modules.config.Bite
+	local startedAt = 100
+	local timeline = { phase = "Lifting", startedAt = startedAt }
+	local sequence = setmetatable({ bite = { timeline = timeline } }, Sequence)
+	local pullbackAt = settings.LiftTime * settings.LiftRiseEnd + settings.ShowcaseCloseupHold
+	local entry, pullback = sequence:_showcaseProgress(startedAt)
+	assert(entry == 0 and pullback == 0, "Start the closeup from the incoming camera")
+	entry, pullback = sequence:_showcaseProgress(startedAt + pullbackAt)
+	assert(entry == 1 and pullback == 0, "Hold the fixed closeup before pulling back")
+	local _, halfway = sequence:_showcaseProgress(startedAt + pullbackAt + settings.ShowcasePullbackTime * 0.5)
+	assert(math.abs(halfway - 0.5) < 0.00001, "Pull back continuously from the closeup")
+	local _, beforeCaught = sequence:_showcaseProgress(startedAt + settings.LiftTime)
+	timeline.phase, timeline.startedAt = "Caught", startedAt + settings.LiftTime
+	local _, afterCaught = sequence:_showcaseProgress(timeline.startedAt)
+	assert(math.abs(beforeCaught - afterCaught) < 0.00001, "Caught must continue the pullback without a jump")
+	local _, finished = sequence:_showcaseProgress(timeline.startedAt + settings.ShowcaseHold)
+	assert(finished == 1, "Finish the full showcase before the return prompt")
+end
+
+do
+	local top = {
+		Size = vector(100, 4, 100),
+		CFrame = { PointToWorldSpace = function(_, point) return point + vector(0, 100, 0) end },
+		IsA = function(_, className) return className == "BasePart" end,
+	}
+	local function container(name, child)
+		return function(_, requested) return if requested == name then child else nil end
+	end
+	local water = { FindFirstChild = container("Top", top) }
+	local areas = { FindFirstChild = container("Water", water) }
+	workspace.FindFirstChild = container("Areas", areas)
+	for _, baitHeight in ipairs({ 1, 5 }) do
+		local feedback = 0
+		local function checkSurface(_, _, position)
+			assert(position.X == 3 and position.Y == 102 and position.Z == 4, "Water feedback must use the Top surface")
+			feedback += 1
+		end
+		local cast = setmetatable({
+			launch = vector(3, 120, 0),
+			forward = vector(0, 0, 1),
+			distance = 4,
+			baitBaseSize = vector(1, baitHeight, 1),
+			_ripple = checkSurface,
+			_splash = checkSurface,
+		}, Sequence)
+		local target = cast:_waterTarget()
+		assert(target.X == 3 and target.Y == 102 and target.Z == 4, "Bait center must land on the Top surface")
+		cast:_waterFeedback(0, vector(3, 95, 4), 1, true, true)
+		assert(feedback == 2, "Splash and ripple must both use the water surface")
+	end
+end
+
+for _, discoveryFlag in { true, false, "missing" } do
+	local weight
+	local bite
+	bite = {
+		timeline = { Advance = function() return "Bite" end },
+		SetCaughtWeight = function(_, grantedWeight)
+			weight = grantedWeight
+		end,
+		TryHook = function()
+			assert(weight == 3.375, "Set the server-granted weight before starting the catch")
+			assert(bite.isNewDiscovery == (discoveryFlag == true), "Set the server discovery flag before starting the catch")
+		end,
+	}
+	local probe = setmetatable({
+		bite = bite,
+		round = 1,
+		serverRoundStart = 100,
+		localRoundStart = 10,
+		options = {
+			hook = function()
+				return {
+					andThen = function(promise, callback)
+						callback({ ok = true, weight = 3.375,
+							isNewDiscovery = if discoveryFlag == "missing" then nil else discoveryFlag })
+						return promise
+					end,
+					catch = function() end,
+				}
+			end,
+		},
+	}, Sequence)
+	probe:TryHook(11)
+	assert(weight == 3.375 and probe.hookPendingAt == nil, "Apply the weight from the successful catch response")
+end
+
+-- 声音与角色特效跟随实际动画起播，前挥触发不能提前或重复。
+do
+	local starts, cues, phases, effects, swings, releases = 0, {}, {}, 0, 0, 0
 	modules.rig.RestoreReadyPose = function() end
 	local probe = setmetatable({
 		phase = "Casting", castClickedAt = 0, rig = {},
 		track = { Length = 0, Play = function() starts += 1 end },
 		folder = { SetAttribute = function() end },
+		characterVFX = {
+			Start = function(_, now)
+				assert(starts == 1 and now == modules.config.CastLeadTime, "Start VFX with the actual animation")
+				effects += 1
+			end,
+			BeginSwing = function() swings += 1 end,
+		},
+		_shot = function() end,
+		_impulse = function() end,
+		_sound = function() end,
+		_release = function() releases += 1 end,
 		fishAudio = {
-			Play = function(_, name) assert(name == "FishingRodCast"); cues += 1 end,
+			Play = function(_, name)
+				assert(starts == 1 and effects == 1, "Play cast sounds with the actual animation and VFX")
+				if name == "FishingCastImpact" then
+					assert(swings == 1, "Play impact with the swing VFX")
+				else
+					assert(swings == 0, "Play cast and wind sounds before the swing")
+				end
+				cues[name] = (cues[name] or 0) + 1
+			end,
 			SetPhase = function(_, phase) table.insert(phases, phase) end,
 		},
 	}, Sequence)
 	probe:_updateAction(0.1)
 	probe.track.Length = 3
 	probe:_updateAction(0.2)
-	assert(starts == 0 and cues == 0)
+	assert(starts == 0 and not next(cues) and effects == 0 and swings == 0,
+		"Do not start animation, VFX or sounds while waiting for animation load and lead time")
 	probe:_updateAction(modules.config.CastLeadTime)
 	probe:_updateAction(modules.config.CastLeadTime + 0.01)
-	assert(starts == 1 and cues == 1)
+	assert(starts == 1 and cues.FishingRodCast == 1 and cues.FishingCastWind == 1 and effects == 1,
+		"Start animation, VFX and both cast sounds once")
+	assert(not cues.FishingCastImpact, "Do not play impact at animation start")
+	local swingAt = modules.config.CastLeadTime + modules.config.CharacterVFX.SwingTime
+	probe:_updateAction(swingAt - 0.01)
+	assert(swings == 0 and releases == 0, "Do not swing during charging")
+	assert(not cues.FishingCastImpact, "Do not play impact before the swing")
+	probe:_updateAction(swingAt + 0.03)
+	probe:_updateAction(swingAt + 0.04)
+	assert(swings == 1 and releases == 0, "Crossing the swing time must trigger once before release")
+	assert(cues.FishingCastImpact == 1, "Crossing the swing time must play impact once")
+	probe:_updateAction(modules.config.CastLeadTime + modules.config.ReleaseTime + 0.01)
+	assert(swings == 1 and releases == 1 and effects == 1, "Keep release timing and VFX deduplication")
+	assert(cues.FishingRodCast == 1 and cues.FishingCastWind == 1 and cues.FishingCastImpact == 1,
+		"Repeated updates must not replay cast sounds")
 	probe:_setPhase("Struggling")
 	probe:_setPhase("Struggling")
 	probe:_setPhase("Lifting")
@@ -112,6 +309,200 @@ sequence.phase = "Waiting"
 sequence:Cast(1)
 assert(sequence.distance == 55, "Waiting input must not start another cast")
 assert(feedbackCount == 1, "Repeated taps must not replay feedback")
+
+local fixedClicks, fixedTicks = {}, {}
+local fixed = setmetatable({
+	phase = "Preparing",
+	fixedCast = true,
+	fullLuck = 10,
+	info = {
+		SetLuck = function(self, value, _, immediate)
+			assert(immediate, "Preparing luck must follow the meter without tween lag")
+			self.shown = value
+		end,
+		Update = function() end,
+		Destroy = function() end,
+	},
+	folder = sequence.folder,
+	originals = {},
+	meter = {
+		gui = { Enabled = false },
+		holder = { Parent = true, Visible = false },
+		bar = { Parent = true, Visible = false },
+		marker = { Parent = true, Visible = false, Position = { X = 0.5, Y = 0.5 } },
+		label = { Parent = true, Visible = true },
+		prompt = { Parent = true, Visible = false },
+	},
+	_sound = function(_, name, volume, pitch)
+		if name == "MeterTick" then
+			assert(volume == 0.25, "Use Throw Food's meter tick volume")
+			table.insert(fixedTicks, pitch)
+		else
+			assert(name == "ButtonClick")
+			table.insert(fixedClicks, { volume = volume, pitch = pitch })
+		end
+	end,
+	_impulse = function() end,
+	_castFeedback = function() error("Fixed casts must not play meter feedback") end,
+}, Sequence)
+fixed:_bindCastMeter(fixed.meter)
+assert(fixed.meter.gui.Enabled and fixed.meter.holder.Visible and fixed.meter.bar.Visible)
+assert(fixed.meter.marker.Visible and fixed.meter.prompt.Visible and not fixed.meter.label.Visible)
+local startY = fixed.meter.marker.Position.Y
+fixed:_updatePresentation(fixed.meterStarted + 0.5, 0.5)
+local movingY = fixed.meter.marker.Position.Y
+assert(movingY < startY and movingY > 0, "The fixed-distance meter must animate before casting")
+fixed.meterProgress, fixed.meterDirection = 0, 1
+for _, sample in { { 0, 0, 1 }, { 0.5 / 0.55, 0.5, 5.5 }, { 1, 1, 10 }, { 0.5 / 1.43, 0.5, 5.5 }, { 1, 0, 1 } } do
+	fixed:_updatePresentation(fixed.meterStarted + 10, sample[1])
+	assert(math.abs(fixed.meterProgress - sample[2]) < 1e-6, "Incorrect meter progress on the up/down sweep")
+	assert(math.abs(fixed.info.shown - sample[3]) < 1e-6, "Luck must match the visible meter progress")
+	assert(math.abs(fixed.meter.marker.Position.Y - (1 - fixed.meterProgress)) < 1e-6, "Marker and luck are out of sync")
+end
+fixed:_updatePresentation(fixed.meterStarted + 11, 0.5 / 0.55)
+local locked = fixed:LockCastMeter()
+assert(math.abs(locked - 0.5) < 1e-6, "Lock the visible click position")
+assert(#fixedClicks == 1 and fixedClicks[1].volume == 0.8
+	and math.abs(fixedClicks[1].pitch - 1.15) < 1e-6, "Play the click immediately when locking the meter")
+fixed:_updatePresentation(fixed.meterStarted + 12, 1)
+assert(fixed:LockCastMeter() == locked and fixed.meter.marker.Position.Y == 0.5
+	and fixed.info.shown == 5.5, "Keep the indicator and luck locked while the request is pending")
+fixed:Cast(locked, 30, 5.5)
+assert(#fixedClicks == 1, "Server confirmation must not play a second click")
+assert(fixed.phase == "Casting" and fixed.distance == 30 and not fixed.meter.gui.Enabled)
+fixed:_updatePresentation(fixed.meterStarted + 13, 1)
+assert(fixed.meter.marker.Position.Y == 0.5, "The indicator must stop once the cast starts")
+fixed.folder = nil
+fixed:Destroy()
+assert(not fixed.meter.bar.Visible and not fixed.meter.marker.Visible and fixed.meter.label.Visible)
+assert(fixed.meter.marker.Position.Y == 0.5, "Cleanup must restore the authored marker position")
+
+for _, ceiling in { 1.3, 10, 100 } do
+	for _, fps in { 30, 60, 144 } do
+		local cues = {}
+		local probe = setmetatable({
+			phase = "Preparing", fixedCast = true, fullLuck = ceiling,
+			meterStarted = 100, lastMeterStep = 0, enabled = true,
+			meterProgress = 0, meterDirection = 1,
+			meter = { marker = {} },
+			info = {
+				SetLuck = function(self, value) self.shown = value end,
+				Update = function() end,
+			},
+			_sound = function(self, name, volume, pitch)
+				if self.enabled then table.insert(cues, { name = name, volume = volume, pitch = pitch }) end
+			end,
+		}, Sequence)
+		probe:_updatePresentation(100, 0)
+		assert(#cues == 0, "Initialize the bottom meter step quietly")
+		local expected, direction, previousStep = 0, 1, 0
+		local reachedTop, returned = false, false
+		for frame = 1, fps * 4 do
+			-- 与参考逐帧积分比对，使用偏移时钟避免依赖绝对时间对齐。
+			expected += direction * 0.55 * (1 + 1.6 * expected) / fps
+			if expected >= 1 then
+				expected, direction, reachedTop = 1, -1, true
+			elseif expected <= 0 then
+				expected, direction = 0, 1
+				returned = reachedTop
+			end
+			local before = #cues
+			probe:_updatePresentation(100.007 + frame / fps, 1 / fps)
+			assert(math.abs(probe.meterProgress - expected) < 1e-10 and probe.meterDirection == direction,
+				"Match Throw Food's acceleration, endpoint clamp and discarded overshoot")
+			assert(math.abs(probe.meter.marker.Position.Y - (1 - expected)) < 1e-10,
+				"Marker and sound must sample the same progress")
+			local step = math.floor(expected * 6)
+			assert(#cues == before + (if step ~= previousStep then 1 else 0),
+				"Play exactly one cue on each sampled reference step, including the top reversal")
+			previousStep = step
+			if #cues > before then
+				local cue = cues[#cues]
+				assert(cue.name == "MeterTick" and cue.volume == 0.25
+					and math.abs(cue.pitch - (0.9 + probe.meterProgress * 0.5)) < 1e-6,
+					"Meter sound must follow progress instead of the luck ceiling")
+			end
+			assert(math.abs(probe.info.shown - ceiling * (0.1 + 0.9 * probe.meterProgress)) < 1e-6,
+				"The new sound rule must preserve live luck values")
+			if returned then break end
+		end
+		assert(returned and #cues == 12, "A full sweep must play 12 ticks at " .. ceiling .. "X / " .. fps .. "fps")
+		probe.enabled = false
+		probe:_updatePresentation(105, 0.5)
+		probe.enabled = true
+		probe:_updatePresentation(105, 0)
+		assert(#cues == 12 and probe.lastMeterStep == 1, "Muted steps must be consumed without replay")
+		probe:_updatePresentation(105.5, 0.5)
+		assert(#cues == 13 and cues[13].name == "MeterTick", "A multi-step jump must play a single fresh tick")
+		probe:LockCastMeter()
+		assert(#cues == 14 and cues[14].name == "ButtonClick", "Locking must play the separate click sound")
+		probe:_updatePresentation(106.5, 1)
+		probe:LockCastMeter()
+		assert(#cues == 14, "A locked meter must stop ticks and ignore repeated clicks")
+	end
+end
+
+-- 极低帧率越过多档时只提示一次，并在端点丢弃剩余位移。
+do
+	local ticks = 0
+	local probe = setmetatable({
+		phase = "Preparing", fixedCast = true, meterStarted = 100, lastMeterStep = 0,
+		meterProgress = 0, meterDirection = 1,
+		meter = { marker = {} },
+		_sound = function(_, name)
+			assert(name == "MeterTick", "Only meter ticks may play during the sweep")
+			ticks += 1
+		end,
+	}, Sequence)
+	probe:_updatePresentation(110, 10)
+	assert(ticks == 1 and probe.meterProgress == 1 and probe.meterDirection == -1,
+		"A long frame must clamp at the top and emit only one cue")
+	probe:_updatePresentation(120, 10)
+	assert(ticks == 2 and probe.meterProgress == 0 and probe.meterDirection == 1,
+		"Discard overshoot and reverse at the bottom on the next long frame")
+end
+
+for _, progress in { 0, 0.919999, 0.92, 1 } do
+	local cues = {}
+	local probe = setmetatable({
+		phase = "Preparing", fixedCast = true, meterProgress = progress,
+		folder = sequence.folder, meter = { gui = {} },
+		_sound = function(_, name, volume, pitch)
+			table.insert(cues, { name = name, volume = volume, pitch = pitch })
+		end,
+		_impulse = function() end,
+	}, Sequence)
+	assert(probe:LockCastMeter() == progress, "Lock the visible progress before confirmation audio")
+	local expected = if progress >= 0.92 then 2 else 1
+	assert(#cues == expected and cues[1].name == "ButtonClick" and cues[1].volume == 0.8
+		and math.abs(cues[1].pitch - (0.9 + progress * 0.5)) < 1e-10,
+		"Confirm immediately with the locked progress pitch")
+	if progress >= 0.92 then
+		assert(cues[2].name == "Perfect" and cues[2].volume == 0.5 and cues[2].pitch == 1.3,
+			"At 92% and above, layer Throw Food's perfect confirmation")
+	end
+	probe:LockCastMeter()
+	probe:Cast(progress, 30)
+	probe:Cast(progress, 30)
+	assert(#cues == expected, "Repeated locks and server confirmation must not replay either confirmation cue")
+end
+
+do
+	local clicks = 0
+	local direct = setmetatable({
+		phase = "Preparing", fixedCast = true, meterProgress = 0.8,
+		folder = sequence.folder, meter = { gui = {} },
+		_sound = function(_, name, volume, pitch)
+			assert(name == "ButtonClick" and volume == 0.8 and math.abs(pitch - 1.3) < 1e-6,
+				"Direct casts must use the same click sound and meter pitch")
+			clicks += 1
+		end,
+		_impulse = function() end,
+	}, Sequence)
+	direct:Cast(0.8, 30)
+	direct:Cast(0.8, 30)
+	assert(clicks == 1 and direct.lockedMeterProgress == 0.8, "Direct callers must lock and click exactly once")
+end
 
 for _, case in ipairs({
 	{ 0, "BAD" },
@@ -249,8 +640,9 @@ audio:RefreshSoundSetting()
 assert(resumed == 1, "Only the active flight wind may resume, without replaying old one-shots")
 
 local function cleanupProbe(failStop)
-	local stopped, trackDestroyed, folderDestroyed, guiDestroyed = 0, 0, 0, 0
+	local stopped, trackDestroyed, folderDestroyed, guiDestroyed, effectsDestroyed = 0, 0, 0, 0, 0
 	local instance = setmetatable({
+		characterVFX = { Destroy = function() effectsDestroyed += 1 end },
 		track = {
 			Stop = function()
 				stopped += 1
@@ -278,7 +670,7 @@ local function cleanupProbe(failStop)
 	instance:Destroy()
 	instance:Destroy()
 	assert(
-		stopped == 1 and folderDestroyed == 1 and guiDestroyed == 0 and not instance.gui.Enabled,
+		stopped == 1 and folderDestroyed == 1 and guiDestroyed == 0 and effectsDestroyed == 1 and not instance.gui.Enabled,
 		"Cleanup must be idempotent and survive an unavailable Animator"
 	)
 	if not failStop then
@@ -312,8 +704,8 @@ do
 	local gui = node("FishingSequenceGui", "ScreenGui", {
 		PerfectFlash = node("PerfectFlash", "Frame"),
 		TopBar = node("TopBar", "Frame"), BottomBar = node("BottomBar", "Frame"),
-		Distance = text("Distance"), ReturnPrompt = text("ReturnPrompt"),
-		CatchStatus = text("CatchStatus"), PowerPopup = text("PowerPopup"),
+		ContinuePrompt = text("tap to continue"),
+		PowerPopup = text("PowerPopup"),
 	})
 	gui.children.PerfectFlash.BackgroundColor3, gui.children.PerfectFlash.BackgroundTransparency = "studioFlash", 1
 	gui.children.TopBar.Size, gui.children.BottomBar.Size = "studioTopSize", "studioBottomSize"
@@ -328,8 +720,8 @@ do
 		local owner = create()
 		owner:_bindGui(playerGui)
 		assert(owner.gui == gui and not gui.Enabled and not owner.popup.Visible)
-		assert(owner.distanceLabel.Text == "0 STUDS" and owner.popupScale.Scale == 1)
-		assert(owner.popup.FontFace == "studioFont" and owner.distanceLabel.Position == "studioPosition")
+		assert(owner.continueText == "tap to continue" and owner.popupScale.Scale == 1)
+		assert(owner.popup.FontFace == "studioFont" and owner.continueLabel.Position == "studioPosition")
 		gui.Enabled = true
 		for _, original in ipairs(owner.originals) do
 			original.instance[original.property] = "changedDuringRound"
@@ -415,10 +807,19 @@ do
 		_updateLine = function()
 			table.insert(order, "line")
 		end,
+		_updateIdleWaterVFX = function() end,
 		_updateWaterEffects = function() end,
 		RefreshSoundSetting = function() end,
-		_updatePresentation = function() end,
+		_updatePresentation = function(_, _, dt)
+			assert(dt == 1 / 60, "Forward the render delta to the meter's reference integration")
+		end,
+		vignette = { Update = function() end },
+		characterVFX = { Update = function() table.insert(order, "characterVFX") end },
 	}, Sequence)
 	session:Update(10, 1 / 60)
-	assert(table.concat(order, ",") == "base,camera,present,line", "Camera/presentation/line order changed")
+	assert(table.concat(order, ",") == "base,characterVFX,camera,present,line", "Camera/presentation/line order changed")
+	table.clear(order)
+	session.bite = nil
+	session:Update(11, 1 / 60)
+	assert(table.concat(order, ",") == "base,characterVFX,camera,line", "Update character VFX before the bite sequence exists")
 end

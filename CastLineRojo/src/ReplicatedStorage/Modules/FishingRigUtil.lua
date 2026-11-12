@@ -160,22 +160,30 @@ function FishingRigUtil.Create(template: Model, character: Model, rodTemplate: T
 		grip.C0, grip.C1 = gripAttachment.CFrame, rodTemplate.Grip
 		grip.Parent = hand
 		-- 静态准备姿势，不依赖 R6 参考动画，也不提前播放抛竿动作。
-		local shoulder = rig:FindFirstChild("RightShoulder", true)
-		local elbow = rig:FindFirstChild("RightElbow", true)
-		if shoulder then
-			shoulder:SetAttribute("FishingReadyC0", shoulder.C0)
-			shoulder.C0 *= CFrame.Angles(math.rad(45), 0, math.rad(8))
-		end
-		if elbow then
-			elbow:SetAttribute("FishingReadyC0", elbow.C0)
-			elbow.C0 *= CFrame.Angles(math.rad(35), 0, 0)
-		end
+		FishingRigUtil.ApplyReadyPose(rig)
 	end)
 	if not ok then
 		rig:Destroy()
 		error(result, 0)
 	end
 	return rig
+end
+
+function FishingRigUtil.ApplyReadyPose(rig: Model)
+	for _, name in ipairs({ "RightShoulder", "RightElbow" }) do
+		local joint = rig:FindFirstChild(name, true)
+		if joint then
+			local original = joint:GetAttribute("FishingReadyC0")
+			if typeof(original) ~= "CFrame" then
+				original = joint.C0
+				joint:SetAttribute("FishingReadyC0", original)
+			end
+			local offset = if name == "RightShoulder"
+				then CFrame.Angles(math.rad(45), 0, math.rad(8))
+				else CFrame.Angles(math.rad(35), 0, 0)
+			joint.C0 = original * offset
+		end
+	end
 end
 
 function FishingRigUtil.RestoreReadyPose(rig: Model)

@@ -16,8 +16,7 @@ local function validate(template)
 		bait = bait,
 		forward = Vector3.zAxis,
 		spin = 0,
-		statusLabel = {},
-		returnLabel = {},
+		continueLabel = {},
 		_waterTarget = function()
 			return target
 		end,
@@ -48,11 +47,17 @@ local function validate(template)
 		local fish = sequence.fish
 		local ratio = fish:GetScale() / template:GetAttribute("RigV2SurfaceScale")
 		for _, binding in effect.surfaces do
-			local rest = fish.PrimaryPart.CFrame:PointToWorldSpace(binding.rest.Position * ratio)
+			local rest = binding.point:GetAttribute("RigV2SurfaceBind").Position * ratio
 			local blended = Vector3.zero
 			for _, influence in binding.influences do
 				local bone = influence.joint
-				local moved = bone.TransformedWorldCFrame:PointToWorldSpace(bone.WorldCFrame:PointToObjectSpace(rest))
+				local bind = bone.CFrame
+				local parent = bone.Parent
+				while parent:IsA("Bone") do
+					bind = parent.CFrame * bind
+					parent = parent.Parent
+				end
+				local moved = bone.TransformedWorldCFrame:PointToWorldSpace(bind:PointToObjectSpace(rest))
 				blended += moved * influence.weight
 			end
 			maxSurfaceError = math.max(maxSurfaceError, (binding.point.WorldPosition - blended).Magnitude)

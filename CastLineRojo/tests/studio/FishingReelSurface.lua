@@ -5,7 +5,7 @@ local Bite = require(storage.Modules.FishingBiteSequence)
 local Reel = require(storage.Modules.FishingReelSpring)
 local Water = require(storage.Modules.WaterSurfaceUtil)
 local waterY = assert(Water.GetWaterSurfaceY(), "Water surface is missing")
-game:GetService("ContentProvider"):PreloadAsync({ storage.Sound.Fish.FishFail })
+game:GetService("ContentProvider"):PreloadAsync({ storage.Sound.Fishing.FishFail })
 local audio, motion
 local cases = {}
 local ok, err = xpcall(function()

@@ -4,6 +4,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Knit = require(ReplicatedStorage.Packages.Knit)
 local BackpackSlotObserver = require(ReplicatedStorage.Modules.BackpackSlotObserver)
 local ItemToolUtil = require(ReplicatedStorage.Modules.ItemToolUtil)
+local EggToolUtil = require(ReplicatedStorage.Modules.EggToolUtil)
 local PotionToolUtil = require(ReplicatedStorage.Modules.PotionToolUtil)
 
 local LOCAL_PLAYER = Players.LocalPlayer
@@ -31,6 +32,9 @@ end
 
 local function getDescriptor(tool: Instance?): Descriptor?
 	if not tool or not tool:IsA("Tool") or tool:GetAttribute(PLACEHOLDER_ATTRIBUTE) == true then return nil end
+	if EggToolUtil.IsEggTool(tool) then
+		return { Kind = "Egg", Id = EggToolUtil.GetInstanceId(tool) }
+	end
 	if PotionToolUtil.IsPotionTool(tool) then
 		local id = PotionToolUtil.GetPotionId(tool)
 		if id then return { Kind = "Potion", Id = id } end
@@ -121,7 +125,7 @@ local function getNormalizedSavedLayout(savedLayout): { [string]: Descriptor }
 	local result: { [string]: Descriptor } = {}
 	for slot = FIRST_ITEM_SLOT, LAST_ITEM_SLOT do
 		local descriptor = savedLayout[tostring(slot)]
-		if typeof(descriptor) == "table" and (descriptor.Kind == "Item" or descriptor.Kind == "Potion")
+		if typeof(descriptor) == "table" and (descriptor.Kind == "Item" or descriptor.Kind == "Potion" or descriptor.Kind == "Egg")
 			and typeof(descriptor.Id) == "string"
 		then
 			if slot >= FIRST_ITEM_SLOT and slot <= LAST_ITEM_SLOT and not result[tostring(slot)] then

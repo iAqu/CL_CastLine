@@ -71,6 +71,7 @@ function PurchaseService:HandlePurchase(player: Player, productId: number, sentT
 
     -- local purchaseType = PurchaseDataHelper.GetType(productId)
     local purchaseId = PurchaseDataHelper.GetPurchaseId(productId)
+    if PurchaseDataHelper.IsRetired(purchaseId) then return false end
     local purchaseType = PurchaseDataHelper.GetTypeByPurchaseId(purchaseId)
     
     sentToGa = sentToGa or true
@@ -270,6 +271,10 @@ function PurchaseService:processReceipt(receiptInfo: Receipt)
     elseif not success then
         error("Data store error:" .. errorMessage)
     end
+    if PurchaseDataHelper.IsRetired(PurchaseDataHelper.GetPurchaseId(receiptInfo.ProductId)) then
+        -- A retired product must not grant an entitlement or create a new order record.
+        return Enum.ProductPurchaseDecision.NotProcessedYet
+    end
 
     -- Determine if the product was already granted by checking the data store 
     local playerProductKey = receiptInfo.PlayerId .. "_" .. receiptInfo.PurchaseId
@@ -359,7 +364,11 @@ function PurchaseService:GetPolicyCache(player: Player) : {[string]: any}
     return self._PlayerPolicyCache[player.UserId]
 end
 
-function PurchaseService:PromptPurchase(player:Player, purchaseId:number)
+function PurchaseService:PromptPurchase(player: Player, purchaseId: string)
+    if PurchaseDataHelper.IsRetired(purchaseId) then
+        self.Client.PromptPurchaseFail:Fire(player, "This item is no longer for sale.")
+        return
+    end
 	if not PotionFeatureHelper.IsAcquisitionEnabled() and PotionFeatureHelper.IsPotionRelatedPurchaseId(purchaseId) then
 		self.Client.PromptPurchaseFail:Fire(player, PotionFeatureHelper.ACQUISITION_DISABLED_MESSAGE)
 		return
@@ -409,7 +418,7 @@ function PurchaseService:KnitInit()
         self._PlayerGifted[player.UserId] = nil
     end)
 
-    self.Client.PromptPurchase:Connect(function(player: Player, purchaseId: number)
+    self.Client.PromptPurchase:Connect(function(player: Player, purchaseId: string)
         self:PromptPurchase(player, purchaseId)
     end)
 end
@@ -425,7 +434,9 @@ function PurchaseService:KnitStart()
 
     -- handle game pass purchase
     MarketplaceService.PromptGamePassPurchaseFinished:Connect(function(player, gamePassId, wasPurchased)
-        if not wasPurchased then return end
+        if not wasPurchased or PurchaseDataHelper.IsRetired(PurchaseDataHelper.GetPurchaseId(gamePassId)) then
+            return
+        end
         self:HandlePurchase(player, gamePassId)
         -- LogHelper.Print("PromptGamePassPurchaseFinished")
         self.Client.PurchaseSuccess:Fire(player, gamePassId)
@@ -433,6 +444,10 @@ function PurchaseService:KnitStart()
     end)
 
     self.Client.TokensPurchase:Connect(function(player: Player, purchaseId: string)
+        if PurchaseDataHelper.IsRetired(purchaseId) then
+            self.Client.TokensPurchaseFail:Fire(player, "This item is no longer for sale.")
+            return
+        end
         local playerData = PlayerDataService:GetAllData(player)
         if not playerData then return end
 

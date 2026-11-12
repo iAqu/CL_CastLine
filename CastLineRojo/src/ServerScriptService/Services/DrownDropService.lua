@@ -407,7 +407,6 @@ function DrownDropService:_claimDrop(player: Player, state: DropState)
 
 	profile.Data.Items[state.instanceId] = table.clone(state.record)
 	tool.Parent = backpack
-	Knit.GetService("CarryCapacityService"):RefreshPlayer(player)
 	self:_removeDrop(state)
 end
 
@@ -422,9 +421,8 @@ function DrownDropService:_createDrop(
 		return nil
 	end
 
-	local templateScale = template:GetScale()
 	local model = template:Clone()
-	ItemStatUtil.ScaleModel(model, candidate.item, candidate.record.Weight, templateScale)
+	ItemStatUtil.ScaleModel(model, candidate.item, candidate.record.Weight, template)
 	for _, descendant in ipairs(model:GetDescendants()) do
 		if descendant:IsA("BasePart") then
 			descendant.Anchored = true
@@ -448,7 +446,7 @@ function DrownDropService:_createDrop(
 	model:SetAttribute("ConditionId", candidate.record.ConditionId)
 	model:SetAttribute("Price", candidate.record.Price)
 	model:SetAttribute("MutationId", candidate.record.MutationId)
-	MutationVisualUtil.Apply(model, candidate.record.MutationId)
+	MutationVisualUtil.Apply(model, candidate.record.MutationId, template.Name)
 	local highlight = Instance.new("Highlight")
 	highlight.Name = "DrownedItemHighlight"
 	highlight.Adornee = model
@@ -582,7 +580,6 @@ function DrownDropService:DropCarriedItems(player: Player, deathPosition: Vector
 	if #droppedIds > 0 then
 		local hotbarLayoutService = Knit.GetService("HotbarLayoutService")
 		hotbarLayoutService:RemoveItemDescriptors(player, droppedIds)
-		Knit.GetService("CarryCapacityService"):RefreshPlayer(player)
 	end
 	return #droppedIds
 end

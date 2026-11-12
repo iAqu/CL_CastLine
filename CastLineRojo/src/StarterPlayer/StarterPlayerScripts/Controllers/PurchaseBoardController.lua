@@ -42,6 +42,13 @@ local function initPurchaseBoards()
             local purchaseId = model:GetAttribute("PurchaseId")
             if not purchaseId then warn("purchaseId not found!", model.Name) continue end
             if purchaseId == "" then warn("purchaseId is Empty!", model.Name) continue end
+            if PurchaseDataHelper.IsRetired(purchaseId) then
+                local surface = model:FindFirstChildOfClass("SurfaceGui")
+                if surface then
+                    surface.Enabled = false
+                end
+                continue
+            end
             if not model:FindFirstChild("SurfaceGui") then warn("SurfaceGui not found!", model.Name) continue end
 
             if PurchaseDataHelper.GetTypeByPurchaseId(purchaseId) == "GamePass" then
@@ -81,6 +88,13 @@ local function updatePurchaseBoard()
             local purchaseId = model:GetAttribute("PurchaseId")
             if not purchaseId then warn("purchaseId not found!", model.Name) continue end
             if purchaseId == "" then warn("purchaseId is Empty!", model.Name) continue end
+            if PurchaseDataHelper.IsRetired(purchaseId) then
+                local surface = model:FindFirstChildOfClass("SurfaceGui")
+                if surface then
+                    surface.Enabled = false
+                end
+                continue
+            end
             if not model:FindFirstChild("SurfaceGui") then continue end
 
             LogHelper.Print("PurchaseBoardController", playerData.LimitedPurchaseHistory)

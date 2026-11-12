@@ -6,7 +6,6 @@ local Knit = require(ReplicatedStorage.Packages.Knit)
 
 local Config = require(ReplicatedStorage.Modules.FishingConfig)
 local RodsData = require(ReplicatedFirst:WaitForChild("Data"):WaitForChild("RodsData"))
-local DEFAULT_MODEL = RodsData[Config.DefaultRodId].Model
 
 local ROD_NAME = "DefaultBackRod"
 local BACK_MOUNT_OFFSET = CFrame.new(0.55, 0.05, 0.72)
@@ -14,10 +13,7 @@ local FALLBACK_OFFSET = BACK_MOUNT_OFFSET * CFrame.Angles(math.rad(35), 0, math.
 
 local BackRodService = Knit.CreateService({ Name = "BackRodService", Client = {} })
 
-function BackRodService:AttachBackRod(character: Model)
-	if character:FindFirstChild(ROD_NAME) then
-		return
-	end
+function BackRodService:AttachBackRod(player: Player, character: Model)
 	local torso = character:FindFirstChild("UpperTorso") or character:FindFirstChild("Torso")
 	if not torso then
 		local deadline = os.clock() + 5
@@ -26,22 +22,25 @@ function BackRodService:AttachBackRod(character: Model)
 			torso = character:FindFirstChild("UpperTorso") or character:FindFirstChild("Torso")
 		until torso or not character.Parent or os.clock() >= deadline
 	end
-	if not character.Parent then
+	if player.Character ~= character or not character.Parent then
 		return
 	end
 	if not torso or not torso:IsA("BasePart") then
 		warn("BackRodService: character torso is missing")
 		return
 	end
-	-- A second request may have completed while waiting for the torso.
-	if character:FindFirstChild(ROD_NAME) then
+	-- Read the equipped ID after waiting for the torso so a stale refresh cannot replace a newer one.
+	local rodId = player:GetAttribute("EquippedRodId") or Config.DefaultRodId
+	local existing = character:FindFirstChild(ROD_NAME)
+	if existing and existing:GetAttribute("RodId") == rodId then
 		return
 	end
+	local modelName = (RodsData[rodId] or RodsData[Config.DefaultRodId]).Model
 	local models = ReplicatedStorage:FindFirstChild("Models")
 	local rods = models and models:FindFirstChild("FishRod")
-	local template = rods and rods:FindFirstChild(DEFAULT_MODEL)
+	local template = rods and rods:FindFirstChild(modelName)
 	if not template or not (template:IsA("Tool") or template:IsA("Model")) then
-		warn("BackRodService: invalid rod template " .. DEFAULT_MODEL)
+		warn("BackRodService: invalid rod template " .. modelName)
 		return
 	end
 
@@ -71,7 +70,7 @@ function BackRodService:AttachBackRod(character: Model)
 	local handle = rod:FindFirstChild("Handle", true)
 	if not handle or not handle:IsA("BasePart") then
 		rod:Destroy()
-		warn("BackRodService: invalid Handle for " .. DEFAULT_MODEL)
+		warn("BackRodService: invalid Handle for " .. modelName)
 		return
 	end
 	rod.PrimaryPart = handle
@@ -94,6 +93,10 @@ function BackRodService:AttachBackRod(character: Model)
 	weld.Name = "DefaultBackRodWeld"
 	weld.Part0, weld.Part1 = torso, handle
 	weld.Parent = handle
+	rod:SetAttribute("RodId", rodId)
+	if existing then
+		existing:Destroy()
+	end
 	rod.Parent = character
 end
 
@@ -104,17 +107,17 @@ function BackRodService:KnitStart()
 			return
 		end
 		boundPlayers[player] = true
-		player.CharacterAdded:Connect(function(character)
-			task.defer(function()
-				self:AttachBackRod(character)
-			end)
-		end)
-		if player.Character then
+		local function refresh()
 			local character = player.Character
-			task.defer(function()
-				self:AttachBackRod(character)
-			end)
+			if character then
+				task.defer(function()
+					self:AttachBackRod(player, character)
+				end)
+			end
 		end
+		player.CharacterAdded:Connect(refresh)
+		player:GetAttributeChangedSignal("EquippedRodId"):Connect(refresh)
+		refresh()
 	end
 	Players.PlayerAdded:Connect(bindPlayer)
 	Players.PlayerRemoving:Connect(function(player)

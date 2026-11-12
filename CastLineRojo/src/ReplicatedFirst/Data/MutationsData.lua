@@ -4,9 +4,8 @@ export type MutationConfig = {
 	DisplayName: string,
 	PriceRate: number,
 	EarnCashRate: number,
+	Chance: number,
 	LabelColor: string,
-	PullChance: number,
-	backup: string,
 	Icon: string,
 }
 
@@ -17,9 +16,8 @@ local data: {[string]: MutationConfig} = {
 		DisplayName = "Golden",
 		PriceRate = 1.5,
 		EarnCashRate = 1.5,
+		Chance = 0.1,
 		LabelColor = "255, 170, 0",
-		PullChance = 0.1,
-		backup = "0.02",
 		Icon = "rbxassetid://128821997192741",
 	},
 	Diamond = {
@@ -28,9 +26,8 @@ local data: {[string]: MutationConfig} = {
 		DisplayName = "Diamond",
 		PriceRate = 2,
 		EarnCashRate = 2,
+		Chance = 0.05,
 		LabelColor = "37, 204, 255",
-		PullChance = 0.05,
-		backup = "0.001",
 		Icon = "rbxassetid://132091174151109",
 	},
 	Rainbow = {
@@ -39,9 +36,8 @@ local data: {[string]: MutationConfig} = {
 		DisplayName = "Rainbow",
 		PriceRate = 2.5,
 		EarnCashRate = 2.5,
+		Chance = 0.02,
 		LabelColor = "255, 255, 255",
-		PullChance = 0.02,
-		backup = "0.0005",
 		Icon = "rbxassetid://159696879",
 	},
 }

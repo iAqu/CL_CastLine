@@ -19,8 +19,6 @@ assert(service:find("recipientProfile.Data.Items[instanceId] = transferredRecord
 assert(service:find("ItemToolUtil.Create", 1, true), "Gift transfer must create an item tool for the recipient")
 assert(service:find("destroyItemTools", 1, true), "Sender item tools must be destroyed")
 assert(service:find("RemoveItemDescriptors(sender, { instanceId })", 1, true), "Sender hotbar entries must be cleared")
-assert(service:find("RefreshPlayer(sender)", 1, true), "Sender carry weight must refresh")
-assert(service:find("RefreshPlayer(recipient)", 1, true), "Recipient carry weight must refresh")
 assert(service:find("DiscoverItem(recipient, item.ItemID)", 1, true), "Gifted items must update the recipient index")
 assert(service:find("NewItemTagSeenLog", 1, true), "Gifted items must update the recipient new-item tag log")
 assert(not service:find("TotalItemWeightTenths", 1, true), "Gift transfer must not increment total dug weight")

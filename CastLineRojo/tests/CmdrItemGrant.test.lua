@@ -22,7 +22,6 @@ assert(grantUtil:find("condition.ValueMult, mutationPriceRate", 1, true), "Grant
 assert(grantUtil:find("ItemStatUtil.RollWeight(item, random)", 1, true), "Granted items must roll weights")
 assert(grantUtil:find("ItemToolUtil.Create", 1, true), "Granted items must create a Tool")
 assert(grantUtil:find("profile.Data.Items[instanceId]", 1, true), "Granted items must persist before use")
-assert(grantUtil:find('GetService("CarryCapacityService"):RefreshPlayer(player)', 1, true), "Granting must refresh carry stats")
 assert(giveItem:find('Name = "giveItem"', 1, true), "giveItem command must exist")
 assert(giveItem:find('Type = "item"', 1, true), "giveItem must accept configured item IDs")
 assert(giveItemServer:find("ItemGrantUtil.Grant(player, itemId", 1, true), "giveItem must use shared grant logic")

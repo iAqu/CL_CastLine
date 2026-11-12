@@ -56,11 +56,11 @@ def material(part, name):
     mat['RobloxMaterial']=part['material']
     return mat
 
-def create(entry):
-    key=entry['key'];data=read(f'payload/{key}/rig.json')
-    clips=read(f"motions/{data['variant']}.json")['clips']
+def create(entry, reader=read, output=None):
+    key=entry['key'];data=reader(f'payload/{key}/rig.json')
+    clips=reader(f"motions/{data['variant']}.json")['clips']
     name=data['name']
-    out=ROOT/'models'/name;out.mkdir(parents=True,exist_ok=True)
+    out=output or ROOT/'models'/name;out.mkdir(parents=True,exist_ok=True)
     bpy.ops.wm.read_factory_settings(use_empty=True)
     rigdata=bpy.data.armatures.new(name+'Skeleton')
     rig=bpy.data.objects.new(name+'RigV2',rigdata)
@@ -82,8 +82,8 @@ def create(entry):
     scene.frame_start=0
     objects=[]
     for index,p in enumerate(data['parts'],1):
-        source=read(f'source/{key}/part{index:03}.json')
-        weights=read(f'payload/{key}/part{index:03}.json')
+        source=reader(f'source/{key}/part{index:03}.json')
+        weights=reader(f'payload/{key}/part{index:03}.json')
         frame=np.array(source['frame'])
         scale=np.array(source['size'])/np.maximum(source['meshSize'],1e-6)
         matrix=frame[3:].reshape(3,3)
@@ -121,7 +121,7 @@ def create(entry):
         modifier.object=rig
         obj.parent=rig
         mesh.materials.append(material(source,name+'_'+source['name']))
-    source_rig=read(f'source/{key}/rig.json')
+    source_rig=reader(f'source/{key}/rig.json')
     drip_by_name={p['name']:p['bone'] for p in data['drip']}
     for name_point,point,joint in [('MouthAttachment',data['mouth'],'FishBody')]+[
         (p['name'],p['position'],drip_by_name[p['name']]) for p in source_rig['drip']

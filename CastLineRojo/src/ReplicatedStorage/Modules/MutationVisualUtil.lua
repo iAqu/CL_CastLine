@@ -1,8 +1,10 @@
+local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local MutationDataUtil = require(ReplicatedStorage.Modules.MutationDataUtil)
 
 local MutationVisualUtil = {}
+MutationVisualUtil.RAINBOW_TAG = "RainbowFishVisual"
 
 local EFFECT_PART_NAME = "ItemMutationEffectPart"
 local EFFECT_PART_BY_MUTATION = {
@@ -21,7 +23,7 @@ local function warnOnce(key: string, message: string)
 end
 
 local function getTemplate(mutationId: string): BasePart?
-	local effects = ReplicatedStorage:FindFirstChild("Effects")
+	local effects = ReplicatedStorage:FindFirstChild("VFX")
 	local mutationEffects = effects and effects:FindFirstChild("MutationEffect")
 	local templateName = EFFECT_PART_BY_MUTATION[mutationId]
 	local template = templateName and mutationEffects and mutationEffects:FindFirstChild(templateName)
@@ -69,7 +71,67 @@ local function getLocalBounds(anchor: BasePart, parts: { BasePart }): (Vector3, 
 	return (min + max) * 0.5, max - min
 end
 
+local function getSurfaceFolder(surfaceRoot: Instance?, modelName: string): Instance?
+	if not surfaceRoot then
+		return nil
+	end
+	local exact = surfaceRoot:FindFirstChild(modelName)
+	if exact then
+		return exact
+	end
+	local normalizedName = modelName:gsub("%s+", "")
+	local match: Instance? = nil
+	for _, folder in surfaceRoot:GetChildren() do
+		if folder.Name:gsub("%s+", "") == normalizedName then
+			if match then
+				warnOnce("surface_" .. modelName, "MutationVisualUtil: ambiguous FishSurface directory for " .. modelName)
+				return nil
+			end
+			match = folder
+		end
+	end
+	return match
+end
+
+function MutationVisualUtil.ApplyAppearance(target: Instance, value: unknown, modelName: string)
+	local mutationId = MutationDataUtil.NormalizeMutationId(value)
+	if not mutationId then
+		return
+	end
+	local effects = ReplicatedStorage:FindFirstChild("VFX")
+	local surfaceRoot = effects and effects:FindFirstChild("FishSurface")
+	local modelFolder = getSurfaceFolder(surfaceRoot, modelName)
+	local surfaceName, colorName = "SurfaceAppearance_" .. mutationId, "Color_" .. mutationId
+	local fallbackColor = if mutationId == "Rainbow" then nil else MutationDataUtil.GetLabelColor(mutationId)
+
+	for _, mesh in target:GetDescendants() do
+		if not mesh:IsA("MeshPart") or mesh.Transparency >= 1 or mesh.Name == "CameraPart" then
+			continue
+		end
+		local meshFolder = modelFolder and modelFolder:FindFirstChild(mesh.Name)
+		local template = meshFolder and meshFolder:FindFirstChild(surfaceName)
+		local surface = mesh:FindFirstChildOfClass("SurfaceAppearance")
+		if template and template:IsA("SurfaceAppearance") then
+			if surface then
+				surface:Destroy()
+			end
+			template:Clone().Parent = mesh
+		else
+			local colorValue = meshFolder and meshFolder:FindFirstChild(colorName)
+			local color = if colorValue and colorValue:IsA("Color3Value") then colorValue.Value else fallbackColor
+			if color then
+				if surface then
+					surface.Color = color
+				else
+					mesh.Color = color
+				end
+			end
+		end
+	end
+end
+
 function MutationVisualUtil.Remove(target: Instance)
+	CollectionService:RemoveTag(target, MutationVisualUtil.RAINBOW_TAG)
 	for _, descendant in target:GetDescendants() do
 		if descendant.Name == EFFECT_PART_NAME then
 			descendant:Destroy()
@@ -77,17 +139,23 @@ function MutationVisualUtil.Remove(target: Instance)
 	end
 end
 
-function MutationVisualUtil.Apply(target: Instance, value: unknown)
+function MutationVisualUtil.Apply(target: Instance, value: unknown, modelName: string?)
 	MutationVisualUtil.Remove(target)
 	local mutationId = MutationDataUtil.NormalizeMutationId(value)
 	if not mutationId then
 		return
 	end
+	if modelName then
+		MutationVisualUtil.ApplyAppearance(target, mutationId, modelName)
+	end
+	if mutationId == "Rainbow" then
+		CollectionService:AddTag(target, MutationVisualUtil.RAINBOW_TAG)
+	end
 	local template = getTemplate(mutationId)
 	if not template then
 		warnOnce(
 			"template_" .. mutationId,
-			("MutationVisualUtil: missing Effects.MutationEffect.%s"):format(EFFECT_PART_BY_MUTATION[mutationId])
+			("MutationVisualUtil: missing VFX.MutationEffect.%s"):format(EFFECT_PART_BY_MUTATION[mutationId])
 		)
 		return
 	end

@@ -121,12 +121,11 @@ function ItemGrantUtil.Grant(player: Player, itemId: string, options: GrantOptio
 	end
 	local isFirstItemAcquisition = profile.Data.NewItemTagSeenLog[itemId] ~= true
 	profile.Data.NewItemTagSeenLog[itemId] = true
-	Knit.GetService("IndexService"):DiscoverItem(player, itemId)
+	local isNewDiscovery = Knit.GetService("IndexService"):DiscoverItem(player, itemId)
 	if options and options.CountTowardTotalWeight then
 		PlayerDataService:AdjustTotalItemWeightTenths(player, math.round(weight * 10))
 	end
 
-	Knit.GetService("CarryCapacityService"):RefreshPlayer(player)
 
 	return {
 		Item = item,
@@ -138,6 +137,7 @@ function ItemGrantUtil.Grant(player: Player, itemId: string, options: GrantOptio
 		BasePrice = basePrice,
 		Price = price,
 		IsFirstItemAcquisition = isFirstItemAcquisition,
+		IsNewDiscovery = isNewDiscovery,
 		MutationId = mutationId,
 	}
 end

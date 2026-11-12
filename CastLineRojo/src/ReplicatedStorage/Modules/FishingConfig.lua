@@ -1,5 +1,8 @@
 return {
+	EggCatchChance = 0.10,
+	EggMotion = { RockDegrees = 12, BobHeight = 0.3, StruggleRadius = 0.8, SinkDistance = 8 },
 	DefaultRodId = "Rod_101",
+	FixedCastDistance = 30,
 	DistanceLuckScale = 100,
 	WaitLuckMaxMultiplier = 4,
 	WaitLuckRampSeconds = 60,
@@ -13,14 +16,24 @@ return {
 	ApexHeightMax = 60,
 	CastLeadTime = 0.35,
 	FrontShotTime = 0.16,
-	OrbitShotTime = 1.59,
+	OrbitShotTime = 1.39,
 	-- CastRod 在 0.85～1.8 秒后摆停顿；2.05 秒竿尖已前挥且仍高于角色。
 	ReleaseTime = 2.05,
 	AnimationLoadTimeout = 8,
 	ReturnInputDelay = 0.5,
-	Transition = { Cover = 0.3, Reveal = 0.35 },
+	Transition = {
+		Entering = { Cover = 0.12, Reveal = 0.10 },
+		Returning = { Cover = 0.30, Reveal = 0.35 },
+	},
+	Vignette = {
+		FadeIn = 0.3,
+		FadeOut = 0.3,
+		Strength = 0.9, -- ThrowFood 的透明度系数为 0.6，最外圈不透明度为 54%。
+	},
 	Meter = {
 		Segments = 6,
+		BaseSpeed = 0.55,
+		TopSpeedFactor = 2.6,
 		Enter = 0.45,
 		Hold = 0.45,
 		Exit = 0.25,
@@ -40,6 +53,8 @@ return {
 	},
 	Camera = {
 		Attack = 0.05,
+		-- 在 1.8 秒挥竿爆发前完成环绕，留出能容纳 Impact 的身后全景。
+		CastOrbit = { Duration = 0.3, Distance = 18, Height = 4.5, FocusHeight = -2 },
 		Tap = { Shake = 0.3, Bonus = 0.4, Duration = 0.25, Frequency = 22 },
 		Perfect = { Fov = 6, Recovery = 0.3 },
 		Front = { Fov = -6, Recovery = 0.35, Shake = 0.5, Duration = 0.35, Frequency = 20 },
@@ -70,6 +85,8 @@ return {
 	WaterVFX = {
 		Entry = "Cast_WaterEntry",
 		Exit = "Cast_WaterOut",
+		Idle = "Bite_Idle",
+		IdleEnabled = false,
 		Light = "Bite_Light",
 		Heavy = "Bite_Heavey",
 		Struggle = "Bite_Struggle",
@@ -78,8 +95,18 @@ return {
 		StrugglePositionScale = 0.6,
 		StruggleScale = 0.75,
 	},
+	CharacterVFX = {
+		Land = "FishingCast_Land",
+		Wind = "FishingCast_Wind",
+		Impact = "FishingCast_Impact",
+		SwingTime = 1.8,
+		CleanupPadding = 0.1,
+	},
 	RarityVFX = {
-		Template = "Common",
+		ReferenceDiameter = 12,
+		ExitCountScale = 0.35,
+		ExitSizeScale = 0.8,
+		CleanupPadding = 0.1,
 	},
 	BaitElastic = {
 		MinStretch = 0.65,
@@ -253,17 +280,23 @@ return {
 		ShowcaseScreenFraction = 0.55,
 		ShowcasePadding = 0.5,
 		ShowcaseMinDistance = 10,
+		ShowcaseCloseupDistance = 24,
+		ShowcaseCloseupHold = 0.55,
+		ShowcasePullbackTime = 0.9,
 		EscapeTime = 0.7,
 		ShadowTransparency = 0.55,
+		ShadowOutlineTransparency = 0.2,
 		Text = {
 			Waiting = "WAIT FOR A BITE...",
 			Hook = "TAP TO HOOK!",
 			Escaped = "THE FISH GOT AWAY!",
 			Caught = "CAUGHT!",
-			Return = "TAP TO RETURN",
+			Return = "tap to continue",
 		},
 	},
 	Sounds = {
+		LuckTick = { Id = "rbxassetid://137872392480008", Volume = 0.3 },
+		LuckWhole = { Id = "rbxassetid://113397864512278", Volume = 0.85 },
 		MeterTick = { Id = "rbxassetid://137872392480008", Volume = 0.25 },
 		ButtonClick = { Id = "rbxassetid://113397864512278", Volume = 0.8 },
 		Perfect = { Id = "rbxassetid://112485797063762", Volume = 0.5, Pitch = 1.3 },

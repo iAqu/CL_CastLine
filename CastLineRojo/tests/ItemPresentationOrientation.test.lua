@@ -7,7 +7,7 @@ end
 
 local itemBoundsUtil = read("src/ReplicatedStorage/Modules/ItemBoundsUtil.lua")
 local itemToolUtil = read("src/ReplicatedStorage/Modules/ItemToolUtil.lua")
-local plotPedestalController = read("src/StarterPlayer/StarterPlayerScripts/Controllers/PlotPedestalController.lua")
+local plotFishController = read("src/StarterPlayer/StarterPlayerScripts/Controllers/PlotFishController.lua")
 local backpackViewport = read("src/ReplicatedStorage/Modules/BackpackItemViewport.lua")
 local indexViewport = read("src/ReplicatedStorage/Modules/IndexItemViewport.lua")
 local purseBackpack = read("src/StarterPlayer/StarterPlayerScripts/PurseBackpack.client.lua")
@@ -22,16 +22,12 @@ assert(
 	"Held item grip must measure world-axis bounds from the shared helper"
 )
 assert(
-	plotPedestalController:find("ItemBoundsUtil.GetWorldAxisBounds(model)", 1, true),
-	"Pedestal display height must measure world-axis bounds from the shared helper"
+	plotFishController:find("model.PrimaryPart.CFrame:ToObjectSpace(model:GetPivot())", 1, true),
+	"Roaming fish must preserve the authored offset from the swimming body to the model pivot"
 )
 assert(
-	plotPedestalController:find("local authoredRotation = model:GetPivot().Rotation", 1, true),
-	"Pedestal displays must preserve the template authored rotation"
-)
-assert(
-	plotPedestalController:find("model:PivotTo(mountCFrame * authoredRotation)", 1, true),
-	"Pedestal displays must mount with the same authored rotation used by previews"
+	plotFishController:find("model:PivotTo(pose * bodyToPivot)", 1, true),
+	"Roaming fish must face the route tangent using the body-to-pivot offset"
 )
 
 assert(
