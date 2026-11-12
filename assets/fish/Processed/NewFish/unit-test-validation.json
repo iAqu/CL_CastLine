@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "tests": 4,
+  "failures": 0,
+  "runner": "CastLineRojo/tools/run-tests.py",
+  "command": "python3 tools/run-tests.py FishAnimationController FishingBiteSequence FishingCastLifecycle FishingTransition",
+  "luauVersion": "0.746",
+  "luauSource": "https://github.com/luau-lang/luau/releases/tag/0.746",
+  "output": "Tests: 4; failures: 0"
+}

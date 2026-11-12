@@ -54,9 +54,14 @@ folder.Parent = workspace
 local originals = Instance.new("Folder")
 originals.Name = "OriginalTemplates"
 originals.Parent = folder
+<<<<<<< Updated upstream
 local v2 = workspace:FindFirstChild("_RigV2Stage")
 local variants = (v2 or workspace.Fish_Processed):GetChildren()
 local staged = not v2 and workspace:FindFirstChild("_FishRace_Staging")
+=======
+local variants = workspace.Fish_Processed:GetChildren()
+local staged = workspace:FindFirstChild("_FishNewFish_Staging") or workspace:FindFirstChild("_FishRace_Staging")
+>>>>>>> Stashed changes
 if staged then
 	for _, fish in staged:GetChildren() do
 		table.insert(variants, fish)

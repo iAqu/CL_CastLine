@@ -1,0 +1,12 @@
+{
+  "source": "assets/fish/Processed/NewFish/source/New059p0011_diff.png",
+  "output": "assets/fish/Processed/NewFish/textures/55b41c8dd634a91d.png",
+  "width": 1536,
+  "height": 1920,
+  "method": "HSV saturation +35% with gamut taper; value soft contrast +20%",
+  "layoutUnchanged": true,
+  "alphaUnchanged": true,
+  "changedPixels": 1363587,
+  "sourceSha256": "55b41c8dd634a91deca8ef94387ba977324e5f89b4e80f76d5faa14ec2e1015f",
+  "outputSha256": "be5ae2bf4806c96941a13a2b8e85e99237828f7c9d6d920e533ad5d6b04215cf"
+}

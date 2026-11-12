@@ -1,0 +1,32 @@
+newmtl New006p0271Mtl
+Material Color
+Ka 0.0938759 0.147998 0.163641
+Kd 0.0938759 0.147998 0.163641
+Ks 0.00589025 0.00928615 0.0102676 
+
+d 1
+
+Ns 0
+
+map_Ka New006p0281_diff.png
+map_Kd New006p0281_diff.png
+map_d New006p0281_diff.png
+
+map_Bump New006p0281_nmap.png
+
+newmtl New006p0281Mtl
+Material Color
+Ka 0.373615 0.368591 0.383775
+Kd 0.373615 0.368591 0.383775
+Ks 0.0234425 0.0231273 0.02408 
+
+d 1
+
+Ns 0
+
+map_Ka New006p0281_diff.png
+map_Kd New006p0281_diff.png
+map_d New006p0281_diff.png
+
+map_Bump New006p0281_nmap.png
+
