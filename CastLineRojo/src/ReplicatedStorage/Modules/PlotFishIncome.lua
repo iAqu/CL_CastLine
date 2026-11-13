@@ -1,4 +1,5 @@
 local FishInventoryData = require(script.Parent.FishInventoryData)
+local ItemStatUtil = require(script.Parent.ItemStatUtil)
 local MutationDataUtil = require(script.Parent.MutationDataUtil)
 local PlotPlacementUtil = require(script.Parent.PlotPlacementUtil)
 
@@ -30,7 +31,7 @@ function PlotFishIncome.GetBestOwnedBaseCps(data): number
 	return best or PlotFishIncome.GetDefaultBaseCps()
 end
 
-function PlotFishIncome.GetCpsPrice(itemData, mutationEarnCashRate: number?, bestBaseCps: number?): number
+function PlotFishIncome.GetCpsPrice(itemData, mutationEarnCashRate: number?, bestBaseCps: number?, actualWeight: number?): number
 	local cpsPrice = tonumber(itemData and itemData.CpsPrice) or 0
 	local mutationRate = math.max(0, tonumber(mutationEarnCashRate) or 1)
 	if cpsPrice ~= cpsPrice or cpsPrice == math.huge or cpsPrice == -math.huge then
@@ -39,11 +40,12 @@ function PlotFishIncome.GetCpsPrice(itemData, mutationEarnCashRate: number?, bes
 	if mutationRate ~= mutationRate or mutationRate == math.huge then
 		mutationRate = 1
 	end
+	local weightRate = if itemData then ItemStatUtil.GetWeightValueMultiplier(itemData, actualWeight) else 1
 	if itemData and itemData.Rarity == "Event" then
 		local base = finiteNonnegative(bestBaseCps) or PlotFishIncome.GetDefaultBaseCps()
-		return math.max(1, math.floor(base * math.max(0, cpsPrice) * mutationRate))
+		return math.max(1, math.floor(base * math.max(0, cpsPrice) * mutationRate * weightRate))
 	end
-	return math.max(0, math.floor(cpsPrice * mutationRate))
+	return math.max(0, math.floor(cpsPrice * mutationRate * weightRate))
 end
 
 function PlotFishIncome.ComputeOfflineCash(cpsPrice: number, offlineSeconds: number): number
@@ -72,7 +74,8 @@ function PlotFishIncome.GetRate(data): number
 			rate += PlotFishIncome.GetCpsPrice(
 				FishInventoryData[record.ItemId],
 				MutationDataUtil.GetEarnCashRate(record.MutationId),
-				bestBaseCps
+				bestBaseCps,
+				record.Weight
 			)
 		end
 	end

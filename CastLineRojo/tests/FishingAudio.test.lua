@@ -85,6 +85,7 @@ local function sound(name)
 end
 for _, name in ipairs({
 	"FishingRodCast",
+	"FishingBaitShow",
 	"FishBiteHeavey",
 	"FishBite",
 	"FishReelLoop",
@@ -188,6 +189,26 @@ local function advance(seconds)
 end
 
 local audio = create()
+local appear = audio:Play("FishingBaitShow")
+assert(appear.Volume == 0.37 and appear.PlaybackSpeed == 0.85 and not appear.Looped,
+	"Bait appearance must preserve the Studio sound mix and play once")
+enabled = false
+audio:RefreshSoundSetting()
+assert(appear.destroyed and audio:Play("FishingBaitShow") == nil,
+	"Muting must stop the appearance cue and prevent new voices")
+enabled = true
+audio:RefreshSoundSetting()
+assert(count("FishingBaitShow") == 1, "Unmuting must not replay appearance")
+local appearTemplate = templates.FishingBaitShow
+templates.FishingBaitShow = nil
+local appearWarnings = warnings
+assert(audio:Play("FishingBaitShow") == nil and audio:Play("FishingBaitShow") == nil)
+assert(warnings == appearWarnings + 1, "Missing appearance sound must warn once without blocking")
+templates.FishingBaitShow = appearTemplate
+appear = audio:Play("FishingBaitShow")
+audio:Destroy()
+assert(appear.destroyed, "Exiting must immediately stop the appearance sound")
+audio = create()
 local cast = audio:Play("FishingRodCast")
 assert(cast.Volume == 0.37 and cast.PlaybackSpeed == 0.85 and cast.effect == "template-effect")
 assert(not cast.Looped and cast ~= templates.FishingRodCast)

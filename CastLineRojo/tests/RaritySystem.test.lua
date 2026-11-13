@@ -70,7 +70,7 @@ local function check(h)
 		assert(Roll.RollRarity(data, {}, "Zone_1", available, random) == nil)
 		assert(Roll.RollRarity({}, { ["Chance_" .. name] = 1 }, "Zone_1", available, random) == nil)
 		near(Stat.CalculateLuck(data[name], 25, 3), luck[index] * 5 * 3 * 0.00045 * 2)
-		assert(Stat.CalculatePrice(data[name], 20, 3, 2) == 1200)
+		assert(Stat.CalculatePrice(data[name], 20, 3, 2) == 909)
 		if index > 7 then
 			for key, value in pairs(Reveal.GetStyle("Secret")) do assert(Reveal.GetStyle(name)[key] == value) end
 		end

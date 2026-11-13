@@ -1,5 +1,6 @@
 return {
 	Name = "giveItem";
+	Aliases = { "giveFish" };
 	Description = "Give a configured item directly to a player's backpack";
 	Group = "Admin";
 	Args = {

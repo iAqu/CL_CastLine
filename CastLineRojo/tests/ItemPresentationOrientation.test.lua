@@ -8,7 +8,6 @@ end
 local itemBoundsUtil = read("src/ReplicatedStorage/Modules/ItemBoundsUtil.lua")
 local itemToolUtil = read("src/ReplicatedStorage/Modules/ItemToolUtil.lua")
 local plotFishController = read("src/StarterPlayer/StarterPlayerScripts/Controllers/PlotFishController.lua")
-local backpackViewport = read("src/ReplicatedStorage/Modules/BackpackItemViewport.lua")
 local indexViewport = read("src/ReplicatedStorage/Modules/IndexItemViewport.lua")
 local purseBackpack = read("src/StarterPlayer/StarterPlayerScripts/PurseBackpack.client.lua")
 
@@ -39,26 +38,6 @@ assert(
 	"Item tools must capture the authored Model pivot before detaching their Handle"
 )
 assert(
-	backpackViewport:find("ItemToolUtil.VISUAL_PIVOT_OFFSET_ATTRIBUTE", 1, true),
-	"Inventory previews must consume the authored visual pivot"
-)
-assert(
-	backpackViewport:find("handle.PivotOffset = visualPivotOffset", 1, true),
-	"Inventory previews must restore the authored visual pivot on their cloned Handle"
-)
-assert(
-	backpackViewport:find("previewModel.PrimaryPart = handle", 1, true),
-	"Inventory previews must use the restored authored pivot as the preview model pivot"
-)
-assert(
-	backpackViewport:find("local FRONT_FACING_ROTATION = CFrame.Angles(0, math.pi, 0)", 1, true),
-	"Inventory previews must define the shared front-facing correction"
-)
-assert(
-	backpackViewport:find("previewModel:PivotTo(MODEL_ROTATION * FRONT_FACING_ROTATION * authoredRotation)", 1, true),
-	"Inventory previews must preserve authored rotation before applying the presentation rotation"
-)
-assert(
 	indexViewport:find("local FRONT_FACING_ROTATION = CFrame.Angles(0, math.pi, 0)", 1, true),
 	"Index previews must define the shared front-facing correction"
 )
@@ -67,12 +46,12 @@ assert(
 	"Index previews must preserve authored rotation with the same correction as inventory previews"
 )
 assert(
-	backpackViewport:find('tool:FindFirstChildWhichIsA("BasePart", true)', 1, true),
-	"Inventory previews must wait for a replicated Tool visual before cloning it"
+	not purseBackpack:find("BackpackItemViewport", 1, true),
+	"Backpack icon presentation must not create 3D previews"
 )
 assert(
-	purseBackpack:find("tool.DescendantAdded:Connect", 1, true),
-	"Backpack slots must refresh when a Tool's visual arrives after the Tool itself"
+	purseBackpack:find('GetPropertyChangedSignal("TextureId")', 1, true),
+	"Backpack slots must refresh when their icon changes"
 )
 
 print("ItemPresentationOrientation.test.lua passed")

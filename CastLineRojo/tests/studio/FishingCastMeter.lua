@@ -16,6 +16,7 @@ local enabled = true
 local owner = setmetatable({
 	phase = "Preparing", fixedCast = true, fullLuck = 10,
 	meterProgress = 0, meterDirection = 1, lastMeterStep = 0,
+	impulses = {}, flash = {},
 	meter = { marker = {} }, folder = folder, sounds = {},
 	options = { isSoundEnabled = function() return enabled end },
 	info = {

@@ -71,11 +71,13 @@ end
 
 local modules = "src/ReplicatedStorage/Modules/"
 local placements = loadSource(modules .. "PlotPlacementUtil.lua")
+local stats = require("./helpers/ItemStats")
 local inventory = {
 	Small = { ItemID = "Small", CpsPrice = 4 },
 	Large = { ItemID = "Large", CpsPrice = 20 },
 }
 local mutations = {
+	GetPriceRate = function() return 1 end,
 	NormalizeMutationId = function(id)
 		return id
 	end,
@@ -88,7 +90,7 @@ local income = loadSource(modules .. "PlotFishIncome.lua", {
 		return value
 	end,
 	script = {
-		Parent = { FishInventoryData = inventory, MutationDataUtil = mutations, PlotPlacementUtil = placements },
+		Parent = { FishInventoryData = inventory, ItemStatUtil = stats, MutationDataUtil = mutations, PlotPlacementUtil = placements },
 	},
 })
 
@@ -174,7 +176,7 @@ local services = {
 			MutationDataUtil = mutations,
 			PlotPlacementUtil = placements,
 			PlotFishIncome = income,
-			ItemStatUtil = {},
+			ItemStatUtil = stats,
 			ItemToolUtil = {
 				GetInstanceId = function(tool)
 					return tool.uid

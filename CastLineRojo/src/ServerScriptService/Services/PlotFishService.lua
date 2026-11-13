@@ -63,8 +63,7 @@ local function readItemRecord(record, repair: boolean?): (any?, any?)
 		return nil, nil
 	end
 	local mutationId = MutationDataUtil.NormalizeMutationId(record.MutationId)
-	local price = tonumber(record.Price)
-		or ItemStatUtil.CalculatePrice(item, weight, condition.ValueMult, MutationDataUtil.GetPriceRate(mutationId))
+	local price = ItemStatUtil.CalculatePrice(item, weight, condition.ValueMult, MutationDataUtil.GetPriceRate(mutationId))
 	if repair then
 		record.Weight = weight
 		record.ConditionId = conditionId
@@ -136,7 +135,7 @@ local function defaultEntry(slot: number): Vector3
 end
 
 local function getIncome(item, data, bestBaseCps: number): number
-	return PlotFishIncome.GetCpsPrice(item, MutationDataUtil.GetEarnCashRate(data.MutationId), bestBaseCps)
+	return PlotFishIncome.GetCpsPrice(item, MutationDataUtil.GetEarnCashRate(data.MutationId), bestBaseCps, data.Weight)
 end
 
 local function getEquippedFish(player: Player, data)

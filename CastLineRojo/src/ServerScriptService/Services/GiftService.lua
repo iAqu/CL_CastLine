@@ -90,7 +90,7 @@ local function normalizeItemRecord(record): (any?, any?)
 		return nil, nil
 	end
 	local mutationId = MutationDataUtil.NormalizeMutationId(record.MutationId)
-	local price = tonumber(record.Price) or ItemStatUtil.CalculatePrice(
+	local price = ItemStatUtil.CalculatePrice(
 		item,
 		weight,
 		condition.ValueMult,

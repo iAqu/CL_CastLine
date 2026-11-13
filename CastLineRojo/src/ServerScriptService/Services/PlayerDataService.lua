@@ -568,6 +568,8 @@ function PlayerDataService:LoadProfile(player: Player)
 		return
 	end
 
+	-- Reprice before either the early snapshot or the regular loaded-inventory event.
+	require(ReplicatedStorage.Modules.ItemPriceMigration)(profile.Data)
 	-- 数据已经可以先返回客户端；业务 Service 的 ProfileLoaded 广播等待 Knit 就绪。
 	self._PendingProfiles[player] = profile
 	self._LoadingProfiles[player] = nil

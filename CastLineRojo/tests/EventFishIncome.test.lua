@@ -8,12 +8,13 @@ end
 local prefix = "src/ReplicatedStorage/Modules/"
 local fishes = loadSource("src/ReplicatedFirst/Data/FishesData.lua")
 local placements = loadSource(prefix .. "PlotPlacementUtil.lua")
+local stats = require("./helpers/ItemStats")
 local mutations = {
 	NormalizeMutationId = function(id) return id end,
 	GetEarnCashRate = function(id) return if id == "Golden" then 1.5 else 1 end,
 }
 local income = loadSource(prefix .. "PlotFishIncome.lua", {
-	script = { Parent = { FishInventoryData = fishes, MutationDataUtil = mutations, PlotPlacementUtil = placements } },
+	script = { Parent = { FishInventoryData = fishes, ItemStatUtil = stats, MutationDataUtil = mutations, PlotPlacementUtil = placements } },
 	require = function(module) return module end,
 })
 

@@ -52,8 +52,7 @@ local function normalizeStoredItem(record, item)
 		return nil
 	end
 	local mutationId = MutationDataUtil.NormalizeMutationId(record.MutationId)
-	local price = tonumber(record.Price)
-		or ItemStatUtil.CalculatePrice(item, weight, condition.ValueMult, MutationDataUtil.GetPriceRate(mutationId))
+	local price = ItemStatUtil.CalculatePrice(item, weight, condition.ValueMult, MutationDataUtil.GetPriceRate(mutationId))
 	record.Weight = weight
 	record.ConditionId = conditionId
 	record.Price = price

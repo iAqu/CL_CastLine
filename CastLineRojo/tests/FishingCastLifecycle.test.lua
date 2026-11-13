@@ -405,6 +405,7 @@ for _, ceiling in { 1.3, 10, 100 } do
 		local cues = {}
 		local probe = setmetatable({
 			phase = "Preparing", fixedCast = true, fullLuck = ceiling,
+			impulses = {},
 			meterStarted = 100, lastMeterStep = 0, enabled = true,
 			meterProgress = 0, meterDirection = 1,
 			meter = { marker = {} },
@@ -485,29 +486,53 @@ do
 		"Discard overshoot and reverse at the bottom on the next long frame")
 end
 
-for _, progress in { 0, 0.919999, 0.92, 1 } do
+for _, progress in { 0, 0.5, 0.919999, 0.92, 1 } do
 	local cues = {}
 	local probe = setmetatable({
 		phase = "Preparing", fixedCast = true, meterProgress = progress,
-		folder = sequence.folder, meter = { gui = {} },
+		folder = sequence.folder, meter = { gui = {}, marker = {} },
+		impulses = {}, flash = { Visible = false, BackgroundTransparency = 1 },
 		_sound = function(_, name, volume, pitch)
 			table.insert(cues, { name = name, volume = volume, pitch = pitch })
 		end,
-		_impulse = function() end,
 	}, Sequence)
 	assert(probe:LockCastMeter() == progress, "Lock the visible progress before confirmation audio")
 	local expected = if progress >= 0.92 then 2 else 1
+	assert(#probe.impulses == expected and probe.phase == "Preparing",
+		"Camera feedback must begin while server confirmation is still pending")
+	local tap = probe.impulses[1]
+	assert(math.abs(tap.shake - (0.3 + progress * 0.4)) < 1e-10
+		and tap.settings.Duration == 0.25 and tap.settings.Frequency == 22,
+		"Click shake must match Throw Food's strength, duration and frequency")
 	assert(#cues == expected and cues[1].name == "ButtonClick" and cues[1].volume == 0.8
 		and math.abs(cues[1].pitch - (0.9 + progress * 0.5)) < 1e-10,
 		"Confirm immediately with the locked progress pitch")
 	if progress >= 0.92 then
 		assert(cues[2].name == "Perfect" and cues[2].volume == 0.5 and cues[2].pitch == 1.3,
 			"At 92% and above, layer Throw Food's perfect confirmation")
+		assert(probe.flash.Visible and probe.flash.BackgroundTransparency == 0.65
+			and probe.flash.BackgroundColor3[2] == 255, "Perfect must immediately show the green flash")
+		assert(math.abs(select(6, probe:_sampleImpulses(tap.started + 0.05)) - 6) < 1e-6,
+			"Perfect must reach +6 FOV after 50ms before server confirmation")
+		probe:_updatePresentation(probe.perfectAt + 0.175, 0)
+		assert(math.abs(probe.flash.BackgroundTransparency - 0.9125) < 1e-6,
+			"Fixed casts must fade the perfect flash while waiting for the server")
+		probe:_updatePresentation(probe.perfectAt + 0.35, 0)
+		assert(math.abs(probe.flash.BackgroundTransparency - 1) < 1e-6,
+			"Perfect flash must fully recover after 350ms")
+		assert(select(6, probe:_sampleImpulses(tap.started + 0.36)) == 0,
+			"Perfect FOV must recover without server confirmation")
+	else
+		assert(not probe.flash.Visible and probe.perfectAt == nil,
+			"Below 92%, clicks must not flash or punch the FOV")
 	end
+	local pendingImpulses = #probe.impulses
 	probe:LockCastMeter()
 	probe:Cast(progress, 30)
 	probe:Cast(progress, 30)
 	assert(#cues == expected, "Repeated locks and server confirmation must not replay either confirmation cue")
+	assert(#probe.impulses == pendingImpulses,
+		"Repeated locks and server confirmation must not add another camera impulse")
 end
 
 do

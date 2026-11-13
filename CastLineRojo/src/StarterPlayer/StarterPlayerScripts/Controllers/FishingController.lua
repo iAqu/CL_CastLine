@@ -475,6 +475,7 @@ local function begin(entry)
 					state.baitSelection = nil
 					state.audio = FishingAudio.new(isSoundEnabled)
 					state.sequence = FishingCastSequence.new(rig, playerGui, meter, animation, baitModel or bait, {
+						playBaitAppear = baitData ~= nil,
 						isSoundEnabled = isSoundEnabled,
 						audio = state.audio,
 						initialYaw = result.initialYaw,

@@ -70,7 +70,7 @@ local modules = {
 	GamePassEffectUtil = { GetItemLuckMultiplier = function() return 1 end, GetSaleMultiplier = function() return 1 end },
 }
 local income = assert(load(read("src/ReplicatedStorage/Modules/PlotFishIncome.lua"), "Income", "t", setmetatable({
-	script = { Parent = { FishInventoryData = fish, MutationDataUtil = modules.MutationDataUtil, PlotPlacementUtil = {} } },
+	script = { Parent = { FishInventoryData = fish, ItemStatUtil = require("./helpers/ItemStats"), MutationDataUtil = modules.MutationDataUtil, PlotPlacementUtil = {} } },
 	require = function(value) return value end,
 }, { __index = getfenv() })))()
 local guid, failRecipient = 0, false

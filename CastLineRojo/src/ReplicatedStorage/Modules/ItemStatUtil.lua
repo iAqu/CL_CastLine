@@ -67,6 +67,18 @@ function ItemStatUtil.GetSizeTitle(item: ItemConfig, actualWeight: number?): str
 	return SIZE_TITLES[math.min(level, #SIZE_TITLES)]
 end
 
+function ItemStatUtil.GetWeightValueMultiplier(item: ItemConfig, actualWeight: number?): number
+	local weight = tonumber(actualWeight)
+	local defaultWeight = tonumber(item.DefaultWeight)
+	if not weight or not defaultWeight or defaultWeight <= 0 or weight < 0
+		or weight ~= weight or defaultWeight ~= defaultWeight
+		or weight == math.huge or defaultWeight == math.huge
+	then
+		return 1
+	end
+	return (weight / defaultWeight) ^ 0.6
+end
+
 function ItemStatUtil.CalculatePrice(
 	item: ItemConfig,
 	actualWeight: number,
@@ -77,7 +89,7 @@ function ItemStatUtil.CalculatePrice(
 	local mutationMultiplier = math.max(0, tonumber(mutationPriceRate) or 1)
 	return math.round(
 		(tonumber(item.DefaultPrice) or 0)
-			* getWeightRatio(item, actualWeight)
+			* ItemStatUtil.GetWeightValueMultiplier(item, actualWeight)
 			* conditionMultiplier
 			* mutationMultiplier
 	)

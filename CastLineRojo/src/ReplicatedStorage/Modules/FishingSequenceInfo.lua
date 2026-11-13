@@ -195,7 +195,12 @@ function FishingSequenceInfo:_showCatch(bite)
 		label.Visible = id == mutationId
 	end
 	self.mutationRow.Visible = mutationId ~= nil and self.mutationLabels[mutationId] ~= nil
-	local income = PlotFishIncome.GetCpsPrice(item, MutationDataUtil.GetEarnCashRate(bite.mutationId))
+	local bestBaseCps
+	if item.Rarity == "Event" then
+		local player = game:GetService("Players").LocalPlayer
+		bestBaseCps = player and player:GetAttribute(PlotFishIncome.BEST_CPS_ATTRIBUTE)
+	end
+	local income = PlotFishIncome.GetCpsPrice(item, MutationDataUtil.GetEarnCashRate(bite.mutationId), bestBaseCps, bite.catchWeight)
 	self.income.Text = "$" .. NumberUtil.FormatItemPriceCompact(income) .. "/s"
 	self.revealedBite = bite
 	self.owner:_celebrateCatch(bite)

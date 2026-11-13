@@ -112,7 +112,7 @@ local function createHeldItemTitle(
 	titleAnchor.Position = Vector3.zero
 	titleAnchor.Parent = handle
 
-	local title = FishTitleUtil.Create(titleGui, item, instanceData.MutationId, owner)
+	local title = FishTitleUtil.Create(titleGui, item, instanceData.MutationId, owner, instanceData.Weight)
 	if not title then
 		warn("ItemToolUtil: missing held fish title template")
 		return

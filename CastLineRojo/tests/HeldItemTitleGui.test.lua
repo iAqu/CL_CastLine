@@ -12,7 +12,7 @@ assert(itemToolUtil:find('local StarterGui = game:GetService("StarterGui")', 1, 
 assert(itemToolUtil:find('local HELD_ITEM_TITLE_NAME = "HeldItemTitle"', 1, true), "Held item titles need a stable name")
 assert(itemToolUtil:find('local HELD_ITEM_TITLE_ANCHOR_NAME = "HeldItemTitleAnchor"', 1, true), "Held item titles need a stable anchor name")
 assert(itemToolUtil:find('local function createHeldItemTitle', 1, true), "Item tools must build a held-item title")
-assert(itemToolUtil:find('FishTitleUtil.Create(titleGui, item, instanceData.MutationId, owner)', 1, true), "Replicated held titles must use the shared fish title")
+assert(itemToolUtil:find('FishTitleUtil.Create(titleGui, item, instanceData.MutationId, owner, instanceData.Weight)', 1, true), "Replicated held titles must include the actual weight")
 assert(itemToolUtil:find('Instance.new("Attachment")', 1, true), "Held item titles must use an attachment anchor")
 assert(itemToolUtil:find('titleAnchor.Parent = handle', 1, true), "Held item title anchors must follow the Tool handle")
 assert(itemToolUtil:find('titleAnchor.Position = Vector3.zero', 1, true), "Held title anchors must stay at the grip point")
@@ -24,7 +24,7 @@ assert(itemToolUtil:find('createHeldItemTitle(visual, handle, item, instanceData
 
 assert(heldItemVisualController:find("ItemToolUtil.IsItemTool(tool)", 1, true), "The local client must recognize equipped item Tools")
 assert(heldItemVisualController:find("createLocalHeldItemTitle", 1, true), "The local client must create its own held-item title")
-assert(heldItemVisualController:find("FishTitleUtil.Create(titleGui, item, mutationId, LOCAL_PLAYER)", 1, true), "Local held titles must use the shared fish title")
+assert(heldItemVisualController:find("FishTitleUtil.Create(titleGui, item, mutationId, LOCAL_PLAYER, tool:GetAttribute(ItemToolUtil.WEIGHT_ATTRIBUTE))", 1, true), "Local held titles must include the actual weight")
 assert(heldItemVisualController:find('LOCAL_TITLE_NAME = "LocalHeldItemTitle"', 1, true), "Local held-item titles need a stable name")
 local localMount = heldItemVisualController:find("title.Parent = titleAnchor", 1, true)
 local hideReplicated = heldItemVisualController:find("serverTitle.Enabled = false", 1, true)

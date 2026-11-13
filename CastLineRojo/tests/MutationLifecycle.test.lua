@@ -48,7 +48,7 @@ assert(visualUtil:find("for _, descendant in target:GetDescendants()", 1, true),
 
 assert(toolUtil:find("MutationVisualUtil.Apply", 1, true), "Held tools must keep their Mutation particles")
 assert(drownController:find("MutationTitleUtil.Show", 1, true), "Drowned item titles must retain the Mutation label")
-assert(plotFishController:find("FishTitleUtil.Create(titleGui, item, mutationId, owner)", 1, true), "Roaming fish must use the shared fish title")
+assert(plotFishController:find("FishTitleUtil.Create(titleGui, item, mutationId, owner, weight)", 1, true), "Roaming fish titles must include weight")
 assert(plotFishController:find("MutationVisualUtil.Apply", 1, true), "Roaming fish must keep their Mutation particles")
 
 local function loadSource(path, globals)
@@ -62,7 +62,7 @@ local mutationData = loadSource(modulesPath .. "MutationDataUtil.lua", {
 	require = function(value) return value end,
 })
 local income = loadSource(modulesPath .. "PlotFishIncome.lua", {
-	script = { Parent = { FishInventoryData = {}, MutationDataUtil = mutationData, PlotPlacementUtil = {} } },
+	script = { Parent = { FishInventoryData = {}, ItemStatUtil = require("./helpers/ItemStats"), MutationDataUtil = mutationData, PlotPlacementUtil = {} } },
 	require = function(value) return value end,
 })
 local modules = {

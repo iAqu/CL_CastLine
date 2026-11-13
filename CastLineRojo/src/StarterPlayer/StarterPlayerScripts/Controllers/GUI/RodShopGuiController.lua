@@ -5,6 +5,7 @@ local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 
 local Modules = ReplicatedStorage.Modules
+local FishingConfig = require(Modules.FishingConfig)
 local Knit = require(ReplicatedStorage.Packages.Knit)
 local ButtonAnimation = require(Modules.ButtonAnimation)
 local FishingAssets = require(Modules.FishingAssets)
@@ -113,6 +114,14 @@ function RodShopGuiController:KnitStart()
 	end
 
 	local function buildCards()
+		-- Keep both same-named rows in the authored template for restoring the limit later.
+		if not FishingConfig.RodWeightLimitEnabled then
+			for _, row in template.Information:GetChildren() do
+				if row.Name == "Weight" then
+					row.Visible = false
+				end
+			end
+		end
 		for id, rod in RodsData do
 			local card = template:Clone()
 			card.Name = id
@@ -125,6 +134,9 @@ function RodShopGuiController:KnitStart()
 			for _, row in information:GetChildren() do
 				if row.Name == "Weight" then
 					row.Counter.Text = tostring(rod.MaxWeight) .. "kg"
+					if not FishingConfig.RodWeightLimitEnabled then
+						row.Visible = false
+					end
 				elseif row.Name == "Location" or row.Name == "Distance" then
 					row.Visible = false
 				end

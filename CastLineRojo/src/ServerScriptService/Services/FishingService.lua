@@ -109,7 +109,7 @@ function FishingService.Client:SelectBait(player: Player, token, baitId)
 	local pool = FishingRoll.GetPool(FishesData, state.rod.MaxWeight, bait, Assets.GetFish)
 	local eggPool = if PetFeatureConfig.Enabled then FishingRoll.GetEggPool(EggsData, state.rod.MaxWeight, Assets.GetEgg) else {}
 	if #pool == 0 then
-		return failure("No fish match this bait within your rod's weight limit")
+		return failure("No fish match this bait")
 	end
 	if PetFeatureConfig.Enabled and #eggPool == 0 then return failure("No eggs are available for this rod") end
 	local profile = PlayerDataService:GetProfile(player)
@@ -130,7 +130,7 @@ function FishingService.Client:SelectBait(player: Player, token, baitId)
 	return {
 		ok = true,
 		initialYaw = state.initialYaw,
-		luck = FishingRoll.GetLuck(state.rod, bait, Config.FixedCastDistance, 0) * Knit.GetService("PetService"):GetLuckMultiplier(player),
+		luck = FishingRoll.GetLuck(state.rod, bait, Config.FixedCastDistance) * Knit.GetService("PetService"):GetLuckMultiplier(player),
 	}
 end
 
@@ -144,6 +144,8 @@ function FishingService.Client:Cast(player: Player, token, progress)
 		return failure("Invalid cast progress")
 	end
 	local distance = Config.FixedCastDistance
+	local eventFish = Knit.GetService("EventFishService"):GetActiveFish()
+	state.eventFishId = eventFish and eventFish.FishID
 	state.castLuckMultiplier = FishingRoll.GetCastLuckMultiplier(progress)
 	state.phase, state.distance = "Waiting", distance
 	local flightTime = ProjectileMath.FlightTime(distance)
@@ -153,7 +155,7 @@ function FishingService.Client:Cast(player: Player, token, progress)
 	return {
 		ok = true,
 		distance = distance,
-		luck = FishingRoll.GetLuck(state.rod, state.bait, distance, 0, state.castLuckMultiplier) * Knit.GetService("PetService"):GetLuckMultiplier(player),
+		luck = FishingRoll.GetLuck(state.rod, state.bait, distance, state.castLuckMultiplier) * Knit.GetService("PetService"):GetLuckMultiplier(player),
 	}
 end
 
@@ -166,12 +168,16 @@ function FishingService.Client:NextRound(player: Player, token, previousRound)
 		return failure("Fishing round unavailable")
 	end
 	local startedAt = now + ROUND_LEAD_SECONDS
-	state.landedAt = state.landedAt or startedAt
 	local luck = FishingRoll.GetLuck(
-		state.rod, state.bait, state.distance, startedAt - state.landedAt, state.castLuckMultiplier
+		state.rod, state.bait, state.distance, state.castLuckMultiplier
 	)
 	local petMultiplier = Knit.GetService("PetService"):GetLuckMultiplier(player)
-	local catchKind, fish = FishingRoll.ChooseCatch(state.pool, state.eggPool, luck, petMultiplier, random)
+	local catchKind, fish
+	if state.eventFishId then
+		catchKind, fish = "Fish", FishesData[state.eventFishId]
+	else
+		catchKind, fish = FishingRoll.ChooseCatch(state.pool, state.eggPool, luck, petMultiplier, random)
+	end
 	local template = fish and (if catchKind == "Egg" then Assets.GetEgg(fish.Model) else Assets.GetFish(fish.Model))
 	if not template then
 		return failure("Fish model unavailable")
@@ -184,6 +190,7 @@ function FishingService.Client:NextRound(player: Player, token, previousRound)
 		template, state.baitSize, startedAt, readyAt, seed, motionSeed, state.spin, fish, catchKind
 	)
 	state.round += 1
+	state.roundLuck = luck * petMultiplier
 	state.fishId = fish.FishID
 	state.catchKind, state.catchId = catchKind, if catchKind == "Egg" then fish.EggId else fish.FishID
 	state.biteAt, state.biteEndsAt = biteAt, biteEndsAt
@@ -199,7 +206,7 @@ function FishingService.Client:NextRound(player: Player, token, previousRound)
 		retryAt = state.retryAt,
 		seed = seed,
 		motionSeed = motionSeed,
-		luck = luck * petMultiplier,
+		luck = state.roundLuck,
 	}
 end
 
@@ -224,8 +231,8 @@ function FishingService.Client:Hook(player: Player, token, round, pressedAt)
 	end
 	local fish = FishesData[state.fishId]
 	local granted, err = ItemGrantUtil.Grant(player, state.fishId, {
-		Weight = FishingRoll.RollWeight(fish.DefaultWeight, state.rod.MaxWeight, random),
-		MutationId = FishingRoll.RollMutation(mutationRanges, random),
+		Weight = FishingRoll.RollWeightLucky(fish.DefaultWeight, state.rod.MaxWeight, state.roundLuck, random),
+		MutationId = FishingRoll.RollMutationLucky(mutationRanges, state.roundLuck, random),
 		CountTowardTotalWeight = true,
 	})
 	if not granted then

@@ -7,6 +7,20 @@ local function smooth(alpha)
 	return alpha * alpha * (3 - 2 * alpha)
 end
 
+-- 独立的均匀出现缩放，与各阶段的保体积弹性缩放相乘。
+function BaitElasticMotion.SampleAppear(elapsed)
+	local settings = Config.BaitAppear
+	local scale
+	if elapsed < settings.PeakTime then
+		scale = settings.StartScale + (settings.PeakScale - settings.StartScale) * smooth(elapsed / settings.PeakTime)
+	else
+		scale = settings.PeakScale
+			+ (1 - settings.PeakScale) * smooth((elapsed - settings.PeakTime) / (settings.Duration - settings.PeakTime))
+	end
+	local fill = settings.FillTransparency + (1 - settings.FillTransparency) * smooth(elapsed / settings.Duration)
+	return scale, fill
+end
+
 -- 纯时间采样；不积分、不抽随机数，也不读取上一帧变形后的尺寸。
 function BaitElasticMotion.Rebound(alpha)
 	if alpha <= 0 or alpha >= 1 then

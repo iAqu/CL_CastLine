@@ -7,6 +7,9 @@ end
 
 local modules = "src/ReplicatedStorage/Modules/"
 local config = loadSource(modules .. "FishingConfig.lua")
+-- Retain regression coverage for restoring rod limits. Disabled limits have separate tests.
+assert(config.RodWeightLimitEnabled == false)
+config.RodWeightLimitEnabled = true
 local petFeatureConfig = loadSource(modules .. "PetFeatureConfig.lua")
 local rarityNames = { "Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythic", "Secret", "Divine", "Celestial", "Eternal", "Cosmic", "Exclusive" }
 local rarities = {}
@@ -20,7 +23,23 @@ local roll = loadSource(modules .. "FishingRoll.lua", setmetatable({
 local function data(name)
 	return loadSource("src/ReplicatedFirst/Data/" .. name .. ".lua")
 end
-local fishes, baits, rods = data("FishesData"), data("BaitsData"), data("RodsData")
+local baits, rods = data("BaitsData"), data("RodsData")
+-- Fixed species keep service regressions independent of live balance-table changes.
+local fishes = {}
+for _, entry in {
+	{ "Fish_101", "Common", 0.5, 1000, 0 },
+	{ "Fish_105", "Common", 8, 900, 0 },
+	{ "Fish_106", "Common", 11, 800, 0 },
+	{ "Fish_109", "Rare", 130, 700, 1 },
+	{ "Fish_117", "Legendary", 500, 1, 3 },
+	{ "Fish_201", "Uncommon", 0.5, 600, 0.5 },
+	{ "Fish_203", "Uncommon", 1.5, 500, 0.5 },
+} do
+	fishes[entry[1]] = {
+		FishID = entry[1], Model = if entry[1] == "Fish_203" then "Fish_109" else entry[1],
+		Rarity = entry[2], DefaultWeight = entry[3], RollWeight = entry[4], LuckExponent = entry[5],
+	}
+end
 local mutations = data("MutationsData")
 local mutationRanges = roll.BuildMutationRanges(mutations)
 for _, example in ipairs({
@@ -46,16 +65,11 @@ local function hasModel() return true end
 local starterCap = rods.Rod_101.MaxWeight
 local none = roll.GetPool(fishes, starterCap, nil, hasModel)
 local uncommon = roll.GetPool(fishes, starterCap, baits.Bait_103, hasModel)
-assert(#none == 25, "The starter rod should have five eligible fish per zone")
-local zones = {}
+assert(#none == 4, "The starter rod must retain the four eligible fixture fish")
 for _, entry in ipairs(none) do
 	assert(entry.fish.DefaultWeight <= starterCap, "Exclude fish above the rod's cap")
-	zones[entry.fish.Zone] = true
 end
-for index = 1, 5 do
-	assert(zones["Zone_" .. index], "The pool must include fish across all zones")
-end
-assert(#roll.GetPool(fishes, 1_250, nil, hasModel) == 60, "The highest cap should allow 60 configured fish")
+assert(#roll.GetPool(fishes, 1_250, nil, hasModel) == 7, "The highest cap must allow every fixture fish")
 local atCap = roll.GetPool({ fishes.Fish_105, fishes.Fish_106 }, 8, nil, hasModel)
 assert(#atCap == 1 and atCap[1].fish == fishes.Fish_105, "Allow fish with a base weight exactly at the cap")
 assert(#roll.GetPool(fishes, starterCap, nil, function()
@@ -65,8 +79,8 @@ assert(uncommon[1].fish == fishes.Fish_201 and uncommon[1].weight == fishes.Fish
 	"Keep the bait's partial rarity filter")
 assert(#roll.GetPool(fishes, starterCap, { FilterRarity = "Exclusive", FilterRatio = 1 }, hasModel) == 0,
 	"Apply the bait filter after removing overweight fish")
-assert(roll.GetLuck(rods.Rod_101, baits.Bait_102, 100, 0) == 24)
-assert(roll.GetLuck(rods.Rod_101, baits.Bait_102, 100, 120) == 96)
+assert(roll.GetLuck(rods.Rod_101, baits.Bait_102, 100) == 24)
+assert(roll.GetLuck(rods.Rod_101, baits.Bait_102, 100, 0.5) == 12)
 local sample = { NextNumber = function() return 0.5 end }
 local rarityPool = roll.GetPool({ fishes.Fish_101, fishes.Fish_117 }, 260_000, nil, hasModel)
 assert(roll.Choose(rarityPool, 1, sample).Rarity == "Common", "Use the configured roll weights at baseline luck")
@@ -162,6 +176,8 @@ local services = {
 services.ReplicatedStorage.Packages = { Knit = {
 	CreateService = function(value) return value end,
 	GetService = function(name)
+		if name == "EventFishService" then return { GetActiveFish = function() return nil end } end
+		if name == "PetService" then return { GetLuckMultiplier = function() return 1 end } end
 		assert(name == "PlotSlotService")
 		return { GetPlayerPlot = function(_, requester)
 			assert(requester == player)
@@ -170,9 +186,9 @@ services.ReplicatedStorage.Packages = { Knit = {
 	end,
 } }
 local fishingRoll = table.clone(roll)
-function fishingRoll.RollMutation(ranges, rng)
+function fishingRoll.RollMutationLucky(ranges, luck, rng)
 	mutationRolls += 1
-	return roll.RollMutation(ranges, rng)
+	return roll.RollMutationLucky(ranges, luck, rng)
 end
 services.ReplicatedStorage.Modules = {
 	PetFeatureConfig = petFeatureConfig,
@@ -256,7 +272,7 @@ assets.GetFish = function(modelName)
 	return modelName == fishes.Fish_106.Model
 end
 local emptyPool = client:SelectBait(player, token, "Bait_102")
-assert(not emptyPool.ok and emptyPool.message == "No fish match this bait within your rod's weight limit",
+assert(not emptyPool.ok and emptyPool.message == "No fish match this bait",
 	"Report an empty pool when the only available model is overweight")
 assert(charges == 0 and profile.Data.Wins == 100, "An empty pool must not charge for bait")
 assets.GetFish = hasModel
@@ -271,7 +287,7 @@ local duplicateBegin = client:Begin(player)
 assert(not duplicateBegin.ok and duplicateBegin.message == "Already fishing", "Keep the current bait selection open")
 local selectedBait = client:SelectBait(player, token, "Bait_102")
 assert(selectedBait.ok, "Allow paid bait after waiting and retrying")
-assert(selectedBait.luck == roll.GetLuck(rods.Rod_101, baits.Bait_102, 30, 0), "Return initial authoritative luck")
+assert(selectedBait.luck == roll.GetLuck(rods.Rod_101, baits.Bait_102, 30), "Return initial authoritative luck")
 assert(not client:SelectBait(player, token, "Bait_102").ok)
 assert(charges == 1 and profile.Data.Wins == 0)
 now += 59
@@ -279,7 +295,7 @@ assert(client:Cast(player, token).distance == 30)
 assert(not client:NextRound(player, token, 0).ok, "No fish before landing")
 now += 5
 local first = client:NextRound(player, token, 0)
-assert(first.ok and first.round == 1 and first.luck == roll.GetLuck(rods.Rod_101, baits.Bait_102, 30, 0))
+assert(first.ok and first.round == 1 and first.luck == roll.GetLuck(rods.Rod_101, baits.Bait_102, 30))
 assert(biteSize == paidBait.Size, "Use the configured paid bait dimensions for the bite window")
 assert(biteFish == fishes[first.fishId], "Use the selected fish's config for the server bite window")
 assert(fishes[first.fishId].Rarity ~= "Common")
@@ -288,7 +304,7 @@ assert(not client:NextRound(player, token, first.round).ok, "No reroll during th
 now = first.retryAt + 0.1
 randomValue = 0
 local second = client:NextRound(player, token, first.round)
-assert(second.ok and second.luck > first.luck and charges == 1)
+assert(second.ok and second.luck == first.luck and charges == 1)
 now = second.readyAt + 1.25
 catchRound, clickAt = second.round, now
 assert(not client:Hook(player, token, first.round, now).ok, "Old round cannot claim")
@@ -336,7 +352,7 @@ assert(client:Cast(player, token).distance == 30, "Upgraded rods must cast the s
 now += 5
 local upgraded = client:NextRound(player, token, 0)
 assert(biteSize == fishHook.Size, "Use the default hook dimensions for the bite window")
-assert(upgraded.ok and upgraded.luck == roll.GetLuck(rods.Rod_105, nil, 30, 0), "The session must keep the original rod's luck")
+assert(upgraded.ok and upgraded.luck == roll.GetLuck(rods.Rod_105, nil, 30), "The session must keep the original rod's luck")
 assert(upgraded.fishId == "Fish_109", "The session must keep the original rod's weight limit")
 now = upgraded.readyAt + 1.25
 catchRound, clickAt = upgraded.round, now

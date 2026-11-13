@@ -40,11 +40,13 @@ local guid = 0
 local index
 local playerData = { GetProfile = function() return profile end }
 local condition = { ValueMult = 1 }
+local conditionLuckValues = {}
 local item = { Model = "TestFish", LayoutOrder = 1 }
 local modules = {
+	NumberUtil = { FormatItemPriceCompact = tostring },
 	FishInventoryData = { Fish_A = item, Fish_B = item, Fish_C = item },
 	GamePassEffectUtil = { GetItemLuckMultiplier = function() return 1 end },
-	ItemRollUtil = { RollCondition = function() return "Normal", condition end },
+	ItemRollUtil = { RollCondition = function(_, luck) table.insert(conditionLuckValues, luck); return "Normal", condition end },
 	ItemStatUtil = {
 		CalculateLuck = function() return 1 end,
 		CalculatePrice = function() return 10 end,
@@ -76,10 +78,7 @@ local knit = {
 local services = {
 	HttpService = { GenerateGUID = function() guid += 1; return tostring(guid) end },
 	ReplicatedFirst = {
-		Data = { ConditionsData = {}, IndexRewardsData = {} },
-		DataHelpers = { IndexRewardsDataHelper = {
-			GetProgress = function() return { UnlockedLuck = 0 } end,
-		} },
+		Data = { ConditionsData = {} },
 	},
 	ReplicatedStorage = { Modules = modules, Packages = { Knit = knit } },
 	ServerScriptService = { Services = { PlayerDataService = playerData } },
@@ -112,3 +111,8 @@ assert(profile.Data.IndexDiscoveryLog.Fish_C == nil and discoveryEvents == 1,
 createSucceeds = true
 assert(grant.Grant(player, "Fish_C").IsNewDiscovery == true and discoveryEvents == 2,
 	"The next successful catch must still count as the first discovery")
+
+assert(#conditionLuckValues == 5, "Every attempted grant must roll a condition")
+for _, luck in ipairs(conditionLuckValues) do
+	assert(luck == 1, "Discoveries must not add luck to condition rolls")
+end

@@ -44,6 +44,7 @@ for _, path in ipairs({
 	"src/StarterPlayer/StarterPlayerScripts/Controllers/DrownDropController.lua",
 	"src/StarterPlayer/StarterPlayerScripts/Controllers/PlotFishController.lua",
 	"src/StarterPlayer/StarterPlayerScripts/Controllers/GUI/SellShopController.lua",
+	"src/StarterPlayer/StarterPlayerScripts/Controllers/GUI/IndexGuiController.lua",
 }) do
 	assert(read(path):find("FormatItemPriceCompact", 1, true), path .. " must use compact item-price formatting")
 end

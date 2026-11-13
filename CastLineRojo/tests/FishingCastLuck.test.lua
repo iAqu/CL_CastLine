@@ -24,11 +24,15 @@ assert(roll.GetCastLuckMultiplier(nil) == 1, "Legacy casts keep the full multipl
 local rod = { LuckBoost = 0, MaxWeight = 100, BaitsSelect = { "Bait_Test" } }
 local paidBait = { Model = "TestBait", Price = 10, LuckBoost = 1 }
 local fish = { FishID = "Fish_Test", Model = "Test", Rarity = "Common", DefaultWeight = 1, RollWeight = 1, LuckExponent = 1 }
-near(roll.GetLuck(rod, nil, 30, 0, 0.1), 0.13, "Actual luck can be below one")
-near(roll.GetLuck(rod, nil, 30, 60, 0.55), 1.3 * config.WaitLuckMaxMultiplier * 0.55,
-	"Waiting gains must multiply the locked cast result")
+near(roll.GetLuck(rod, nil, 30, 0.1), 0.13, "Actual luck can be below one")
+near(roll.GetLuck(rod, nil, 30, 0.55), 1.3 * 0.55, "Use only the locked cast result")
 
 local now, guid, chosenLuck = 100, 0, nil
+local petMultiplier = 1
+local eventWindows = false
+local eventFish = { FishID = "Event_Test", Model = "EventTest", Rarity = "Event", DefaultWeight = 58 }
+local laterEventFish = { FishID = "Event_Later", Model = "LaterEvent", Rarity = "Event", DefaultWeight = 60 }
+local weightLuck, mutationLuck
 local root = { IsA = function(_, class) return class == "BasePart" end }
 local humanoid = { Health = 100 }
 local character = {
@@ -50,12 +54,25 @@ local charges = 0
 local Knit = {
 	CreateService = function(service) return service end,
 	GetService = function(name)
-		if name == "PetService" then return {GetLuckMultiplier=function() return 1 end} end
+		if name == "EventFishService" then return { GetActiveFish = function()
+			if not eventWindows or now % 600 >= 30 then return nil end
+			return if now < 1200 then eventFish else laterEventFish
+		end } end
+		if name == "PetService" then return {GetLuckMultiplier=function() return petMultiplier end} end
 		assert(name == "PlotSlotService", "Unexpected service dependency")
 		return { GetPlayerPlot = function() return {} end }
 	end,
 }
 local fishingRoll = roll
+local originalWeightLucky, originalMutationLucky = roll.RollWeightLucky, roll.RollMutationLucky
+function fishingRoll.RollWeightLucky(defaultWeight, maxWeight, luck, random)
+	weightLuck = luck
+	return originalWeightLucky(defaultWeight, maxWeight, luck, random)
+end
+function fishingRoll.RollMutationLucky(ranges, luck, random)
+	mutationLuck = luck
+	return originalMutationLucky(ranges, luck, random)
+end
 function fishingRoll.GetEggPool()
 	error("Disabled fishing must not build or validate the egg pool")
 end
@@ -84,7 +101,8 @@ local modules = {
 	},
 }
 local data = {
-	FishesData = { Fish_Test = fish }, BaitsData = { Bait_Test = paidBait }, RodsData = { Rod_Test = rod }, MutationsData = {},
+	FishesData = { Fish_Test = fish, Event_Test = eventFish, Event_Later = laterEventFish },
+	BaitsData = { Bait_Test = paidBait }, RodsData = { Rod_Test = rod }, MutationsData = {},
 }
 local dataFolder = { WaitForChild = function(_, name)
 	assert(name ~= "EggsData", "Disabled fishing must not wait for egg data")
@@ -149,9 +167,13 @@ for _, discoveryFlag in { true, false, "missing" } do
 	assert(round.catchKind == "Fish" and round.catchId == fish.FishID,
 		"A roll inside the former egg interval must still produce fish")
 	now = math.max(round.startedAt, round.readyAt) + 1.1
+	petMultiplier = 8 -- Changing equipment after selection must not change this round's award luck.
 	grantResult = { Weight = 1, MutationId = "Golden",
 		IsNewDiscovery = if discoveryFlag == "missing" then nil else discoveryFlag }
 	local caught = client:Hook(player, token, round.round, now)
+	near(weightLuck, round.luck, "Size must use the displayed round luck")
+	near(mutationLuck, round.luck, "Mutation must use the same saved round luck")
+	petMultiplier = 1
 	assert(caught.ok and caught.weight == 1 and caught.mutationId == "Golden")
 	assert(caught.isNewDiscovery == (discoveryFlag == true),
 		"The catch response must preserve only a confirmed first discovery from the grant")
@@ -173,12 +195,15 @@ for _, progress in { 0, 0.5, 1 } do
 	assert(first.ok, "Start the first fishing round")
 	near(first.luck, cast.luck, "Use the locked luck exactly once")
 	near(chosenLuck, first.luck, "Select the fish using the displayed luck")
-	now = first.retryAt + 0.1
-	local second = client:NextRound(player, token, first.round)
-	assert(second.ok and second.luck > first.luck, "Retry rounds keep their waiting gain")
-	near(second.luck, roll.GetLuck(rod, nil, config.FixedCastDistance,
-		second.startedAt - first.startedAt, multiplier), "Retries must retain the same cast multiplier")
-	near(chosenLuck, second.luck, "Retry selection must use the updated authoritative luck")
+	local previous = first
+	for _, waited in { 0, 60, 120 } do
+		now = previous.retryAt + 0.1 + waited
+		local nextRound = client:NextRound(player, token, previous.round)
+		assert(nextRound.ok, "Retry after waiting")
+		near(nextRound.luck, first.luck, "Waiting and retries must not add luck")
+		near(chosenLuck, nextRound.luck, "Selection must use the displayed luck")
+		previous = nextRound
+	end
 	client:Cancel(player, token)
 end
 
@@ -208,7 +233,7 @@ for _, baitId in { "NONE", "Bait_Test" } do
 		assert(not client:SelectBait(player, begin.token, baitId).ok, "Waiting must not allow another bait purchase")
 		local cast = client:Cast(player, begin.token, 0.5)
 		assert(cast.ok and cast.distance == config.FixedCastDistance, "A valid preparation must not expire after " .. waited)
-		near(cast.luck, roll.GetLuck(rod, bait, config.FixedCastDistance, 0, roll.GetCastLuckMultiplier(0.5)),
+		near(cast.luck, roll.GetLuck(rod, bait, config.FixedCastDistance, roll.GetCastLuckMultiplier(0.5)),
 			"Preparation time must not add waiting luck before landing")
 		assert(not client:Cast(player, begin.token, 1).ok, "A delayed cast must still be accepted only once")
 		assert(profile.Data.Wins == balanceBefore - (if bait then bait.Price else 0)
@@ -235,6 +260,49 @@ for _, invalid in { -0.01, 1.01, 0 / 0, math.huge, -math.huge, "0.5", {} } do
 end
 assert(client:Cast(player, guarded, 0.5).ok, "Rejected requests must not consume a valid delayed cast")
 client:Cancel(player, guarded)
+
+-- Cast time, not entry or the next fish round, determines Event eligibility.
+eventWindows = true
+now = 599
+local beforeEvent = prepare()
+assert(client:Cast(player, beforeEvent, 1).ok)
+now = 605
+assert(client:NextRound(player, beforeEvent, 0).fishId == fish.FishID,
+	"A window opening after the cast must not replace an ordinary catch")
+client:Cancel(player, beforeEvent)
+now = 599
+local eventToken = prepare()
+now = 600
+assert(client:Cast(player, eventToken, 0.5).ok, "The exact opening boundary qualifies")
+local peer = { Character = character }
+local peerBegin = client:Begin(peer)
+assert(peerBegin.ok and client:SelectBait(peer, peerBegin.token, "NONE").ok)
+assert(client:Cast(peer, peerBegin.token, 1).ok)
+now = 700
+local eventRound = client:NextRound(player, eventToken, 0)
+local peerRound = client:NextRound(peer, peerBegin.token, 0)
+assert(eventRound.fishId == eventFish.FishID and peerRound.fishId == eventFish.FishID,
+	"Qualifying players share the species even after the window ends")
+client:Cancel(peer, peerBegin.token)
+now = 1205
+local eventRetry = client:NextRound(player, eventToken, eventRound.round)
+assert(eventRetry.fishId == eventFish.FishID, "Retrying during a later window preserves the original species")
+grantResult = { Weight = 58, MutationId = "Golden" }
+now = math.max(eventRetry.startedAt, eventRetry.readyAt) + 1.1
+assert(client:Hook(player, eventToken, eventRetry.round, now).ok)
+near(weightLuck, eventRetry.luck, "Event size must use the player's locked round luck")
+near(mutationLuck, eventRetry.luck, "Event mutation must use the player's locked round luck")
+assert(not client:Hook(player, eventToken, eventRetry.round, now).ok, "An Event catch can only be granted once")
+client:Cancel(player, eventToken)
+grantResult = nil
+now = 629
+local atEnd = prepare()
+now = 630
+assert(client:Cast(player, atEnd, 1).ok)
+now += 5
+assert(client:NextRound(player, atEnd, 0).fishId == fish.FishID, "The ending boundary does not qualify")
+client:Cancel(player, atEnd)
+eventWindows = false
 
 local cancelled = prepare()
 now += 600

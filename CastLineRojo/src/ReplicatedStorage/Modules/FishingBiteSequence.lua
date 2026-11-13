@@ -6,9 +6,11 @@ local BaitElasticMotion = require(script.Parent.BaitElasticMotion)
 local FishingReelSpring = require(script.Parent.FishingReelSpring)
 local WaterSurfaceUtil = require(script.Parent.WaterSurfaceUtil)
 local FishAnimationController = require(script.Parent.FishAnimationController)
+local FishShadowAppearance = require(script.Parent.FishShadowAppearance)
 local FishSecondaryMotion = require(script.Parent.FishSecondaryMotion)
 local FishRepositionPath = require(script.Parent.FishRepositionPath)
 local FishDripEffect = require(script.Parent.FishDripEffect)
+local FishingShowcaseVFX = require(script.Parent.FishingShowcaseVFX)
 local MutationVisualUtil = require(script.Parent.MutationVisualUtil)
 local ItemStatUtil = require(script.Parent.ItemStatUtil)
 local EggMotion = require(script.Parent.FishingEggMotion)
@@ -343,51 +345,8 @@ function FishingBiteSequence.new(owner, startedAt, readyAt, random, visualRandom
 	fish:ScaleTo(self.baseScale * self.scale)
 	fish.Name, fish.Parent = "BitingFish", owner.folder
 	self.fish = fish
-	for _, part in ipairs(fish:GetDescendants()) do
-		if
-			part:IsA("BaseScript")
-			or part:IsA("AnimationController")
-			or part:IsA("JointInstance")
-			or part:IsA("Constraint")
-			or part:IsA("WeldConstraint")
-			or part:IsA("Highlight")
-		then
-			part:Destroy()
-		elseif part:IsA("BasePart") then
-			part.Anchored, part.CanCollide, part.CanTouch, part.CanQuery = true, false, false, false
-			part.LocalTransparencyModifier = 0
-			if part.Transparency < 1 and part.Name ~= "CameraPart" then
-				self.originals[part] = {
-					color = part.Color,
-					transparency = part.Transparency,
-					material = part.Material,
-					materialVariant = part.MaterialVariant,
-						reflectance = part.Reflectance,
-					texture = part:IsA("MeshPart") and part.TextureID or nil,
-				}
-				part.Color, part.Transparency = Color3.new(0, 0, 0), 1
-				if part:IsA("MeshPart") then
-					part.TextureID = ""
-				end
-			end
-		elseif part:IsA("SurfaceAppearance") then
-			table.insert(self.surfaces, { instance = part, parent = part.Parent })
-			part.Parent = nil
-		end
-	end
-	-- 同一个 Humanoid 支持半透明 Highlight 和骨骼动画。
-	local humanoid = Instance.new("Humanoid")
-	humanoid.EvaluateStateMachine = false
-	humanoid.AutomaticScalingEnabled = false
-	humanoid.RequiresNeck = false
-	humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
-	humanoid.Parent = fish
-	local highlight = Instance.new("Highlight")
-	highlight.Name, highlight.Adornee = "FishShadow", fish
-	highlight.FillColor, highlight.OutlineColor = Color3.new(0, 0, 0), Color3.fromRGB(254, 254, 254)
-	highlight.FillTransparency, highlight.OutlineTransparency = 1, 1
-	highlight.DepthMode, highlight.Enabled = Enum.HighlightDepthMode.Occluded, false
-	highlight.Parent, self.highlight = fish, highlight
+	local appearance = FishShadowAppearance.Prepare(fish)
+	self.originals, self.surfaces, self.highlight = appearance.originals, appearance.surfaces, appearance.highlight
 	self.animation = if self.isEgg then EggMotion.Animator() else FishAnimationController.new(
 		fish, startedAt, self.motion.random, nil, self.timeline.struggleTime, self.timeline.approachTime
 	)
@@ -471,6 +430,7 @@ function FishingBiteSequence:_trueBiteFeedback(now, target)
 	end
 	self.trueBiteEmitted = true
 	local owner = self.owner
+	owner:_impulse(Config.Camera.Bite, now)
 	owner:_waterFeedback(now, target, 0.8, false)
 	owner:_playWaterVFX(now, Config.WaterVFX.Heavy, target)
 end
@@ -486,45 +446,13 @@ end
 function FishingBiteSequence:_appearance(visible, original, fade, phase, elapsed)
 	self.appearanceFade = if visible then math.clamp(fade, 0, 1) else 1
 	fade = if visible then smooth(fade) else 1
-	local shadow = visible and not original and fade < 1
 	-- 挣扎只淡出高亮，鱼身保持可见；出水前也保持淡出终点，避免阶段切换闪回。
 	local highlightFade = if phase == "Struggling"
 		then smooth(elapsed / Settings.Struggle.HighlightFadeTime)
 		elseif phase == "Lifting" or phase == "Caught" then 1
 		else 0
 	highlightFade = 1 - (1 - fade) * (1 - highlightFade)
-	self.highlight.FillTransparency = if shadow
-		then Settings.ShadowTransparency + (1 - Settings.ShadowTransparency) * highlightFade
-		else 1
-	-- 出水显色后复用鱼影高亮，只保留遵循场景遮挡的黑色描边。
-	self.highlight.OutlineColor = if original then Color3.new(0, 0, 0) else Color3.fromRGB(254, 254, 254)
-	-- 白边在鱼身半透明时保留对比度，仍与鱼影共用淡入淡出终点。
-	self.highlight.OutlineTransparency = if original then fade
-		elseif shadow
-			then Settings.ShadowOutlineTransparency + (1 - Settings.ShadowOutlineTransparency) * highlightFade ^ 3
-		else 1
-	self.highlight.DepthMode = Enum.HighlightDepthMode.Occluded
-	for part, saved in pairs(self.originals) do
-		-- 纯黑 Neon 避免鱼影随光照泛亮。
-		part.Material = if shadow then Enum.Material.Neon else saved.material
-		part.MaterialVariant = if shadow then "" else saved.materialVariant
-		part.Reflectance = if shadow then 0 else saved.reflectance
-		part.Transparency = if visible then saved.transparency + (1 - saved.transparency) * fade else 1
-		if original and not self.originalShown then
-			part.Color = saved.color
-			if saved.texture then
-				part.TextureID = saved.texture
-			end
-		end
-	end
-	if original and not self.originalShown then
-		self.originalShown = true
-		for _, surface in ipairs(self.surfaces) do
-			surface.instance.Parent = surface.parent
-		end
-	end
-	-- 外观就绪后再启用；完全淡出后关闭，避免首尾帧使用旧的填充/描边。
-	self.highlight.Enabled = (visible and original and fade < 1) or (shadow and highlightFade < 1)
+	FishShadowAppearance.Apply(self, visible, original, fade, highlightFade)
 end
 
 function FishingBiteSequence:_scaleAt(phase, elapsed)
@@ -1044,11 +972,22 @@ function FishingBiteSequence:_updateRarityVFX(phase, now)
 	end
 end
 
+function FishingBiteSequence:_updateShowcaseVFX(now)
+	if self.showcasePending and not self.showcasePlayed then
+		self.showcasePending = nil
+		self.showcasePlayed = true
+		self.showcaseVFX = FishingShowcaseVFX.new(self, now)
+	end
+	if self.showcaseVFX and not self.showcaseVFX:Update(now) then
+		self.showcaseVFX = nil
+	end
+end
+
 -- Update 先准备基础姿态供镜头取景；正式会话在镜头更新后调用 Present。
 function FishingBiteSequence:Present(cameraPosition)
 	self.presentationCamera = cameraPosition
 	local pose = self.pendingPose
-	if not pose then
+	if self.destroyed or not pose then
 		return
 	end
 	local frame, baitPosition, _, baitRotation =
@@ -1064,6 +1003,7 @@ function FishingBiteSequence:Present(cameraPosition)
 		MutationVisualUtil.Apply(self.fish, self.mutationId, self.template.Name)
 	end
 	self:_updateRarityVFX(pose.phase, pose.now)
+	self:_updateShowcaseVFX(pose.now)
 	-- 在鱼的本帧缩放、姿态与位置落定后发射，避免甩尾水珠从旧位置出现。
 	if not self.isEgg and pose.phase == "Caught" and not self.drip then
 		self.drip = FishDripEffect.new(self.fish)
@@ -1256,6 +1196,11 @@ function FishingBiteSequence:Destroy()
 		return
 	end
 	self.destroyed = true
+	self.showcasePending = nil
+	if self.showcaseVFX then
+		self.showcaseVFX:Destroy()
+		self.showcaseVFX = nil
+	end
 	if self.fishTrail then
 		self.fishTrail.trail.Enabled = false
 		self.fishTrail.trail:Clear()
@@ -1274,9 +1219,7 @@ function FishingBiteSequence:Destroy()
 	if self.animation then
 		self.animation:Destroy()
 	end
-	for _, surface in ipairs(self.surfaces) do
-		surface.instance:Destroy()
-	end
+	FishShadowAppearance.Destroy(self)
 	self.fish:Destroy()
 end
 

@@ -37,7 +37,7 @@ local mutationUtil = assert(load(read(prefix .. "MutationDataUtil.lua"), "Mutati
 	Color3 = harness.colors,
 }, { __index = getfenv() })))()
 local income = assert(load(read(prefix .. "PlotFishIncome.lua"), "PlotFishIncome", "t", setmetatable({
-	script = { Parent = { FishInventoryData = {}, MutationDataUtil = mutationUtil, PlotPlacementUtil = {} } },
+	script = { Parent = { FishInventoryData = {}, ItemStatUtil = stats, MutationDataUtil = mutationUtil, PlotPlacementUtil = {} } },
 	require = function(value) return value end,
 }, { __index = getfenv() })))()
 local config = assert(loadstring(read(prefix .. "FishingConfig.lua")))()
@@ -58,6 +58,13 @@ function dimensions:Lerp(other, alpha)
 	return size(self.X + (other.X - self.X) * alpha, self.Y + (other.Y - self.Y) * alpha)
 end
 local Info = assert(load(read(prefix .. "FishingSequenceInfo.lua"), "FishingSequenceInfo", "t", setmetatable({
+	game = { GetService = function(_, name)
+		assert(name == "Players")
+		return { LocalPlayer = { GetAttribute = function(_, attribute)
+			assert(attribute == "BestOwnedFishBaseCps")
+			return 100
+		end } }
+	end },
 	script = { Parent = modules },
 	require = function(value) return value end,
 	Color3 = harness.colors,
@@ -227,7 +234,7 @@ for _, reuseScale in { false, true } do
 		and info.rarityRow.children.Label.TextColor3 == "original color", "Leave the unused rarity label untouched")
 	assert(info.name.TextColor3 == modules.RarityConfig.Get("Rare").Color, "Use rarity color for the whole fish name")
 	assertMutation(info, "Golden")
-	assert(info.income.Text == "$150/s", "Use the actual mutation-adjusted passive income")
+	assert(info.income.Text == "$311/s", "Use both actual weight and mutation for passive income")
 	bite.timeline.phase = "Caught"
 	info:Update(23, bite)
 	assert(#owner.celebrations == 1, "Caught must not repeat the reveal celebration")
@@ -301,6 +308,14 @@ do
 end
 
 -- 回放正式调用顺序：每帧先根据进度即时赋值，再更新信息面板。
+do
+	local info = fixture()
+	info:Update(30, { fishConfig = { DisplayName = "Event", Rarity = "Event", CpsPrice = 1.2, DefaultWeight = 10 },
+		catchWeight = 10, timeline = { phase = "Caught", startedAt = 30 } })
+	assert(info.income.Text == "$120/s", "Event reveal uses the player's baseline, not the starter fallback")
+	info:Destroy()
+end
+
 for _, ceiling in { 1.3, 10, 100 } do
 	for _, fps in { 30, 60, 144 } do
 		local info, owner = fixture()

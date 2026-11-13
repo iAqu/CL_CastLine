@@ -343,7 +343,7 @@ local POPUP_GUI_NAMES = {
     "UpdateLogGui",
     "OnlineRewardGui",
     "DailyRewardGui",
-    "IndexGui",
+    "IndexGui_New",
     "PetGui",
     "StarterPackGui",
     "SpinningWheelGui",

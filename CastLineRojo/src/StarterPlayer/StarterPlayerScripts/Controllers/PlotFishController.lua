@@ -224,7 +224,7 @@ function PlotFishController:KnitStart()
 		titleAnchor.Parent = model
 		local titleGui = StarterGui:FindFirstChild("TitleGui")
 		local owner = Players:GetPlayerByUserId(folder:GetAttribute("OwnerUserId"))
-		local title = FishTitleUtil.Create(titleGui, item, mutationId, owner)
+		local title = FishTitleUtil.Create(titleGui, item, mutationId, owner, weight)
 		if title then
 			title.Enabled = true
 			title.Adornee = titleAnchor

@@ -18,6 +18,7 @@ local NumberUtil = require(ReplicatedStorage.Modules.NumberUtil)
 local Timer = require(ReplicatedStorage.Packages.Timer)
 local GuiHelper = require(ReplicatedStorage.Modules.GuiHelper)
 local GameplayInputGate = require(ReplicatedStorage.Modules.GameplayInputGate)
+local BackpackConfig = require(ReplicatedStorage.Modules.BackpackConfig)
 local GameDataUtil = require(ReplicatedStorage.Modules.GameDataUtil)
 local CharacterUtil = require(ReplicatedStorage.Modules.CharacterUtil)
 local ItemStatUtil = require(ReplicatedStorage.Modules.ItemStatUtil)
@@ -132,7 +133,7 @@ if not PetFeatureConfig.Enabled then
 end
 
 local SpinningWheelGui = PlayerGUI:WaitForChild("SpinningWheelGui")
-local IndexGui = PlayerGUI:WaitForChild("IndexGui")
+local IndexGui = PlayerGUI:WaitForChild("IndexGui_New")
 local SettingsGui = PlayerGUI:WaitForChild("SettingsGui")
 local UgcListGui = PlayerGUI:WaitForChild("UgcListGui")
 local StoreGui = PlayerGUI:WaitForChild("StoreGui")
@@ -188,6 +189,9 @@ local function clearBackpackTabConnections()
 end
 
 local function hideBackpackTabBar(instance: Instance)
+    if BackpackConfig.CategoriesEnabled then
+        return
+    end
     if instance.Name ~= BACKPACK_TAB_BAR_NAME or not instance:IsA("GuiObject") then
         return
     end

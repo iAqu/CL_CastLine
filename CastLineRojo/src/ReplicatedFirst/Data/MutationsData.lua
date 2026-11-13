@@ -7,6 +7,7 @@ export type MutationConfig = {
 	Chance: number,
 	LabelColor: string,
 	Icon: string,
+	backup: string,
 }
 
 local data: {[string]: MutationConfig} = {
@@ -19,6 +20,7 @@ local data: {[string]: MutationConfig} = {
 		Chance = 0.1,
 		LabelColor = "255, 170, 0",
 		Icon = "rbxassetid://128821997192741",
+		backup = "0.1",
 	},
 	Diamond = {
 		MutationId = "Diamond",
@@ -29,6 +31,7 @@ local data: {[string]: MutationConfig} = {
 		Chance = 0.05,
 		LabelColor = "37, 204, 255",
 		Icon = "rbxassetid://132091174151109",
+		backup = "0.05",
 	},
 	Rainbow = {
 		MutationId = "Rainbow",
@@ -39,6 +42,7 @@ local data: {[string]: MutationConfig} = {
 		Chance = 0.02,
 		LabelColor = "255, 255, 255",
 		Icon = "rbxassetid://159696879",
+		backup = "0.02",
 	},
 }
 

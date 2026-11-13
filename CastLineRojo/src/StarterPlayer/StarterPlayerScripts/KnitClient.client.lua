@@ -3,6 +3,10 @@ local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local Players = game:GetService("Players")
 local StarterPlayer = game:GetService("StarterPlayer")
 
+-- 按钮反馈先启动，避免依赖 Controller 加载顺序或首批 GUI 的复制时机。
+local ButtonAnimation = require(ReplicatedStorage:WaitForChild("Modules"):WaitForChild("ButtonAnimation"))
+ButtonAnimation.Start()
+
 local Knit = require(ReplicatedStorage.Packages.Knit)
 local LogHelper = require(ReplicatedStorage.Modules.LogHelper)
 local LoadingAttributes = require(ReplicatedFirst:WaitForChild("LoadingAttributes"))

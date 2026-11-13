@@ -37,6 +37,20 @@ local function near(a, b)
 	assert(math.abs(a - b) < 1e-8, tostring(a) .. " ~= " .. tostring(b))
 end
 
+-- 出现动画首尾、峰值与闪光恢复；乱序采样不累积变形。
+for _, elapsed in ipairs({ -1, 0, 0.18, 0.32, 10, 0.18, 0 }) do
+	local size, fill = Motion.SampleAppear(elapsed)
+	near(size, if elapsed <= 0 then 0.3 elseif elapsed == 0.18 then 1.12 else 1)
+	if elapsed <= 0 then near(fill, 0.65) end
+	if elapsed >= 0.32 then near(fill, 1) end
+end
+for _, rate in ipairs({ 30, 60, 144 }) do
+	for frame = 0, math.ceil(config.BaitAppear.Duration * rate) do
+		local size, fill = Motion.SampleAppear(frame / rate)
+		assert(size >= 0.3 and size <= 1.12 and fill >= 0.65 and fill <= 1)
+	end
+end
+
 -- 一次主回弹和两次幅度递减、方向交替的余弹，完整结束后不再运动。
 near(Motion.Rebound(0), 0)
 near(Motion.Rebound(0.25), 1)

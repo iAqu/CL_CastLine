@@ -19,9 +19,10 @@ assert(playerLuckService:find("self.Client.LuckChanged:Fire(player, luck)", 1, t
 assert(homeGuiController:find("playerLuckService.LuckChanged:Connect(setLuckAmountText)", 1, true))
 assert(homeGuiController:find("playerLuckService:GetPlayerRollLuck()", 1, true))
 
-for _, source in ipairs({ plotFishService, indexService }) do
+for _, source in ipairs({ plotFishService }) do
 	assert(source:find('Knit.GetService("PlayerLuckService"):RefreshPlayerLuck(player)', 1, true), "Luck sources must refresh the displayed total")
 end
+assert(not indexService:find('Knit.GetService("PlayerLuckService")', 1, true), "Discoveries must not refresh luck")
 assert(gamePassService:find("Constants.GAMEPASS.SUPER_LUCK", 1, true), "Super Luck must refresh the total")
 assert(gamePassService:find("Constants.GAMEPASS.MEGA_LUCK", 1, true), "Ultra Luck must refresh the total")
 

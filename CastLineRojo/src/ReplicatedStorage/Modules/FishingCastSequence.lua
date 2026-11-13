@@ -87,6 +87,10 @@ function FishingCastSequence:_celebrateCatch(bite)
 		return
 	end
 	self.celebratedBite = bite
+	if not bite.showcasePlayed then
+		-- Present 在鱼体本帧定位完成后消费，和信息揭晓、音效同帧出现。
+		bite.showcasePending = true
+	end
 	UiConfettiUtil.play(self.gui, "sideCannons")
 	if self.fishAudio then
 		self.fishAudio:PlayShowcase()
@@ -218,7 +222,7 @@ function FishingCastSequence:_bindGui(playerGui)
 	self.popupScale = guiChild(self.popup, "UIScale", "UIScale")
 
 	-- 只接管演出状态；退出后还原，保留 Studio 中调整的布局和样式。
-	self:_save(self.flash, { "BackgroundColor3", "BackgroundTransparency" })
+	self:_save(self.flash, { "BackgroundColor3", "BackgroundTransparency", "Visible" })
 	for _, bar in ipairs(self.bars) do
 		self:_save(bar, { "Size" })
 		bar.Size = UDim2.fromScale(1, 0)
@@ -386,6 +390,72 @@ function FishingCastSequence:_init(rig, playerGui, meter, animation, baitTemplat
 	self.cameraFrame, self.cameraFov = Workspace.CurrentCamera.CFrame, Workspace.CurrentCamera.FieldOfView
 	self:_shot("Behind", 0, os.clock())
 	self.gui.Enabled = true
+	self:_startBaitAppear(os.clock())
+end
+
+function FishingCastSequence:_stopBaitAppear()
+	if not self.baitAppearStarted then
+		return
+	end
+	self.baitAppearStarted = nil
+	self.baitHighlight.FillColor = self.baitAppearFillColor
+	self.baitHighlight.FillTransparency = 1
+	self.baitAppearFillColor = nil
+end
+
+function FishingCastSequence:_updateBaitAppear(now)
+	if not self.baitAppearStarted then
+		return 1
+	end
+	local elapsed = now - self.baitAppearStarted
+	if elapsed >= Config.BaitAppear.Duration then
+		self:_stopBaitAppear()
+		return 1
+	end
+	local scale, fill = BaitElasticMotion.SampleAppear(elapsed)
+	self.baitHighlight.FillColor = Color3.new(1, 1, 1)
+	self.baitHighlight.FillTransparency = fill
+	return scale
+end
+
+function FishingCastSequence:_startBaitAppear(now)
+	if self.destroyed or self.options.playBaitAppear ~= true or self.baitAppearPlayed then
+		return
+	end
+	self.baitAppearPlayed, self.baitAppearStarted = true, now
+	self.baitAppearFillColor = self.baitHighlight.FillColor
+	BaitElasticMotion.Apply(self, self.bait.CFrame, Vector3.one * self:_updateBaitAppear(now))
+	self:_updateLine()
+	if self.fishAudio then
+		self.fishAudio:Play("FishingBaitShow")
+	end
+
+	local vfx = ReplicatedStorage:FindFirstChild("VFX")
+	local folder = vfx and vfx:FindFirstChild("Fishing")
+	local template = folder and folder:FindFirstChild("BaitAppear")
+	if not (template and (template:IsA("Model") or template:IsA("BasePart"))) then
+		warn("FishingCastSequence: VFX.Fishing.BaitAppear is missing or invalid; skipping particles")
+		return
+	end
+	local effect = template:Clone()
+	local descendants = effect:GetDescendants()
+	table.insert(descendants, effect)
+	for _, descendant in ipairs(descendants) do
+		if descendant:IsA("BasePart") then
+			descendant.Anchored, descendant.CanCollide = true, false
+			descendant.CanTouch, descendant.CanQuery = false, false
+		elseif descendant:IsA("ParticleEmitter") then
+			descendant.Enabled = false
+		end
+	end
+	effect:PivotTo(CFrame.new(self.bait.Position) * template:GetPivot().Rotation)
+	effect.Parent = self.folder
+	game:GetService("Debris"):AddItem(effect, Config.BaitAppear.EffectLifetime)
+	for _, descendant in ipairs(descendants) do
+		if descendant:IsA("ParticleEmitter") then
+			descendant:Emit(descendant:GetAttribute("EmitCount") or 1)
+		end
+	end
 end
 
 function FishingCastSequence.new(
@@ -422,6 +492,18 @@ function FishingCastSequence:UpdateMeter(value)
 	end
 end
 
+function FishingCastSequence:_castClickFeedback(value, now)
+	self:_sound("ButtonClick", 0.8, 0.9 + value * 0.5)
+	self:_impulse(Config.Camera.Tap, now, value)
+	if value >= Config.Meter.Ratings[1].Min then
+		self.perfectAt = now
+		self.flash.BackgroundColor3 = Color3.fromRGB(unpack(FishingCastSequence.GetRating(value).Color))
+		self.flash.Visible, self.flash.BackgroundTransparency = true, 0.65
+		self:_sound("Perfect", 0.5, 1.3)
+		self:_impulse(Config.Camera.Perfect, now)
+	end
+end
+
 function FishingCastSequence:_castFeedback(value, now)
 	local rating = FishingCastSequence.GetRating(value)
 	local color = Color3.fromRGB(unpack(rating.Color))
@@ -438,23 +520,13 @@ function FishingCastSequence:_castFeedback(value, now)
 	)
 	self.popupOrigin =
 		UDim2.fromOffset(x, math.clamp(self.meter.marker.AbsolutePosition.Y, viewport.Y * 0.25, viewport.Y * 0.8))
-	self:_sound("ButtonClick", nil, 0.9 + value * 0.5)
-	self:_impulse(Config.Camera.Tap, now, value)
-	if value >= Config.Meter.Ratings[1].Min then
-		self.perfectAt = now
-		self.flash.BackgroundColor3 = color
-		self:_sound("Perfect")
-		self:_impulse(Config.Camera.Perfect, now)
-	end
+	self:_castClickFeedback(value, now)
 end
 
 function FishingCastSequence:LockCastMeter(): number
 	if self.lockedMeterProgress == nil then
 		self.lockedMeterProgress = self.meterProgress or 0
-		self:_sound("ButtonClick", 0.8, 0.9 + self.lockedMeterProgress * 0.5)
-		if self.lockedMeterProgress >= Config.Meter.Ratings[1].Min then
-			self:_sound("Perfect", 0.5, 1.3)
-		end
+		self:_castClickFeedback(self.lockedMeterProgress, os.clock())
 	end
 	return self.lockedMeterProgress
 end
@@ -474,10 +546,10 @@ function FishingCastSequence:Cast(value: number, distance: number?, luck: number
 	end
 	self.castFromScale = self.baitVisualScale
 	self.castFromOffset = self.bait and self.bait.Position - (self.tip.WorldPosition - Vector3.new(0, 1.5, 0))
+	self:_stopBaitAppear()
 	self:_setPhase("Casting")
 	if self.fixedCast then
 		self.meter.gui.Enabled = false
-		self:_impulse(Config.Camera.Tap, self.castClickedAt)
 	else
 		self:_castFeedback(math.clamp(value, 0, 1), self.castClickedAt)
 	end
@@ -959,6 +1031,9 @@ function FishingCastSequence:_updateBait(now, dt)
 	if self.phase == "Preparing" or self.phase == "Casting" then
 		local elapsed = now - (self.castClickedAt or self.meterStarted)
 		local offset, scale = BaitElasticMotion.Sample(self.phase, elapsed)
+		if self.phase == "Preparing" then
+			scale *= self:_updateBaitAppear(now)
+		end
 		local position = self.tip.WorldPosition
 			- Vector3.new(0, 1.5, 0)
 			+ Vector3.yAxis * BaitElasticMotion.BaseSize(self).Y * offset
@@ -1250,6 +1325,10 @@ function FishingCastSequence:_updatePresentation(now, dt)
 	if self.info then
 		self.info:Update(now, self.bite)
 	end
+	if self.perfectAt then
+		local alpha = math.clamp((now - self.perfectAt) / settings.PerfectFlash, 0, 1)
+		self.flash.BackgroundTransparency = 1 - 0.35 * (1 - alpha) ^ 2
+	end
 	if self.fixedCast then
 		return
 	end
@@ -1286,10 +1365,6 @@ function FishingCastSequence:_updatePresentation(now, dt)
 		self.popup.Visible = elapsed < settings.PopupDuration
 	else
 		meter.scale.Scale = 1 + math.sin((now - self.meterStarted) * 6) * 0.05
-	end
-	if self.perfectAt then
-		local alpha = math.clamp((now - self.perfectAt) / settings.PerfectFlash, 0, 1)
-		self.flash.BackgroundTransparency = 1 - 0.35 * (1 - alpha) ^ 2
 	end
 end
 

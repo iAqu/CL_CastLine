@@ -28,6 +28,11 @@ end
 local function refreshSlot(slot: TextButton)
 	local label = slot:FindFirstChild(LABEL_NAME)
 	if not label or not label:IsA("TextLabel") then return end
+	if slot:GetAttribute("MinimalSlotLabels") then
+		label.Text = ""
+		label.Visible = false
+		return
+	end
 	local tool = getSlotTool(slot)
 	local count = if tool and PotionToolUtil.IsPotionTool(tool) then PotionToolUtil.GetCount(tool) else nil
 	label.Text = if count then "x" .. tostring(count) else ""

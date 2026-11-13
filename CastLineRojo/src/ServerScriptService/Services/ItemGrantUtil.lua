@@ -74,7 +74,6 @@ function ItemGrantUtil.Grant(player: Player, itemId: string, options: GrantOptio
 	weight = weight or ItemStatUtil.RollWeight(item, random)
 	-- Roll from the item's intrinsic Luck so a Condition never improves its own chance.
 	local conditionLuck = ItemStatUtil.CalculateLuck(item, weight, 1)
-	conditionLuck += Knit.GetService("IndexService"):GetDiscoveryLuck(player)
 	conditionLuck *= GamePassEffectUtil.GetItemLuckMultiplier(profile.Data)
 	local conditionId, condition = ItemRollUtil.RollCondition(ConditionsData, conditionLuck, random)
 	conditionId = conditionId or DEFAULT_CONDITION_ID

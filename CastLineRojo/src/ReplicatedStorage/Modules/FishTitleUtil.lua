@@ -8,14 +8,14 @@ local FishTitleUtil = {}
 
 local MUTATION_LABEL_IDS = { "Golden", "Diamond", "Mint", "Rainbow" }
 
-type FishTitleItem = { DisplayName: string, CpsPrice: number, Rarity: string? }
+type FishTitleItem = { DisplayName: string, CpsPrice: number, Rarity: string?, DefaultWeight: number? }
 
 local function findLabel(frame: Instance, name: string): TextLabel?
 	local label = frame:FindFirstChild(name)
 	return if label and label:IsA("TextLabel") then label else nil
 end
 
-function FishTitleUtil.Create(titleGui: Instance?, item: FishTitleItem, mutationId: unknown, owner: Player?): BillboardGui?
+function FishTitleUtil.Create(titleGui: Instance?, item: FishTitleItem, mutationId: unknown, owner: Player?, actualWeight: number?): BillboardGui?
 	local template = titleGui and titleGui:FindFirstChild("FishTitleTemplate")
 	if not template or not template:IsA("BillboardGui") then
 		return nil
@@ -38,7 +38,7 @@ function FishTitleUtil.Create(titleGui: Instance?, item: FishTitleItem, mutation
 	if cpsLabel then
 		local function refreshIncome()
 			local base = owner and owner:GetAttribute(PlotFishIncome.BEST_CPS_ATTRIBUTE)
-			local cpsPrice = PlotFishIncome.GetCpsPrice(item, MutationDataUtil.GetEarnCashRate(normalizedId), base)
+			local cpsPrice = PlotFishIncome.GetCpsPrice(item, MutationDataUtil.GetEarnCashRate(normalizedId), base, actualWeight)
 			cpsLabel.Text = "$" .. NumberUtil.FormatItemPriceCompact(cpsPrice) .. "/s"
 		end
 		refreshIncome()

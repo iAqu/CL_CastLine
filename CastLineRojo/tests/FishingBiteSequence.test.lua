@@ -62,6 +62,12 @@ local Elastic = assert(load(read("src/ReplicatedStorage/Modules/BaitElasticMotio
 environment.require = function(name)
 	return if name == "elastic" then Elastic else baseRequire(name)
 end
+environment.script.Parent.FishShadowAppearance = "shadow"
+local shadowAppearance = assert(load(read("src/ReplicatedStorage/Modules/FishShadowAppearance.lua"), "Shadow", "t", environment))()
+local withElastic = environment.require
+environment.require = function(name)
+	return if name == "shadow" then shadowAppearance else withElastic(name)
+end
 
 local Bite = assert(
 	load(read("src/ReplicatedStorage/Modules/FishingBiteSequence.lua"), "FishingBiteSequence", "t", environment)
