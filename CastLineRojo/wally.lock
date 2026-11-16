@@ -3,6 +3,11 @@
 registry = "test"
 
 [[package]]
+name = "1foreverhd/topbarplus"
+version = "3.5.0"
+dependencies = []
+
+[[package]]
 name = "evaera/promise"
 version = "4.0.0"
 dependencies = []
@@ -10,12 +15,7 @@ dependencies = []
 [[package]]
 name = "guxin/car-smasher"
 version = "0.1.0"
-dependencies = [["EnumList", "sleitnick/enum-list@2.1.0"], ["Knit", "sleitnick/knit@1.5.1"], ["Shake", "sleitnick/shake@1.1.0"], ["Signal", "sleitnick/signal@1.5.0"], ["TableUtil", "sleitnick/table-util@1.2.1"], ["Timer", "sleitnick/timer@1.1.2"], ["TopbarPlus", "ryanlua/topbarplus@1.0.1"], ["Tree", "sleitnick/tree@1.1.0"]]
-
-[[package]]
-name = "ryanlua/topbarplus"
-version = "1.0.1"
-dependencies = []
+dependencies = [["EnumList", "sleitnick/enum-list@2.1.0"], ["Knit", "sleitnick/knit@1.5.1"], ["Shake", "sleitnick/shake@1.1.0"], ["Signal", "sleitnick/signal@1.5.0"], ["TableUtil", "sleitnick/table-util@1.2.1"], ["Timer", "sleitnick/timer@1.1.2"], ["TopbarPlus", "1foreverhd/topbarplus@3.5.0"], ["Tree", "sleitnick/tree@1.1.0"]]
 
 [[package]]
 name = "sleitnick/comm"

@@ -9,7 +9,7 @@ local Rarity = require(modules.RarityConfig)
 local Config = require(modules.FishingConfig)
 local Mutations = require(modules.MutationDataUtil)
 local target = Vector3.new(0, 5000, 0)
-local apex = Config.Bite.LiftTime * Config.Bite.LiftRiseEnd
+local apex = Config.Bite.FishLift.RiseTime
 local owners, guis = {}, {}
 local report = { cases = 0, sizes = {}, integration = true, cleanup = true }
 
@@ -39,7 +39,7 @@ local function create(modelName, rarity, isNew, mutationId, egg)
 		if egg then "Egg" else nil)
 	local bite = owner.bite
 	bite.isNewDiscovery, bite.mutationId = isNew, mutationId
-	bite.timeline:_enter("Lifting", 0, Config.Bite.LiftTime)
+	bite.timeline:_enter("Lifting", 0, bite:GetLiftTiming().duration)
 	return owner, bite
 end
 local function frame(owner, now)
@@ -83,7 +83,7 @@ local ok, err = xpcall(function()
 		assert(bite.showcaseVFX == effect, "Repeated frame restarted effect")
 		frame(owner, apex + 0.01 + Config.ShowcaseVFX.OutlineDuration)
 		assert(bite.highlight.OutlineColor == Color3.new(0, 0, 0), "Outline did not recover after 1.2 seconds")
-		frame(owner, Config.Bite.LiftTime + 0.01)
+		frame(owner, bite:GetLiftTiming().duration + 0.01)
 		assert(if case[4] then bite.showcaseVFX == effect else bite.showcaseVFX == nil,
 			"Caught lost active star tail")
 		if storage.VFX.AnimalRoller:FindFirstChild(case[1]) then
@@ -122,9 +122,9 @@ local ok, err = xpcall(function()
 	assert(not bite.showcaseVFX and not bite.showcasePending and not VFX.ShouldBurst(bite), "Egg received fish effects")
 	owner:Destroy()
 	owner, bite = create("GreenSeahorse", "Rare", true)
-	frame(owner, Config.Bite.LiftTime + 0.01)
+	frame(owner, bite:GetLiftTiming().duration + 0.01)
 	local effect = assert(bite.showcaseVFX, "Skipping Lifting missed reveal")
-	frame(owner, Config.Bite.LiftTime + 0.02)
+	frame(owner, bite:GetLiftTiming().duration + 0.02)
 	assert(bite.showcaseVFX == effect, "Skipped reveal played twice")
 	owner:Destroy()
 	for _, phase in { "Escaped", "Reeling", "Reeled" } do

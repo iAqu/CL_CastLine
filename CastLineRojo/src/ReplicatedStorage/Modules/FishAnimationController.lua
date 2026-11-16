@@ -32,9 +32,10 @@ function FishAnimationController.NewState(startedAt, random, struggleTime, appro
 end
 
 -- 这里只选择固定动画、权重和播放时间；骨骼姿势由 Animator 的关键帧插值产生。
-function State:Sample(phase, phaseStartedAt, now, mirror, swimWeight, nibbleSpeed, nibbleAttackTime)
+function State:Sample(phase, phaseStartedAt, now, mirror, swimWeight, nibbleSpeed, nibbleAttackTime, liftDuration)
 	local elapsed = math.max(0, now - phaseStartedAt)
 	local clips = AnimationSettings.Clips
+	liftDuration = liftDuration or (Settings.FishLift.RiseTime + Settings.FishLift.PeakHold + Settings.FishLift.FallTime + Settings.FishLift.SettleTime)
 	local name, token, position, speed, weight
 	if phase == "Approaching" or phase == "Holding" or phase == "Nibbling" or phase == "Bite" or phase == "Escaped" then
 		name, token, speed = "SwimLoop", "SwimLoop", 1
@@ -72,9 +73,9 @@ function State:Sample(phase, phaseStartedAt, now, mirror, swimWeight, nibbleSpee
 			speed = clips[name].Duration / cycle
 			position, weight = (elapsed % cycle) * speed, 1
 		end
-	elseif phase == "Lifting" and elapsed < Settings.LiftTime then
+	elseif phase == "Lifting" and elapsed < liftDuration then
 		name, token = "LiftFlop", phaseStartedAt
-		speed = clips.LiftFlop.Duration / Settings.LiftTime
+		speed = clips.LiftFlop.Duration / liftDuration
 		position, weight = elapsed * speed, 1
 	elseif phase == "Caught" then
 		if self.caughtAt ~= phaseStartedAt then
@@ -198,11 +199,11 @@ function FishAnimationController:_stop(fade)
 	end
 end
 
-function FishAnimationController:Update(phase, phaseStartedAt, now, mirror, swimWeight, nibbleSpeed, nibbleAttackTime)
+function FishAnimationController:Update(phase, phaseStartedAt, now, mirror, swimWeight, nibbleSpeed, nibbleAttackTime, liftDuration)
 	if self.destroyed then
 		return
 	end
-	local request = self.state:Sample(phase, phaseStartedAt, now, mirror, swimWeight, nibbleSpeed, nibbleAttackTime)
+	local request = self.state:Sample(phase, phaseStartedAt, now, mirror, swimWeight, nibbleSpeed, nibbleAttackTime, liftDuration)
 	if self.loading or self.failed then
 		return request
 	end

@@ -202,14 +202,14 @@ local services = {
 					return if math.abs(characterRoot.Position.X) <= 22.5 then position(5) else nil
 				end,
 				GetGeometry = function()
-					return { footprint = 3 }
+					return {}
 				end,
-				Start = function(_, entry, startedAt, _, _, radius)
-					assert(radius == 3, "Start new and restored fish with their scaled footprint")
+				Start = function(_, entry, startedAt, _, ...)
+					assert(select("#", ...) == 0, "New and restored fish use the same center boundary")
 					return { from = entry, startedAt = startedAt, swimming = true }
 				end,
-				Advance = function(_, move, time, _, radius)
-					assert(radius == 3, "Keep the same footprint on later moves")
+				Advance = function(_, move, time, _, ...)
+					assert(select("#", ...) == 0, "Later moves must not depend on fish size")
 					if time >= move.startedAt + 1 then
 						return { from = move.from, startedAt = time, swimming = not move.swimming }
 					end
@@ -218,8 +218,8 @@ local services = {
 				Encode = function(move)
 					return move
 				end,
-				GetSurfacePoint = function(_, point, radius)
-					assert(radius == 3, "Use the fish footprint at the placement point")
+				GetSurfacePoint = function(_, point, ...)
+					assert(select("#", ...) == 0, "Placement uses the same center boundary")
 					return point
 				end,
 			},

@@ -6,11 +6,12 @@ local BackpackSlotObserver = require(ReplicatedStorage.Modules.BackpackSlotObser
 local ItemToolUtil = require(ReplicatedStorage.Modules.ItemToolUtil)
 local BackpackSlotPresentation = require(ReplicatedStorage.Modules.BackpackSlotPresentation)
 local PlotFishIncome = require(ReplicatedStorage.Modules.PlotFishIncome)
+local Appearance = require(ReplicatedStorage.Modules.BackpackConfig).Appearance
 
 local LOCAL_PLAYER = Players.LocalPlayer
 local BACKPACK_SLOT_CORNER_NAME = "PurseSlotCorner"
 local BACKPACK_SLOT_EQUIPPED_STROKE_NAME = "PurseSlotEquippedStroke"
-local BACKPACK_SLOT_CORNER_RADIUS = UDim.new(0.1, 0)
+local BACKPACK_SLOT_CORNER_RADIUS = UDim.new(Appearance.SlotCornerScale, 0)
 local BACKPACK_SLOT_EQUIPPED_STROKE_COLOR = Color3.fromRGB(90, 142, 233)
 local BACKPACK_SLOT_EQUIPPED_STROKE_THICKNESS_DESKTOP = 7
 local BACKPACK_SLOT_EQUIPPED_STROKE_THICKNESS_MOBILE = 3
@@ -240,6 +241,9 @@ end
 local purseMounted = false
 
 local function applyBackpackFont(instance: Instance)
+	if instance:GetAttribute("PreserveBackpackFont") then
+		return
+	end
 	if instance:IsA("TextLabel") or instance:IsA("TextButton") or instance:IsA("TextBox") then
 		instance.Font = BACKPACK_FONT
 	end

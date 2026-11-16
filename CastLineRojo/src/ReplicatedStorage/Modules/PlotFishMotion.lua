@@ -2,7 +2,6 @@ local HttpService = game:GetService("HttpService")
 
 local FishingAssets = require(script.Parent.FishingAssets)
 local ItemStatUtil = require(script.Parent.ItemStatUtil)
-local FishSwimBounds = require(script.Parent.FishSwimBounds)
 
 local PlotPlacementUtil = require(script.Parent.PlotPlacementUtil)
 
@@ -11,6 +10,12 @@ local PlotFishMotion = {
 	FOLDER_NAME = "PlacedFish",
 	MOVE_ATTRIBUTE = "MoveState",
 }
+
+-- Match StealEgg: constrain the body center, allowing fins and tails past the fence.
+local EDGE_INSET = 1.75
+local FLOAT_HEIGHT = 5
+local FLOAT_AMPLITUDE = 0.5
+local FLOAT_PERIOD = 6
 
 export type Move = {
 	from: Vector3,
@@ -21,14 +26,6 @@ export type Move = {
 	duration: number,
 	swimming: boolean,
 }
-
-export type Footprint = {
-	minimum: Vector3,
-	maximum: Vector3,
-	radius: number,
-}
-
-type Bounds = Footprint | number
 
 function PlotFishMotion.GetBoundary(plot: Instance): BasePart?
 	local ground = plot:FindFirstChild("Ground")
@@ -47,82 +44,25 @@ function PlotFishMotion.GetGeometry(item, weight: number, boundary: BasePart)
 	end
 	local metrics = ItemStatUtil.GetModelBounds(template)
 	local scale = ItemStatUtil.GetScaleRatio(item, weight, template)
-	local animations = template:FindFirstChild("Animations")
-	local swim = animations and animations:FindFirstChild("SwimLoop")
-	local envelope = swim and FishSwimBounds[template.PrimaryPart.MeshId .. "/" .. swim.AnimationId]
-	local footprint
-	if envelope then
-		footprint = {
-			minimum = Vector3.new(math.min(metrics.minimum.X, envelope[1]), 0, math.min(metrics.minimum.Z, envelope[3])) * scale,
-			maximum = Vector3.new(math.max(metrics.maximum.X, envelope[2]), 0, math.max(metrics.maximum.Z, envelope[4])) * scale,
-			radius = math.max(metrics.radius, envelope[5]) * scale,
-		}
-	else
-		-- Unknown animated models keep the conservative circular boundary.
-		footprint = metrics.radius * scale
-	end
 	return {
 		template = template,
 		scale = scale,
 		radius = metrics.radius * scale,
-		footprint = footprint,
-		height = boundary.Size.Y * 0.5 + 1.25 - metrics.bottom * scale,
+		height = boundary.Size.Y * 0.5 + FLOAT_HEIGHT - metrics.bottom * scale,
 	}
 end
 
-local function getSwimLimits(boundary: BasePart, footprint: Bounds?, yaw: number?): (number, number, number, number)
-	local halfX, halfZ = boundary.Size.X * 0.5, boundary.Size.Z * 0.5
-	local minX, maxX, minZ, maxZ
-	if typeof(footprint) == "table" then
-		local cosine, sine = math.cos(yaw or 0), math.sin(yaw or 0)
-		local low, high = footprint.minimum, footprint.maximum
-		local centerX, centerZ = (low.X + high.X) * 0.5, (low.Z + high.Z) * 0.5
-		local extentX, extentZ = (high.X - low.X) * 0.5, (high.Z - low.Z) * 0.5
-		local x, z = cosine * centerX + sine * centerZ, -sine * centerX + cosine * centerZ
-		local width = math.abs(cosine) * extentX + math.abs(sine) * extentZ
-		local depth = math.abs(sine) * extentX + math.abs(cosine) * extentZ
-		-- Both envelopes contain every pose: their tighter support is still safe.
-		minX, maxX = math.max(x - width, -footprint.radius), math.min(x + width, footprint.radius)
-		minZ, maxZ = math.max(z - depth, -footprint.radius), math.min(z + depth, footprint.radius)
-	else
-		local radius = footprint or 0
-		minX, maxX, minZ, maxZ = -radius, radius, -radius, radius
-	end
-	return math.min(-halfX - minX, 0), math.max(halfX - maxX, 0),
-		math.min(-halfZ - minZ, 0), math.max(halfZ - maxZ, 0)
+local function getSwimLimits(boundary: BasePart): (number, number)
+	return math.max(boundary.Size.X * 0.5 - EDGE_INSET, 0), math.max(boundary.Size.Z * 0.5 - EDGE_INSET, 0)
 end
 
 local function clampToPlot(position: Vector3, halfX: number, halfZ: number): Vector3
 	return Vector3.new(math.clamp(position.X, -halfX, halfX), 0, math.clamp(position.Z, -halfZ, halfZ))
 end
 
-local function clampToFootprint(boundary: BasePart, position: Vector3, footprint: Bounds?, yaw: number?): Vector3
-	local minX, maxX, minZ, maxZ = getSwimLimits(boundary, footprint, yaw)
-	return Vector3.new(math.clamp(position.X, minX, maxX), 0, math.clamp(position.Z, minZ, maxZ))
-end
-
-local function fitTarget(boundary: BasePart, from: Vector3, target: Vector3, footprint: Bounds?): Vector3?
-	local direction = target - from
-	local distance = direction.Magnitude
-	if distance < 0.00001 then
-		return nil
-	end
-	direction = direction * (1 / distance)
-	local yaw = math.atan2(-direction.X, -direction.Z)
-	local minX, maxX, minZ, maxZ = getSwimLimits(boundary, footprint, yaw)
-	local enter, leave = 0, distance
-	for _, axis in { { from.X, direction.X, minX, maxX }, { from.Z, direction.Z, minZ, maxZ } } do
-		local at, speed, low, high = table.unpack(axis)
-		if math.abs(speed) < 0.00001 then
-			if at < low or at > high then
-				return nil
-			end
-		else
-			local a, b = (low - at) / speed, (high - at) / speed
-			enter, leave = math.max(enter, math.min(a, b)), math.min(leave, math.max(a, b))
-		end
-	end
-	return if leave >= enter and leave > 0 then from + direction * leave else nil
+local function clampToSwimArea(boundary: BasePart, position: Vector3): Vector3
+	local halfX, halfZ = getSwimLimits(boundary)
+	return clampToPlot(position, halfX, halfZ)
 end
 
 function PlotFishMotion.GetEntry(boundary: BasePart, root: BasePart): Vector3?
@@ -139,7 +79,7 @@ function PlotFishMotion.GetEntry(boundary: BasePart, root: BasePart): Vector3?
 	local forward = boundary.CFrame:VectorToObjectSpace(root.CFrame.LookVector)
 	local horizontal = Vector3.new(forward.X, 0, forward.Z)
 	local projected = position + (if horizontal.Magnitude > 0.01 then horizontal.Unit * 5 else Vector3.zero)
-	return clampToPlot(projected, half.X, half.Z)
+	return clampToSwimArea(boundary, projected)
 end
 
 local function pickTarget(halfX: number, halfZ: number, from: Vector3, random: Random): Vector3
@@ -169,24 +109,11 @@ function PlotFishMotion.Start(
 	entry: Vector3,
 	now: number,
 	random: Random,
-	yaw: number?,
-	footprint: Bounds?
+	yaw: number?
 ): Move
-	local from = clampToFootprint(boundary, entry, footprint, yaw)
-	local target
-	if typeof(footprint) == "table" then
-		for _ = 1, 8 do
-			local candidate = pickTarget(boundary.Size.X * 0.5, boundary.Size.Z * 0.5, from, random)
-			target = fitTarget(boundary, from, candidate, footprint)
-			if target then
-				break
-			end
-		end
-		target = target or fitTarget(boundary, from, Vector3.zero, footprint) or from
-	else
-		local _, halfX, _, halfZ = getSwimLimits(boundary, footprint)
-		target = if halfX > 0 or halfZ > 0 then pickTarget(halfX, halfZ, from, random) else from
-	end
+	local halfX, halfZ = getSwimLimits(boundary)
+	local from = clampToPlot(entry, halfX, halfZ)
+	local target = if halfX > 0 or halfZ > 0 then pickTarget(halfX, halfZ, from, random) else from
 	local direction = target - from
 	local distance = direction.Magnitude
 	local swimming = distance > 0
@@ -194,7 +121,7 @@ function PlotFishMotion.Start(
 	return {
 		from = from,
 		target = target,
-		fromYaw = yaw or (if typeof(footprint) == "table" then 0 else targetYaw),
+		fromYaw = yaw or 0,
 		targetYaw = targetYaw,
 		startedAt = now,
 		duration = if swimming then distance / random:NextNumber(5, 7) else random:NextNumber(0.7, 1.5),
@@ -202,12 +129,12 @@ function PlotFishMotion.Start(
 	}
 end
 
-function PlotFishMotion.Advance(boundary: BasePart, move: Move, now: number, random: Random, footprint: Bounds?): Move?
+function PlotFishMotion.Advance(boundary: BasePart, move: Move, now: number, random: Random): Move?
 	if now < move.startedAt + move.duration then
 		return nil
 	end
 	if not move.swimming then
-		return PlotFishMotion.Start(boundary, move.target, now, random, move.targetYaw, footprint)
+		return PlotFishMotion.Start(boundary, move.target, now, random, move.targetYaw)
 	end
 	return {
 		from = move.target,
@@ -224,14 +151,25 @@ local function smooth(alpha: number): number
 	return alpha * alpha * (3 - 2 * alpha)
 end
 
-function PlotFishMotion.Sample(boundary: BasePart, height: number, move: Move, now: number, footprint: Bounds?): (CFrame, number)
+function PlotFishMotion.GetFloatPhase(uid: string): number
+	local hash = 0
+	for index = 1, #uid do
+		hash = (hash * 31 + string.byte(uid, index)) % 65521
+	end
+	-- Spread similar IDs across the cycle, including IDs differing only in their suffix.
+	return ((hash * 48271) % 65521) / 65521 * 2 * math.pi
+end
+
+function PlotFishMotion.Sample(boundary: BasePart, height: number, move: Move, now: number, floatPhase: number?): (CFrame, number)
 	local elapsed = math.max(0, now - move.startedAt)
 	local alpha = math.clamp(elapsed / move.duration, 0, 1)
 	local turnAlpha = math.clamp(elapsed / math.min(0.4, move.duration), 0, 1)
 	local deltaYaw = (move.targetYaw - move.fromYaw + math.pi) % (2 * math.pi) - math.pi
 	local yaw = move.fromYaw + deltaYaw * smooth(turnAlpha)
-	local center = clampToFootprint(boundary, move.from + (move.target - move.from) * smooth(alpha), footprint, yaw)
-	local position = center + Vector3.new(0, height, 0)
+	local center = clampToSwimArea(boundary, move.from + (move.target - move.from) * smooth(alpha))
+	-- Absolute server time keeps floating continuous through moves, rests and display recreation.
+	local floatOffset = FLOAT_AMPLITUDE * math.sin((now % FLOAT_PERIOD) / FLOAT_PERIOD * 2 * math.pi + (floatPhase or 0))
+	local position = center + Vector3.new(0, height + floatOffset, 0)
 	local forward = Vector3.new(-math.sin(yaw), 0, -math.cos(yaw))
 	local swimWeight = if move.swimming then math.min(1, 6 * alpha * (1 - alpha)) else 0
 	return boundary.CFrame * CFrame.lookAt(position, position + forward), 0.25 + 0.75 * swimWeight
@@ -268,8 +206,8 @@ function PlotFishMotion.Decode(encoded: unknown): Move?
 	}
 end
 
-function PlotFishMotion.GetSurfacePoint(boundary: BasePart, point: Vector3, footprint: Bounds?): Vector3
-	local center = clampToFootprint(boundary, point, footprint, 0)
+function PlotFishMotion.GetSurfacePoint(boundary: BasePart, point: Vector3): Vector3
+	local center = clampToSwimArea(boundary, point)
 	return boundary.CFrame:PointToWorldSpace(center + Vector3.new(0, boundary.Size.Y * 0.5 + 0.7, 0))
 end
 

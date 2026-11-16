@@ -20,6 +20,7 @@ local environment = setmetatable({
 	script = {
 		Parent = {
 			FishingConfig = "config",
+			FishingLiftMotion = "lift",
 			FishAnimationController = "fish-animation",
 			FishDripEffect = "fish-drip",
 			FishSecondaryMotion = "secondary",
@@ -37,6 +38,7 @@ local environment = setmetatable({
 	},
 	require = function(name)
 		if name == nil then return {} end
+		if name == "lift" then return dofile("src/ReplicatedStorage/Modules/FishingLiftMotion.lua") end
 		if name == "water" then return water end
 		if name == "fish-animation" or name == "fish-drip" or name == "secondary" or name == "reel" or name == "water"
 			or name == "mutation"
@@ -152,7 +154,7 @@ caught:SetCaughtWeight(64000)
 assert(caught:_scaleAt("Bite", 0) == 1, "Keep the pre-catch size for bite timing")
 assert(caught:_scaleAt("Lifting", 0) == 1, "Start the lift at the pre-catch size")
 for index = 1, 100 do
-	assert(caught:_scaleAt("Lifting", settings.LiftTime * index / 100) <= 4.3, "Limit the lift animation peak")
+	assert(caught:_scaleAt("Lifting", caught:GetLiftTiming().duration * index / 100) <= 4.3, "Limit the lift animation peak")
 end
 assert(caught:_scaleAt("Caught", 0) == 4.2, "Hold the final fish size at the shared weight scale")
 
@@ -163,9 +165,9 @@ for _, phase in { "Settling", "Waiting", "Approaching", "Holding", "Nibbling", "
 end
 assert(scaled:_scaleAt("Lifting", 0) == 1.5, "Start the lift at the base size without a jump")
 for index = 1, 100 do
-	assert(scaled:_scaleAt("Lifting", settings.LiftTime * index / 100) <= 4.3, "Cap the combined animated size")
+	assert(scaled:_scaleAt("Lifting", caught:GetLiftTiming().duration * index / 100) <= 4.3, "Cap the combined animated size")
 end
-assert(math.abs(scaled:_scaleAt("Lifting", settings.LiftTime) - 4.2) < 1e-5, "Finish the lift at the final size")
+assert(math.abs(scaled:_scaleAt("Lifting", scaled:GetLiftTiming().duration) - 4.2) < 1e-5, "Finish the lift at the final size")
 assert(scaled:_scaleAt("Caught", 0) == 4.2, "Do not multiply the base size twice after catching")
 local unweighed = setmetatable({ defaultScale = 1.5 }, Bite)
 assert(unweighed:_scaleAt("Caught", 0) == 1.5, "Preview rounds without a caught weight must keep their base size")
@@ -179,7 +181,8 @@ for _, shape in { { radius = 1, mouth = 0 }, { radius = 5, mouth = 4 } } do
 	assert(height - caught:GetShowcaseRadius() >= settings.WaterClearance - 0.00001, "Keep the animated fish above water")
 	for index = 0, 100 do
 		local bounce = index / 100
-		local elapsed = settings.LiftTime * (settings.LiftFallEnd + (1 - settings.LiftFallEnd) * bounce)
+		local timing = caught:GetLiftTiming()
+		local elapsed = timing.landAt + (timing.duration - timing.landAt) * bounce
 		local lowest = height + settings.LiftBounceHeight * Elastic.Rebound(bounce)
 			- caught.presentationRadius * caught:_scaleAt("Lifting", elapsed)
 		assert(lowest >= settings.WaterClearance - 0.00001, "Keep the whole fish above water during rebound")
@@ -900,4 +903,40 @@ do
 	sequence:_updateRarityVFX("Caught", 14)
 	sequence:_updateRarityVFX("Caught", 14)
 	assert(sequence.rarityShowcasePlayed and not sequence.rarityEffects, "Missing resources must consume the stage")
+end
+
+-- 每轮按捕获类型选择时序；鱼蛋继续保持旧的两秒演出。
+do
+	local random = { NextInteger = function(_, low) return low end, NextNumber = function(_, low) return low end }
+	local fish = Bite.NewTimeline(0, random)
+	local egg = Bite.NewTimeline(0, random, nil, nil, "Egg")
+	assert(math.abs(fish.liftTiming.duration - 1.55) < 1e-9 and egg.liftTiming.duration == 2)
+	fish:_enter("Struggling", 0, 1)
+	egg:_enter("Struggling", 0, 1)
+	fish:Advance(1)
+	egg:Advance(1)
+	assert(math.abs(fish.endsAt - 2.55) < 1e-9 and egg.endsAt == 3)
+end
+
+-- 音画反馈共用破水/落位边界；静音或重复更新不能导致补播。
+do
+	local motion = dofile("src/ReplicatedStorage/Modules/FishingLiftMotion.lua")
+	local plan = motion.New(settings, config.BaitElastic, -4, 5, 8)
+	local played, effects, impulses, whooshes = {}, 0, {}, 0
+	local sequence = setmetatable({ liftPlan = plan, owner = {
+		_waterFeedback = function() end,
+		_playWaterVFX = function(_, _, _, _, _, scale) effects += 1; assert(scale == 1) end,
+		_impulse = function(_, setting) table.insert(impulses, setting) end,
+		_sound = function(_, name) assert(name == "CameraWhoosh"); whooshes += 1 end,
+		fishAudio = { Play = function(_, name) table.insert(played, name) end },
+	} }, Bite)
+	sequence:_updateLiftFeedback("Lifting", plan.exitAt + 0.01, 10, {})
+	sequence:_updateLiftFeedback("Lifting", plan.exitAt + 0.01, 10, {})
+	assert(effects == 1 and whooshes == 1 and played[1] == "FishWaterOut" and #impulses == 1)
+	sequence:_updateLiftFeedback("Lifting", plan.timing.landAt + 0.01, 11, {})
+	sequence:_updateLiftFeedback("Caught", 0.01, 12, {})
+	assert(#played == 2 and played[2] == "FishDrop" and impulses[2] == settings.FishLift.Land)
+	sequence.liftFeedbackAt = nil
+	sequence:_updateLiftFeedback("Caught", 5, 20, {})
+	assert(#played == 2 and effects == 1, "Expired boundaries replayed")
 end

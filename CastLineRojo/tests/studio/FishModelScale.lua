@@ -115,15 +115,13 @@ local ok, result = xpcall(function()
 				near(geometry.scale, ratio, "Plot size must match caught fish")
 				local metrics = Stats.GetModelBounds(template)
 				assert(metrics.longest * ratio <= 50.001 and geometry.radius <= 21.501, "Final size exceeds limits")
-				local move = Plot.Start(boundary, Vector3.zero, 0, Random.new(11), 0, geometry.footprint)
+				local move = Plot.Start(boundary, Vector3.zero, 0, Random.new(11), 0)
 				for index = 0, 20 do
-					local frame = Plot.Sample(boundary, geometry.height, move, move.duration * index / 20, geometry.footprint)
-					for _, x in { metrics.minimum.X, metrics.maximum.X } do
-						for _, z in { metrics.minimum.Z, metrics.maximum.Z } do
-							local point = boundary.CFrame:PointToObjectSpace(frame:PointToWorldSpace(Vector3.new(x, 0, z) * ratio))
-							assert(math.abs(point.X) <= 22.501 and math.abs(point.Z) <= 22.501, "Plot fish crossed the boundary")
-						end
-					end
+					local frame = Plot.Sample(boundary, geometry.height, move, move.duration * index / 20)
+					local center = boundary.CFrame:PointToObjectSpace(frame.Position)
+					assert(math.abs(center.X) <= boundary.Size.X / 2 - 1.75 + 0.001
+						and math.abs(center.Z) <= boundary.Size.Z / 2 - 1.75 + 0.001,
+						"Plot fish center crossed the fixed boundary")
 				end
 				for _, viewport in { Vector2.new(390, 844), Vector2.new(1877, 1240) } do
 					local camera = Cast._showcaseCamera(owner, target, viewport)

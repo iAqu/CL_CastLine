@@ -413,3 +413,14 @@ assert(preloadCalls == 3 and #preloadTasks == 3 and warnings == beforeWarnings +
 for index = beforeObjects + 1, #preloadObjects do
 	assert(preloadObjects[index].destroyed, "Release resources if the meter failed to load")
 end
+
+do
+	enabled = true
+	local timed = Audio.new(function() return enabled end)
+	local exits, drops = count("FishWaterOut"), count("FishDrop")
+	timed:SetPhase("Lifting", true)
+	timed:SetPhase("Caught", true)
+	assert(count("FishWaterOut") == exits and count("FishDrop") == drops,
+		"Timed fish feedback must not also play legacy phase cues")
+	timed:Destroy(false)
+end

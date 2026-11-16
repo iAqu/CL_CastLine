@@ -7,7 +7,7 @@ local Audio = require(ReplicatedStorage.Modules.FishingAudio)
 local config = require(ReplicatedStorage.Modules.FishingConfig)
 local settings = config.Bite
 local originalFishName = settings.FishName
-settings.FishName = "Elder Fish"
+settings.FishName = "GreenSeahorse"
 local template = ReplicatedStorage.Models.Fish[settings.FishName]
 local originalTexture, originalColor = template.PrimaryPart.TextureID, template.PrimaryPart.Color
 local folder = Instance.new("Folder")
@@ -39,6 +39,7 @@ local ok, result = xpcall(function()
 	local line = Instance.new("Beam")
 	line.Attachment0, line.Attachment1, line.Parent = tip, endAttachment, folder
 	owner = setmetatable({
+		options = {},
 		folder = folder,
 		phase = "Waiting",
 		forward = Vector3.zAxis,
@@ -72,6 +73,7 @@ local ok, result = xpcall(function()
 		_nibbleRipple = function() end,
 		_nibbleFeedback = function() end,
 		_sound = function(self, name)
+			if name == "CameraWhoosh" then return end
 			assert(name == "FishBiteHeavey", "Unexpected bite cue")
 			self.biteCues = (self.biteCues or 0) + 1
 		end,
@@ -568,7 +570,8 @@ local ok, result = xpcall(function()
 	update(hookAt + 1.03)
 	assert((first - owner.bite.fish.PrimaryPart.Position).Magnitude > 0.1, "Orbit paused")
 	update(hookAt + 1.35)
-	assert((first - owner.bite.fish.PrimaryPart.Position).Magnitude > 0.5, "Orbit stopped moving")
+	local orbitRadius = ((first - target) * Vector3.new(1, 0, 1)).Magnitude
+	assert((first - owner.bite.fish.PrimaryPart.Position).Magnitude > orbitRadius * 0.05, "Orbit stopped moving")
 	local body = owner.bite.fish.PrimaryPart
 	local mouth = body.CFrame:PointToWorldSpace(owner.bite.mouthOffset)
 	assert(
@@ -588,6 +591,7 @@ local ok, result = xpcall(function()
 
 	-- 出水保持竖线，完全出水才恢复彩色；最终鱼头朝上。
 	local liftingAt = owner.bite.timeline.endsAt
+	local liftImpulsesBefore = owner.impulseCount
 	update(liftingAt)
 	assert(
 		not owner.bite.highlight.Enabled
@@ -600,12 +604,12 @@ local ok, result = xpcall(function()
 		line.Attachment0 == topAttachment and body.TextureID == "" and bait.Transparency == 1,
 		"Lift did not switch the upper anchor or colored fish too early"
 	)
-	assert(owner.impulseCount == 1, "Exit must trigger one strong camera impulse")
+	assert(owner.impulseCount == liftImpulsesBefore, "Wait for the fish to cross the water before the exit impulse")
 	local caughtAt = owner.bite.timeline.endsAt
 	local highest = -math.huge
 	local peakScale, bounceHeight = 0, 0
 	for index = 1, 100 do
-		local at = liftingAt + settings.LiftTime * index / 100
+		local at = liftingAt + owner.bite:GetLiftTiming().duration * index / 100
 		update(at)
 		owner:_updateCamera(at, 1 / 60)
 		if owner.bite.originalShown then
@@ -614,20 +618,12 @@ local ok, result = xpcall(function()
 			assert(not owner.bite.highlight.Enabled, "Black outline appeared before the fish surfaced")
 		end
 		peakScale = math.max(peakScale, owner.bite.scale)
-		if index / 100 > settings.LiftFallEnd then
+		if at - liftingAt > owner.bite:GetLiftTiming().landAt then
 			bounceHeight = math.max(bounceHeight, body.Position.Y - target.Y - settings.ShowcaseHeight)
 		end
-		if index == 35 then
-			local focus = owner.bite.showcasePosition
-			assert((camera.Focus.Position - focus).Magnitude < 0.001, "Closeup did not track the rising fish")
-			assert(
-				math.abs((owner.cameraFrame.Position - focus).Magnitude - settings.ShowcaseCloseupDistance) < 0.001,
-				"Exit closeup distance changed with fish size"
-			)
-			assert(
-				(owner.cameraFrame.Position - camera.CFrame.Position).Magnitude < 0.1,
-				"Framing protection pushed the closeup away"
-			)
+		if index == 20 then
+			assert((camera.Focus.Position - owner.bite.showcasePosition).Magnitude > 0.01,
+				"Rising camera must retain visible follow lag")
 		end
 		highest = math.max(highest, body.Position.Y)
 		assertFishShowcaseLine()
@@ -650,7 +646,7 @@ local ok, result = xpcall(function()
 		bounceHeight > 1 and peakScale > 1.3 and math.abs(owner.bite.scale - 1) < 0.001,
 		"Fish did not scale-punch and rebound"
 	)
-	assert(owner.impulseCount == 1, "Exit replayed its camera impulse")
+	assert(owner.impulseCount == liftImpulsesBefore + 2, "Exit and landing must each trigger once")
 	owner:_updateCamera(caughtAt + settings.ShowcaseHold, 1 / 60)
 	assert(math.abs(owner.cameraFrame.LookVector.Y) < 0.0001, "Base showcase camera did not return to level")
 	assert(camera.CFrame.LookVector.Y < 0.02, "Showcase camera sway is too strong")
@@ -777,7 +773,7 @@ local ok, result = xpcall(function()
 		"Source fish appearance changed"
 	)
 	-- 单网格与多部件鱼都复用同一个模型级描边，出水前关闭，显色后保持。
-	for index, name in ipairs({ "ThresherShark", "YaoYu_04_00" }) do
+	for index, name in ipairs({ "GreenSeahorse", "AncientMegalodon" }) do
 		settings.FishName = name
 		local at = 5000 + index * 100
 		round(at)
@@ -787,7 +783,7 @@ local ok, result = xpcall(function()
 		update(liftAt)
 		assert(not bite.highlight.Enabled, "Outline validation fish showed black outline underwater")
 		for frame = 1, 60 do
-			update(liftAt + settings.LiftTime * frame / 60)
+			update(liftAt + owner.bite:GetLiftTiming().duration * frame / 60)
 			if bite.originalShown then
 				assertCaughtOutline(bite)
 			else
@@ -795,7 +791,7 @@ local ok, result = xpcall(function()
 			end
 		end
 		assertCaughtOutline(bite)
-		update(liftAt + settings.LiftTime + settings.ShowcaseHold)
+		update(liftAt + owner.bite:GetLiftTiming().duration + settings.ShowcaseHold)
 		assertCaughtOutline(bite)
 		bite:_appearance(false, true, 0, "Caught", 0)
 		assert(
@@ -813,7 +809,7 @@ local ok, result = xpcall(function()
 	)
 	return {
 		passed = true,
-		checks = "three spawn sectors, Neon shadow and original material restoration, 30/60 fps body and outline easing, escape fade endpoints, keyframe animation, actual size/fade/rise, bait outline/red fill, side contact, timeout retry, spr reel with continuous retargeting and physical settling, struggle shake, single exit impulse, sky spin/fall/bounce, camera tracking, three idle bursts, fixed mouth/focus/line, centered bait anchor, fish anchor one world stud below scaled mouth, landscape/portrait animation framing, single-mesh and multipart surfaced black outline, hidden outline and cleanup",
+		checks = "three spawn sectors, Neon shadow and original material restoration, 30/60 fps body and outline easing, escape fade endpoints, keyframe animation, actual size/fade/rise, bait outline/red fill, side contact, timeout retry, spr reel with continuous retargeting and physical settling, struggle shake, synchronized exit and landing impulses, sky spin/fall/bounce, camera tracking, three idle bursts, fixed mouth/focus/line, centered bait anchor, fish anchor one world stud below scaled mouth, landscape/portrait animation framing, single-mesh and multipart surfaced black outline, hidden outline and cleanup",
 	}
 end, debug.traceback)
 

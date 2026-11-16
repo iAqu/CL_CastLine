@@ -209,7 +209,8 @@ function PlotFishController:KnitStart()
 		model:ScaleTo(model:GetScale() * geometry.scale)
 		setDisplayPartProperties(model)
 		local bodyToPivot = model.PrimaryPart.CFrame:ToObjectSpace(model:GetPivot())
-		local pose = PlotFishMotion.Sample(boundary, geometry.height, move, Workspace:GetServerTimeNow(), geometry.footprint)
+		local floatPhase = PlotFishMotion.GetFloatPhase(fish.Name)
+		local pose = PlotFishMotion.Sample(boundary, geometry.height, move, Workspace:GetServerTimeNow(), floatPhase)
 		model:PivotTo(pose * bodyToPivot)
 		model.Parent = plot
 
@@ -239,7 +240,7 @@ function PlotFishController:KnitStart()
 			plot = plot,
 			folder = folder,
 			height = geometry.height,
-			footprint = geometry.footprint,
+			floatPhase = floatPhase,
 			move = move,
 			started = started,
 		}
@@ -332,7 +333,7 @@ function PlotFishController:KnitStart()
 			local current = owner == display.folder:GetAttribute("OwnerUserId")
 			local nearby = root and (root.Position - display.boundary.Position).Magnitude <= RENDER_DISTANCE
 			if current and nearby then
-				local pose, swimWeight = PlotFishMotion.Sample(display.boundary, display.height, display.move, now, display.footprint)
+				local pose, swimWeight = PlotFishMotion.Sample(display.boundary, display.height, display.move, now, display.floatPhase)
 				display.model:PivotTo(pose * display.bodyToPivot)
 				if not display.animation then
 					display.animation = FishAnimationController.new(display.model, display.started, nil, "SwimLoop")
@@ -354,7 +355,7 @@ function PlotFishController:KnitStart()
 			and PlotFishMotion.GetGeometry(item, weight, boundary)
 		preview.Transparency = if geometry then 0.28 else 1
 		if geometry then
-			local point = PlotFishMotion.GetSurfacePoint(boundary, entry, geometry.footprint)
+			local point = PlotFishMotion.GetSurfacePoint(boundary, entry)
 			preview.CFrame = CFrame.new(point) * boundary.CFrame.Rotation * CFrame.Angles(0, 0, math.pi * 0.5)
 		end
 	end)

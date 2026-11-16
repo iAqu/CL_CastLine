@@ -183,7 +183,7 @@ return {
 		HoldTime = 0.5,
 	},
 	Bite = {
-		Prompt = { PopTime = 0.16, StartScale = 0.2, HeightOffset = 3.2 },
+		Prompt = { PopTime = 0.08, StartScale = 0.7, HeightOffset = 3.2 },
 		-- 独立演出测试可用 FishName 指定鱼种；正式钓鱼使用服务器抽取结果。
 		-- 相对鱼身尺寸的嘴部连接位置。
 		MouthOffset = { 0, -0.1, -0.485 },
@@ -301,6 +301,23 @@ return {
 			AnimationCycle = 0.45,
 		},
 		RippleInterval = 0.22,
+		FishLift = {
+			RiseTime = 0.40,
+			PeakHold = 0.08,
+			FallTime = 0.80,
+			SettleTime = 0.27,
+			ScaleTime = 0.35,
+			BaseRise = 32,
+			SizeRise = 1.5,
+			EventWindow = 0.10,
+			CameraHold = 0.12,
+			CameraBlend = 0.18,
+			CameraLag = 0.12,
+			CameraRiseFollow = 0.35,
+			Exit = { Fov = 10, Recovery = 0.25, Shake = 3.6, Duration = 0.22, Frequency = 22 },
+			Land = { Shake = 0.6, Duration = 0.12, Frequency = 22 },
+		},
+		-- 鱼蛋保留原演出参数。
 		LiftTime = 2,
 		LiftRiseEnd = 0.35,
 		LiftFallEnd = 0.72,

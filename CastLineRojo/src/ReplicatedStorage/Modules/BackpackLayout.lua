@@ -1,5 +1,6 @@
 -- Pure layout and drop policy. Logical hotbar slots always remain 1..10.
 local BackpackLayout = {}
+local GRID_SIDE_PADDING = 18
 
 function BackpackLayout.Compute(width, height, touchOnly)
 	width, height = math.max(1, width), math.max(1, height)
@@ -10,18 +11,29 @@ function BackpackLayout.Compute(width, height, touchOnly)
 	local availableWidth = math.max(1, width - margin * 2)
 	local desired = touchOnly and height * (phone and 0.15 or 0.11) or 56 * scale
 	desired = math.max(touchOnly and 44 or 36, math.min(desired, touchOnly and 72 or 84))
-	local gap = math.max(3, math.floor(desired * 0.09))
-	local icon = math.max(1, math.floor(math.min(desired, (availableWidth - gap * (count + 1)) / count)))
-	gap = math.max(3, math.floor(icon * 0.09))
-	local hotbarWidth = math.min(availableWidth, count * icon + gap * (count + 1))
+	-- Fit the complete row and panel padding before sizing either container.
+	local icon = math.max(1, math.floor(desired))
+	local gap, gridWidth
+	repeat
+		gap = math.max(3, math.floor(icon * 0.09))
+		gridWidth = count * icon + (count - 1) * gap
+		if gridWidth + GRID_SIDE_PADDING * 2 <= availableWidth or icon == 1 then
+			break
+		end
+		icon = icon - 1
+	until false
+	local hotbarWidth = gridWidth + gap * 2
 	local hotbarHeight = icon + gap * 2
 	local hotbarY = math.max(0, height - margin - hotbarHeight)
-	local panelWidth = math.floor(math.min(availableWidth, math.max(hotbarWidth, width * (touchOnly and 0.9 or 0.55))))
+	local panelWidth = gridWidth + GRID_SIDE_PADDING * 2
 	local panelHeight = math.max(1, math.floor(math.min(height * (phone and 0.62 or 0.42), hotbarY - margin - gap)))
 	return {
 		TouchOnly = touchOnly,
 		Phone = phone,
 		VisibleSlots = count,
+		GridColumns = count,
+		GridWidth = gridWidth,
+		GridOffsetX = GRID_SIDE_PADDING,
 		IconSize = icon,
 		Gap = gap,
 		Margin = margin,
@@ -33,6 +45,14 @@ function BackpackLayout.Compute(width, height, touchOnly)
 		PanelHeight = panelHeight,
 		PanelY = math.max(margin, hotbarY - gap - panelHeight),
 	}
+end
+
+function BackpackLayout.CanvasHeight(itemCount, layout)
+	local rows = math.ceil(itemCount / layout.GridColumns)
+	if rows == 0 then
+		return 0
+	end
+	return rows * layout.IconSize + (rows - 1) * layout.Gap + 8
 end
 
 function BackpackLayout.IsInventorySlot(index, visibleSlots)

@@ -88,7 +88,6 @@ local motion = assert(load(
 			PlotPlacementUtil = { CAPACITY = 10 },
 			FishingAssets = { GetFish = function(name) return templates[name] end },
 			ItemStatUtil = stats,
-			FishSwimBounds = { ["mesh/Slender"] = { -0.5, 0.5, -5, 5, math.sqrt(25.25) } },
 		} },
 		Vector3 = vector,
 		Vector2 = vector2,
@@ -141,6 +140,10 @@ local function expectVector(actual, expected, message)
 	assert((actual - expected).Magnitude < 1e-5, message)
 end
 
+local function expectHorizontal(actual, expected, message)
+	expectVector(vector.new(actual.X, 0, actual.Z), vector.new(expected.X, 0, expected.Z), message)
+end
+
 local function fishTemplate(size, animatedRadius, animationId)
 	return {
 		FindFirstChild = function(_, name)
@@ -175,9 +178,9 @@ for _, base in { 1, 1.5 } do
 		stats.ScaleModel(toolModel, item, weight, templates.Axolotl)
 		local placed = motion.GetGeometry(item, weight, ground)
 		assert(heldScale == 2 * expected and placed.scale == expected, "Apply authored scale once in held and placed fish")
-		assert(math.abs(placed.radius - 4.056 * expected) < 1e-5, "Use the final size for plot travel bounds")
-		assert(math.abs(placed.height - (ground.Size.Y * 0.5 + 1.25 + 1.017 * expected)) < 1e-5,
-			"Keep the final-sized fish above the ground")
+		assert(math.abs(placed.radius - 4.056 * expected) < 1e-5, "Preserve the final model radius")
+		assert(math.abs(placed.height - (ground.Size.Y * 0.5 + 5 + 1.017 * expected)) < 1e-5,
+			"Keep the final-sized fish five studs above the ground")
 	end
 end
 for _, invalid in { 0, -1, math.huge, -math.huge, 0 / 0, "invalid" } do
@@ -191,28 +194,6 @@ assert(heldScale == 2 * oldFish.scale, "Hold and place the old fish at the same 
 assert(motion.GetGeometry(axolotl, 64000, legacy).scale == oldFish.scale, "Plot size must not change model size")
 
 templates.Slender = fishTemplate(vector.new(1, 1, 10), nil, "Slender")
-local slender = motion.GetGeometry({ Model = "Slender", DefaultWeight = 1 }, 1, ground)
-assert(slender.footprint, "Use the fish's directional footprint instead of a circular inset")
-local footprint = slender.footprint
-for edge = 1, 4 do
-	local move = motion.Start(ground, vector.zero, 0, {
-		NextNumber = function(_, low, high) return if low == nil then 0.1 else (low + high) / 2 end,
-		NextInteger = function() return edge end,
-	}, 0, footprint)
-	local pose = motion.Sample(ground, slender.height, move, move.duration, footprint)
-	local center = ground.CFrame:PointToObjectSpace(pose.Position)
-	local closest = math.huge
-	for _, x in { -0.5, 0.5 } do
-		for _, z in { -5, 5 } do
-			local forward = ground.CFrame:VectorToObjectSpace(pose.LookVector)
-			local corner = center + vector.new(-forward.Z * x - forward.X * z, 0, forward.X * x - forward.Z * z)
-			assert(math.abs(corner.X) <= 30.00001 and math.abs(corner.Z) <= 28.25001, "The whole fish stays inside")
-			local gap = if edge <= 2 then 30 - math.abs(corner.X) else 28.25 - math.abs(corner.Z)
-			closest = math.min(closest, gap)
-		end
-	end
-	assert(closest < 0.0001, "The body must touch each selected edge without a circular gap")
-end
 local longFish = motion.GetGeometry({ Model = "Slender", DefaultWeight = 1 }, 1000, legacy)
 assert(math.abs(longFish.radius - 21.5) < 1e-5 and longFish.scale * 10 < 50,
 	"Long horizontal fish must still fit the shared footprint")
@@ -247,14 +228,14 @@ for _, yaw in { 0, math.pi * 0.5, math.pi, 0.37 } do
 	local start = boundary.CFrame:PointToWorldSpace(vector.new(0, 3, 25))
 	local root = { Position = start, CFrame = frame(start, yaw + math.pi) }
 	local entry = assert(motion.GetEntry(boundary, root))
-	expectVector(entry, vector.new(0, 0, 28), "Clamp the projected placement to the Ground edge")
+	expectVector(entry, vector.new(0, 0, 26.25), "Clamp the projected placement to the center boundary")
 	local preview = motion.GetSurfacePoint(boundary, entry)
-	expectVector(boundary.CFrame:PointToObjectSpace(preview), vector.new(0, 1.2, 28), "Surface point must use the placement X/Z")
+	expectVector(boundary.CFrame:PointToObjectSpace(preview), vector.new(0, 1.2, 26.25), "Surface point must use the placement X/Z")
 
 	root.Position = boundary.CFrame:PointToWorldSpace(vector.new(31, 3, 25))
 	assert(not motion.GetEntry(boundary, root), "Reject placements originating outside a rotated plot")
 
-	for edge, target in { vector.new(-30, 0, 0), vector.new(30, 0, 0), vector.new(0, 0, -28), vector.new(0, 0, 28) } do
+	for edge, target in { vector.new(-28.25, 0, 0), vector.new(28.25, 0, 0), vector.new(0, 0, -26.25), vector.new(0, 0, 26.25) } do
 		local random = fixedRandom(edge)
 		local from = if edge == 4 then vector.zero else entry
 		local move = motion.Start(boundary, from, 50, random, math.pi)
@@ -272,7 +253,7 @@ for _, yaw in { 0, math.pi * 0.5, math.pi, 0.37 } do
 		for index = 0, 100 do
 			local sampled = motion.Sample(boundary, 4, move, move.startedAt + move.duration * index / 100)
 			local localPosition = boundary.CFrame:PointToObjectSpace(sampled.Position)
-			assert(math.abs(localPosition.X) <= 30 + 1e-5 and math.abs(localPosition.Z) <= 28 + 1e-5, "Stay inside the plot")
+			assert(math.abs(localPosition.X) <= 28.25 + 1e-5 and math.abs(localPosition.Z) <= 26.25 + 1e-5, "Stay inside the plot")
 		end
 
 		local arrivedAt = move.startedAt + move.duration
@@ -281,24 +262,39 @@ for _, yaw in { 0, math.pi * 0.5, math.pi, 0.37 } do
 		assert(not rest.swimming and rest.duration >= 0.7 and rest.duration <= 1.5, "Rest for the configured time")
 		local arrived = motion.Sample(boundary, 4, move, arrivedAt)
 		local resting, restWeight = motion.Sample(boundary, 4, rest, rest.startedAt + rest.duration * 0.5)
-		expectVector(boundary.CFrame:PointToObjectSpace(arrived.Position), target + vector.new(0, 4, 0), "Reach the selected edge")
-		expectVector(resting.Position, arrived.Position, "Hold position while resting")
+		expectHorizontal(boundary.CFrame:PointToObjectSpace(arrived.Position), target, "Reach the selected edge")
+		expectHorizontal(resting.Position, arrived.Position, "Hold horizontal position while floating at rest")
 		expectVector(resting.LookVector, arrived.LookVector, "Hold heading while resting")
 		assert(restWeight == 0.25, "Keep only a light tail motion while resting")
 
 		local nextMove = assert(motion.Advance(boundary, rest, rest.startedAt + rest.duration, fixedRandom()))
 		assert(nextMove.swimming, "Start swimming again after resting")
 		local resumed = motion.Sample(boundary, 4, nextMove, nextMove.startedAt)
-		expectVector(resumed.Position, resting.Position, "Resume at the previous target")
+		local restEnd = motion.Sample(boundary, 4, rest, nextMove.startedAt)
+		expectVector(resumed.Position, restEnd.Position, "Resume at the same position and floating height")
 		expectVector(resumed.LookVector, resting.LookVector, "Resume without snapping to the next heading")
 	end
 end
 
--- Turn at the edge with an off-center body, then continue through rest/resume.
--- Check the actual body corners independently of the motion module's limits.
-local offsetFootprint = { minimum = vector.new(-3, 0, -6), maximum = vector.new(5, 0, 10), radius = math.sqrt(125) }
+-- Near the physical ground edge, placing is still allowed and preview/spawn agree.
 for _, plotYaw in { 0, 0.37, math.pi / 2 } do
 	local boundary = boundaryPart(vector.new(60, 1, 56), frame(vector.new(50, 10, -30), plotYaw))
+	for _, x in { -29.9, 29.9 } do
+		for _, z in { -27.9, 27.9 } do
+			local position = boundary.CFrame:PointToWorldSpace(vector.new(x, 3, z))
+			local entry = assert(motion.GetEntry(boundary, { Position = position, CFrame = frame(position, plotYaw) }))
+			local preview = boundary.CFrame:PointToObjectSpace(motion.GetSurfacePoint(boundary, entry))
+			local move = motion.Start(boundary, entry, 0, fixedRandom(1), 0.7)
+			expectVector(move.from, vector.new(preview.X, 0, preview.Z), "Preview and actual spawn must match at corners")
+			assert(math.abs(entry.X) <= 28.25 and math.abs(entry.Z) <= 26.25, "Clamp corner placements to the center area")
+		end
+	end
+	for _, outside in { vector.new(30.1, 3, 0), vector.new(0, 3, 28.1) } do
+		local position = boundary.CFrame:PointToWorldSpace(outside)
+		assert(not motion.GetEntry(boundary, { Position = position, CFrame = frame(position, plotYaw) }),
+			"Players outside the physical ground cannot place fish")
+	end
+
 	local seed = 7823
 	local random = {}
 	function random:NextNumber(low, high)
@@ -309,26 +305,66 @@ for _, plotYaw in { 0, 0.37, math.pi / 2 } do
 	function random:NextInteger(low, high)
 		return math.min(high, math.floor(self:NextNumber(low, high + 1)))
 	end
-	local move = motion.Start(boundary, vector.new(29, 0, 27), 0, random, math.pi * 0.75, offsetFootprint)
+	local move = motion.Start(boundary, vector.new(29, 0, 27), 0, random, math.pi * 0.75)
 	for _ = 1, 100 do
 		for index = 0, 40 do
-			local pose = motion.Sample(boundary, 4, move, move.startedAt + move.duration * index / 40, offsetFootprint)
+			local pose = motion.Sample(boundary, 4, move, move.startedAt + move.duration * index / 40)
 			local center = boundary.CFrame:PointToObjectSpace(pose.Position)
-			local forward = boundary.CFrame:VectorToObjectSpace(pose.LookVector)
-			for _, x in { -3, 5 } do
-				for _, z in { -6, 10 } do
-					local corner = center + vector.new(-forward.Z * x - forward.X * z, 0, forward.X * x - forward.Z * z)
-					assert(math.abs(corner.X) <= 30.0001 and math.abs(corner.Z) <= 28.0001,
-						"The entire offset footprint must stay inside while turning, travelling and resting")
-				end
-			end
+			assert(math.abs(center.X) <= 28.2501 and math.abs(center.Z) <= 26.2501,
+				"Center must stay inside while turning, travelling and resting")
 		end
-		local arrived = motion.Sample(boundary, 4, move, move.startedAt + move.duration, offsetFootprint)
-		move = assert(motion.Advance(boundary, move, move.startedAt + move.duration, random, offsetFootprint))
-		local resumed = motion.Sample(boundary, 4, move, move.startedAt, offsetFootprint)
+		local arrived = motion.Sample(boundary, 4, move, move.startedAt + move.duration)
+		move = assert(motion.Advance(boundary, move, move.startedAt + move.duration, random))
+		local resumed = motion.Sample(boundary, 4, move, move.startedAt)
 		expectVector(arrived.Position, resumed.Position, "Do not jump when changing direction at the edge")
 		expectVector(arrived.LookVector, resumed.LookVector, "Do not snap the heading at the edge")
 	end
+end
+
+-- Weight, size and facing affect the fish appearance, never its center travel area.
+local expectedTargets = { vector.new(-28.25, 0, 0), vector.new(28.25, 0, 0), vector.new(0, 0, -26.5), vector.new(0, 0, 26.5) }
+local bodyCrossings = 0
+for _, name in { "Axolotl", "Slender", "Wide" } do
+	for _, multiple in { 1, 8, 1000 } do
+		local geometry = assert(motion.GetGeometry({ Model = name, DefaultWeight = 1 }, multiple, ground))
+		local metrics = stats.GetModelBounds(geometry.template)
+		for _, yaw in { 0, 0.7, math.pi } do
+			for edge, target in expectedTargets do
+				local move = motion.Start(ground, vector.zero, 0, fixedRandom(edge), yaw)
+				expectVector(move.target, target, "Every size and facing must reach the same four center edges")
+				local pose = motion.Sample(ground, geometry.height, move, move.duration)
+				local center = ground.CFrame:PointToObjectSpace(pose.Position)
+				expectHorizontal(center, target, "Reach the center limit independently of floating height")
+				local bottomGap = center.Y + metrics.bottom * geometry.scale - ground.Size.Y / 2
+				assert(bottomGap >= 4.5 - 1e-5 and bottomGap <= 5.5 + 1e-5,
+					"Every model size must float 4.5 to 5.5 studs above the ground")
+				local forward = ground.CFrame:VectorToObjectSpace(pose.LookVector)
+				for _, x in { metrics.minimum.X * geometry.scale, metrics.maximum.X * geometry.scale } do
+					for _, z in { metrics.minimum.Z * geometry.scale, metrics.maximum.Z * geometry.scale } do
+						local corner = center + vector.new(-forward.Z * x - forward.X * z, 0, forward.X * x - forward.Z * z)
+						if math.abs(corner.X) > 30 or math.abs(corner.Z) > 28.25 then bodyCrossings += 1 end
+					end
+				end
+			end
+		end
+	end
+end
+assert(bodyCrossings > 0, "Large fish bodies must be allowed to extend beyond the ground")
+
+-- Preserve the 20% edge selection threshold.
+for _, chance in { 0.199, 0.2 } do
+	local edgeDraws = 0
+	local random = fixedRandom()
+	local nextNumber = random.NextNumber
+	function random:NextNumber(low, high)
+		return if low == nil then chance else nextNumber(self, low, high)
+	end
+	function random:NextInteger()
+		edgeDraws += 1
+		return 1
+	end
+	motion.Start(ground, vector.zero, 0, random)
+	assert((edgeDraws > 0) == (chance < 0.2), "Only draws below 20% select an edge")
 end
 
 local tiny = boundaryPart(vector.new(2, 1, 4), frame(vector.zero, 0))
@@ -336,30 +372,69 @@ local centeredRandom = fixedRandom()
 local draws = 0
 local nextNumber = centeredRandom.NextNumber
 function centeredRandom:NextNumber(min, max)
-	if min == -1 then
-		draws += 1
-	end
+	if min == -0.25 then draws += 1 end
 	return nextNumber(self, min, max)
 end
-local fallback = motion.Start(tiny, vector.zero, 0, centeredRandom)
+local fallback = motion.Start(tiny, vector.new(3, 0, 0), 0, centeredRandom)
 assert(draws == 8, "Limit attempts when all candidate targets are too close")
-expectVector(fallback.target, vector.new(-1, 0, -2), "Fall back to the farthest corner")
-
-local wideRadius = 21.5
-local edgeEntry = vector.new(20, 0, 20)
-local wideMove = motion.Start(legacy, edgeEntry, 50, fixedRandom(1), math.pi, wideRadius)
-expectVector(wideMove.from, vector.new(1, 0, 1), "Inset a restored or projected entry by the fish radius")
-expectVector(wideMove.target, vector.new(-1, 0, 0), "Inset swimming targets by the same radius")
-local preview = motion.GetSurfacePoint(legacy, edgeEntry, wideRadius)
-expectVector(legacy.CFrame:PointToObjectSpace(preview), vector.new(1, 1.2, 1), "Preview the actual entry")
-for index = 0, 10 do
-	local pose = motion.Sample(legacy, 4, wideMove, 50 + wideMove.duration * index / 10, wideRadius)
-	local position = legacy.CFrame:PointToObjectSpace(pose.Position)
-	assert(math.abs(position.X) + wideRadius <= 22.5 + 1e-5, "Keep the fish inside during turns on X")
-	assert(math.abs(position.Z) + wideRadius <= 22.5 + 1e-5, "Keep the fish inside during turns on Z")
+expectVector(fallback.from, vector.zero, "A collapsed X axis must stay at the center")
+expectVector(fallback.target, vector.new(0, 0, -0.25), "Fall back to the farthest allowed point")
+local narrow = boundaryPart(vector.new(4, 1, 2), frame(vector.zero, 0))
+expectVector(motion.Start(narrow, vector.zero, 0, fixedRandom(2)).target, vector.new(0.25, 0, 0),
+	"A collapsed Z axis must still allow movement on X")
+for _, size in { vector.new(2, 1, 3), vector.new(3.5, 1, 3.5) } do
+	local boundary = boundaryPart(size, frame(vector.zero, 0))
+	local noRoom = motion.Start(boundary, vector.new(20, 0, 20), 50, fixedRandom(1), math.pi)
+	assert(not noRoom.swimming and noRoom.duration > 0, "No travel room must produce a positive-duration idle")
+	expectVector(noRoom.from, vector.zero, "Center a fish with no room to swim")
+	local resumed = assert(motion.Advance(boundary, noRoom, 50 + noRoom.duration, fixedRandom(1)))
+	assert(not resumed.swimming and resumed.duration > 0, "Continue idling safely in a collapsed area")
 end
-local noRoom = motion.Start(legacy, edgeEntry, 50, fixedRandom(1), math.pi, 22.5)
-assert(not noRoom.swimming and noRoom.duration > 0, "Keep a stationary fish idle without a zero-duration move")
-expectVector(noRoom.from, vector.zero, "Center a fish with no room to swim")
+local edgeEntry = vector.new(100, 0, -100)
+local restored = motion.Start(legacy, edgeEntry, 50, fixedRandom(1), math.pi)
+expectVector(restored.from, vector.new(20.75, 0, -20.75), "Restored entries use the same fixed inset on the legacy boundary")
+local preview = motion.GetSurfacePoint(legacy, edgeEntry)
+expectVector(legacy.CFrame:PointToObjectSpace(preview), vector.new(20.75, 1.2, -20.75), "Legacy preview uses the fixed center inset")
+
+-- Floating uses one shared clock, independent of move timing or display lifetime.
+local floatBoundary = boundaryPart(vector.new(60, 1, 56), frame(vector.new(80, 10, -20), 0.37))
+local floatMove = motion.Start(floatBoundary, vector.zero, 0, fixedRandom(1), 0.7)
+local uid = "fish-7a03648b"
+local floatPhase = motion.GetFloatPhase(uid)
+assert(floatPhase >= 0 and floatPhase < 2 * math.pi, "Map fish IDs into one floating cycle")
+assert(floatPhase == motion.GetFloatPhase(uid), "Display recreation must preserve the same phase")
+assert(math.abs(motion.GetFloatPhase("fish-1") - motion.GetFloatPhase("fish-2")) > 0.1,
+	"Similar fish IDs must not float in lockstep")
+for time, offset in { [0] = 0, [1.5] = 0.5, [3] = 0, [4.5] = -0.5, [6] = 0 } do
+	local pose = motion.Sample(floatBoundary, 7, floatMove, time, 0)
+	local localPosition = floatBoundary.CFrame:PointToObjectSpace(pose.Position)
+	assert(math.abs(localPosition.Y - 7 - offset) < 1e-5, "Float by half a stud over a six-second cycle")
+end
+for _, time in { 0, 0.37, 3, 6, 1794812000.25 } do
+	local pose = motion.Sample(floatBoundary, 7, floatMove, time, floatPhase)
+	local repeated = motion.Sample(floatBoundary, 7, floatMove, time + 6, floatPhase)
+	assert(math.abs(pose.Position.Y - repeated.Position.Y) < 1e-5, "Floating must repeat every six seconds at server epoch times")
+	local decoded = assert(motion.Decode(motion.Encode(floatMove)))
+	local recreated = motion.Sample(floatBoundary, 7, decoded, time, motion.GetFloatPhase(uid))
+	expectVector(pose.Position, recreated.Position, "Clients must agree on floating after decoding or recreation")
+	local defaultPhase = motion.Sample(floatBoundary, 7, floatMove, time)
+	local zeroPhase = motion.Sample(floatBoundary, 7, floatMove, time, 0)
+	expectVector(defaultPhase.Position, zeroPhase.Position, "Omitted floating phase must default to zero")
+end
+local stopAt = floatMove.startedAt + floatMove.duration
+local floatRest = assert(motion.Advance(floatBoundary, floatMove, stopAt, fixedRandom(1)))
+local beforeRest = motion.Sample(floatBoundary, 7, floatMove, stopAt, floatPhase)
+local afterRest = motion.Sample(floatBoundary, 7, floatRest, stopAt, floatPhase)
+expectVector(beforeRest.Position, afterRest.Position, "Floating must not reset when movement becomes idle")
+local idleStart = motion.Sample(floatBoundary, 7, floatRest, 0, 0)
+local idlePeak = motion.Sample(floatBoundary, 7, floatRest, 1.5, 0)
+expectHorizontal(idleStart.Position, idlePeak.Position, "Idle fish stay in place horizontally")
+assert(math.abs(idlePeak.Position.Y - idleStart.Position.Y - 0.5) < 1e-5, "Idle fish must continue floating")
+local restartAt = floatRest.startedAt + floatRest.duration
+local floatNext = assert(motion.Advance(floatBoundary, floatRest, restartAt, fixedRandom(2)))
+local beforeRestart = motion.Sample(floatBoundary, 7, floatRest, restartAt, floatPhase)
+local afterRestart = motion.Sample(floatBoundary, 7, floatNext, restartAt, floatPhase)
+expectVector(beforeRestart.Position, afterRestart.Position, "Floating must not reset when idle becomes movement")
+expectVector(beforeRestart.LookVector, afterRestart.LookVector, "Floating must not change the heading")
 
 print("PlotFishMotion.test.lua passed")

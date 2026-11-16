@@ -5,11 +5,11 @@ local TweenService = game:GetService("TweenService")
 
 local Modules = ReplicatedStorage.Modules
 local Knit = require(ReplicatedStorage.Packages.Knit)
+local FishIconPresentation = require(Modules.FishIconPresentation)
 local FishInventoryData = require(Modules.FishInventoryData)
 local GuiAnimation = require(Modules.GuiAnimation)
 local GuiHelper = require(Modules.GuiHelper)
 local GuiUtil = require(Modules.GuiUtil)
-local IndexItemViewport = require(Modules.IndexItemViewport)
 local MutationDataUtil = require(Modules.MutationDataUtil)
 local NotificationClient = require(Modules.NotificationClient)
 local NumberUtil = require(Modules.NumberUtil)
@@ -61,6 +61,7 @@ function MyFishGuiController:KnitStart()
 	local service = Knit.GetService("PlotFishService")
 	local roster
 	local rows = {}
+	local missingIcons = {}
 	local pending = false
 	local loadError = false
 	local opening = false
@@ -184,9 +185,7 @@ function MyFishGuiController:KnitStart()
 		end)
 	end
 
-	local function addRow(entry, item)
-		local row = template:Clone()
-		row.Name = "Fish_" .. entry.uid
+	local function updateRow(row, entry, item)
 		row.Info.AnimalName.Text = item.DisplayName
 		row.Info.Rarity.Text = RarityConfig.Normalize(item.Rarity)
 		GuiUtil.SetRarityGradient(row.Info.Rarity, item.Rarity)
@@ -196,9 +195,21 @@ function MyFishGuiController:KnitStart()
 		row.Info.Mutation.Text = if mutation then mutation.DisplayName else ""
 		row.Info.Mutation.Visible = mutation ~= nil
 		local preview = row.Preview.AnimalPreview
-		if not IndexItemViewport.Show(row.Preview, preview, item.Model, true) then
-			preview.Visible = false
+		local image = item.Icon
+		local validImage = typeof(image) == "string" and image:match("^rbxassetid://[1-9]%d*$") ~= nil
+		preview.Image = if validImage then image else ""
+		preview.ScaleType = Enum.ScaleType.Fit
+		preview.Visible = validImage
+		FishIconPresentation.ApplyMutation(preview, if validImage then entry.mutationId else nil)
+		if not validImage and not missingIcons[entry.itemId] then
+			missingIcons[entry.itemId] = true
+			warn("MyFishGuiController: missing fish icon", entry.itemId)
 		end
+	end
+
+	local function addRow(entry)
+		local row = template:Clone()
+		row.Name = "Fish_" .. entry.uid
 		local button = row.Buttons.UnequipButton
 		button.Activated:Connect(function()
 			request(function()
@@ -222,7 +233,8 @@ function MyFishGuiController:KnitStart()
 			if not item then
 				continue
 			end
-			local row = rows[entry.uid] or addRow(entry, item)
+			local row = rows[entry.uid] or addRow(entry)
+			updateRow(row, entry, item)
 			shown += 1
 			kept[entry.uid] = true
 			row.LayoutOrder = shown

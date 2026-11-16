@@ -29,6 +29,7 @@ local GM_COMMANDS = {       -- gm limited commands
     "giveDiamond",
     "givePotion",
     "giveItem",
+    "giveFish",
     "giveRandomItem",
     "givePet",
     "giveEgg",

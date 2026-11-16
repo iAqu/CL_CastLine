@@ -1,6 +1,6 @@
-local CollectionService = game:GetService("CollectionService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local FishIconPresentation = require(ReplicatedStorage.Modules.FishIconPresentation)
 local FishInventoryData = require(ReplicatedStorage.Modules.FishInventoryData)
 local ItemToolUtil = require(ReplicatedStorage.Modules.ItemToolUtil)
 local MutationDataUtil = require(ReplicatedStorage.Modules.MutationDataUtil)
@@ -8,43 +8,6 @@ local NumberUtil = require(ReplicatedStorage.Modules.NumberUtil)
 local PlotFishIncome = require(ReplicatedStorage.Modules.PlotFishIncome)
 
 local BackpackSlotPresentation = {}
-local RAINBOW_GRADIENT_NAME = "BackpackMutationRainbowGradient"
-
-local function applyIconColor(icon: ImageLabel, mutationId: string?)
-	icon.ImageColor3 = MutationDataUtil.GetLabelColor(mutationId)
-	local existing = icon:FindFirstChild(RAINBOW_GRADIENT_NAME)
-	if mutationId ~= "Rainbow" then
-		if existing then
-			existing:Destroy()
-		end
-		return
-	end
-	if existing then
-		return
-	end
-	local gui = ReplicatedStorage:FindFirstChild("Gui")
-	local gradients = gui and gui:FindFirstChild("UIGradient")
-	local template = gradients and gradients:FindFirstChild("UIGradient_Mutation_Rainbow")
-	if not template or not template:IsA("UIGradient") then
-		warn("BackpackSlotPresentation: rainbow gradient template is missing")
-		return
-	end
-	local gradient = template:Clone()
-	gradient.Name = RAINBOW_GRADIENT_NAME
-	gradient.Enabled = true
-	local marker = Instance.new("Configuration")
-	marker.Name = "GUI_MovingRainbowGradient"
-	-- Drag previews keep the gradient, without copying its live script reference.
-	marker.Archivable = false
-	marker.Parent = gradient
-	gradient.Parent = icon
-	task.defer(function()
-		if marker.Parent and marker:IsDescendantOf(game) then
-			CollectionService:AddTag(marker, "LocalScriptAttach")
-		end
-	end)
-end
-
 function BackpackSlotPresentation.Apply(slot: TextButton, tool: Tool?, owner: Player)
 	slot:SetAttribute("MinimalSlotLabels", true)
 	local cpsLabel = slot:FindFirstChild("CpsLabel")
@@ -66,7 +29,7 @@ function BackpackSlotPresentation.Apply(slot: TextButton, tool: Tool?, owner: Pl
 		icon.Image = if tool then tool.TextureId else ""
 		icon.ScaleType = Enum.ScaleType.Fit
 		icon.Visible = icon.Image ~= ""
-		applyIconColor(icon, if icon.Visible then mutationId else nil)
+		FishIconPresentation.ApplyMutation(icon, if icon.Visible then mutationId else nil)
 	end
 	if cpsLabel and cpsLabel:IsA("TextLabel") then
 		cpsLabel.Visible = item ~= nil

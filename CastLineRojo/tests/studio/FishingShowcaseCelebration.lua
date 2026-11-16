@@ -49,7 +49,7 @@ local function dispose()
 	gui:Destroy()
 	owner, gui = nil, nil
 end
-local apex = config.Bite.LiftTime * config.Bite.LiftRiseEnd
+local apex = config.Bite.FishLift.RiseTime
 local ok, err = xpcall(function()
 	create()
 	for _, rarity in rarities.List do

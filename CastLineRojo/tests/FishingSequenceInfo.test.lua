@@ -215,7 +215,7 @@ for _, reuseScale in { false, true } do
 	info:SetLuck(8, 15.3, true)
 	assert(info.shown == 8, "Immediate updates must settle even when the animated target is unchanged")
 
-	local apex = config.Bite.LiftTime * config.Bite.LiftRiseEnd
+	local apex = config.Bite.FishLift.RiseTime
 	local bite = { fishConfig = item, catchWeight = 33.75, mutationId = "Golden",
 		isNewDiscovery = true,
 		timeline = { phase = "Lifting", startedAt = 20 } }

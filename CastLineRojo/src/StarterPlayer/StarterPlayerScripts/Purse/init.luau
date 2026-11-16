@@ -8,6 +8,9 @@
 -- Changes by AnimalFarm: custom backpack behavior and styling. See LICENSE.md.
 
 local GuiService = game:GetService("GuiService") -- ROBLOX deviation: use GuiService instead of UserGameSettings
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local BackpackConfig = require(ReplicatedStorage.Modules.BackpackConfig)
+local Appearance = BackpackConfig.Appearance
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local playerGui = player.PlayerGui
@@ -45,7 +48,6 @@ end)
 -- local Modules = RobloxGui.Modules
 -- local InExperienceAppChatModal = require(CorePackages.Workspace.Packages.AppChat).App.InExperienceAppChatModal
 -- local getFFlagAppChatCoreUIConflictFix = require(CorePackages.Workspace.Packages.SharedFlags).getFFlagAppChatCoreUIConflictFix
-local FFlagMountCoreGuiBackpack = true -- ROBLOX deviation: always true for now
 -- local isInExperienceUIVREnabled = require(CorePackages.Workspace.Packages.SharedExperimentDefinition).isInExperienceUIVREnabled
 
 local BackpackScript = {}
@@ -68,7 +70,7 @@ local ICON_SIZE = 56
 local FONT_SIZE = 18
 local ICON_BUFFER = 5
 
-local BACKGROUND_FADE_DEFAULT = 0.35
+local BACKGROUND_FADE_DEFAULT = Appearance.PanelTransparency
 local backgroundFade = BACKGROUND_FADE_DEFAULT * GuiService.PreferredTransparency -- ROBLOX deviation: use GuiService instead of UserGameSettings
 local BACKGROUND_COLOR = Color3.new(31 / 255, 31 / 255, 31 / 255)
 
@@ -78,8 +80,7 @@ local VR_PANEL_RESOLUTION = 64
 local SLOT_DRAGGABLE_COLOR = Color3.new(49 / 255, 49 / 255, 49 / 255)
 local SLOT_EQUIP_COLOR = Color3.new(90 / 255, 142 / 255, 233 / 255)
 local SLOT_EQUIP_THICKNESS = 0.1 -- Relative
-local SLOT_FADE_LOCKED_DEFAULT = 0.35 -- Locked means undraggable
-local slotFadeLocked = SLOT_FADE_LOCKED_DEFAULT * GuiService.PreferredTransparency -- ROBLOX deviation: use GuiService instead of UserGameSettings
+local slotFadeDefault = Appearance.SlotTransparency * GuiService.PreferredTransparency
 local SLOT_BORDER_COLOR = Color3.new(1, 1, 1) -- Appears when dragging
 
 local TOOLTIP_BUFFER = 6
@@ -122,9 +123,8 @@ local GAMEPAD_INPUT_TYPES = {
 local ContextActionService = game:GetService("ContextActionService")
 local GamepadService = game:GetService("GamepadService")
 local PlayersService = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local GameplayInputGate = require(ReplicatedStorage.Modules.GameplayInputGate)
-local BackpackConfig = require(ReplicatedStorage.Modules.BackpackConfig)
+local ButtonAnimation = require(ReplicatedStorage.Modules.ButtonAnimation)
 local BackpackLayout = require(ReplicatedStorage.Modules.BackpackLayout)
 local BackpackDragController = require(ReplicatedStorage.Modules.BackpackDragController)
 local StarterGui = game:GetService("StarterGui")
@@ -503,9 +503,9 @@ local function UpdateScrollingFrameCanvasSize()
 			visible = visible + 1
 		end
 	end
-	local countX = math.max(1, math.floor((UIGridFrame.AbsoluteSize.X + ICON_BUFFER) / (ICON_SIZE + ICON_BUFFER)))
-	local rows = math.ceil(visible / countX)
-	ScrollingFrame.CanvasSize = UDim2.fromOffset(0, rows * (ICON_SIZE + ICON_BUFFER))
+	local height = BackpackLayout.CanvasHeight(visible, Layout)
+	UIGridFrame.Size = UDim2.fromOffset(Layout.GridWidth, height)
+	ScrollingFrame.CanvasSize = UDim2.fromOffset(0, height)
 end
 
 local function AdjustInventoryFrames()
@@ -525,12 +525,14 @@ local function UpdateBackpackLayout()
 	end
 	UIGridLayout.CellSize = UDim2.fromOffset(ICON_SIZE, ICON_SIZE)
 	UIGridLayout.CellPadding = UDim2.fromOffset(ICON_BUFFER, ICON_BUFFER)
+	UIGridLayout.FillDirectionMaxCells = Layout.GridColumns
+	UIGridFrame.Position = UDim2.fromOffset(Layout.GridOffsetX, 0)
 	HotbarFrame.Size = UDim2.fromOffset(Layout.HotbarWidth, Layout.HotbarHeight)
 	HotbarFrame.Position = UDim2.new(0.5, -Layout.HotbarWidth / 2, 0, Layout.HotbarY)
 	InventoryFrame.Size = UDim2.fromOffset(Layout.PanelWidth, Layout.PanelHeight)
 	InventoryFrame.Position = UDim2.new(0.5, -Layout.PanelWidth / 2, 0, Layout.PanelY)
-	ScrollingFrame.Size = UDim2.new(1, -16, 1, -INVENTORY_HEADER_SIZE - 8)
-	ScrollingFrame.Position = UDim2.fromOffset(8, INVENTORY_HEADER_SIZE)
+	ScrollingFrame.Size = UDim2.new(1, 0, 1, -INVENTORY_HEADER_SIZE - 8)
+	ScrollingFrame.Position = UDim2.fromOffset(0, INVENTORY_HEADER_SIZE)
 	AdjustHotbarFrames()
 	AdjustInventoryFrames()
 end
@@ -608,9 +610,12 @@ local function MakeSlot(parent, index)
 
 	local function UpdateSlotFading()
 		SlotFrame.SelectionImageObject = nil
-		SlotFrame.BackgroundTransparency = SlotFrame:GetAttribute("CanDrag") and 0 or slotFadeLocked
+		local equipped = HighlightFrame and HighlightFrame.Parent == SlotFrame
+		local transparency = equipped and Appearance.EquippedSlotTransparency or Appearance.SlotTransparency
+		SlotFrame.BackgroundTransparency = transparency * GuiService.PreferredTransparency
 		SlotFrame.BackgroundColor3 = SlotFrame:GetAttribute("CanDrag") and SLOT_DRAGGABLE_COLOR or BACKGROUND_COLOR
 	end
+	slot.UpdateFading = UpdateSlotFading
 
 	function slot:Readjust(visualIndex, visualTotal) --NOTE: Only used for Hotbar slots
 		local centered = HotbarFrame.Size.X.Offset / 2
@@ -853,7 +858,7 @@ local function MakeSlot(parent, index)
 		SlotFrame.Size = UDim2.fromOffset(ICON_SIZE, ICON_SIZE)
 		SlotFrame.Active = true
 		SlotFrame:SetAttribute("CanDrag", false)
-		SlotFrame.BackgroundTransparency = slotFadeLocked
+		SlotFrame.BackgroundTransparency = slotFadeDefault
 
 		ToolIcon = SlotFrame:FindFirstChild("Icon")
 		ToolName = SlotFrame:FindFirstChild("ToolName")
@@ -869,7 +874,7 @@ local function MakeSlot(parent, index)
 		SlotFrame.Size = UDim2.fromOffset(ICON_SIZE, ICON_SIZE)
 		SlotFrame.Active = true
 		SlotFrame:SetAttribute("CanDrag", false)
-		SlotFrame.BackgroundTransparency = slotFadeLocked
+		SlotFrame.BackgroundTransparency = slotFadeDefault
 
 		do
 			local selectionObjectClipper = NewGui("Frame", "SelectionObjectClipper")
@@ -1581,14 +1586,9 @@ end
 
 -- Make the main frame, which (mostly) covers the screen
 MainFrame = NewGui("Frame", "Backpack")
-if FFlagMountCoreGuiBackpack then
-	if StarterGui:GetCoreGuiEnabled(Enum.CoreGuiType.Backpack) then
-		MainFrame.Parent = BackpackGui
-	end
-else
-	MainFrame.Visible = false
-	MainFrame.Parent = BackpackGui
-end
+-- The custom UI owns its mount independently of Roblox's default backpack.
+-- Loading/fishing can disable CoreGui before this module starts.
+MainFrame.Parent = BackpackGui
 
 -- Make the HotbarFrame, which holds only the Hotbar Slots
 HotbarFrame = NewGui("Frame", "Hotbar")
@@ -1646,6 +1646,15 @@ InventoryFrame.BackgroundColor3 = BACKGROUND_COLOR
 InventoryFrame.Active = true
 InventoryFrame.Visible = false
 InventoryFrame.Parent = MainFrame
+local inventoryCorner = Instance.new("UICorner")
+inventoryCorner.CornerRadius = UDim.new(0, Appearance.PanelCornerRadius)
+inventoryCorner.Parent = InventoryFrame
+local inventoryStroke = Instance.new("UIStroke")
+inventoryStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+inventoryStroke.Color = Color3.new(0, 0, 0)
+inventoryStroke.Thickness = Appearance.PanelStrokeThickness
+inventoryStroke.Transparency = Appearance.PanelStrokeTransparency
+inventoryStroke.Parent = InventoryFrame
 
 VRInventorySelector = NewGui("TextButton", "VRInventorySelector")
 VRInventorySelector.Position = UDim2.new(0, 0, 0, 0)
@@ -1666,16 +1675,23 @@ VRInventorySelector.SelectionImageObject = selectorImage
 ScrollingFrame = NewGui("ScrollingFrame", "ScrollingFrame")
 ScrollingFrame.Selectable = false
 ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+ScrollingFrame.ScrollBarThickness = 6
+ScrollingFrame.VerticalScrollBarInset = Enum.ScrollBarInset.Always
+ScrollingFrame.ScrollingDirection = Enum.ScrollingDirection.Y
 ScrollingFrame.Parent = InventoryFrame
 
 UIGridFrame = NewGui("Frame", "UIGridFrame")
 UIGridFrame.Selectable = false
-UIGridFrame.Size = UDim2.new(1, -(ICON_BUFFER * 2), 1, 0)
-UIGridFrame.Position = UDim2.fromOffset(ICON_BUFFER, 0)
+UIGridFrame.Size = UDim2.fromOffset(Layout.GridWidth, 0)
+UIGridFrame.Position = UDim2.fromOffset(Layout.GridOffsetX, 0)
 UIGridFrame.Parent = ScrollingFrame
 
 UIGridLayout = Instance.new("UIGridLayout")
 UIGridLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIGridLayout.FillDirection = Enum.FillDirection.Horizontal
+UIGridLayout.FillDirectionMaxCells = Layout.GridColumns
+UIGridLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+UIGridLayout.VerticalAlignment = Enum.VerticalAlignment.Top
 UIGridLayout.CellSize = UDim2.fromOffset(ICON_SIZE, ICON_SIZE)
 UIGridLayout.CellPadding = UDim2.fromOffset(ICON_BUFFER, ICON_BUFFER)
 UIGridLayout.Parent = UIGridFrame
@@ -2029,6 +2045,9 @@ do -- Make the Inventory expand/collapse arrow (unless TopBar)
 		BackpackScript.StateChanged:Fire(open)
 	end
 
+	BackpackScript.Open = function()
+		setOpen(true)
+	end
 	BackpackScript.Close = function()
 		setOpen(false)
 	end
@@ -2050,26 +2069,64 @@ end
 -- Header and interaction are generated in code; slot styling keeps the authored template.
 local title = NewGui("TextLabel", "Title")
 title.Text = "Inventory"
-title.TextSize = 22
+title.TextSize = Appearance.TitleTextSize
 title.TextXAlignment = Enum.TextXAlignment.Left
 title.Size = UDim2.new(1, -80, 0, 44)
 title.Position = UDim2.fromOffset(12, 6)
 title.Parent = InventoryFrame
+local titleStroke = Instance.new("UIStroke")
+titleStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual
+titleStroke.Color = Color3.new(0, 0, 0)
+titleStroke.Thickness = 2
+titleStroke.Parent = title
 
-local closeButton = NewGui("TextButton", "CloseButton")
-closeButton.Text = "X"
-closeButton.TextSize = 24
-closeButton.Modal = true -- Keep the pointer available when opening in first person.
-closeButton.BackgroundColor3 = Color3.fromRGB(220, 62, 62)
-closeButton.BackgroundTransparency = 0
-closeButton.AnchorPoint = Vector2.new(1, 0)
-closeButton.Position = UDim2.new(1, -6, 0, 6)
-closeButton.Size = UDim2.fromOffset(44, 44)
-closeButton.ZIndex = 5
+local function createCloseButton()
+	local indexGui = StarterGui:FindFirstChild("IndexGui_New")
+	local frame = indexGui and indexGui:FindFirstChild("Frame")
+	local template = frame and frame:FindFirstChild("CloseButton")
+	local button
+	if template and template:IsA("GuiButton") then
+		button = template:Clone()
+		local baseZ = button.ZIndex
+		for _, descendant in ipairs(button:GetDescendants()) do
+			if descendant:IsA("GuiObject") then
+				descendant.ZIndex = 5 + math.max(0, descendant.ZIndex - baseZ)
+			end
+			if descendant:IsA("TextLabel") or descendant:IsA("TextButton") or descendant:IsA("TextBox") then
+				descendant:SetAttribute("PreserveBackpackFont", true)
+			end
+		end
+	else
+		warn("Purse: IndexGui_New close-button template missing; using generated close button")
+		button = NewGui("TextButton", "CloseButton")
+		button.Text = "X"
+		button.TextSize = 24
+		button.BackgroundColor3 = Color3.fromRGB(220, 62, 62)
+		button.BackgroundTransparency = 0
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0.16, 0)
+		corner.Parent = button
+	end
+	button.Name = "CloseButton"
+	button.AnchorPoint = Vector2.new(1, 0)
+	button.Position = UDim2.new(1, -6, 0, 6)
+	button.Size = UDim2.fromOffset(44, 44)
+	button.ZIndex = 5
+	button.Visible = true
+	local scale = button:FindFirstChildOfClass("UIScale") or Instance.new("UIScale")
+	scale.Scale = 1
+	scale.Parent = button
+	ButtonAnimation.SetUp(button)
+	return button
+end
+
+local closeButton = createCloseButton()
+closeButton.Modal = BackpackScript.IsOpen
+BackpackScript.StateChanged.Event:Connect(function()
+	-- Release modal input as soon as the window closes, including queued changes.
+	closeButton.Modal = BackpackScript.IsOpen
+end)
 closeButton.Parent = InventoryFrame
-local closeCorner = Instance.new("UICorner")
-closeCorner.CornerRadius = UDim.new(0.16, 0)
-closeCorner.Parent = closeButton
 closeButton.Activated:Connect(function()
 	BackpackScript.Close()
 end)
@@ -2254,13 +2311,15 @@ local function OnPreferredTransparencyChanged()
 	backgroundFade = BACKGROUND_FADE_DEFAULT * GuiService.PreferredTransparency -- ROBLOX deviation: use GuiService instead of UserGameSettings
 	InventoryFrame.BackgroundTransparency = backgroundFade
 
-	slotFadeLocked = SLOT_FADE_LOCKED_DEFAULT * preferredTransparency
+	slotFadeDefault = Appearance.SlotTransparency * preferredTransparency
 	for _, slot in ipairs(Slots) do
-		slot.Frame.BackgroundTransparency = slotFadeLocked
+		slot:UpdateFading()
 	end
 
 	searchBackgroundFade = SEARCH_BACKGROUND_FADE_DEFAULT * GuiService.PreferredTransparency -- ROBLOX deviation: use GuiService instead of UserGameSettings
-	searchFrame.BackgroundTransparency = searchBackgroundFade
+	if searchFrame then
+		searchFrame.BackgroundTransparency = searchBackgroundFade
+	end
 end
 GuiService:GetPropertyChangedSignal("PreferredTransparency"):connect(OnPreferredTransparencyChanged)
 

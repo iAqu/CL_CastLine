@@ -161,7 +161,7 @@ function FishingAudio:PlayShowcase()
 	self:Play("Gui_Fuse_Success")
 end
 
-function FishingAudio:SetPhase(phase)
+function FishingAudio:SetPhase(phase, timedLift)
 	if self.destroyed or self.phase == phase then
 		return
 	end
@@ -174,9 +174,9 @@ function FishingAudio:SetPhase(phase)
 	if phase == "Bite" then
 		self:Play("FishBiteHeavey")
 		self:Play("FishBite")
-	elseif phase == "Lifting" then
+	elseif phase == "Lifting" and not timedLift then
 		self:Play("FishWaterOut")
-	elseif phase == "Caught" then
+	elseif phase == "Caught" and not timedLift then
 		self:Play("FishDrop")
 	end
 end

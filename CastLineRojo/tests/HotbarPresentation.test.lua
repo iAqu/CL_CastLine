@@ -206,19 +206,54 @@ local callbacks = assert(
 		core:sub(layoutStart, layoutEnd - 1)
 			.. "\nlocal drop = "
 			.. core:sub(dropStart, dropEnd)
-			.. "\nreturn { layout = UpdateBackpackLayout, drop = drop }",
+			.. "\nreturn { layout = UpdateBackpackLayout, canvas = UpdateScrollingFrameCanvasSize, drop = drop }",
 		"Purse presentation callbacks",
 		"t",
 		coreEnv
 	)
 )()
 callbacks.layout()
+assert(coreEnv.UIGridLayout.FillDirectionMaxCells == 10)
+assert(grid.Size.X == coreEnv.Layout.GridWidth and grid.Position.X == 18)
+assert(scroll.CanvasSize.Y == policy.CanvasHeight(1, coreEnv.Layout))
 for i = 1, 10 do
 	assert(slots[i].Frame.Parent == hotbar)
 end
 coreEnv.VisibleHotbarSlots = 7
 coreEnv.Layout = policy.Compute(402, 816, true)
 callbacks.layout()
+assert(coreEnv.UIGridLayout.FillDirectionMaxCells == 7)
+assert(grid.Size.X == coreEnv.Layout.GridWidth and grid.Position.X == 18)
+assert(scroll.CanvasSize.Y == policy.CanvasHeight(4, coreEnv.Layout), "Reserved positions count toward the same grid")
+local getActualChildren = grid.GetChildren
+for _, count in ipairs({ 0, 1, 7, 8, 29 }) do
+	grid.GetChildren = function()
+		local children = {}
+		for _ = 1, count do
+			table.insert(children, {
+				Visible = true,
+				IsA = function()
+					return true
+				end,
+			})
+		end
+		table.insert(children, {
+			Visible = false,
+			IsA = function()
+				return true
+			end,
+		})
+		return children
+	end
+	callbacks.canvas()
+	assert(
+		scroll.CanvasSize.Y == policy.CanvasHeight(count, coreEnv.Layout),
+		"Production canvas sizing counts visible cells and handles row boundaries"
+	)
+	assert(grid.Size.Y == scroll.CanvasSize.Y)
+end
+grid.GetChildren = getActualChildren
+callbacks.canvas()
 for i = 1, 7 do
 	assert(slots[i].Frame.Parent == hotbar)
 end

@@ -211,8 +211,10 @@ function FishingSequenceInfo:Update(now, bite)
 		return
 	end
 	local timeline = bite and bite.timeline
+	local revealAt = if timeline and timeline.liftTiming then timeline.liftTiming.riseEnd
+		else (if bite and bite.isEgg then Config.Bite.LiftTime * Config.Bite.LiftRiseEnd else Config.Bite.FishLift.RiseTime)
 	local revealed = timeline and (timeline.phase == "Caught"
-		or (timeline.phase == "Lifting" and now - timeline.startedAt >= Config.Bite.LiftTime * Config.Bite.LiftRiseEnd))
+		or (timeline.phase == "Lifting" and now - timeline.startedAt >= revealAt))
 	self.luck.Visible, self.reveal.Visible = not revealed, revealed == true
 	self:_updateLuck(now)
 	self.audioReady = true

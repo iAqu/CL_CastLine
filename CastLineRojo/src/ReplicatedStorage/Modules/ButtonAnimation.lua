@@ -119,6 +119,11 @@ local function setUpSizeButton(button: GuiButton)
 end
 
 function module.SetUp(button: GuiButton, mouseEnterScaleSize: number?)
+	-- TopbarPlus owns this hit area and updates its size after parenting it.
+	-- Capturing its temporary zero size makes every later hover disable the icon.
+	if button:GetAttribute("CorrespondingIconUID") ~= nil then
+		return
+	end
 	if buttonConnections[button] then
 		if mouseEnterScaleSize ~= nil then
 			mouseEnterScaleSizes[button] = mouseEnterScaleSize

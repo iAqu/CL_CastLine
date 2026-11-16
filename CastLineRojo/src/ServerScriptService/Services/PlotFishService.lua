@@ -100,7 +100,7 @@ local function getFishFolder(plot: Instance, player: Player): Folder
 	return folder
 end
 
-local function createFish(uid, item, data, slot, boundary, entry, now, footprint)
+local function createFish(uid, item, data, slot, boundary, entry, now)
 	local fish = Instance.new("Configuration")
 	fish.Name = uid
 	fish:SetAttribute("ItemId", item.ItemID)
@@ -109,9 +109,9 @@ local function createFish(uid, item, data, slot, boundary, entry, now, footprint
 	fish:SetAttribute("MutationId", data.MutationId)
 	fish:SetAttribute("Slot", slot)
 	fish:SetAttribute("StartedAt", now)
-	local move = PlotFishMotion.Start(boundary, entry, now, random, nil, footprint)
+	local move = PlotFishMotion.Start(boundary, entry, now, random)
 	fish:SetAttribute(PlotFishMotion.MOVE_ATTRIBUTE, PlotFishMotion.Encode(move))
-	activeFish[fish] = { boundary = boundary, move = move, footprint = footprint }
+	activeFish[fish] = { boundary = boundary, move = move }
 	return fish
 end
 
@@ -121,7 +121,7 @@ function PlotFishService:_stepMotion(now: number)
 			activeFish[fish] = nil
 			continue
 		end
-		local nextMove = PlotFishMotion.Advance(state.boundary, state.move, now, random, state.footprint)
+		local nextMove = PlotFishMotion.Advance(state.boundary, state.move, now, random)
 		if nextMove then
 			state.move = nextMove
 			fish:SetAttribute(PlotFishMotion.MOVE_ATTRIBUTE, PlotFishMotion.Encode(nextMove))
@@ -221,7 +221,7 @@ function PlotFishService:_restore(player: Player)
 			local item, data = readItemRecord(profile.Data.Items[uid], true)
 			local geometry = item and data and PlotFishMotion.GetGeometry(item, data.Weight, boundary)
 			if geometry then
-				createFish(uid, item, data, slot, boundary, defaultEntry(slot), now, geometry.footprint).Parent = folder
+				createFish(uid, item, data, slot, boundary, defaultEntry(slot), now).Parent = folder
 			end
 		end
 	end
@@ -271,10 +271,10 @@ function PlotFishService:RequestPlace(player: Player, uid: unknown)
 	if not state then
 		return reject("Cash data is unavailable.")
 	end
-	local position = PlotFishMotion.GetSurfacePoint(boundary, entry, geometry.footprint)
+	local position = PlotFishMotion.GetSurfacePoint(boundary, entry)
 	local previousRate = state.rate
 	PlotPlacementUtil.SetItemUid(placements, emptySlot, uid)
-	createFish(uid, item, data, emptySlot, boundary, entry, now, geometry.footprint).Parent = getFishFolder(plot, player)
+	createFish(uid, item, data, emptySlot, boundary, entry, now).Parent = getFishFolder(plot, player)
 	heldTool:Destroy()
 	rosterChanged(player, profile.Data, state)
 	return { ok = true, position = position, rate = state.rate - previousRate }
@@ -342,7 +342,7 @@ local function commitMenuRoster(player: Player, context, desired)
 			if not tool or not geometry then
 				return reject("A fish is unavailable.")
 			end
-			incoming[slot] = { uid = nextUid, item = item, record = record, tool = tool, footprint = geometry.footprint }
+			incoming[slot] = { uid = nextUid, item = item, record = record, tool = tool }
 		end
 	end
 	if next(outgoing) == nil and next(incoming) == nil then
@@ -380,7 +380,7 @@ local function commitMenuRoster(player: Player, context, desired)
 	end
 	for slot, fish in pairs(incoming) do
 		PlotPlacementUtil.SetItemUid(placements, slot, fish.uid)
-		createFish(fish.uid, fish.item, fish.record, slot, context.boundary, defaultEntry(slot), now, fish.footprint).Parent = folder
+		createFish(fish.uid, fish.item, fish.record, slot, context.boundary, defaultEntry(slot), now).Parent = folder
 		fish.tool:Destroy()
 	end
 	for _, tool in pairs(returnTools) do

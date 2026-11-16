@@ -140,7 +140,7 @@ do
 	local settings = modules.config.Bite
 	local startedAt = 100
 	local timeline = { phase = "Lifting", startedAt = startedAt }
-	local sequence = setmetatable({ bite = { timeline = timeline } }, Sequence)
+	local sequence = setmetatable({ bite = { isEgg = true, timeline = timeline } }, Sequence)
 	local pullbackAt = settings.LiftTime * settings.LiftRiseEnd
 	local entry, pullback = sequence:_showcaseProgress(startedAt)
 	assert(entry == 0 and pullback == 0, "Start the closeup from the incoming camera")
@@ -930,4 +930,25 @@ do
 	session.bite = nil
 	session:Update(11, 1 / 60)
 	assert(table.concat(order, ",") == "base,characterVFX,camera,line", "Update character VFX before the bite sequence exists")
+end
+
+-- 鱼的拉远在上升期间完成，追随从破水后的滞后窗口开始。
+do
+	local settings = modules.config.Bite
+	local Motion = dofile("src/ReplicatedStorage/Modules/FishingLiftMotion.lua")
+	local plan = Motion.New(settings, modules.config.BaitElastic, -4, 5, 8)
+	local timeline = { phase = "Lifting", startedAt = 100 }
+	local sequence = setmetatable({
+		bite = { timeline = timeline, liftPlan = plan, _prepareLift = function() end },
+		_waterTarget = function() return {} end,
+	}, Sequence)
+	local hold = 100 + plan.exitAt + settings.FishLift.CameraHold
+	local entry, pullback = sequence:_showcaseProgress(hold)
+	assert(math.abs(entry) < 1e-9 and pullback > 0, "Hold the water focus while beginning the pullback")
+	entry, pullback = sequence:_showcaseProgress(100 + plan.timing.riseEnd)
+	assert(entry == 1 and pullback == 1, "Finish camera entry and pullback by the apex")
+	local before, beforePull = sequence:_showcaseProgress(100 + plan.timing.duration)
+	timeline.phase, timeline.startedAt = "Caught", 100 + plan.timing.duration
+	local after, afterPull = sequence:_showcaseProgress(timeline.startedAt)
+	assert(before == after and beforePull == afterPull, "Caught reset the camera clock")
 end

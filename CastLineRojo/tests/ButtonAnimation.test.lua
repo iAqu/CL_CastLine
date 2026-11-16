@@ -54,6 +54,9 @@ local function button(offset, useUIScale)
 	function result:FindFirstChild(name)
 		return rawget(self, name)
 	end
+	function result:GetAttribute(name)
+		return self.attributes and self.attributes[name]
+	end
 	function result:TweenSize(size, direction, style, duration)
 		self.Size = size
 		self.lastTween = { direction = direction, style = style, duration = duration }
@@ -215,3 +218,24 @@ assert(math.abs(beforeStart.Size.X.Scale - 0.525) < 1e-9 and beforeStart.MouseEn
 	"Startup scanning preserves manual setup performed before Start")
 assert(initiallyTagged.MouseEnter:Count() == 1 and duringScan.MouseEnter:Count() == 1,
 	"Initial tags and arrivals during scanning are covered")
+
+-- TopbarPlus parents its click region before calculating the final hit area.
+-- A global animation must never capture and restore that temporary zero size.
+local topbar = button()
+topbar.attributes = { CorrespondingIconUID = "inventory-icon" }
+topbar.Size = dim(0, 0, 0, 0)
+local topbarHarness = harness({ topbar }, { topbar })
+topbarHarness.module.Start()
+topbarHarness.gui.DescendantAdded:Fire(topbar)
+topbarHarness.module.SetUp(topbar)
+topbar.Size = dim(0, 36, 1, 0)
+for _ = 1, 4 do
+	topbar.MouseEnter:Fire()
+	topbar.MouseButton1Down:Fire()
+	topbar.MouseButton1Up:Fire()
+	topbar.MouseLeave:Fire()
+	assert(topbar.Size.X.Offset == 36 and topbar.Size.Y.Scale == 1,
+		"TopbarPlus retains its clickable area across repeated pointer interactions")
+end
+assert(topbar.MouseEnter:Count() == 0 and topbar.Activated:Count() == 0,
+	"Third-party icon inputs keep their own animation and activation handlers")

@@ -75,7 +75,7 @@ function FishingCastSequence:_setPhase(phase)
 	self.phase = phase
 	self.folder:SetAttribute("Phase", phase)
 	if self.fishAudio then
-		self.fishAudio:SetPhase(phase)
+		self.fishAudio:SetPhase(phase, self.bite ~= nil and not self.bite.isEgg)
 		if phase == "Caught" and self.bite and self.bite.isEgg then
 			self.fishAudio:Play("FishSuccess")
 		end
@@ -663,8 +663,33 @@ local function playVFX(owner, now, group, name, position, direction, scale, cont
 		return
 	end
 	local model = template:Clone()
+	local exitParticles = {}
+	if scale and group == "WaterVFX" and name == Config.WaterVFX.Exit then
+		for _, instance in ipairs(model:GetDescendants()) do
+			if instance:IsA("ParticleEmitter") then
+				table.insert(exitParticles, { instance, instance.Size, instance.Speed, instance.Acceleration })
+			end
+		end
+	end
 	if scale and model:IsA("Model") then
 		model:ScaleTo(template:GetScale() * scale)
+	elseif scale and model:IsA("BasePart") then
+		model.Size *= scale
+		for _, instance in ipairs(model:GetDescendants()) do
+			if instance:IsA("Attachment") then
+				instance.Position *= scale
+			end
+		end
+	end
+	-- 从缩放前的数值覆盖，避免 ScaleTo 和粒子空间参数重复缩放。
+	for _, original in ipairs(exitParticles) do
+		local points = {}
+		for _, key in ipairs(original[2].Keypoints) do
+			table.insert(points, NumberSequenceKeypoint.new(key.Time, key.Value * scale, key.Envelope * scale))
+		end
+		original[1].Size = NumberSequence.new(points)
+		original[1].Speed = NumberRange.new(original[3].Min * scale, original[3].Max * scale)
+		original[1].Acceleration = original[4] * scale
 	end
 	local descendants = model:GetDescendants()
 	table.insert(descendants, model)
@@ -711,6 +736,7 @@ end
 function FishingCastSequence:_playWaterVFX(now, name, position, direction, fishScale)
 	local scale = if name == Config.WaterVFX.Struggle
 		then Config.WaterVFX.StruggleScale * math.max(1, fishScale or 1)
+		elseif name == Config.WaterVFX.Exit then fishScale
 		else nil
 	return playVFX(self, now, "WaterVFX", name, position, direction, scale)
 end
@@ -1093,6 +1119,17 @@ end
 function FishingCastSequence:_showcaseProgress(now)
 	local settings, timeline = Config.Bite, self.bite.timeline
 	local elapsed = now - timeline.startedAt
+	if not self.bite.isEgg then
+		self.bite:_prepareLift(self:_waterTarget())
+		local plan = self.bite.liftPlan
+		if timeline.phase == "Caught" then
+			elapsed += plan.timing.duration
+		end
+		local fish = settings.FishLift
+		local entry = math.clamp((elapsed - plan.exitAt - fish.CameraHold) / fish.CameraBlend, 0, 1)
+		local pullback = math.clamp(elapsed / plan.timing.riseEnd, 0, 1)
+		return entry * entry * (3 - 2 * entry), pullback * pullback * (3 - 2 * pullback)
+	end
 	if timeline.phase == "Caught" then
 		elapsed += settings.LiftTime
 	end
@@ -1117,6 +1154,51 @@ function FishingCastSequence:_showcaseCamera(target, viewport)
 	)
 	local focus = target + Vector3.yAxis * bite:GetShowcaseHeight()
 	return CFrame.lookAt(focus - self.forward * distance, focus), focus
+end
+
+-- 完整包围球保护也用于横竖屏的离线取景验证。
+function FishingCastSequence:_protectShowcase(frame, center, radius, viewport, fov, weight)
+	local relative = frame:PointToObjectSpace(center)
+	local vertical = math.rad(fov * 0.5)
+	local aspect = math.max(viewport.X, 1) / math.max(viewport.Y, 1)
+	local horizontal = math.atan(math.tan(vertical) * aspect)
+	local depth = math.max(
+		(math.abs(relative.X) * math.cos(horizontal) + radius) / math.sin(horizontal),
+		(math.abs(relative.Y) * math.cos(vertical) + radius) / math.sin(vertical)
+	)
+	-- 沿当前镜头后退，保留滞后取景，同时保证包括震动在内的完整包围球入镜。
+	return frame * CFrame.new(0, 0, math.max(0, depth + relative.Z) * weight)
+end
+
+-- 延迟追随并少量抬升机位，抬头保留高度感；下落后逐渐恢复水平展示。
+function FishingCastSequence:_fishLiftCamera(now, target, viewport)
+	local bite, settings = self.bite, Config.Bite.FishLift
+	bite:_prepareLift(target)
+	local plan = bite.liftPlan
+	local elapsed = now - bite.timeline.startedAt
+	if bite.timeline.phase == "Caught" then
+		elapsed += plan.timing.duration
+	end
+	if not self.showcaseFrom then
+		self.showcaseFrom = self.cameraFrame - target
+		self.showcaseFocus = (self.cameraFocus or self.biteFocus or target) - target
+	end
+	local function smooth(value)
+		local u = math.clamp(value, 0, 1)
+		return u * u * (3 - 2 * u)
+	end
+	local entry, pullback = self:_showcaseProgress(now)
+	local settle = smooth((elapsed - plan.timing.landAt) / (plan.timing.duration - plan.timing.landAt))
+	local lagged = bite:_liftFrame(math.max(0, elapsed - settings.CameraLag * (1 - settle)), target).Position
+	local goal, goalFocus = self:_showcaseCamera(target, viewport)
+	local focus = (target + self.showcaseFocus):Lerp(lagged:Lerp(goalFocus, settle), entry)
+	local distance = (goal.Position - goalFocus).Magnitude
+	local incoming = (self.showcaseFrom + target).Position
+	local level = smooth((elapsed - plan.timing.fallStart) / (plan.timing.duration - plan.timing.fallStart))
+	local eye = focus - self.forward * distance
+		- Vector3.yAxis * (focus.Y - incoming.Y) * (1 - settings.CameraRiseFollow) * (1 - level)
+	local position = incoming:Lerp(eye, pullback)
+	return CFrame.lookAt(position, focus), focus
 end
 
 function FishingCastSequence:_reelCamera(target, viewport)
@@ -1186,6 +1268,10 @@ function FishingCastSequence:_updateCamera(now, dt)
 			66 + math.clamp(velocity.Magnitude * 0.12, 0, 16)
 	elseif reeling then
 		shot, focus = self:_reelCamera(self:_waterTarget(), Workspace.CurrentCamera.ViewportSize)
+		fov = Config.Bite.ShowcaseFov
+	elseif showcasing and not self.bite.isEgg then
+		shot, focus = self:_fishLiftCamera(now, self:_waterTarget(), Workspace.CurrentCamera.ViewportSize)
+		showcasePullback = 1
 		fov = Config.Bite.ShowcaseFov
 	elseif showcasing then
 		local target = self:_waterTarget()
@@ -1275,20 +1361,11 @@ function FishingCastSequence:_updateCamera(now, dt)
 	local presentation = shot * noise * shake
 	if showcasing and self.bite.presentationRadius then
 		local center = self.bite.showcasePosition or self.bite.lastPosition
-		local relative = presentation:PointToObjectSpace(center)
 		local radius = if self.bite.timeline.phase == "Caught"
 			then self.bite:GetShowcaseRadius()
 			else self.bite.presentationRadius * self.bite.scale
 		radius += Config.Bite.ShowcasePadding
-		local vertical = math.rad((fov + fovOffset) * 0.5)
-		local aspect = math.max(camera.ViewportSize.X, 1) / math.max(camera.ViewportSize.Y, 1)
-		local horizontal = math.atan(math.tan(vertical) * aspect)
-		-- 近景允许鱼身超出画面，随拉远逐步恢复完整动画包围球的视锥保护。
-		local depth = math.max(
-			(math.abs(relative.X) * math.cos(horizontal) + radius) / math.sin(horizontal),
-			(math.abs(relative.Y) * math.cos(vertical) + radius) / math.sin(vertical)
-		)
-		presentation *= CFrame.new(0, 0, math.max(0, depth + relative.Z) * showcasePullback)
+		presentation = self:_protectShowcase(presentation, center, radius, camera.ViewportSize, fov + fovOffset, showcasePullback)
 	end
 	camera.CameraType = Enum.CameraType.Scriptable
 	camera.CFrame, camera.FieldOfView = presentation, fov + fovOffset

@@ -94,12 +94,14 @@ function gameRoot:GetService(name)
 		table.insert(tagged, marker)
 	end }
 end
-local presentation = loadSource("src/ReplicatedStorage/Modules/BackpackSlotPresentation.lua", {
+local presentationEnv = {
 	game = gameRoot, require = function(value) return value end,
 	Instance = { new = instance }, Enum = { ScaleType = { Fit = "Fit" } },
 	task = { defer = function(fn) table.insert(deferred, fn) end },
 	warn = function(err) error(err) end,
-})
+}
+modules.FishIconPresentation = loadSource("src/ReplicatedStorage/Modules/FishIconPresentation.lua", presentationEnv)
+local presentation = loadSource("src/ReplicatedStorage/Modules/BackpackSlotPresentation.lua", presentationEnv)
 local function flush()
 	local jobs = table.clone(deferred)
 	table.clear(deferred)
