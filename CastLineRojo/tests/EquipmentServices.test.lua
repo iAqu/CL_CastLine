@@ -63,15 +63,11 @@ dependencies.luck = loadModule("src/ReplicatedStorage/Modules/PlayerLuckUtil.lua
 	script = { Parent = { ItemStatUtil = "stats" } },
 })
 local util = dependencies.luck
-assert(math.abs(util.CombineRollLuck(2, 0.1, 1.5) - 3.15) < 0.000001)
-assert(util.CombineRollLuck(-2, 0.1, 1) == 0.1)
-assert(util.CombineRollLuck(nil, nil, nil) == 0)
+assert(math.abs(util.CombineRollLuck(2, 1.5) - 3) < 0.000001)
+assert(util.CombineRollLuck(-2, 1) == 0)
+assert(util.CombineRollLuck(nil, nil) == 0)
 
-local discoveryLuck = 0.1
-knit.GetService = function(name)
-	assert(name == "IndexService")
-	return { GetDiscoveryLuck = function() return discoveryLuck end }
-end
+knit.GetService = function() error("Player luck must not depend on IndexService") end
 local player = {}
 profile = {
 	Data = {
@@ -84,15 +80,18 @@ profile = {
 	},
 }
 local luckService = loadModule("src/ServerScriptService/Services/PlayerLuckService.lua")
-assert(math.abs(luckService:GetPlayerRollLuck(player) - 9.15) < 0.000001, "Placed entries must count once and retain condition luck")
+assert(math.abs(luckService:GetPlayerRollLuck(player) - 9) < 0.000001, "Placed entries must count once and retain condition luck")
 luckService:RefreshPlayerLuck(player)
 luckService:RefreshPlayerLuck(player)
 assert(luckService.Client.LuckChanged.count == 1, "Unchanged totals must not send redundant notifications")
-discoveryLuck = 0.2
+profile.Data.IndexDiscoveryLog = { Duck = true }
+luckService:RefreshPlayerLuck(player)
+assert(luckService.Client.LuckChanged.count == 1, "Discoveries must not change displayed luck")
+profile.Data.Items.placed.Weight = 3
 luckService:RefreshPlayerLuck(player)
 assert(luckService.Client.LuckChanged.count == 2)
 assert(luckService.Client.LuckChanged.last[1] == player)
-assert(math.abs(luckService.Client.LuckChanged.last[2] - 9.3) < 0.000001)
+assert(math.abs(luckService.Client.LuckChanged.last[2] - 13.5) < 0.000001)
 local savedProfile = profile
 profile = nil
 assert(luckService:GetPlayerRollLuck(player) == nil)

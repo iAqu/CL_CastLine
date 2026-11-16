@@ -1,11 +1,9 @@
-local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
 local Knit = require(ReplicatedStorage.Packages.Knit)
 local FishInventoryData = require(ReplicatedStorage.Modules.FishInventoryData)
-local IndexRewardsData = require(ReplicatedFirst.Data.IndexRewardsData)
-local IndexRewardsDataHelper = require(ReplicatedFirst.DataHelpers.IndexRewardsDataHelper)
+local NumberUtil = require(ReplicatedStorage.Modules.NumberUtil)
 local PlayerDataService = require(ServerScriptService.Services.PlayerDataService)
 
 local REWARD_MULTIPLIER = 0.5
@@ -41,18 +39,13 @@ end
 
 local TOTAL_ITEM_COUNT = getTotalItemCount()
 
-function IndexService:GetRewardProgress(player: Player): IndexRewardsDataHelper.RewardProgress?
+function IndexService:GetCollectionProgress(player: Player): { CollectedCount: number, TotalCount: number }?
 	local profile = PlayerDataService:GetProfile(player)
 	if not profile then
 		return nil
 	end
 	local discoveryCount = getValidDiscoveryCount(profile.Data.IndexDiscoveryLog)
-	return IndexRewardsDataHelper.GetProgress(IndexRewardsData, discoveryCount, TOTAL_ITEM_COUNT)
-end
-
-function IndexService:GetDiscoveryLuck(player: Player): number
-	local rewardProgress = self:GetRewardProgress(player)
-	return if rewardProgress then rewardProgress.UnlockedLuck else 0
+	return { CollectedCount = discoveryCount, TotalCount = TOTAL_ITEM_COUNT }
 end
 
 function IndexService:DiscoverItem(player: Player, itemId: string): boolean
@@ -67,9 +60,7 @@ function IndexService:DiscoverItem(player: Player, itemId: string): boolean
 		return false
 	end
 	profile.Data.IndexDiscoveryLog[itemId] = true
-	local rewardProgress = self:GetRewardProgress(player)
-	Knit.GetService("PlayerLuckService"):RefreshPlayerLuck(player)
-	self.Client.IndexDiscovered:Fire(player, itemId, rewardProgress)
+	self.Client.IndexDiscovered:Fire(player, itemId, self:GetCollectionProgress(player))
 	return true
 end
 
@@ -81,8 +72,7 @@ function IndexService:GetState(player: Player)
 	return {
 		DiscoveryLog = table.clone(profile.Data.IndexDiscoveryLog or {}),
 		RewardClaimLog = table.clone(profile.Data.IndexRewardClaimLog or {}),
-		DiscoveryLuck = self:GetDiscoveryLuck(player),
-		RewardProgress = self:GetRewardProgress(player),
+		CollectionProgress = self:GetCollectionProgress(player),
 	}
 end
 
@@ -106,7 +96,7 @@ function IndexService:ClaimReward(player: Player, itemId: string)
 	profile.Data.IndexRewardClaimLog[itemId] = true
 	PlayerDataService:AdjustWins(player, reward, false)
 	self.Client.IndexRewardClaimed:Fire(player, itemId, reward)
-	return { IsSuccess = true, ResultText = ("Claimed $%d!"):format(reward), Reward = reward }
+	return { IsSuccess = true, ResultText = "Claimed $" .. NumberUtil.FormatItemPriceCompact(reward) .. "!", Reward = reward }
 end
 
 function IndexService.Client:GetIndexState(player: Player)

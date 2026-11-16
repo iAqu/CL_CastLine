@@ -311,6 +311,23 @@ local function playSideCannonsSequence(layer, sequenceToken)
 	end)
 end
 
+function UiConfettiUtil.clear(parentGui)
+	local layer = layers[parentGui]
+	if not layer then
+		return
+	end
+	layers[parentGui] = nil
+	layer.sequenceToken = layer.sequenceToken + 1
+	if layer.heartbeatConn then
+		layer.heartbeatConn:Disconnect()
+		layer.heartbeatConn = nil
+	end
+	layer.container:Destroy()
+	table.clear(layer.activeParticles)
+	table.clear(layer.frameById)
+	table.clear(layer.framePool)
+end
+
 function UiConfettiUtil.play(parentGui, preset)
 	if not parentGui then
 		return

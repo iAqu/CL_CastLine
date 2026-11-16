@@ -4,10 +4,8 @@ local PurchaseDataHelper = require(ReplicatedFirst.DataHelpers.PurchaseDataHelpe
 
 local gamepasses = {}
 
-for gamepassID, gamepass in PurchaseDataHelper.GetAllData() do
-    if gamepass.Type == "GamePass" then
-        table.insert(gamepasses, gamepassID)
-    end
+for gamepassID in PurchaseDataHelper.GetGamePassesData() do
+    table.insert(gamepasses, gamepassID)
 end
 
 return function (registry)

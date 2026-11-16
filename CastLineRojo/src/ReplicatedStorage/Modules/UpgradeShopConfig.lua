@@ -1,25 +1,8 @@
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
-local Constants = require(ReplicatedStorage.Modules.Constants)
-
 local UpgradeShopConfig = {}
 
-UpgradeShopConfig.BASE_WALK_SPEED = 30
-UpgradeShopConfig.BASE_CARRY_WEIGHT = 20
 UpgradeShopConfig.BUNDLE_AMOUNTS = table.freeze({ 1, 5, 10 })
 
-local MOVE_SPEED_UPGRADE_EXPONENT = 0.8
-
-local CONFIGS = table.freeze({
-	[Constants.UPGRADE_ID.MOVE_SPEED] = table.freeze({
-		Coefficient = 50,
-		Exponent = 3,
-	}),
-	[Constants.UPGRADE_ID.CARRY_WEIGHT] = table.freeze({
-		Coefficient = 20,
-		Exponent = 2.5,
-	}),
-})
+local CONFIGS = table.freeze({})
 
 function UpgradeShopConfig.IsValidUpgradeId(upgradeId: unknown): boolean
 	return typeof(upgradeId) == "string" and CONFIGS[upgradeId] ~= nil
@@ -47,16 +30,6 @@ end
 function UpgradeShopConfig.GetBundlePrice(upgradeId: string, currentLevel: number, amount: number): number
 	assert(UpgradeShopConfig.IsValidBundleAmount(amount), `Invalid bundle amount: {tostring(amount)}`)
 	return UpgradeShopConfig.GetUnitPrice(upgradeId, currentLevel) * amount
-end
-
-function UpgradeShopConfig.GetWalkSpeed(playerData): number
-	return UpgradeShopConfig.BASE_WALK_SPEED
-		+ UpgradeShopConfig.GetLevel(playerData, Constants.UPGRADE_ID.MOVE_SPEED) ^ MOVE_SPEED_UPGRADE_EXPONENT
-end
-
-function UpgradeShopConfig.GetCarryWeight(playerData): number
-	return UpgradeShopConfig.BASE_CARRY_WEIGHT
-		+ UpgradeShopConfig.GetLevel(playerData, Constants.UPGRADE_ID.CARRY_WEIGHT)
 end
 
 return UpgradeShopConfig

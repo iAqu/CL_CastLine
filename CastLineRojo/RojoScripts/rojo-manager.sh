@@ -144,9 +144,28 @@ log_file() {
   echo "$LOG_DIR/${project}.log"
 }
 
+# launchd owns the process outside the command session and restarts failed jobs.
+launchd_label() {
+  printf 'local.%s.rojo\n' "$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9-' '-')"
+}
+
+launchd_owned() {
+  [[ "$(uname -s)" == "Darwin" ]] || return 1
+  local info
+  info="$(launchctl list "$(launchd_label "$1")" 2>/dev/null)" || return 1
+  [[ "$info" == *"\"StandardOutPath\" = \"$(log_file "$1")\";"* ]]
+}
+
+listener_matches_project() {
+  local pid="$1" path="$2" cwd executable
+  cwd="$(lsof -a -p "$pid" -d cwd -Fn 2>/dev/null | sed -n 's/^n//p')"
+  executable="$(lsof -a -p "$pid" -d txt -Fn 2>/dev/null | sed -n 's/^n//p' | head -n 1)"
+  [[ "$cwd" == "$path" && "${executable##*/}" == "rojo" ]]
+}
+
 port_pid() {
   local port="$1"
-  lsof -tiTCP:"$port" -sTCP:LISTEN 2>/dev/null | head -n 1
+  lsof -tiTCP:"$port" -sTCP:LISTEN 2>/dev/null | head -n 1 || true
 }
 
 is_port_listening() {
@@ -208,13 +227,6 @@ start_one() {
   local project="$1"
   require_project "$project"
 
-  if is_running "$project"; then
-    local running_pid
-    running_pid="$(<"$(pid_file "$project")")"
-    echo "[$project] 已在运行 (pid=$running_pid)"
-    return 0
-  fi
-
   local path port log pidf
   path="$(project_path "$project")"
   port="$(project_port "$project")"
@@ -229,7 +241,40 @@ start_one() {
   if is_port_listening "$port"; then
     local occupied_pid
     occupied_pid="$(port_pid "$port")"
+    if listener_matches_project "$occupied_pid" "$path"; then
+      echo "[$project] 已在运行 (pid=$occupied_pid port=$port)"
+      return 0
+    fi
     print_error "[$project] 启动前检查失败: 端口 $port 已被占用 (pid=${occupied_pid:-unknown})"
+    return 1
+  fi
+
+  if [[ "$(uname -s)" == "Darwin" ]]; then
+    local label rojo_bin
+    label="$(launchd_label "$project")"
+    rojo_bin="$(command -v rojo)" || { print_error "未找到 rojo"; return 1; }
+    if launchd_owned "$project"; then
+      launchctl start "$label" || return 1
+    else
+      if launchctl list "$label" >/dev/null 2>&1; then
+        print_error "[$project] launchd 名称已被其他项目使用: $label"
+        return 1
+      fi
+      # Pass paths as arguments, preserving spaces and the project's Aftman version.
+      if ! launchctl submit -l "$label" -o "$log" -e "$log" -- \
+        /bin/bash -c 'cd "$1" && exec "$2" serve --port "$3"' \
+        rojo-launchd "$path" "$rojo_bin" "$port"; then
+        print_error "[$project] launchd 启动失败；在 Codex 中请允许沙箱外执行同一 start 命令。"
+        return 1
+      fi
+    fi
+    if wait_for_port_state "$port" up; then
+      printf '%s\n' "$label" >"${pidf}.launchd"
+      echo "[$project] 启动成功: pid=$(port_pid "$port") port=$port backend=launchd"
+      echo "[$project] 日志: $log"
+      return 0
+    fi
+    print_error "[$project] launchd 服务端口未就绪，请检查日志: $log"
     return 1
   fi
 
@@ -254,6 +299,23 @@ start_one() {
 stop_one() {
   local project="$1"
   require_project "$project"
+
+  if launchd_owned "$project"; then
+    launchctl remove "$(launchd_label "$project")" || return 1
+    if ! wait_for_port_state "$(project_port "$project")" down; then
+      print_error "[$project] launchd 停止后端口仍被占用"
+      return 1
+    fi
+    rm -f "$(pid_file "$project")" "$(pid_file "$project").launchd"
+    echo "[$project] 已停止并通过检查 (launchd)"
+    return 0
+  fi
+
+  # Never kill a listener we did not start, or a launchd child that would respawn.
+  if [[ -f "$(pid_file "$project").launchd" ]]; then
+    print_error "[$project] 无法确认 launchd 服务归属；请允许沙箱外执行 stop，或先确认手动启动的进程。"
+    return 1
+  fi
 
   if ! is_running "$project"; then
     print_warn "[$project] 未运行"
@@ -294,10 +356,14 @@ status_one() {
   local port path
   port="$(project_port "$project")"
   path="$(project_path "$project")"
-  if is_running "$project"; then
-    local pid
-    pid="$(<"$(pid_file "$project")")"
+  local pid
+  pid="$(port_pid "$port")"
+  if [[ -n "$pid" ]] && listener_matches_project "$pid" "$path"; then
     echo "[$project] RUNNING pid=$pid port=$port path=$path"
+  elif [[ -n "$pid" ]]; then
+    echo "[$project] PORT_IN_USE pid=$pid port=$port path=$path"
+  elif launchd_owned "$project"; then
+    echo "[$project] STARTING backend=launchd port=$port path=$path"
   else
     echo "[$project] STOPPED port=$port path=$path"
   fi

@@ -11,18 +11,17 @@ local PlayerDataController = require(StarterPlayer.StarterPlayerScripts.Controll
 local GuiAnimation = require(ReplicatedStorage.Modules.GuiAnimation)
 local NotificationClient = require(ReplicatedStorage.Modules.NotificationClient)
 local Constants = require(ReplicatedStorage.Modules.Constants)
+local PetFeatureConfig = require(ReplicatedStorage.Modules.PetFeatureConfig)
 local SoundHelper = require(ReplicatedStorage.Modules.SoundHelper)
 local LogHelper = require(ReplicatedStorage.Modules.LogHelper)
 local NumberUtil = require(ReplicatedStorage.Modules.NumberUtil)
 local Timer = require(ReplicatedStorage.Packages.Timer)
-local GuiAnimationUtil = require(ReplicatedStorage.Modules.GuiAnimationUtil)
 local GuiHelper = require(ReplicatedStorage.Modules.GuiHelper)
 local GameplayInputGate = require(ReplicatedStorage.Modules.GameplayInputGate)
+local BackpackConfig = require(ReplicatedStorage.Modules.BackpackConfig)
 local GameDataUtil = require(ReplicatedStorage.Modules.GameDataUtil)
 local CharacterUtil = require(ReplicatedStorage.Modules.CharacterUtil)
-local CarryCapacityUtil = require(ReplicatedStorage.Modules.CarryCapacityUtil)
 local ItemStatUtil = require(ReplicatedStorage.Modules.ItemStatUtil)
-local WeightFormat = require(ReplicatedStorage.Modules.WeightFormat)
 local Icon = require(ReplicatedStorage.Libs.Icon)
 local PurchaseDataHelper = require(ReplicatedFirst.DataHelpers.PurchaseDataHelper)
 local RebirthDataHelper = require(ReplicatedFirst.DataHelpers.RebirthDataHelper)
@@ -35,11 +34,6 @@ local PlayerGUI = localPlayer:WaitForChild("PlayerGui")
 local HomeGui = PlayerGUI:WaitForChild("HomeGui")
 local TopFrame = HomeGui.TopFrame
 local BottomFrame = HomeGui.BottomFrame
-local BackpackPanel = HomeGui:WaitForChild("BackpackPanel")
-local BackpackWeightLabel = BackpackPanel:WaitForChild("WeightLabel") :: TextLabel
-local BackpackValueLabel = BackpackPanel:WaitForChild("ValueLabel") :: TextLabel
-local BackpackFill = BackpackPanel:WaitForChild("ProgressBar"):WaitForChild("Fill") :: Frame
-
 local StarterPackButton = TopFrame.StarterPackButton
 local LeaderboardButton = TopFrame:WaitForChild("LeaderboardButton") :: TextButton
 -- local NotificationLabel = TopFrame.NotificationLabel
@@ -118,26 +112,40 @@ local OnlineRewardButton = LeftMenuFrame.OnlineRewardFrame.OnlineRewardButton
 local IndexFrame = LeftMenuFrame:FindFirstChild("IndexFrame")
 local IndexButton = IndexFrame and IndexFrame:FindFirstChild("IndexButton")
 local IndexDot = IndexButton and IndexButton:FindFirstChild("Dot")
+local PetFrame = LeftMenuFrame:FindFirstChild("PetFrame")
+local PetButton = PetFrame and PetFrame:FindFirstChild("PetButton")
+
+if not PetFeatureConfig.Enabled then
+    if PetFrame then
+        PetFrame.Visible = false
+    end
+    local menu = RightFrame:FindFirstChild("MenuFrame_b")
+    local pets = menu and menu:FindFirstChild("PetsFrame")
+    if pets then
+        pets.Visible = false
+    end
+    for _, name in ipairs({ "MyPetButton", "MyEggButton" }) do
+        local entry = RightFrame:FindFirstChild(name)
+        if entry then
+            entry.Visible = false
+        end
+    end
+end
 
 local SpinningWheelGui = PlayerGUI:WaitForChild("SpinningWheelGui")
-local IndexGui = PlayerGUI:WaitForChild("IndexGui")
+local IndexGui = PlayerGUI:WaitForChild("IndexGui_New")
 local SettingsGui = PlayerGUI:WaitForChild("SettingsGui")
 local UgcListGui = PlayerGUI:WaitForChild("UgcListGui")
 local StoreGui = PlayerGUI:WaitForChild("StoreGui")
 local RebirthGui = PlayerGUI:WaitForChild("RebirthGui")
 local TradeMenuGui = PlayerGUI:WaitForChild("TradeMenuGui")
 local HalloweenDailyRewardGui = PlayerGUI:WaitForChild("HalloweenDailyRewardGui")
-local currentWins = 0
-local currentTrophy = 0
-
 local currentWinsValue = Instance.new("NumberValue")
 local currentTrophyValue = Instance.new("NumberValue")
 
 -- local currentTowerTokenValue = Instance.new("NumberValue")
 -- local currentDungeonTokenValue = Instance.new("NumberValue")
 
-local isWinsAnimationPlaying = false
-local isTrophyAnimationPlaying = false
 local isOnlineRewardReady = false
 local UnstuckButton = BottomFrame:WaitForChild("UnstuckButton") :: TextButton
 local PickUpButton = BottomFrame:WaitForChild("PickUpButton") :: TextButton
@@ -169,19 +177,9 @@ local HomeGuiController = Knit.CreateController {
     Name = "HomeGuiController",
 }
 
-local isHomeGuiContentVisible = true
 local backpackInventory: GuiObject? = nil
-local backpackInventoryVisibilityConnection: RBXScriptConnection? = nil
 local backpackTabConnections: { RBXScriptConnection } = {}
-local backpackHotbar: GuiObject? = nil
-local backpackHotbarGui: Instance? = nil
-local backpackHotbarSizeConnection: RBXScriptConnection? = nil
 local BACKPACK_TAB_BAR_NAME = "AnimalFarmBackpackTabs"
-
-local function refreshBackpackPanelVisibility()
-    local isBackpackOpen = backpackInventory ~= nil and backpackInventory.Visible
-    BackpackPanel.Visible = HomeGui.Enabled and isHomeGuiContentVisible and not isBackpackOpen
-end
 
 local function clearBackpackTabConnections()
 	for _, connection in ipairs(backpackTabConnections) do
@@ -190,51 +188,10 @@ local function clearBackpackTabConnections()
 	table.clear(backpackTabConnections)
 end
 
-local function syncBackpackPanelHeight()
-	if not backpackHotbar or backpackHotbar.AbsoluteSize.Y <= 0 then
-		return
-	end
-
-	BackpackPanel.Size = UDim2.new(
-		BackpackPanel.Size.X.Scale,
-		BackpackPanel.Size.X.Offset,
-		0,
-		backpackHotbar.AbsoluteSize.Y
-	)
-end
-
-local function clearBackpackHotbarBinding()
-	if backpackHotbarSizeConnection then
-		backpackHotbarSizeConnection:Disconnect()
-		backpackHotbarSizeConnection = nil
-	end
-	backpackHotbar = nil
-	backpackHotbarGui = nil
-end
-
-local function bindBackpackHotbar(backpackGui: Instance)
-	task.spawn(function()
-		local mainFrame = backpackGui:WaitForChild("Backpack", 30)
-		local hotbar = mainFrame and mainFrame:WaitForChild("Hotbar", 30)
-		if not hotbar or not hotbar:IsA("GuiObject") then
-			return
-		end
-		if backpackGui.Parent ~= PlayerGUI then
-			return
-		end
-		if backpackHotbar == hotbar then
-			return
-		end
-
-		clearBackpackHotbarBinding()
-		backpackHotbar = hotbar
-		backpackHotbarGui = backpackGui
-		backpackHotbarSizeConnection = hotbar:GetPropertyChangedSignal("AbsoluteSize"):Connect(syncBackpackPanelHeight)
-		task.defer(syncBackpackPanelHeight)
-	end)
-end
-
 local function hideBackpackTabBar(instance: Instance)
+    if BackpackConfig.CategoriesEnabled then
+        return
+    end
     if instance.Name ~= BACKPACK_TAB_BAR_NAME or not instance:IsA("GuiObject") then
         return
     end
@@ -259,37 +216,15 @@ local function bindBackpackInventory(backpackGui: Instance)
             return
         end
 
-        if backpackInventoryVisibilityConnection then
-            backpackInventoryVisibilityConnection:Disconnect()
-        end
         clearBackpackTabConnections()
 
         backpackInventory = inventory
-        backpackInventoryVisibilityConnection = inventory:GetPropertyChangedSignal("Visible"):Connect(refreshBackpackPanelVisibility)
         local tabBar = inventory:FindFirstChild(BACKPACK_TAB_BAR_NAME)
         if tabBar then
             hideBackpackTabBar(tabBar)
         end
         table.insert(backpackTabConnections, inventory.ChildAdded:Connect(hideBackpackTabBar))
-        refreshBackpackPanelVisibility()
     end)
-end
-
-local function updateBackpackPanel()
-	local playerData = PlayerDataController:GetData()
-	if not playerData then
-		return
-	end
-	local calculatedWeight, calculatedValue = CarryCapacityUtil.GetCarriedTotals(playerData)
-	local weight = localPlayer:GetAttribute(CarryCapacityUtil.WEIGHT_ATTRIBUTE) or calculatedWeight
-	local capacity = localPlayer:GetAttribute(CarryCapacityUtil.CAPACITY_ATTRIBUTE)
-		or CarryCapacityUtil.GetCapacity(playerData)
-	local value = localPlayer:GetAttribute(CarryCapacityUtil.VALUE_ATTRIBUTE) or calculatedValue
-
-	BackpackWeightLabel.Text = `{WeightFormat.FormatKg(weight)} / {WeightFormat.FormatKg(capacity)}`
-	BackpackValueLabel.Text = "$" .. NumberUtil.FormatNumberStartKWithDecimal(value, 1)
-	local ratio = if capacity > 0 then math.clamp(weight / capacity, 0, 1) else 0
-	BackpackFill.Size = UDim2.new(ratio, 0, BackpackFill.Size.Y.Scale, BackpackFill.Size.Y.Offset)
 end
 
 function HomeGuiController:SetUnstuckButtonVisible(isVisible: boolean)
@@ -396,7 +331,6 @@ function HomeGuiController:Init()
     HomeGui.Enabled = true
     TopFrame.Visible = true
     BottomFrame.Visible = true
-    refreshBackpackPanelVisibility()
     UnstuckButton.Visible = false
     -- TowerTokenFrame.Visible = false
     -- DungeonTokenFrame.Visible = false
@@ -419,15 +353,13 @@ function HomeGuiController:Init()
         end)
     end
 
-    currentWins = tonumber(playerData.Wins) or 0
+    local currentWins = tonumber(playerData.Wins) or 0
     currentWinsValue.Value = currentWins
     setWinsAmountText(formatWinsAmountText(currentWins))
     if TrophyFrame then
-        currentTrophy = tonumber(playerData.Trophy) or 0
+        local currentTrophy = tonumber(playerData.Trophy) or 0
         currentTrophyValue.Value = currentTrophy
         setTrophyAmountText(formatTrophyAmountText(currentTrophy))
-    else
-        currentTrophy = tonumber(playerData.Trophy) or 0
     end
     settingsTopBarIcon = self:AddTopBarIcon(SettingsGui, TOP_BAR_ICON.SETTINGS, 2, 1.5)
 
@@ -484,12 +416,10 @@ end
 
 function HomeGuiController:HideHomeGui()
     HomeGui.Enabled = false
-    refreshBackpackPanelVisibility()
 end
 
 function HomeGuiController:ShowHomeGui()
     HomeGui.Enabled = true
-    refreshBackpackPanelVisibility()
 end
 
 -- function HomeGuiController:AddTopBarIcon(labelName, gui)
@@ -575,7 +505,6 @@ function HomeGuiController:AddTopBarIcon(gui, image: string, order: number, imag
 end
 
 local function showHomeGui(isShow: boolean)
-    isHomeGuiContentVisible = isShow
     if isShow then
         LeftFrame.Visible = true
         RightFrame.Visible = true
@@ -589,7 +518,6 @@ local function showHomeGui(isShow: boolean)
         BottomFrame.Visible = false
         -- DashFrame.Visible = false
     end
-    refreshBackpackPanelVisibility()
 end
 
 function HomeGuiController:AddHideGuiIcon(labelName)
@@ -613,7 +541,6 @@ function HomeGuiController:UpdateCurrency(currency: "Wins" | "Trophy", amount: n
     if amount == nil then return end
 
     if currency == "Wins" then
-        currentWins = amount
         local targetRounded = math.floor(amount + 0.5)
         local valueRounded = math.floor(currentWinsValue.Value + 0.5)
         if valueRounded == targetRounded then
@@ -626,7 +553,6 @@ function HomeGuiController:UpdateCurrency(currency: "Wins" | "Trophy", amount: n
         end
 
     elseif currency == "Trophy" then
-        currentTrophy = amount
         if TrophyFrame then
             local targetRounded = math.floor(amount + 0.5)
             local valueRounded = math.floor(currentTrophyValue.Value + 0.5)
@@ -640,23 +566,6 @@ function HomeGuiController:UpdateCurrency(currency: "Wins" | "Trophy", amount: n
             end
         end
 
-    end
-end
-
-function HomeGuiController:PlayAddAnimation(currency: "Wins" | "Trophy")
-    if currency == "Wins" then
-        if isWinsAnimationPlaying then return end
-        isWinsAnimationPlaying = true
-        GuiAnimationUtil.PlayResourceAddAnimation(WinsFrame, 0.1, 1.1, function()
-            isWinsAnimationPlaying = false
-        end)
-    elseif currency == "Trophy" then
-        if not TrophyFrame then return end
-        if isTrophyAnimationPlaying then return end
-        isTrophyAnimationPlaying = true
-        GuiAnimationUtil.PlayResourceAddAnimation(TrophyFrame, 0.1, 1.1, function()
-            isTrophyAnimationPlaying = false
-        end)
     end
 end
 
@@ -696,6 +605,19 @@ end
 function HomeGuiController:ShowIndexNotif(enable: boolean)
     if IndexDot then
         IndexDot.Visible = enable
+    end
+end
+
+function HomeGuiController:ShowPetNotif(enable: boolean)
+    if not PetFeatureConfig.Enabled then return end
+    local rightMenu = RightFrame:FindFirstChild("MenuFrame_b")
+    local rightPets = rightMenu and rightMenu:FindFirstChild("PetsFrame")
+    local rightButton = rightPets and rightPets:FindFirstChild("PetsButton")
+    for _, entry in pairs({ PetButton, rightButton }) do
+        local dot = entry:FindFirstChild("Dot")
+        if dot then
+            dot.Visible = enable
+        end
     end
 end
 
@@ -954,32 +876,15 @@ function HomeGuiController:KnitStart()
     local playerLuckService = Knit.GetService("PlayerLuckService")
     playerLuckService.LuckChanged:Connect(setLuckAmountText)
 
-    HomeGui:GetPropertyChangedSignal("Enabled"):Connect(refreshBackpackPanelVisibility)
     PlayerGUI.ChildAdded:Connect(function(child)
         if child.Name == "BackpackGui" then
             bindBackpackInventory(child)
-            bindBackpackHotbar(child)
-        end
-    end)
-    PlayerGUI.ChildRemoved:Connect(function(child)
-        if child == backpackHotbarGui then
-            clearBackpackHotbarBinding()
         end
     end)
     local existingBackpackGui = PlayerGUI:FindFirstChild("BackpackGui")
     if existingBackpackGui then
         bindBackpackInventory(existingBackpackGui)
-        bindBackpackHotbar(existingBackpackGui)
     end
-
-	for _, attributeName in ipairs({
-		CarryCapacityUtil.WEIGHT_ATTRIBUTE,
-		CarryCapacityUtil.CAPACITY_ATTRIBUTE,
-		CarryCapacityUtil.VALUE_ATTRIBUTE,
-	}) do
-		localPlayer:GetAttributeChangedSignal(attributeName):Connect(updateBackpackPanel)
-	end
-	updateBackpackPanel()
 
     -- Trade 功能已停用：保留旧资源但移除所有玩家入口。
     RightMenuFrame.TradeFrame.Visible = false
@@ -1109,6 +1014,12 @@ function HomeGuiController:KnitStart()
             else
                 GuiAnimation.OpenGui(IndexGui)
             end
+        end)
+    end
+
+    if PetFeatureConfig.Enabled and PetButton then
+        PetButton.Activated:Connect(function()
+            Knit.GetController("PetGuiController"):ToggleGui()
         end)
     end
 
@@ -1263,23 +1174,13 @@ function HomeGuiController:KnitStart()
 
     PlayerDataService.WinsChanged:Connect(function(result)
         task.delay(0, function()
-            if result > currentWins then
-                self:PlayAddAnimation("Wins")
-                self:UpdateCurrency("Wins", result)
-            else
-                self:UpdateCurrency("Wins", result)
-            end
+            self:UpdateCurrency("Wins", result)
         end)
     end)
 
     PlayerDataService.TrophyChanged:Connect(function(result)
         task.delay(0, function()
-            if result > currentTrophy then
-                self:PlayAddAnimation("Trophy")
-                self:UpdateCurrency("Trophy", result)
-            else
-                self:UpdateCurrency("Trophy", result)
-            end
+            self:UpdateCurrency("Trophy", result)
         end)
     end)
 

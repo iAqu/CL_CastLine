@@ -14,14 +14,14 @@ local function check(h)
 	local Gui = h.load("GuiUtil")
 	local VFX = h.load("DropVFXUtil")
 	local names = { "Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythic", "Secret",
-		"Divine", "Celestial", "Eternal", "Cosmic", "Exclusive" }
-	local luck = { 1, 1.6, 2.6, 4.2, 7, 12, 20, 32, 52, 84, 136, 220 }
+		"Divine", "Celestial", "Eternal", "Cosmic", "Exclusive", "Event" }
+	local luck = { 1, 1.6, 2.6, 4.2, 7, 12, 20, 32, 52, 84, 136, 220, 20 }
 	local palettes = {
 		{ "D7D7DE", "9696A0" }, { "96FF78", "32B432" }, { "78BEFF", "1E5AE6" },
 		{ "D782FF", "7828DC" }, { "FFD25A", "FF7800" }, { "FF6E96", "C8003C" },
 		{ "AEB5C6", "515969" }, { "FFFAC8", "FFD700" },
 		{ "78F5FF", "BE82FF", "FF96DC" }, { "FFEBFF", "BE46FF", "3C0096" },
-		{ "78FFFA", "3C5AFF", "14005A" }, { "FFDB89", "FF67B7", "8646FF" },
+		{ "78FFFA", "3C5AFF", "14005A" }, { "FFDB89", "FF67B7", "8646FF" }, { "AEB5C6", "515969" },
 	}
 	local function near(a, b) assert(math.abs(a - b) < 1e-6, tostring(a) .. " ~= " .. tostring(b)) end
 	local function sameColor(a, b)
@@ -40,7 +40,7 @@ local function check(h)
 		return {}, { X = 3, Y = 4, Z = 2 }
 	end }
 	local listed = Roll.GetRarities()
-	assert(#listed == 12 and #Config.List == 12)
+	assert(#listed == 13 and #Config.List == 13)
 	for index, name in ipairs(names) do
 		assert(listed[index] == name and Config.List[index].Name == name)
 		assert(Config.Get(name).Index == index and Roll.GetRarityRank(name) == index)
@@ -70,7 +70,7 @@ local function check(h)
 		assert(Roll.RollRarity(data, {}, "Zone_1", available, random) == nil)
 		assert(Roll.RollRarity({}, { ["Chance_" .. name] = 1 }, "Zone_1", available, random) == nil)
 		near(Stat.CalculateLuck(data[name], 25, 3), luck[index] * 5 * 3 * 0.00045 * 2)
-		assert(Stat.CalculatePrice(data[name], 20, 3, 2) == 1200)
+		assert(Stat.CalculatePrice(data[name], 20, 3, 2) == 909)
 		if index > 7 then
 			for key, value in pairs(Reveal.GetStyle("Secret")) do assert(Reveal.GetStyle(name)[key] == value) end
 		end

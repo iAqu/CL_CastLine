@@ -3,11 +3,6 @@ local TweenService = game:GetService("TweenService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 
-local LocalPlayer = Players.LocalPlayer
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
-local SoundHelper = require(ReplicatedStorage.Modules.SoundHelper)
-local Constants = require(ReplicatedStorage.Modules.Constants)
-
 local MOUSE_ENTER_SIZE = 1.1
 local MOUSE_ENTER_DURATION = 0.15
 local MOUSE_LEAVE_DURATION = 0.2
@@ -17,9 +12,21 @@ local UI_SCALE_TWEEN_INFO = TweenInfo.new(0.1)
 
 local module = {}
 
-local setUpButtons: { [GuiButton]: boolean } = {}
+local started = false
+local buttonConnections: { [GuiButton]: { RBXScriptConnection } } = {}
 local originalSizes: { [GuiButton]: UDim2 } = {}
 local mouseEnterScaleSizes: { [GuiButton]: number } = {}
+
+local function connectButton(button: GuiButton, signal: RBXScriptSignal, callback: () -> ())
+	table.insert(buttonConnections[button], signal:Connect(callback))
+end
+
+local function playClickSound()
+	-- 音效依赖存档和声音资源，不能阻塞动画初始化。
+	local SoundHelper = require(ReplicatedStorage.Modules.SoundHelper)
+	local Constants = require(ReplicatedStorage.Modules.Constants)
+	SoundHelper.PlaySound(Constants.SoundRes.GUI_BUTTON_CLICK)
+end
 
 local function tweenUIScale(uiScale: UIScale, targetScale: number)
 	TweenService:Create(uiScale, UI_SCALE_TWEEN_INFO, {
@@ -27,28 +34,28 @@ local function tweenUIScale(uiScale: UIScale, targetScale: number)
 	}):Play()
 end
 
-local function setUpUIScaleButton(button: GuiButton, uiScale: UIScale, hoverScale: number)
-	button.MouseEnter:Connect(function()
-		tweenUIScale(uiScale, hoverScale)
+local function setUpUIScaleButton(button: GuiButton, uiScale: UIScale)
+	connectButton(button, button.MouseEnter, function()
+		tweenUIScale(uiScale, mouseEnterScaleSizes[button])
 	end)
 
-	button.MouseLeave:Connect(function()
+	connectButton(button, button.MouseLeave, function()
 		tweenUIScale(uiScale, 1)
 	end)
 
-	button.MouseButton1Down:Connect(function()
+	connectButton(button, button.MouseButton1Down, function()
 		tweenUIScale(uiScale, 1)
 	end)
 
-	button.MouseButton1Up:Connect(function()
-		tweenUIScale(uiScale, hoverScale)
+	connectButton(button, button.MouseButton1Up, function()
+		tweenUIScale(uiScale, mouseEnterScaleSizes[button])
 	end)
 
-	button.SelectionGained:Connect(function()
-		tweenUIScale(uiScale, hoverScale)
+	connectButton(button, button.SelectionGained, function()
+		tweenUIScale(uiScale, mouseEnterScaleSizes[button])
 	end)
 
-	button.SelectionLost:Connect(function()
+	connectButton(button, button.SelectionLost, function()
 		tweenUIScale(uiScale, 1)
 	end)
 end
@@ -79,57 +86,71 @@ local function onMouseClick(button: GuiButton, originalSize: UDim2)
 	button:TweenSize(clickSize, "Out", "Sine", MOUSE_CLICK_DURATION, true)
 end
 
-local function setUpSizeButton(button: GuiButton, hoverScale: number)
+local function setUpSizeButton(button: GuiButton)
 	if not originalSizes[button] then
 		originalSizes[button] = button.Size
 	end
 
 	local mainSize = originalSizes[button]
 
-	button.MouseEnter:Connect(function()
+	connectButton(button, button.MouseEnter, function()
 		onMouseEnter(button, mainSize)
 	end)
 
-	button.MouseLeave:Connect(function()
+	connectButton(button, button.MouseLeave, function()
 		onMouseLeave(button, mainSize)
 	end)
 
-	button.MouseButton1Down:Connect(function()
+	connectButton(button, button.MouseButton1Down, function()
 		onMouseClick(button, mainSize)
 	end)
 
-	button.MouseButton1Up:Connect(function()
+	connectButton(button, button.MouseButton1Up, function()
 		onMouseLeave(button, mainSize)
 	end)
 
-	button.SelectionGained:Connect(function()
+	connectButton(button, button.SelectionGained, function()
 		onMouseEnter(button, mainSize)
 	end)
 
-	button.SelectionLost:Connect(function()
+	connectButton(button, button.SelectionLost, function()
 		onMouseLeave(button, mainSize)
 	end)
 end
 
 function module.SetUp(button: GuiButton, mouseEnterScaleSize: number?)
-	if setUpButtons[button] then
+	-- TopbarPlus owns this hit area and updates its size after parenting it.
+	-- Capturing its temporary zero size makes every later hover disable the icon.
+	if button:GetAttribute("CorrespondingIconUID") ~= nil then
 		return
 	end
-	setUpButtons[button] = true
+	if buttonConnections[button] then
+		if mouseEnterScaleSize ~= nil then
+			mouseEnterScaleSizes[button] = mouseEnterScaleSize
+		end
+		return
+	end
+	buttonConnections[button] = {}
 
 	mouseEnterScaleSize = mouseEnterScaleSize or MOUSE_ENTER_SIZE
 	mouseEnterScaleSizes[button] = mouseEnterScaleSize
-	button.Activated:Connect(function()
-		SoundHelper.PlaySound(Constants.SoundRes.GUI_BUTTON_CLICK)
+	connectButton(button, button.Destroying, function()
+		for _, connection in buttonConnections[button] do
+			connection:Disconnect()
+		end
+		buttonConnections[button] = nil
+		originalSizes[button] = nil
+		mouseEnterScaleSizes[button] = nil
 	end)
+	connectButton(button, button.Activated, playClickSound)
 
 	local uiScale = button:FindFirstChild("UIScale")
 	if uiScale and uiScale:IsA("UIScale") then
-		setUpUIScaleButton(button, uiScale, mouseEnterScaleSize)
+		setUpUIScaleButton(button, uiScale)
 		return
 	end
 
-	setUpSizeButton(button, mouseEnterScaleSize)
+	setUpSizeButton(button)
 end
 
 local function trySetUpButton(button: Instance)
@@ -138,18 +159,30 @@ local function trySetUpButton(button: Instance)
 	end
 end
 
--- init static button animations; dynamic buttons are registered via Button tag or manual SetUp
-for _, guiElement in pairs(PlayerGui:GetDescendants()) do
-	-- not support offset size button
+local function trySetUpScaleButton(guiElement: Instance)
+	-- 保留原有自动注册范围；Offset 按钮由标签或显式 SetUp 接管。
 	if guiElement:IsA("GuiButton") and guiElement.Size.X.Offset == 0 and guiElement.Size.Y.Offset == 0 then
 		module.SetUp(guiElement)
 	end
 end
 
-for _, button in CollectionService:GetTagged("Button") do
-	trySetUpButton(button)
-end
+function module.Start()
+	if started then
+		return
+	end
+	started = true
 
-CollectionService:GetInstanceAddedSignal("Button"):Connect(trySetUpButton)
+	local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
+	-- 先监听后扫描，覆盖初次复制、动态克隆以及重生后重建的 GUI。
+	playerGui.DescendantAdded:Connect(trySetUpScaleButton)
+	CollectionService:GetInstanceAddedSignal("Button"):Connect(trySetUpButton)
+
+	for _, guiElement in playerGui:GetDescendants() do
+		trySetUpScaleButton(guiElement)
+	end
+	for _, button in CollectionService:GetTagged("Button") do
+		trySetUpButton(button)
+	end
+end
 
 return module

@@ -42,7 +42,6 @@ end
 
 local DefaultPyhsicalProperties = {Density = 50, Friction = 0.3, Elasticity = 0.5, FrictionWeight = 1, ElasticityWeight = 1}
 
--- local defaultMovementSpeed = localCharacter:WaitForChild("Humanoid").WalkSpeed
 local playersInLeaderboard = {}
 local monitoredHumanoidRootParts = setmetatable({}, {__mode = "k"})
 local stabilizedCharacters = setmetatable({}, {__mode = "k"})
@@ -314,9 +313,8 @@ local function updateMovementSpeed()
     local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
     local humanoid = character:WaitForChild("Humanoid")
 
-    local playerData = PlayerDataController:GetData()
     local zoneWalkSpeedPercent = localPlayer:GetAttribute(MovementSpeedUtil.ZONE_WALK_SPEED_PERCENT_ATTRIBUTE)
-    local walkSpeed = MovementSpeedUtil.CalculateWalkSpeed(playerData, zoneWalkSpeedPercent)
+    local walkSpeed = MovementSpeedUtil.CalculateWalkSpeed(zoneWalkSpeedPercent)
 
     humanoid.WalkSpeed = walkSpeed
 end
@@ -324,14 +322,6 @@ end
 function CharacterController:UpdateMoveSpeed()
     updateMovementSpeed()
 end
-
--- function CharacterController:UpdateMoveSpeed()
---     -- local moveSpeed = GameDataUtil.CalculateMoveSpeed(PlayerDataController:GetData(), defaultMovementSpeed)
---     local moveSpeed = GameDataUtil.CalculateMoveSpeed(
-
---     local humanoid = character:WaitForChild("Humanoid")
---     humanoid.WalkSpeed = moveSpeed
--- end
 
 local function updateJumpPower()
     local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
@@ -436,10 +426,6 @@ function CharacterController:KnitStart()
         playersInLeaderboard = playersData
         self:UpdateAllPlayerDisplayTag()
     end)
-
-	Knit.GetService("GamePassService").GiveGamePass:Connect(function(gamePassId)
-		if gamePassId == Constants.GAMEPASS.FAST_MOVE then task.defer(updateMovementSpeed) end
-	end)
 
     self:Init()
     -- self:UpdatePhysicalProperties()

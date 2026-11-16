@@ -26,6 +26,7 @@ for _, rate in ipairs({ 15, 30, 60, 144 }) do
 		local baseRequire = env.require
 		env.script.Parent.BaitElasticMotion = "elastic"
 		env.script.Parent.FishingReelSpring = "reel"
+		env.script.Parent.FishingLiftMotion = "lift"
 		local elastic =
 			assert(load(h.read("src/ReplicatedStorage/Modules/BaitElasticMotion.lua"), "Elastic", "t", env))()
 		env.require = function(name)
@@ -35,6 +36,7 @@ for _, rate in ipairs({ 15, 30, 60, 144 }) do
 			if name == "elastic" then
 				return elastic
 			end
+			if name == "lift" then return dofile("src/ReplicatedStorage/Modules/FishingLiftMotion.lua") end
 			if name == "reel" then
 				return h.Reel
 			end

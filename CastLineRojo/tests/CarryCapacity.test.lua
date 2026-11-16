@@ -5,20 +5,14 @@ local function read(path: string): string
 	return source
 end
 
-local util = read("src/ReplicatedStorage/Modules/CarryCapacityUtil.lua")
-local service = read("src/ServerScriptService/Services/CarryCapacityService.lua")
-local drownDropService = read("src/ServerScriptService/Services/DrownDropService.lua")
-local pedestalService = read("src/ServerScriptService/Services/PlotPedestalService.lua")
-local homeController = read("src/StarterPlayer/StarterPlayerScripts/Controllers/GUI/HomeGuiController.lua")
+local config = read("src/ReplicatedStorage/Modules/UpgradeShopConfig.lua")
+local home = read("src/StarterPlayer/StarterPlayerScripts/Controllers/GUI/HomeGuiController.lua")
+local playerData = read("src/ServerScriptService/Services/PlayerDataService.lua")
 
-assert(util:find("getPlacedItemIds", 1, true), "Displayed plot items must not count as carried")
-assert(util:find("CarryCapacityUtil.GetCapacity", 1, true), "Capacity must come from the carry upgrade")
-assert(service:find('Name = "CarryCapacityService"', 1, true), "Capacity needs an authoritative server service")
-assert(service:find("CarriedWeightKg", 1, true) or util:find("CarriedWeightKg", 1, true), "Current weight must replicate to the client")
-assert(not drownDropService:find("carryCapacityService:CanCarry", 1, true), "Drowned item pickup must not enforce capacity")
-assert(not pedestalService:find("CanSetCarriedWeight", 1, true), "Pedestal swaps must not enforce net carried weight")
-assert(not pedestalService:find("CanCarry(player, itemData.Weight)", 1, true), "Pedestal pickup must not enforce capacity")
-assert(homeController:find("BackpackWeightLabel.Text", 1, true), "The HUD must show current and maximum weight")
-assert(homeController:find("BackpackFill.Size", 1, true), "The HUD bar must reflect capacity usage")
+assert(not io.open("src/ServerScriptService/Services/CarryCapacityService.lua", "r"), "Retired capacity service must be removed")
+assert(not io.open("src/ReplicatedStorage/Modules/CarryCapacityUtil.lua", "r"), "Retired capacity module must be removed")
+assert(not config:find("CARRY_WEIGHT", 1, true), "Old carry upgrade cannot be purchased")
+assert(not home:find("BackpackPanel", 1, true), "Home must not bind the retired capacity panel")
+assert(playerData:find("TotalItemWeightTenths", 1, true), "Cumulative catch weight must remain available")
 
 print("CarryCapacity.test.lua passed")

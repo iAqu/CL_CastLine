@@ -8,6 +8,9 @@
 -- Changes by AnimalFarm: custom backpack behavior and styling. See LICENSE.md.
 
 local GuiService = game:GetService("GuiService") -- ROBLOX deviation: use GuiService instead of UserGameSettings
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local BackpackConfig = require(ReplicatedStorage.Modules.BackpackConfig)
+local Appearance = BackpackConfig.Appearance
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local playerGui = player.PlayerGui
@@ -45,7 +48,6 @@ end)
 -- local Modules = RobloxGui.Modules
 -- local InExperienceAppChatModal = require(CorePackages.Workspace.Packages.AppChat).App.InExperienceAppChatModal
 -- local getFFlagAppChatCoreUIConflictFix = require(CorePackages.Workspace.Packages.SharedFlags).getFFlagAppChatCoreUIConflictFix
-local FFlagMountCoreGuiBackpack = true -- ROBLOX deviation: always true for now
 -- local isInExperienceUIVREnabled = require(CorePackages.Workspace.Packages.SharedExperimentDefinition).isInExperienceUIVREnabled
 
 local BackpackScript = {}
@@ -64,18 +66,11 @@ BackpackScript.KeepVRTopbarOpen = true
 BackpackScript.VRIsExclusive = true
 BackpackScript.VRClosesNonExclusive = true
 
-local DEFAULT_ICON_SIZE = 72
-local MOBILE_ICON_SIZE = 45
-local MIN_MOBILE_ICON_SIZE = 32
-local HOTBAR_SCREEN_PADDING = 16
-local MOBILE_HOTBAR_BOTTOM_INSET = 12
-local MOBILE_INVENTORY_HEIGHT_SCALE = 0.58
-local MOBILE_ICON_HEIGHT_SCALE = 0.12
-local ICON_SIZE = DEFAULT_ICON_SIZE
+local ICON_SIZE = 56
 local FONT_SIZE = 18
 local ICON_BUFFER = 5
 
-local BACKGROUND_FADE_DEFAULT = 0.35
+local BACKGROUND_FADE_DEFAULT = Appearance.PanelTransparency
 local backgroundFade = BACKGROUND_FADE_DEFAULT * GuiService.PreferredTransparency -- ROBLOX deviation: use GuiService instead of UserGameSettings
 local BACKGROUND_COLOR = Color3.new(31 / 255, 31 / 255, 31 / 255)
 
@@ -85,8 +80,7 @@ local VR_PANEL_RESOLUTION = 64
 local SLOT_DRAGGABLE_COLOR = Color3.new(49 / 255, 49 / 255, 49 / 255)
 local SLOT_EQUIP_COLOR = Color3.new(90 / 255, 142 / 255, 233 / 255)
 local SLOT_EQUIP_THICKNESS = 0.1 -- Relative
-local SLOT_FADE_LOCKED_DEFAULT = 0.35 -- Locked means undraggable
-local slotFadeLocked = SLOT_FADE_LOCKED_DEFAULT * GuiService.PreferredTransparency -- ROBLOX deviation: use GuiService instead of UserGameSettings
+local slotFadeDefault = Appearance.SlotTransparency * GuiService.PreferredTransparency
 local SLOT_BORDER_COLOR = Color3.new(1, 1, 1) -- Appears when dragging
 
 local TOOLTIP_BUFFER = 6
@@ -100,17 +94,8 @@ local ARROW_HOTKEY = Enum.KeyCode.Backquote.Value --TODO: Hookup '~' too?
 local ARROW_HOTKEY_STRING = "`"
 local ARROW_HOVER_COLOR = Color3.new(0, 162 / 255, 1)
 
-local HOTBAR_SLOTS_FULL = 10
-local HOTBAR_SLOTS_VR = 6
-local HOTBAR_SLOTS_MINI = 10
-local HOTBAR_SLOTS_WIDTH_CUTOFF = 1024 -- Anything smaller is MINI
-local HOTBAR_OFFSET_FROMBOTTOM = -30 -- Offset to make room for the Health GUI
-
-local INVENTORY_ROWS_FULL = 4
-local INVENTORY_ROWS_VR = 3
-local INVENTORY_ROWS_MINI = 2
-local INVENTORY_HEADER_SIZE = 40
-local INVENTORY_ARROWS_BUFFER_VR = 40
+local HOTBAR_SLOTS_FULL = 10 -- Logical/persisted slots on every device.
+local INVENTORY_HEADER_SIZE = 56
 
 local SEARCH_BUFFER = 5
 local SEARCH_WIDTH = 200
@@ -120,8 +105,6 @@ local SEARCH_TEXT_OFFSET_FROMLEFT = 0
 local SEARCH_BACKGROUND_COLOR = Color3.new(0.37, 0.37, 0.37)
 local SEARCH_BACKGROUND_FADE_DEFAULT = 0.15
 local searchBackgroundFade = SEARCH_BACKGROUND_FADE_DEFAULT * GuiService.PreferredTransparency -- ROBLOX deviation: use GuiService instead of UserGameSettings
-
-local DOUBLE_CLICK_TIME = 0.5
 
 local ZERO_KEY_VALUE = Enum.KeyCode.Zero.Value
 local DROP_HOTKEY_VALUE = Enum.KeyCode.Backspace.Value
@@ -140,8 +123,10 @@ local GAMEPAD_INPUT_TYPES = {
 local ContextActionService = game:GetService("ContextActionService")
 local GamepadService = game:GetService("GamepadService")
 local PlayersService = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local GameplayInputGate = require(ReplicatedStorage.Modules.GameplayInputGate)
+local ButtonAnimation = require(ReplicatedStorage.Modules.ButtonAnimation)
+local BackpackLayout = require(ReplicatedStorage.Modules.BackpackLayout)
+local BackpackDragController = require(ReplicatedStorage.Modules.BackpackDragController)
 local StarterGui = game:GetService("StarterGui")
 local UserInputService = game:GetService("UserInputService")
 local VRService = game:GetService("VRService")
@@ -183,23 +168,15 @@ end
 
 local GamepadActionsBound = false
 
-local IS_PHONE = UserInputService.TouchEnabled and workspace.CurrentCamera.ViewportSize.X < HOTBAR_SLOTS_WIDTH_CUTOFF -- ROBLOX deviation: use workspace.CurrentCamera.ViewportSize instead of GuiService:GetScreenResolution()
-
-local function getResponsiveIconSize(isPhone: boolean): number
-	if IsTenFootInterface then
-		return 100
-	end
-	if not isPhone then
-		return DEFAULT_ICON_SIZE
-	end
-	local camera = workspace.CurrentCamera
-	local viewport = if camera then camera.ViewportSize else Vector2.new(DEFAULT_ICON_SIZE, DEFAULT_ICON_SIZE)
-	local fromWidth = math.floor((math.max(viewport.X - HOTBAR_SCREEN_PADDING, 0) - ICON_BUFFER) / HOTBAR_SLOTS_MINI - ICON_BUFFER)
-	local fromHeight = math.floor(viewport.Y * MOBILE_ICON_HEIGHT_SCALE)
-	return math.clamp(math.min(fromWidth, fromHeight, MOBILE_ICON_SIZE), MIN_MOBILE_ICON_SIZE, MOBILE_ICON_SIZE)
+local function computeLayout()
+	local size = BackpackGui.AbsoluteSize
+	return BackpackLayout.Compute(size.X, size.Y, UserInputService.TouchEnabled and not UserInputService.MouseEnabled)
 end
 
-ICON_SIZE = getResponsiveIconSize(IS_PHONE)
+local Layout = computeLayout()
+local VisibleHotbarSlots = Layout.VisibleSlots
+ICON_SIZE, ICON_BUFFER = Layout.IconSize, Layout.Gap
+local DragController = nil
 
 local Player = PlayersService.LocalPlayer
 
@@ -235,8 +212,7 @@ local CharConns = {} -- Holds character connections to be cleared later
 local GamepadEnabled = false -- determines if our gui needs to be gamepad friendly
 local TimeOfLastToolChange = 0
 
-local NumberOfHotbarSlots = IS_PHONE and HOTBAR_SLOTS_MINI or HOTBAR_SLOTS_FULL -- Number of slots shown at the bottom
-local NumberOfInventoryRows = IS_PHONE and INVENTORY_ROWS_MINI or INVENTORY_ROWS_FULL -- How many rows in the popped-up inventory
+local NumberOfHotbarSlots = HOTBAR_SLOTS_FULL -- Includes reserved mobile slots 8..10.
 local BackpackPanel = nil
 
 local lastEquippedSlot = nil
@@ -365,6 +341,12 @@ end
 local function resetSlotFrameForRuntime(slotFrame, index)
 	slotFrame.Name = index
 	slotFrame.LayoutOrder = index
+	slotFrame:SetAttribute("MinimalSlotLabels", true)
+	for _, label in slotFrame:GetDescendants() do
+		if label:IsA("TextLabel") then
+			label.Visible = false
+		end
+	end
 
 	local icon = slotFrame:FindFirstChild("Icon")
 	if icon and icon:IsA("ImageLabel") then
@@ -372,9 +354,15 @@ local function resetSlotFrameForRuntime(slotFrame, index)
 	end
 
 	local toolName = slotFrame:FindFirstChild("ToolName")
-	if toolName and toolName:IsA("TextLabel") then
-		toolName.Text = ""
-		toolName.Visible = true
+	if not toolName then
+		toolName = NewGui("TextLabel", "ToolName")
+		toolName.Parent = slotFrame
+	end
+	toolName.Text = ""
+	toolName.Visible = false
+	local cpsLabel = slotFrame:FindFirstChild("CpsLabel")
+	if cpsLabel and cpsLabel:IsA("TextLabel") then
+		cpsLabel.Text = ""
 	end
 
 	local itemNameLabel = slotFrame:FindFirstChild("ItemNameLabel")
@@ -460,7 +448,7 @@ local function FindLowestEmpty()
 end
 
 local function isInventoryEmpty()
-	for i = NumberOfHotbarSlots + 1, #Slots do
+	for i = VisibleHotbarSlots + 1, #Slots do
 		local slot = Slots[i]
 		if slot and slot.Tool then
 			return false
@@ -476,74 +464,74 @@ local function UseGazeSelection()
 end
 
 local function AdjustHotbarFrames()
-	local inventoryOpen = InventoryFrame.Visible -- (Show all)
-	local visualTotal = inventoryOpen and NumberOfHotbarSlots or FullHotbarSlots
+	local inventoryOpen = InventoryFrame.Visible
+	local visualTotal = 0
+	for i = 1, VisibleHotbarSlots do
+		if inventoryOpen or Slots[i].Tool then
+			visualTotal = visualTotal + 1
+		end
+	end
 	local visualIndex = 0
 	for i = 1, NumberOfHotbarSlots do
 		local slot = Slots[i]
-		if slot.Tool or inventoryOpen then
-			visualIndex = visualIndex + 1
-			slot:Readjust(visualIndex, visualTotal)
-			slot.Frame.Visible = true
+		if i <= VisibleHotbarSlots then
+			slot.Frame.Parent = HotbarFrame
+			slot.Frame.Visible = slot.Tool ~= nil or inventoryOpen
+			if slot.Frame.Visible then
+				visualIndex = visualIndex + 1
+				slot:Readjust(visualIndex, visualTotal)
+			end
 		else
-			slot.Frame.Visible = false
+			-- Move the presentation only. ToolReference and the saved index stay intact.
+			slot.Frame.Parent = UIGridFrame
+			slot.Frame.LayoutOrder = i
+			slot.Frame.Visible = slot.Tool ~= nil
 		end
+		slot:TurnNumber(i <= VisibleHotbarSlots and UserInputService.KeyboardEnabled and not Layout.TouchOnly)
 	end
-
 	OpenInventoryButton.Visible = false
 	BackpackScript.IsHotbarVisible = true
 end
 
 local function UpdateScrollingFrameCanvasSize()
-	local countX = math.floor(ScrollingFrame.AbsoluteSize.X / (ICON_SIZE + ICON_BUFFER))
-	local maxRow = math.ceil((#UIGridFrame:GetChildren() - 1) / countX)
-	local canvasSizeY = maxRow * (ICON_SIZE + ICON_BUFFER) + ICON_BUFFER
-	ScrollingFrame.CanvasSize = UDim2.fromOffset(0, canvasSizeY)
+	if not UIGridFrame then
+		return
+	end
+	local visible = 0
+	for _, child in ipairs(UIGridFrame:GetChildren()) do
+		if child:IsA("GuiObject") and child.Visible then
+			visible = visible + 1
+		end
+	end
+	local height = BackpackLayout.CanvasHeight(visible, Layout)
+	UIGridFrame.Size = UDim2.fromOffset(Layout.GridWidth, height)
+	ScrollingFrame.CanvasSize = UDim2.fromOffset(0, height)
 end
 
 local function AdjustInventoryFrames()
 	for i = NumberOfHotbarSlots + 1, #Slots do
 		local slot = Slots[i]
 		slot.Frame.LayoutOrder = slot.Index
-		slot.Frame.Visible = (slot.Tool ~= nil)
+		if not ViewingSearchResults then
+			slot.Frame.Visible = slot.Tool ~= nil
+		end
 	end
 	UpdateScrollingFrameCanvasSize()
 end
 
 local function UpdateBackpackLayout()
 	for _, slot in ipairs(Slots) do
-		if slot.Frame then
-			slot.Frame.Size = UDim2.fromOffset(ICON_SIZE, ICON_SIZE)
-		end
+		slot.Frame.Size = UDim2.fromOffset(ICON_SIZE, ICON_SIZE)
 	end
-	if UIGridLayout then
-		UIGridLayout.CellSize = UDim2.fromOffset(ICON_SIZE, ICON_SIZE)
-	end
-
-	HotbarFrame.Size = UDim2.new(
-		0,
-		ICON_BUFFER + (NumberOfHotbarSlots * (ICON_SIZE + ICON_BUFFER)),
-		0,
-		ICON_BUFFER + ICON_SIZE + ICON_BUFFER
-	)
-	local bottomInset = if IS_PHONE then MOBILE_HOTBAR_BOTTOM_INSET else 0
-	HotbarFrame.Position = UDim2.new(0.5, -HotbarFrame.Size.X.Offset / 2, 1, -HotbarFrame.Size.Y.Offset - bottomInset)
-	local inventoryHeight = (HotbarFrame.Size.Y.Offset * NumberOfInventoryRows) + INVENTORY_HEADER_SIZE
-	if IS_PHONE then
-		local viewport = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize or Vector2.new(0, inventoryHeight)
-		local maxHeight = math.floor(viewport.Y * MOBILE_INVENTORY_HEIGHT_SCALE)
-		local spaceAbove = math.max(viewport.Y - HotbarFrame.Size.Y.Offset - bottomInset - 8, INVENTORY_HEADER_SIZE + ICON_SIZE)
-		inventoryHeight = math.min(maxHeight, spaceAbove)
-	end
-	InventoryFrame.Size = UDim2.fromOffset(HotbarFrame.Size.X.Offset, inventoryHeight)
-	InventoryFrame.Position = UDim2.new(
-		0.5,
-		-InventoryFrame.Size.X.Offset / 2,
-		1,
-		HotbarFrame.Position.Y.Offset - InventoryFrame.Size.Y.Offset
-	)
-
-	ScrollingFrame.Size = UDim2.new(1, ScrollingFrame.ScrollBarThickness + 1, 1, -INVENTORY_HEADER_SIZE)
+	UIGridLayout.CellSize = UDim2.fromOffset(ICON_SIZE, ICON_SIZE)
+	UIGridLayout.CellPadding = UDim2.fromOffset(ICON_BUFFER, ICON_BUFFER)
+	UIGridLayout.FillDirectionMaxCells = Layout.GridColumns
+	UIGridFrame.Position = UDim2.fromOffset(Layout.GridOffsetX, 0)
+	HotbarFrame.Size = UDim2.fromOffset(Layout.HotbarWidth, Layout.HotbarHeight)
+	HotbarFrame.Position = UDim2.new(0.5, -Layout.HotbarWidth / 2, 0, Layout.HotbarY)
+	InventoryFrame.Size = UDim2.fromOffset(Layout.PanelWidth, Layout.PanelHeight)
+	InventoryFrame.Position = UDim2.new(0.5, -Layout.PanelWidth / 2, 0, Layout.PanelY)
+	ScrollingFrame.Size = UDim2.new(1, 0, 1, -INVENTORY_HEADER_SIZE - 8)
 	ScrollingFrame.Position = UDim2.fromOffset(0, INVENTORY_HEADER_SIZE)
 	AdjustHotbarFrames()
 	AdjustInventoryFrames()
@@ -557,11 +545,6 @@ local function CheckBounds(guiObject, x, y)
 	local pos = guiObject.AbsolutePosition
 	local size = guiObject.AbsoluteSize
 	return (x > pos.X and x <= pos.X + size.X and y > pos.Y and y <= pos.Y + size.Y)
-end
-
-local function GetOffset(guiObject, point)
-	local centerPoint = guiObject.AbsolutePosition + (guiObject.AbsoluteSize / 2)
-	return (centerPoint - point).magnitude
 end
 
 local function DisableActiveHopper() --NOTE: HopperBin
@@ -611,9 +594,7 @@ local function MakeSlot(parent, index)
 	slot.Index = index
 	slot.Frame = nil
 
-	local SlotFrameParent = nil
 	local SlotFrame = nil
-	local FakeSlotFrame = nil
 	local ToolIcon = nil
 	local ToolName = nil
 	local ToolChangeConn = nil
@@ -629,9 +610,12 @@ local function MakeSlot(parent, index)
 
 	local function UpdateSlotFading()
 		SlotFrame.SelectionImageObject = nil
-		SlotFrame.BackgroundTransparency = SlotFrame.Draggable and 0 or slotFadeLocked
-		SlotFrame.BackgroundColor3 = SlotFrame.Draggable and SLOT_DRAGGABLE_COLOR or BACKGROUND_COLOR
+		local equipped = HighlightFrame and HighlightFrame.Parent == SlotFrame
+		local transparency = equipped and Appearance.EquippedSlotTransparency or Appearance.SlotTransparency
+		SlotFrame.BackgroundTransparency = transparency * GuiService.PreferredTransparency
+		SlotFrame.BackgroundColor3 = SlotFrame:GetAttribute("CanDrag") and SLOT_DRAGGABLE_COLOR or BACKGROUND_COLOR
 	end
+	slot.UpdateFading = UpdateSlotFading
 
 	function slot:Readjust(visualIndex, visualTotal) --NOTE: Only used for Hotbar slots
 		local centered = HotbarFrame.Size.X.Offset / 2
@@ -653,11 +637,7 @@ local function MakeSlot(parent, index)
 			local icon = tool.TextureId
 			ToolIcon.Image = icon
 
-			if icon ~= "" then
-				ToolName.Visible = false
-			else
-				ToolName.Visible = true
-			end
+			ToolName.Visible = false
 
 			ToolName.Text = tool.Name -- ROBLOX deviation: remove GameTranslator
 
@@ -685,7 +665,7 @@ local function MakeSlot(parent, index)
 		local inventoryOpen = InventoryFrame.Visible
 
 		if not hotbarSlot or inventoryOpen then
-			SlotFrame.Draggable = true
+			SlotFrame:SetAttribute("CanDrag", true)
 		end
 
 		self:UpdateEquipView()
@@ -715,6 +695,9 @@ local function MakeSlot(parent, index)
 	end
 
 	function slot:Clear()
+		if DragController then
+			DragController:CancelSlot(self)
+		end
 		if not self.Tool then
 			return
 		end
@@ -730,7 +713,7 @@ local function MakeSlot(parent, index)
 			ToolTip.Text = ""
 			ToolTip.Visible = false
 		end
-		SlotFrame.Draggable = false
+		SlotFrame:SetAttribute("CanDrag", false)
 
 		self:UpdateEquipView(true) -- Show as unequipped
 
@@ -819,7 +802,7 @@ local function MakeSlot(parent, index)
 
 	function slot:SetClickability(on) -- (Happens on open/close arrow)
 		if self.Tool then
-			SlotFrame.Draggable = not on
+			SlotFrame:SetAttribute("CanDrag", not on)
 			UpdateSlotFading()
 		end
 	end
@@ -874,8 +857,8 @@ local function MakeSlot(parent, index)
 		SlotFrame.BorderSizePixel = 0
 		SlotFrame.Size = UDim2.fromOffset(ICON_SIZE, ICON_SIZE)
 		SlotFrame.Active = true
-		SlotFrame.Draggable = false
-		SlotFrame.BackgroundTransparency = slotFadeLocked
+		SlotFrame:SetAttribute("CanDrag", false)
+		SlotFrame.BackgroundTransparency = slotFadeDefault
 
 		ToolIcon = SlotFrame:FindFirstChild("Icon")
 		ToolName = SlotFrame:FindFirstChild("ToolName")
@@ -890,8 +873,8 @@ local function MakeSlot(parent, index)
 		SlotFrame.BorderSizePixel = 0
 		SlotFrame.Size = UDim2.fromOffset(ICON_SIZE, ICON_SIZE)
 		SlotFrame.Active = true
-		SlotFrame.Draggable = false
-		SlotFrame.BackgroundTransparency = slotFadeLocked
+		SlotFrame:SetAttribute("CanDrag", false)
+		SlotFrame.BackgroundTransparency = slotFadeDefault
 
 		do
 			local selectionObjectClipper = NewGui("Frame", "SelectionObjectClipper")
@@ -929,9 +912,12 @@ local function MakeSlot(parent, index)
 	end
 	ToolReference.Value = nil
 
-	SlotFrame.Activated:connect(function()
-		changeSlot(slot)
-	end)
+	if index <= NumberOfHotbarSlots then
+		SlotFrame:SetAttribute("HotbarSlotIndex", index)
+	end
+	if DragController then
+		DragController:Bind(SlotFrame, slot)
+	end
 	slot.Frame = SlotFrame
 	slot.Frame.LayoutOrder = slot.Index
 
@@ -949,7 +935,7 @@ local function MakeSlot(parent, index)
 		if ToolTip then
 			ToolTip.RichText = true
 			SlotFrame.MouseEnter:connect(function()
-				if ToolTip.Text ~= "" then
+				if not SlotFrame:GetAttribute("MinimalSlotLabels") and ToolTip.Text ~= "" then
 					ToolTip.Visible = true
 				end
 			end)
@@ -994,145 +980,6 @@ local function MakeSlot(parent, index)
 		elseif usingSlotTemplate and SlotNumber then
 			SlotNumber.Visible = false
 		end
-
-	end
-
-	do -- Dragging Logic
-		local startPoint = SlotFrame.Position
-		local lastUpTime = 0
-		local startParent = nil
-
-		SlotFrame.DragBegin:connect(function(dragPoint)
-			Dragging[SlotFrame] = true
-			startPoint = dragPoint
-
-			SlotFrame.BorderSizePixel = 2
-
-			-- Raise above other slots
-			SlotFrame.ZIndex = 2
-			ToolIcon.ZIndex = 2
-			ToolName.ZIndex = 2
-			SlotFrame.Parent.ZIndex = 2
-			if SlotNumber then
-				SlotNumber.ZIndex = 2
-			end
-			if HighlightFrame then
-				HighlightFrame.ZIndex = 2
-				for _, child in pairs(HighlightFrame:GetChildren()) do
-					child.ZIndex = 2
-				end
-			end
-
-			-- Circumvent the ScrollingFrame's ClipsDescendants property
-			startParent = SlotFrame.Parent
-			if startParent == UIGridFrame then
-				local oldAbsolutPos = SlotFrame.AbsolutePosition
-				local newPosition = UDim2.new(
-					0,
-					SlotFrame.AbsolutePosition.X - InventoryFrame.AbsolutePosition.X,
-					0,
-					SlotFrame.AbsolutePosition.Y - InventoryFrame.AbsolutePosition.Y
-				)
-				SlotFrame.Parent = InventoryFrame
-				SlotFrame.Position = newPosition
-
-				FakeSlotFrame = NewGui("Frame", "FakeSlot")
-				FakeSlotFrame.LayoutOrder = SlotFrame.LayoutOrder
-				FakeSlotFrame.Size = SlotFrame.Size
-				FakeSlotFrame.BackgroundTransparency = 1
-				FakeSlotFrame.Parent = UIGridFrame
-			end
-		end)
-
-		SlotFrame.DragStopped:connect(function(x, y)
-			if FakeSlotFrame then
-				FakeSlotFrame:Destroy()
-			end
-
-			local now = tick()
-			SlotFrame.Position = startPoint
-			SlotFrame.Parent = startParent
-
-			SlotFrame.BorderSizePixel = 0
-
-			-- Restore height
-			SlotFrame.ZIndex = 1
-			ToolIcon.ZIndex = 1
-			ToolName.ZIndex = 1
-			startParent.ZIndex = 1
-			if SlotNumber then
-				SlotNumber.ZIndex = 1
-			end
-			if HighlightFrame then
-				HighlightFrame.ZIndex = 1
-				for _, child in pairs(HighlightFrame:GetChildren()) do
-					child.ZIndex = 1
-				end
-			end
-
-			Dragging[SlotFrame] = nil
-
-			-- Make sure the tool wasn't dropped
-			if not slot.Tool then
-				return
-			end
-
-			-- Check where we were dropped
-			if CheckBounds(InventoryFrame, x, y) then
-				if slot.Index <= NumberOfHotbarSlots then
-					slot:MoveToInventory()
-				end
-				-- Check for double clicking on an inventory slot, to move into empty hotbar slot
-				if slot.Index > NumberOfHotbarSlots and now - lastUpTime < DOUBLE_CLICK_TIME then
-					if LowestEmptySlot then
-						local myTool = slot.Tool
-						slot:Clear()
-						LowestEmptySlot:Fill(myTool)
-						slot:Delete()
-					end
-					now = 0 -- Resets the timer
-				end
-			elseif CheckBounds(HotbarFrame, x, y) then
-				local closest = { math.huge, nil }
-				for i = 1, NumberOfHotbarSlots do
-					local otherSlot = Slots[i]
-					local offset = GetOffset(otherSlot.Frame, Vector2.new(x, y))
-					if offset < closest[1] then
-						closest = { offset, otherSlot }
-					end
-				end
-				local closestSlot = closest[2]
-				if closestSlot ~= slot then
-					slot:Swap(closestSlot)
-					if slot.Index > NumberOfHotbarSlots then
-						local tool = slot.Tool
-						if not tool then -- Clean up after ourselves if we're an inventory slot that's now empty
-							slot:Delete()
-						else -- Moved inventory slot to hotbar slot, and gained a tool that needs to be unequipped
-							if IsEquipped(tool) then --NOTE: HopperBin
-								UnequipAllTools()
-							end
-							-- Also hide the inventory slot if we're showing results right now
-							if ViewingSearchResults then
-								slot.Frame.Visible = false
-								slot.Frame.Parent = InventoryFrame
-							end
-						end
-					end
-				end
-			else
-				-- local tool = slot.Tool
-				-- if tool.CanBeDropped then --TODO: HopperBins
-				-- tool.Parent = workspace
-				-- --TODO: Move away from character
-				-- end
-				if slot.Index <= NumberOfHotbarSlots then
-					slot:MoveToInventory() --NOTE: Temporary
-				end
-			end
-
-			lastUpTime = now
-		end)
 	end
 
 	-- All ready!
@@ -1151,85 +998,16 @@ local function MakeSlot(parent, index)
 	return slot
 end
 
--- NOTE: We should probably migrate to a 2 collection system:
--- One collection for the hotbar and another collection for the inventory
-local function SetNumberOfHotbarSlots(numSlots)
-	if NumberOfHotbarSlots ~= numSlots then
-		local prevNumberOfSlots = NumberOfHotbarSlots
-		local newNumberOfSlots = numSlots
-		-- If we are shrinking the number of slots we need
-		-- to move around our tools to the right locations
-		if prevNumberOfSlots > newNumberOfSlots then
-			-- Delete the slots that are now no longer in the Hotbar
-			-- Iterate backwards as to not corrupt our iterator
-			for i = prevNumberOfSlots, newNumberOfSlots + 1, -1 do
-				local slot = Slots[i]
-				if slot then
-					slot:MoveToInventory()
-					slot:Delete()
-				end
-			end
-			-- Also need to slide-back the inventory slots now that they are indexed earlier
-			for i = prevNumberOfSlots, newNumberOfSlots + 1, -1 do
-				local slot = Slots[i]
-				if not slot.Tool then
-					slot:Delete()
-				end
-			end
-		else -- If we added more slots
-			for i = prevNumberOfSlots, newNumberOfSlots do
-				-- Incrementally add hotbar slots
-				NumberOfHotbarSlots = i
-				if Slots[i] then
-					-- Move old
-					local oldSlot = Slots[i]
-					local oldTool = Slots[i].Tool
-
-					local newSlot = MakeSlot(HotbarFrame, i)
-
-					if oldTool then
-						newSlot:Fill(oldTool)
-					elseif not LowestEmptySlot then
-						LowestEmptySlot = newSlot
-					end
-				else
-					local slot = MakeSlot(HotbarFrame, i)
-
-					slot.Frame.Visible = false
-
-					if not LowestEmptySlot then
-						LowestEmptySlot = slot
-					end
-				end
-			end
-		end
-		NumberOfHotbarSlots = numSlots
-		FullHotbarSlots = 0
-		for i = 1, NumberOfHotbarSlots do
-			if Slots[i] and Slots[i].Tool then
-				FullHotbarSlots = FullHotbarSlots + 1
-			end
-		end
-
-		UpdateBackpackLayout()
-	end
-end
-
 local function updateResponsiveLayout()
-	local isPhone = UserInputService.TouchEnabled and workspace.CurrentCamera.ViewportSize.X < HOTBAR_SLOTS_WIDTH_CUTOFF
-	local targetSlotCount = isPhone and HOTBAR_SLOTS_MINI or HOTBAR_SLOTS_FULL
-	local targetIconSize = getResponsiveIconSize(isPhone)
-	local targetInventoryRows = isPhone and INVENTORY_ROWS_MINI or INVENTORY_ROWS_FULL
-	local layoutChanged = ICON_SIZE ~= targetIconSize or NumberOfInventoryRows ~= targetInventoryRows
-
-	IS_PHONE = isPhone
-	ICON_SIZE = targetIconSize
-	NumberOfInventoryRows = targetInventoryRows
-	if NumberOfHotbarSlots ~= targetSlotCount then
-		SetNumberOfHotbarSlots(targetSlotCount)
-	elseif layoutChanged then
-		UpdateBackpackLayout()
+	local nextLayout = computeLayout()
+	if DragController then
+		DragController:Cancel()
 	end
+	Layout = nextLayout
+	VisibleHotbarSlots = Layout.VisibleSlots
+	ICON_SIZE, ICON_BUFFER = Layout.IconSize, Layout.Gap
+	BackpackScript.VisibleHotbarSlots = VisibleHotbarSlots
+	UpdateBackpackLayout()
 end
 
 local function OnChildAdded(child) -- To Character or Backpack
@@ -1296,6 +1074,8 @@ local function OnChildAdded(child) -- To Character or Backpack
 		end
 	end
 
+	AdjustHotbarFrames()
+	UpdateScrollingFrameCanvasSize()
 	BackpackScript.BackpackItemAdded:Fire()
 end
 
@@ -1327,6 +1107,8 @@ local function OnChildRemoved(child) -- From Character or Backpack
 		ActiveHopper = nil
 	end
 
+	AdjustHotbarFrames()
+	UpdateScrollingFrameCanvasSize()
 	BackpackScript.BackpackItemRemoved:Fire()
 	if isInventoryEmpty() then
 		BackpackScript.BackpackEmpty:Fire()
@@ -1334,6 +1116,9 @@ local function OnChildRemoved(child) -- From Character or Backpack
 end
 
 local function OnCharacterAdded(character)
+	if BackpackScript.Close then
+		BackpackScript.Close()
+	end
 	-- First, clean up any old slots
 	for i = #Slots, 1, -1 do
 		local slot = Slots[i]
@@ -1402,7 +1187,7 @@ local function OnUISChanged(property)
 	if property == "KeyboardEnabled" or property == "VREnabled" then
 		local on = UserInputService.KeyboardEnabled and not VRService.VREnabled
 		for i = 1, NumberOfHotbarSlots do
-			Slots[i]:TurnNumber(on)
+			Slots[i]:TurnNumber(on and i <= VisibleHotbarSlots and not Layout.TouchOnly)
 		end
 	end
 end
@@ -1801,14 +1586,9 @@ end
 
 -- Make the main frame, which (mostly) covers the screen
 MainFrame = NewGui("Frame", "Backpack")
-if FFlagMountCoreGuiBackpack then
-	if StarterGui:GetCoreGuiEnabled(Enum.CoreGuiType.Backpack) then
-		MainFrame.Parent = BackpackGui
-	end
-else
-	MainFrame.Visible = false
-	MainFrame.Parent = BackpackGui
-end
+-- The custom UI owns its mount independently of Roblox's default backpack.
+-- Loading/fishing can disable CoreGui before this module starts.
+MainFrame.Parent = BackpackGui
 
 -- Make the HotbarFrame, which holds only the Hotbar Slots
 HotbarFrame = NewGui("Frame", "Hotbar")
@@ -1866,6 +1646,15 @@ InventoryFrame.BackgroundColor3 = BACKGROUND_COLOR
 InventoryFrame.Active = true
 InventoryFrame.Visible = false
 InventoryFrame.Parent = MainFrame
+local inventoryCorner = Instance.new("UICorner")
+inventoryCorner.CornerRadius = UDim.new(0, Appearance.PanelCornerRadius)
+inventoryCorner.Parent = InventoryFrame
+local inventoryStroke = Instance.new("UIStroke")
+inventoryStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+inventoryStroke.Color = Color3.new(0, 0, 0)
+inventoryStroke.Thickness = Appearance.PanelStrokeThickness
+inventoryStroke.Transparency = Appearance.PanelStrokeTransparency
+inventoryStroke.Parent = InventoryFrame
 
 VRInventorySelector = NewGui("TextButton", "VRInventorySelector")
 VRInventorySelector.Position = UDim2.new(0, 0, 0, 0)
@@ -1886,19 +1675,28 @@ VRInventorySelector.SelectionImageObject = selectorImage
 ScrollingFrame = NewGui("ScrollingFrame", "ScrollingFrame")
 ScrollingFrame.Selectable = false
 ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+ScrollingFrame.ScrollBarThickness = 6
+ScrollingFrame.VerticalScrollBarInset = Enum.ScrollBarInset.Always
+ScrollingFrame.ScrollingDirection = Enum.ScrollingDirection.Y
 ScrollingFrame.Parent = InventoryFrame
 
 UIGridFrame = NewGui("Frame", "UIGridFrame")
 UIGridFrame.Selectable = false
-UIGridFrame.Size = UDim2.new(1, -(ICON_BUFFER * 2), 1, 0)
-UIGridFrame.Position = UDim2.fromOffset(ICON_BUFFER, 0)
+UIGridFrame.Size = UDim2.fromOffset(Layout.GridWidth, 0)
+UIGridFrame.Position = UDim2.fromOffset(Layout.GridOffsetX, 0)
 UIGridFrame.Parent = ScrollingFrame
 
 UIGridLayout = Instance.new("UIGridLayout")
 UIGridLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIGridLayout.FillDirection = Enum.FillDirection.Horizontal
+UIGridLayout.FillDirectionMaxCells = Layout.GridColumns
+UIGridLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+UIGridLayout.VerticalAlignment = Enum.VerticalAlignment.Top
 UIGridLayout.CellSize = UDim2.fromOffset(ICON_SIZE, ICON_SIZE)
 UIGridLayout.CellPadding = UDim2.fromOffset(ICON_BUFFER, ICON_BUFFER)
 UIGridLayout.Parent = UIGridFrame
+UIGridLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(UpdateScrollingFrameCanvasSize)
+ScrollingFrame:GetPropertyChangedSignal("AbsoluteSize"):Connect(UpdateScrollingFrameCanvasSize)
 
 ScrollUpInventoryButton = MakeVRRoundButton("ScrollUpButton", "rbxasset://textures/ui/Backpack/ScrollUpArrow.png")
 ScrollUpInventoryButton.Size = UDim2.fromOffset(34, 34)
@@ -2044,11 +1842,12 @@ addGamepadHint(
 )
 
 local searchFrame = NewGui("Frame", "Search")
-do -- Search stuff
+searchFrame.Visible = BackpackConfig.SearchEnabled
+if BackpackConfig.SearchEnabled then -- Retained, but no bindings when disabled.
 	searchFrame.BackgroundColor3 = SEARCH_BACKGROUND_COLOR
 	searchFrame.BackgroundTransparency = searchBackgroundFade
 	searchFrame.Size = UDim2.fromOffset(SEARCH_WIDTH - (SEARCH_BUFFER * 2), INVENTORY_HEADER_SIZE - (SEARCH_BUFFER * 2))
-	searchFrame.Position = UDim2.new(1, -searchFrame.Size.X.Offset - SEARCH_BUFFER, 0, SEARCH_BUFFER)
+	searchFrame.Position = UDim2.new(1, -searchFrame.Size.X.Offset - 60, 0, 12)
 	searchFrame.Parent = InventoryFrame
 
 	local searchBox = NewGui("TextBox", "TextBox")
@@ -2209,47 +2008,51 @@ do -- Make the Inventory expand/collapse arrow (unless TopBar)
 		end
 	end
 
-	local function openClose()
-		if GameplayInputGate.IsActive("Fishing") then
+	local function setOpen(open)
+		if open and GameplayInputGate.IsActive("Fishing") then
 			return
 		end
-		if not next(Dragging) then -- Only continue if nothing is being dragged
-			InventoryFrame.Visible = not InventoryFrame.Visible
-			local nowOpen = InventoryFrame.Visible
-			AdjustHotbarFrames()
-			HotbarFrame.Active = not HotbarFrame.Active
-			for i = 1, NumberOfHotbarSlots do
-				Slots[i]:SetClickability(not nowOpen)
-			end
+		if not open and DragController then
+			DragController:Cancel()
 		end
-
-		if InventoryFrame.Visible then
-			if GamepadEnabled then
-				if GAMEPAD_INPUT_TYPES[UserInputService:GetLastInputType()] then
-					resizeGamepadHintsFrame()
-					gamepadHintsFrame.Visible = true
-				end
-				enableGamepadInventoryControl()
+		if InventoryFrame.Visible == open and BackpackScript.IsOpen == open then
+			return
+		end
+		InventoryFrame.Visible = open
+		AdjustHotbarFrames()
+		UpdateScrollingFrameCanvasSize()
+		HotbarFrame.Active = not open
+		for i = 1, NumberOfHotbarSlots do
+			Slots[i]:SetClickability(not open)
+		end
+		if open and GamepadEnabled then
+			if GAMEPAD_INPUT_TYPES[UserInputService:GetLastInputType()] then
+				resizeGamepadHintsFrame()
+				gamepadHintsFrame.Visible = true
 			end
+			enableGamepadInventoryControl()
 		else
-			if GamepadEnabled then
-				gamepadHintsFrame.Visible = false
-			end
+			gamepadHintsFrame.Visible = false
 			disableGamepadInventoryControl()
 		end
-
-		GameplayInputGate.SetActive("Backpack", MainFrame, InventoryFrame.Visible)
-
-		-- ROBLOX deviation START: change action name from RBX to Backpack
-		if InventoryFrame.Visible then
+		GameplayInputGate.SetActive("Backpack", MainFrame, open)
+		if open then
 			ContextActionService:BindAction("BackpackRemoveSlot", removeHotBarSlot, false, Enum.KeyCode.ButtonX)
 		else
 			ContextActionService:UnbindAction("BackpackRemoveSlot")
 		end
-		-- ROBLOX deviation END
+		BackpackScript.IsOpen = open
+		BackpackScript.StateChanged:Fire(open)
+	end
 
-		BackpackScript.IsOpen = InventoryFrame.Visible
-		BackpackScript.StateChanged:Fire(InventoryFrame.Visible)
+	BackpackScript.Open = function()
+		setOpen(true)
+	end
+	BackpackScript.Close = function()
+		setOpen(false)
+	end
+	local function openClose()
+		setOpen(not InventoryFrame.Visible)
 	end
 
 	-- HotkeyFns[ARROW_HOTKEY] = function()
@@ -2262,6 +2065,155 @@ do -- Make the Inventory expand/collapse arrow (unless TopBar)
 	StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false) -- ROBLOX deviation: disable CoreGui Backpack
 	BackpackScript.OpenClose = openClose -- Exposed
 end
+
+-- Header and interaction are generated in code; slot styling keeps the authored template.
+local title = NewGui("TextLabel", "Title")
+title.Text = "Inventory"
+title.TextSize = Appearance.TitleTextSize
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Size = UDim2.new(1, -80, 0, 44)
+title.Position = UDim2.fromOffset(12, 6)
+title.Parent = InventoryFrame
+local titleStroke = Instance.new("UIStroke")
+titleStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual
+titleStroke.Color = Color3.new(0, 0, 0)
+titleStroke.Thickness = 2
+titleStroke.Parent = title
+
+local function createCloseButton()
+	local indexGui = StarterGui:FindFirstChild("IndexGui_New")
+	local frame = indexGui and indexGui:FindFirstChild("Frame")
+	local template = frame and frame:FindFirstChild("CloseButton")
+	local button
+	if template and template:IsA("GuiButton") then
+		button = template:Clone()
+		local baseZ = button.ZIndex
+		for _, descendant in ipairs(button:GetDescendants()) do
+			if descendant:IsA("GuiObject") then
+				descendant.ZIndex = 5 + math.max(0, descendant.ZIndex - baseZ)
+			end
+			if descendant:IsA("TextLabel") or descendant:IsA("TextButton") or descendant:IsA("TextBox") then
+				descendant:SetAttribute("PreserveBackpackFont", true)
+			end
+		end
+	else
+		warn("Purse: IndexGui_New close-button template missing; using generated close button")
+		button = NewGui("TextButton", "CloseButton")
+		button.Text = "X"
+		button.TextSize = 24
+		button.BackgroundColor3 = Color3.fromRGB(220, 62, 62)
+		button.BackgroundTransparency = 0
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0.16, 0)
+		corner.Parent = button
+	end
+	button.Name = "CloseButton"
+	button.AnchorPoint = Vector2.new(1, 0)
+	button.Position = UDim2.new(1, -6, 0, 6)
+	button.Size = UDim2.fromOffset(44, 44)
+	button.ZIndex = 5
+	button.Visible = true
+	local scale = button:FindFirstChildOfClass("UIScale") or Instance.new("UIScale")
+	scale.Scale = 1
+	scale.Parent = button
+	ButtonAnimation.SetUp(button)
+	return button
+end
+
+local closeButton = createCloseButton()
+closeButton.Modal = BackpackScript.IsOpen
+BackpackScript.StateChanged.Event:Connect(function()
+	-- Release modal input as soon as the window closes, including queued changes.
+	closeButton.Modal = BackpackScript.IsOpen
+end)
+closeButton.Parent = InventoryFrame
+closeButton.Activated:Connect(function()
+	BackpackScript.Close()
+end)
+
+local dragLayer = NewGui("Frame", "DragLayer")
+dragLayer.ZIndex = 40
+dragLayer.Parent = BackpackGui
+
+DragController = BackpackDragController.new({
+	layer = dragLayer,
+	scrolling = ScrollingFrame,
+	canInteract = function()
+		return BackpackGui.Enabled
+			and MainFrame.Visible
+			and not GameplayInputGate.IsActive("Fishing")
+			and not GuiService.MenuIsOpen
+	end,
+	canDrag = function()
+		return InventoryFrame.Visible
+	end,
+	click = function(slot)
+		changeSlot(slot)
+	end,
+	started = function(frame)
+		Dragging[frame] = true
+	end,
+	finished = function(frame)
+		Dragging[frame] = nil
+	end,
+	drop = function(source, point)
+		if not source.Tool then
+			return
+		end
+		local target
+		for i = 1, VisibleHotbarSlots do
+			local candidate = Slots[i]
+			if candidate.Frame.Visible and CheckBounds(candidate.Frame, point.X, point.Y) then
+				target = candidate
+				break
+			end
+		end
+		local inInventory = InventoryFrame.Visible and CheckBounds(ScrollingFrame, point.X, point.Y)
+		local action = BackpackLayout.DropAction(source.Index, target and target.Index, inInventory, VisibleHotbarSlots)
+		if action == "MoveReserved" then
+			local tool, displaced = source.Tool, target.Tool
+			source:Clear()
+			target:Clear()
+			if displaced then
+				MakeSlot(UIGridFrame):Fill(displaced)
+				if IsEquipped(displaced) then
+					UnequipAllTools()
+				end
+			end
+			target:Fill(tool)
+		elseif action == "Swap" then
+			source:Swap(target)
+			if source.Index > VisibleHotbarSlots and IsEquipped(source.Tool) then
+				UnequipAllTools()
+			end
+			if source.Index > NumberOfHotbarSlots and not source.Tool then
+				source:Delete()
+			end
+		elseif action == "MoveToInventory" then
+			source:MoveToInventory()
+		end
+		AdjustHotbarFrames()
+		AdjustInventoryFrames()
+	end,
+})
+for _, slot in ipairs(Slots) do
+	DragController:Bind(slot.Frame, slot)
+end
+HotkeyFns[Enum.KeyCode.Escape.Value] = function(isProcessed)
+	if not isProcessed then
+		BackpackScript.Close()
+	end
+end
+BackpackGui:GetPropertyChangedSignal("Enabled"):Connect(function()
+	if not BackpackGui.Enabled then
+		BackpackScript.Close()
+	end
+end)
+MainFrame:GetPropertyChangedSignal("Visible"):Connect(function()
+	if not MainFrame.Visible then
+		BackpackScript.Close()
+	end
+end)
 
 -- Now that we're done building the GUI, we connect to all the major events
 
@@ -2359,13 +2311,15 @@ local function OnPreferredTransparencyChanged()
 	backgroundFade = BACKGROUND_FADE_DEFAULT * GuiService.PreferredTransparency -- ROBLOX deviation: use GuiService instead of UserGameSettings
 	InventoryFrame.BackgroundTransparency = backgroundFade
 
-	slotFadeLocked = SLOT_FADE_LOCKED_DEFAULT * preferredTransparency
+	slotFadeDefault = Appearance.SlotTransparency * preferredTransparency
 	for _, slot in ipairs(Slots) do
-		slot.Frame.BackgroundTransparency = slotFadeLocked
+		slot:UpdateFading()
 	end
 
 	searchBackgroundFade = SEARCH_BACKGROUND_FADE_DEFAULT * GuiService.PreferredTransparency -- ROBLOX deviation: use GuiService instead of UserGameSettings
-	searchFrame.BackgroundTransparency = searchBackgroundFade
+	if searchFrame then
+		searchFrame.BackgroundTransparency = searchBackgroundFade
+	end
 end
 GuiService:GetPropertyChangedSignal("PreferredTransparency"):connect(OnPreferredTransparencyChanged)
 
@@ -2389,6 +2343,9 @@ local function bindCameraViewport()
 	refreshForViewport()
 end
 
+BackpackGui:GetPropertyChangedSignal("AbsoluteSize"):Connect(refreshForViewport)
+UserInputService:GetPropertyChangedSignal("TouchEnabled"):Connect(refreshForViewport)
+UserInputService:GetPropertyChangedSignal("MouseEnabled"):Connect(refreshForViewport)
 workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(bindCameraViewport)
 bindCameraViewport()
 

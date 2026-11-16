@@ -19,6 +19,8 @@ local HomeGui = PlayerGui:WaitForChild("HomeGui")
 local originalSizes: { [ScreenGui]: UDim2 } = {}
 local activeTweens: { [ScreenGui]: { Tween } } = {}
 local guis: { ScreenGui } = {}
+local transitions: { [ScreenGui]: (boolean, boolean) -> () } = {}
+local openGeneration = 0
 local guiOpenSpeed = 0.18
 local guiCloseSpeed = 0.1
 -- local guiCloseSpeed = 0.3   -- for testing
@@ -336,10 +338,13 @@ local POPUP_GUI_NAMES = {
     "StoreGui",
     "SettingsGui",
     "UpgradeGui",
+    "RodShopGui",
+    "MyFishGui",
     "UpdateLogGui",
     "OnlineRewardGui",
     "DailyRewardGui",
-    "IndexGui",
+    "IndexGui_New",
+    "PetGui",
     "StarterPackGui",
     "SpinningWheelGui",
     "TradeGui",
@@ -464,7 +469,20 @@ function GuiAnimation.Setup(gui: ScreenGui)
     blur_default_size = Blur.Size
 end
 
-function GuiAnimation.CloseGui(gui: ScreenGui)
+function GuiAnimation.SetTransition(gui: ScreenGui, transition: (boolean, boolean) -> ())
+    transitions[gui] = transition
+end
+
+function GuiAnimation.CloseGui(gui: ScreenGui, immediately: boolean?)
+    local transition = transitions[gui]
+    if transition then
+        transition(false, immediately == true)
+        if not gui.Enabled then
+            popNavigation(gui)
+        end
+        return
+    end
+
     local mainFrame = findMainFrame(gui)
     if not mainFrame then
         warn("Gui frame not found:", gui.Name)
@@ -495,28 +513,44 @@ function GuiAnimation.CloseGui(gui: ScreenGui)
     HomeGui.Enabled = true
 end
 
-function GuiAnimation.CloseAllGuis()
+local function closeGuis(except: ScreenGui?): boolean
+    local needsWait = false
     for _, gui in pairs(guis) do
         if not gui:IsA("ScreenGui") then
             warn("Not ScreenGui:", gui.Name)
             continue
         end
-        if not gui.Enabled then continue end
-        coroutine.wrap(GuiAnimation.CloseGui)(gui)
+        if not gui.Enabled or gui == except then continue end
+        if transitions[gui] then
+            GuiAnimation.CloseGui(gui, true)
+        else
+            needsWait = true
+            coroutine.wrap(GuiAnimation.CloseGui)(gui)
+        end
     end
+    return needsWait
 end
 
-local function IsOtherGuiOpen(): boolean
-    for _, gui in pairs(guis) do
-        if gui.Enabled then return true end
-    end
-    return false
+function GuiAnimation.CloseAllGuis()
+    openGeneration += 1
+    closeGuis(nil)
 end
 
 function GuiAnimation.OpenGui(gui: ScreenGui, hideHomeGui: boolean?)
-    if IsOtherGuiOpen() then
-        GuiAnimation.CloseAllGuis()
+    openGeneration += 1
+    local generation = openGeneration
+    local transition = transitions[gui]
+    if closeGuis(if transition then gui else nil) then
         task.wait(guiCloseSpeed + 0.01)
+    end
+    if generation ~= openGeneration then
+        return
+    end
+
+    if transition then
+        transition(true, false)
+        pushNavigation(gui, initialFocuses[gui], backHandlers[gui])
+        return
     end
 
     hideHomeGui = hideHomeGui or false

@@ -74,7 +74,7 @@ function EffectUtil.PlayBodySizeChangeEffect(attachPart: BasePart, target: Model
 		return
 	end
 
-	local effectsFolder = ReplicatedStorage:FindFirstChild("Effects")
+	local effectsFolder = ReplicatedStorage:FindFirstChild("VFX")
 	local characterEffects = effectsFolder and effectsFolder:FindFirstChild("Character")
 	local particleModel = characterEffects and characterEffects:FindFirstChild("BodySizeChange")
 	if not particleModel or not particleModel:IsA("Model") then

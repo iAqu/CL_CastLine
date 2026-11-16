@@ -53,9 +53,7 @@ local ok, result = xpcall(function()
 		landedAt = 0,
 		cameraFrame = CFrame.lookAt(eye, target),
 		cameraFov = 60,
-		statusLabel = {},
-		returnLabel = {},
-		distanceLabel = {},
+		continueLabel = {},
 		impulses = {},
 		trail = { Clear = function() end },
 		_waterTarget = function()

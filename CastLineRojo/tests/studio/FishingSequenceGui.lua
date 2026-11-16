@@ -4,9 +4,12 @@ local player = game:GetService("Players").LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 local Cast = require(storage.Modules.FishingCastSequence)
 local Rig = require(storage.Modules.FishingRigUtil)
+local settings = require(storage.Modules.FishingConfig).Bite
 assert(not workspace:FindFirstChild("FishingRig"), "Finish the active fishing session before validation")
 local gui = assert(playerGui:FindFirstChild("FishingSequenceGui"), "Preset did not clone from StarterGui")
-assert(not gui.Enabled and #gui:GetDescendants() == 9, "Preset has an unexpected initial state")
+assert(not gui:FindFirstChild("CatchStatus"), "Validation requires the preset without CatchStatus")
+assert(gui.LuckMeter.Value and gui.RevealInfo:FindFirstChild("Name").Label and gui.ContinuePrompt,
+	"Preset is missing its result UI")
 local meterGui = playerGui.CastMeterGui
 local holder = meterGui.Meter
 local marker = holder.Bar.Marker
@@ -72,13 +75,22 @@ local ok, err = xpcall(function()
 				sequence.bite.timeline.nibbles = 0
 			end
 			sequence:Update(now, 1 / 60)
+			assert(not gui.RevealInfo.Rarity.Visible, "Rarity row must stay hidden throughout the sequence")
 			states.flash = states.flash or sequence.flash.BackgroundTransparency < 1
 			states.popup = states.popup or sequence.popup.Visible
 			states.blackBars = states.blackBars or sequence.bars[1].Size.Y.Scale > 0
-			states.distance = states.distance or sequence.distanceLabel.Visible
+			states.luck = states.luck or gui.LuckMeter.Visible
+			states.reveal = states.reveal or gui.RevealInfo.Visible
+			if sequence.phase == "Lifting" or sequence.phase == "Caught" then
+				local timeline = sequence.bite.timeline
+				local revealed = sequence.phase == "Caught"
+					or now - timeline.startedAt >= settings.LiftTime * settings.LiftRiseEnd
+				assert(gui.RevealInfo.Visible == revealed and gui.LuckMeter.Visible ~= revealed,
+					"Lucky meter and result card switched at the wrong time")
+			end
 			if sequence.phase == "Bite" then
 				assert(
-					sequence.returnLabel.Visible and sequence.returnLabel.Text == "TAP TO HOOK!",
+					sequence.continueLabel.Visible and sequence.continueLabel.Text == "TAP TO HOOK!",
 					"Hook prompt is missing"
 				)
 				states.hookPrompt = true
@@ -90,16 +102,14 @@ local ok, err = xpcall(function()
 				(catchFish and sequence.phase == "Caught" and sequence:CanReturn(now))
 				or (not catchFish and sequence.phase == "Escaped")
 			then
-				assert(
-					sequence.statusLabel.Visible
-						and sequence.statusLabel.Text == (if catchFish then "CAUGHT!" else "THE FISH GOT AWAY!"),
-					"Result prompt is missing"
-				)
+				assert(gui.RevealInfo.Visible == catchFish, "Result card does not match the catch outcome")
 				if catchFish then
 					assert(
-						sequence.returnLabel.Visible and sequence.returnLabel.Text == "TAP TO RETURN",
+						sequence.continueLabel.Visible and sequence.continueLabel.Text == sequence.continueText,
 						"Return prompt is missing"
 					)
+				else
+					assert(not sequence.continueLabel.Visible, "Escaped fish must not show a return prompt")
 				end
 				states.result = sequence.phase
 				break
@@ -112,7 +122,8 @@ local ok, err = xpcall(function()
 			states.flash
 				and states.popup
 				and states.blackBars
-				and states.distance
+				and states.luck
+				and (not catchFish or states.reveal)
 				and states.hookPrompt
 				and states.result,
 			"Fishing presentation did not complete"

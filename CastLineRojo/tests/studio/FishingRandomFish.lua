@@ -33,7 +33,7 @@ local ok, result = xpcall(function()
 	local initial = CFrame.lookAt(target + Vector3.new(0, 18, -28), target)
 	local owner = setmetatable({
 		folder = folder, bait = bait, forward = Vector3.zAxis, spin = 0,
-		statusLabel = {}, returnLabel = {}, impulses = {},
+		continueLabel = {}, impulses = {},
 		root = { CFrame = CFrame.identity },
 		cameraFrame = initial, cameraFov = 60,
 		shotMode = "Bite", shotStarted = 100, shotDuration = 0, shotFrom = initial, fovFrom = 60,

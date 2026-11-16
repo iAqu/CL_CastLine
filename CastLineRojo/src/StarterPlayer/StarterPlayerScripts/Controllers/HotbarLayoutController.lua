@@ -4,6 +4,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Knit = require(ReplicatedStorage.Packages.Knit)
 local BackpackSlotObserver = require(ReplicatedStorage.Modules.BackpackSlotObserver)
 local ItemToolUtil = require(ReplicatedStorage.Modules.ItemToolUtil)
+local EggToolUtil = require(ReplicatedStorage.Modules.EggToolUtil)
 local PotionToolUtil = require(ReplicatedStorage.Modules.PotionToolUtil)
 
 local LOCAL_PLAYER = Players.LocalPlayer
@@ -30,14 +31,23 @@ local function getBackpack(): Backpack?
 end
 
 local function getDescriptor(tool: Instance?): Descriptor?
-	if not tool or not tool:IsA("Tool") or tool:GetAttribute(PLACEHOLDER_ATTRIBUTE) == true then return nil end
+	if not tool or not tool:IsA("Tool") or tool:GetAttribute(PLACEHOLDER_ATTRIBUTE) == true then
+		return nil
+	end
+	if EggToolUtil.IsEggTool(tool) then
+		return { Kind = "Egg", Id = EggToolUtil.GetInstanceId(tool) }
+	end
 	if PotionToolUtil.IsPotionTool(tool) then
 		local id = PotionToolUtil.GetPotionId(tool)
-		if id then return { Kind = "Potion", Id = id } end
+		if id then
+			return { Kind = "Potion", Id = id }
+		end
 	end
 	if ItemToolUtil.IsItemTool(tool) then
 		local id = ItemToolUtil.GetInstanceId(tool)
-		if id then return { Kind = "Item", Id = id } end
+		if id then
+			return { Kind = "Item", Id = id }
+		end
 	end
 	return nil
 end
@@ -50,12 +60,17 @@ local function getHotbarSlots(): { [number]: TextButton }
 	local result: { [number]: TextButton } = {}
 	local playerGui = LOCAL_PLAYER:FindFirstChildOfClass("PlayerGui")
 	local backpackGui = playerGui and playerGui:FindFirstChild("BackpackGui")
-	local hotbar = backpackGui and backpackGui:FindFirstChild("Hotbar", true)
-	if not hotbar then return result end
-	for _, descendant in ipairs(hotbar:GetDescendants()) do
+	if not backpackGui then
+		return result
+	end
+	for _, descendant in ipairs(backpackGui:GetDescendants()) do
 		if descendant:IsA("TextButton") and descendant:FindFirstChild("ToolReference") then
-			local index = tonumber(descendant.Name)
-			if index and index >= FIRST_ITEM_SLOT and index <= LAST_ITEM_SLOT then result[index] = descendant end
+			-- Reserved slots 8..10 live in the inventory grid on touch devices.
+			-- Their logical identity, and the saved ten-slot layout, never change.
+			local index = descendant:GetAttribute("HotbarSlotIndex")
+			if index and index >= FIRST_ITEM_SLOT and index <= LAST_ITEM_SLOT then
+				result[index] = descendant
+			end
 		end
 	end
 	return result
@@ -67,17 +82,23 @@ local function captureLayout(): { [string]: Descriptor }
 		local reference = slot:FindFirstChild("ToolReference")
 		local tool = reference and reference:IsA("ObjectValue") and reference.Value or nil
 		local descriptor = getDescriptor(tool)
-		if descriptor then layout[tostring(index)] = descriptor end
+		if descriptor then
+			layout[tostring(index)] = descriptor
+		end
 	end
 	return layout
 end
 
 local function requestSave()
-	if restoring or not restoredForCharacter then return end
+	if restoring or not restoredForCharacter then
+		return
+	end
 	saveToken += 1
 	local token = saveToken
 	task.delay(SAVE_DELAY, function()
-		if token ~= saveToken or restoring or not restoredForCharacter then return end
+		if token ~= saveToken or restoring or not restoredForCharacter then
+			return
+		end
 		Knit.GetService("HotbarLayoutService"):SaveHotbarLayout(captureLayout(), HOTBAR_SLOT_COUNT):catch(function(err)
 			warn("HotbarLayoutController: failed to save layout:", err)
 		end)
@@ -121,7 +142,9 @@ local function getNormalizedSavedLayout(savedLayout): { [string]: Descriptor }
 	local result: { [string]: Descriptor } = {}
 	for slot = FIRST_ITEM_SLOT, LAST_ITEM_SLOT do
 		local descriptor = savedLayout[tostring(slot)]
-		if typeof(descriptor) == "table" and (descriptor.Kind == "Item" or descriptor.Kind == "Potion")
+		if
+			typeof(descriptor) == "table"
+			and (descriptor.Kind == "Item" or descriptor.Kind == "Potion" or descriptor.Kind == "Egg")
 			and typeof(descriptor.Id) == "string"
 		then
 			if slot >= FIRST_ITEM_SLOT and slot <= LAST_ITEM_SLOT and not result[tostring(slot)] then
@@ -133,12 +156,18 @@ local function getNormalizedSavedLayout(savedLayout): { [string]: Descriptor }
 end
 
 local function restoreLayout(force: boolean?)
-	if restoring or (restoredForCharacter and not force) then return end
+	if restoring or (restoredForCharacter and not force) then
+		return
+	end
 	local backpack = getBackpack()
-	if not backpack then return end
+	if not backpack then
+		return
+	end
 	local playerData = Knit.GetController("PlayerDataController"):GetData()
 	local savedLayout = playerData and playerData.HotbarLayout
-	if typeof(savedLayout) ~= "table" then savedLayout = {} end
+	if typeof(savedLayout) ~= "table" then
+		savedLayout = {}
+	end
 
 	restoring = true
 	restoredForCharacter = false
@@ -171,9 +200,13 @@ local function restoreLayout(force: boolean?)
 			placeholder.Parent = backpack
 		end
 	end
-	for _, placeholder in ipairs(placeholders) do placeholder:Destroy() end
+	for _, placeholder in ipairs(placeholders) do
+		placeholder:Destroy()
+	end
 	for _, queue in pairs(available) do
-		for _, tool in ipairs(queue) do parentForRestore(tool, backpack) end
+		for _, tool in ipairs(queue) do
+			parentForRestore(tool, backpack)
+		end
 	end
 	task.wait()
 	restoring = false
@@ -182,12 +215,18 @@ local function restoreLayout(force: boolean?)
 end
 
 local function scheduleInitialRestore()
-	if os.clock() > initialRestoreDeadline then return end
-	if restoreQueued then return end
+	if os.clock() > initialRestoreDeadline then
+		return
+	end
+	if restoreQueued then
+		return
+	end
 	restoreQueued = true
 	task.delay(0.15, function()
 		restoreQueued = false
-		if os.clock() > initialRestoreDeadline then return end
+		if os.clock() > initialRestoreDeadline then
+			return
+		end
 		if restoring then
 			scheduleInitialRestore()
 			return
@@ -210,10 +249,14 @@ function HotbarLayoutController:KnitStart()
 	BackpackSlotObserver.new({
 		player = LOCAL_PLAYER,
 		playerGui = LOCAL_PLAYER:WaitForChild("PlayerGui"),
-		isRelevantTool = function(tool: Tool): boolean return getDescriptor(tool) ~= nil end,
+		isRelevantTool = function(tool: Tool): boolean
+			return getDescriptor(tool) ~= nil
+		end,
 		onSlotToolChanged = requestSave,
 		onToolAdded = function(tool)
-			if tool:GetAttribute(RESTORE_MOVE_ATTRIBUTE) == true then return end
+			if tool:GetAttribute(RESTORE_MOVE_ATTRIBUTE) == true then
+				return
+			end
 			scheduleInitialRestore()
 			requestSave()
 		end,

@@ -2,8 +2,8 @@
 local storage = game:GetService("ReplicatedStorage")
 local Cast = require(storage.Modules.FishingCastSequence)
 local Bite = require(storage.Modules.FishingBiteSequence)
-local Elastic = require(storage.Modules.BaitElasticMotion)
 local Audio = require(storage.Modules.FishingAudio)
+local Water = require(storage.Modules.WaterSurfaceUtil)
 local config = require(storage.Modules.FishingConfig)
 local vfx = config.WaterVFX
 local ripplesEnabled = config.WaterRipple.Enabled
@@ -13,29 +13,34 @@ local function near(a, b)
 	assert(math.abs(a - b) < 0.0001, tostring(a) .. " ~= " .. tostring(b))
 end
 
-local function create()
+local function create(baitHeight)
+	local surfaceY = assert(Water.GetWaterSurfaceY(), "Water surface is missing")
+	local target = Vector3.new(1838, surfaceY, 1010)
 	local folder = Instance.new("Folder")
 	folder.Name, folder.Parent = "FishingWaterVFXValidation", workspace
 	local bait = storage.Models.FishBait["1"]["1"]:Clone()
 	bait.Anchored, bait.Parent = true, folder
-	local target = Vector3.new(1838, 772, 1010)
+	local rig = Instance.new("Model")
+	rig.Parent = folder
+	if baitHeight then
+		bait.Size = Vector3.new(bait.Size.X, baitHeight, bait.Size.Z)
+	end
 	local owner = setmetatable({
 		folder = folder,
 		bait = bait,
 		forward = Vector3.zAxis,
+		launch = target - Vector3.zAxis * 55,
 		spin = 0,
-		statusLabel = {},
-		returnLabel = {},
-		distanceLabel = {},
+		continueLabel = {},
 		trail = {},
+		track = { Stop = function() end },
+		rig = rig,
+		options = {},
 		cameraFrame = CFrame.identity,
 		distance = 55,
 		events = {},
 		soundsPlayed = {},
 		legacySplashes = 0,
-		_waterTarget = function()
-			return target
-		end,
 		_presentBait = function() end,
 		_impulse = function() end,
 		_shot = function() end,
@@ -48,34 +53,12 @@ local function create()
 		_splash = function(self)
 			self.legacySplashes += 1
 		end,
-		_playRarityVFX = function(self, now, position)
-			local effect = Cast._playRarityVFX(self, now, position)
-			assert(effect and effect.model:IsA("BasePart"), "Missing Part rarity VFX")
-			local source = storage.VFX.AnimalRoller[config.RarityVFX.Template]
-			local part = effect.model
-			assert(part.Parent == self.folder and not part:IsDescendantOf(self.bite.fish), "Rarity VFX altered fish bounds")
-			assert(part.Anchored and not part.CanCollide and not part.CanTouch and not part.CanQuery, "Unsafe rarity root")
-			assert(part.Size == source.Size and part.Color == source.Color, "Rarity template appearance changed")
-			assert(part:GetPivot().Rotation:FuzzyEq(source:GetPivot().Rotation, 0.0001), "Rarity rotation changed")
-			local emitters = 0
-			for _, emitter in ipairs(part:GetDescendants()) do
-				if emitter:IsA("ParticleEmitter") then
-					local original = source:FindFirstChild(emitter.Name, true)
-					assert(emitter.LockedToPart == original.LockedToPart, "Rarity particle locking changed")
-					assert(emitter:GetAttribute("EmitCount") == original:GetAttribute("EmitCount"), "Rarity burst count changed")
-					assert(not emitter.Enabled, "One-shot rarity emitter left enabled")
-					emitters += 1
-				end
-			end
-			assert(emitters == 7, "Rarity emitters missing")
-			table.insert(self.events, { name = config.RarityVFX.Template, at = now, effect = effect })
-			return effect
-		end,
-		_playWaterVFX = function(self, now, name, position, direction)
-			local effect = Cast._playWaterVFX(self, now, name, position, direction)
+		_playRarityVFX = function() end, -- 稀有度演出由 FishingRarityVFX 单独验证。
+		_playWaterVFX = function(self, now, name, position, direction, fishScale)
+			local effect = Cast._playWaterVFX(self, now, name, position, direction, fishScale)
 			assert(effect, "Missing test VFX: " .. name)
 			local source = storage.VFX.WaterVFX[name]
-			local scale = if name == vfx.Struggle then vfx.StruggleScale else 1
+			local scale = if name == vfx.Struggle then vfx.StruggleScale * math.max(1, fishScale or 1) else 1
 			near(effect.model:GetScale(), source:GetScale() * scale)
 			assert((effect.model:GetPivot().Position - position).Magnitude < 0.001, "VFX position changed")
 			for _, part in ipairs(effect.model:GetDescendants()) do
@@ -87,6 +70,7 @@ local function create()
 				end
 			end
 			if name == vfx.Struggle then
+				near(fishScale, self.bite.scale)
 				local pose = self.bite.pendingPose
 				local frame, baitPosition = self.bite:_pose(pose.phase, pose.elapsed, target, now, pose.request)
 				local centered = target:Lerp(baitPosition, vfx.StrugglePositionScale)
@@ -97,7 +81,7 @@ local function create()
 					((position - target) * flat).Magnitude <= ((baitPosition - target) * flat).Magnitude * 0.6 + 0.001,
 					"Struggle VFX spread beyond the central 60% of the orbit"
 				)
-				near(position.Y, target.Y - Elastic.BaseSize(self).Y * 0.15)
+				near(position.Y, target.Y)
 				local forward = (frame.LookVector * Vector3.new(1, 0, 1)).Unit
 				assert(effect.model:GetPivot().LookVector:Dot(forward) > 0.9999, "Struggle VFX heading drifted")
 			end
@@ -116,7 +100,7 @@ local function create()
 	return owner, target
 end
 
-local function begin(owner, nibbles)
+local function begin(owner, nibbles, template)
 	local random = {
 		NextInteger = function(_, low)
 			return if low == 0 then nibbles or 0 else 1
@@ -125,7 +109,7 @@ local function begin(owner, nibbles)
 			return if low < 0 then 0 else 1
 		end,
 	}
-	owner.bite = Bite.new(owner, 0, 0, random)
+	owner.bite = Bite.new(owner, 0, 0, random, nil, template)
 	return owner.bite.timeline
 end
 
@@ -139,7 +123,90 @@ local function count(owner, name)
 	return result
 end
 
+local function checkIdleWaterVFX()
+	local idle, surface = create()
+	local timeline = begin(idle, 1)
+	timeline:_enter("Waiting", 0)
+	vfx.IdleEnabled = false
+	idle:_updateIdleWaterVFX(0)
+	assert(not idle.folder:FindFirstChild(vfx.Idle), "Idle VFX played while disabled")
+	vfx.IdleEnabled = true
+	timeline:_enter("Settling", 0.5)
+	idle:_updateIdleWaterVFX(0.5)
+	assert(not idle.folder:FindFirstChild(vfx.Idle), "Idle VFX played during landing")
+	timeline:_enter("Waiting", 1)
+	idle:_updateIdleWaterVFX(1)
+	local ripple = assert(idle.folder:FindFirstChild(vfx.Idle), "Idle VFX missing")
+	local childCount = #idle.folder:GetChildren()
+	near((ripple:GetPivot().Position - surface).Magnitude, 0)
+	local emitter = assert(ripple:FindFirstChildWhichIsA("ParticleEmitter", true))
+	local templateEmitter = storage.VFX.WaterVFX[vfx.Idle]:FindFirstChildWhichIsA("ParticleEmitter", true)
+	assert(emitter.Enabled and emitter.Rate == templateEmitter.Rate, "Idle VFX lost continuous emission")
+	timeline:_enter("Approaching", 2)
+	idle:_updateIdleWaterVFX(2)
+	timeline:_enter("Holding", 4)
+	idle:_updateIdleWaterVFX(4)
+	idle:_updateWaterEffects(4)
+	assert(idle.folder:FindFirstChild(vfx.Idle) == ripple, "Idle VFX was recreated or expired")
+	assert(#idle.folder:GetChildren() == childCount, "Idle VFX was duplicated")
+	for index, phase in ipairs({ "Nibbling", "Bite", "Reeling" }) do
+		local at = 5 + 2 * (index - 1)
+		timeline:_enter(phase, at)
+		idle:_updateIdleWaterVFX(at)
+		assert(ripple.Parent == nil and not idle.folder:FindFirstChild(vfx.Idle), "Idle VFX survived " .. phase)
+		timeline:_enter("Holding", at + 1)
+		idle:_updateIdleWaterVFX(at + 1)
+		ripple = assert(idle.folder:FindFirstChild(vfx.Idle), "Idle VFX did not resume")
+	end
+	idle:Destroy()
+	assert(ripple.Parent == nil, "Idle VFX survived session teardown")
+end
+
 local ok, result = xpcall(function()
+	local idleEnabled = vfx.IdleEnabled
+	local idleOK, idleError = pcall(checkIdleWaterVFX)
+	vfx.IdleEnabled = idleEnabled
+	assert(idleOK, idleError)
+	local scaling, scalingTarget = create()
+	local source = storage.VFX.WaterVFX[vfx.Struggle]
+	local defaultEffect = Cast._playWaterVFX(scaling, 0, vfx.Struggle, scalingTarget)
+	near(defaultEffect.model:GetScale(), source:GetScale() * vfx.StruggleScale)
+	for _, case in ipairs({ { 0.5, 0.75 }, { 1, 0.75 }, { 2, 1.5 } }) do
+		local effect = Cast._playWaterVFX(scaling, 0, vfx.Struggle, scalingTarget, nil, case[1])
+		near(effect.model:GetScale(), source:GetScale() * case[2])
+	end
+	local lightEffect = Cast._playWaterVFX(scaling, 0, vfx.Light, scalingTarget, nil, 2)
+	near(lightEffect.model:GetScale(), storage.VFX.WaterVFX[vfx.Light]:GetScale())
+	scaling:_updateWaterEffects(vfx.Lifetime + 0.01)
+	assert(#scaling.waterVFX == 0 and defaultEffect.model.Parent == nil, "Scaled struggle VFX leaked")
+	scaling:Destroy()
+	local fishTemplate = Bite.SelectFishTemplate(storage.Models.Fish, Random.new(42))
+	local bodySize = fishTemplate:GetAttribute("FishBodySize") or fishTemplate.PrimaryPart.Size
+	for _, baitHeight in ipairs({ 1, 5 }) do
+		local owner, surface = create(baitHeight)
+		local target = owner:_waterTarget()
+		near(target.Y, surface.Y)
+		local timeline = begin(owner, 1, fishTemplate)
+		local bite = owner.bite
+		local restingY = surface.Y - bodySize.Y * 0.5 - config.Bite.WaterClearance
+		local approachStart = bite:_basePose("Approaching", 0, target)
+		assert(approachStart.Position.Y < restingY, "Fish must approach from deeper water")
+		local holding, baitPosition = bite:_basePose("Holding", 0, target)
+		near(baitPosition.Y, surface.Y)
+		for _, pose in ipairs({
+			(bite:_basePose("Approaching", timeline.approachTime, target)),
+			holding,
+			(bite:_repositionPose(1, math.huge, target)),
+			(bite:_struggleFrame(timeline.struggleTime, target)),
+		}) do
+			assert(math.abs(pose.Position.Y - restingY) < 0.001, "Swim depth must be relative to the Top surface")
+		end
+		owner._startBiteRound = function() end
+		owner:_land(10)
+		near(owner.events[1].effect.model:GetPivot().Position.Y, surface.Y)
+		owner:Destroy()
+	end
+
 	local entry, target = create()
 	entry._startBiteRound = function() end
 	entry:_land(10)
@@ -148,9 +215,9 @@ local ok, result = xpcall(function()
 			and #(entry.ripples or {}) == (if ripplesEnabled then 3 else 0),
 		"Landing feedback changed"
 	)
-	assert(entry.soundsPlayed.Splash == 1 and entry.soundsPlayed.FovImpact == 1, "Landing audio changed")
+	assert(entry.soundsPlayed.Splash == 1, "Landing audio changed")
 	local effect = entry.events[1].effect
-	near(effect.model:GetPivot().Position.Y, target.Y - Elastic.BaseSize(entry).Y * 0.15)
+	near(effect.model:GetPivot().Position.Y, target.Y)
 	assert(#effect.emissions == 1, "Entry Wind should be the only delayed emission")
 	local wind = effect.emissions[1]
 	assert(wind.emitter.Name == "Wind" and not wind.emitted and not wind.emitter.Enabled, "Wind delay ignored")
@@ -263,28 +330,15 @@ local ok, result = xpcall(function()
 			local liftAt = hookAt + config.Bite.StruggleTime + 0.001
 			owner.bite:Update(liftAt, true)
 			assert(count(owner, vfx.Struggle) == expected and owner.legacySplashes == 0, "Lift retained legacy splash")
-			assert(count(owner, vfx.Exit) == 1 and count(owner, config.RarityVFX.Template) == 0, "Exit or presentation timing changed")
+			assert(count(owner, vfx.Exit) == 1, "Exit or presentation timing changed")
 			local exit = owner.events[#owner.events].effect
-			near(exit.model:GetPivot().Position.Y, owner:_waterTarget().Y - Elastic.BaseSize(owner).Y * 0.15)
+			near(exit.model:GetPivot().Position.Y, owner:_waterTarget().Y)
 			owner.bite:Present()
-			local rarity = assert(owner.bite.rarityVFX, "Lift did not create rarity VFX")
-			local center = owner.bite.fish:GetBoundingBox()
-			assert((rarity.model:GetPivot().Position - center.Position).Magnitude < 0.001, "Rarity emitted from a stale fish pose")
-			near(rarity.started, exit.started)
-			local firstPosition = rarity.model:GetPivot().Position
 			owner.bite:Present()
-			owner.bite:Update(liftAt)
 			owner.bite:Update(liftAt + 0.15)
-			center = owner.bite.fish:GetBoundingBox()
-			assert((rarity.model:GetPivot().Position - center.Position).Magnitude < 0.001, "Rarity did not follow fish center")
-			assert((rarity.model:GetPivot().Position - firstPosition).Magnitude > 0.1, "Follow fixture did not move")
-			assert(rarity.model:GetPivot().Rotation:FuzzyEq(rarity.rotation, 0.0001), "Rarity rotated with fish")
-			assert(count(owner, vfx.Exit) == 1 and count(owner, config.RarityVFX.Template) == 1, "Exit or rarity replayed")
+			assert(count(owner, vfx.Exit) == 1, "Exit replayed")
 			owner:_updateWaterEffects(liftAt + vfx.Lifetime + 0.01)
 			assert(#owner.waterVFX == 0, "Finished struggle VFX leaked")
-			assert(rarity.model.Parent == nil, "Rarity VFX survived expiry")
-			owner.bite:Present()
-			assert(count(owner, config.RarityVFX.Template) == 1, "Expired rarity VFX restarted")
 			owner:Destroy()
 			cadenceCases += 1
 			task.wait()
@@ -304,9 +358,7 @@ local ok, result = xpcall(function()
 	assert(count(skipped, vfx.Struggle) == 2, "Long frame replayed missed struggle effects")
 	skipped.bite:Update(hookAt + config.Bite.StruggleTime + 0.01)
 	assert(count(skipped, vfx.Struggle) == 2, "Expired struggle spawned another effect")
-	local interruptedRarity = assert(skipped.bite.rarityVFX).model
 	skipped.bite:Destroy()
-	assert(interruptedRarity.Parent == nil, "Interrupted fish session left rarity VFX")
 	skipped:Destroy()
 	local expired = create()
 	timeline = begin(expired, 0)
@@ -347,22 +399,11 @@ local ok, result = xpcall(function()
 	assert(effect.model.Parent == nil and #reel.waterVFX == 0, "Empty reel leaked VFX")
 	reel:Destroy()
 
-	-- 缺失资源只 warning；Common 失败后同轮不反复尝试。
+	-- 缺失水面资源只 warning。
 	local missing = create()
 	begin(missing, 0)
-	missing._playRarityVFX = Cast._playRarityVFX
 	assert(Cast._playWaterVFX(missing, 0, "MissingExitVFX", missing:_waterTarget()) == nil, "Missing VFX did not skip")
-	local savedTemplate = config.RarityVFX.Template
-	config.RarityVFX.Template = "MissingRarityVFX"
-	local missingOK, missingError = pcall(function()
-		missing.bite.timeline:_enter("Lifting", 10, config.Bite.LiftTime)
-		missing.bite:Update(10)
-		missing.bite:Update(10.01)
-	end)
-	config.RarityVFX.Template = savedTemplate
-	assert(missingOK, missingError)
-	assert(missing.bite.rarityVFXPlayed and not missing.bite.rarityVFX, "Missing rarity did not skip")
-	assert(missing.warnedWaterVFX["AnimalRoller.MissingRarityVFX"], "Missing rarity did not warn")
+	assert(missing.warnedWaterVFX["WaterVFX.MissingExitVFX"], "Missing water VFX did not warn")
 	missing:Destroy()
 	return {
 		passed = true,
@@ -372,8 +413,7 @@ local ok, result = xpcall(function()
 		trueBiteDeduplication = true,
 		longFrames = true,
 		cleanup = true,
-		exitAndRarityOnce = true,
-		rarityFollow = true,
+		exitOnce = true,
 		missingResources = true,
 		legacyReel = true,
 	}

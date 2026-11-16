@@ -51,24 +51,22 @@ local function getRecordPrice(record): number?
 		return nil
 	end
 
-	local price = tonumber(record.Price)
-	if not price then
-		local weight = tonumber(record.Weight)
-		local conditionId = record.ConditionId
-		local condition = typeof(conditionId) == "string" and ConditionsData[conditionId] or nil
-		if not weight or weight <= 0 or not condition then
-			return nil
-		end
-		price = ItemStatUtil.CalculatePrice(
-			item,
-			weight,
-			condition.ValueMult,
-			MutationDataUtil.GetPriceRate(record.MutationId)
-		)
+	local weight = tonumber(record.Weight)
+	local conditionId = record.ConditionId
+	local condition = typeof(conditionId) == "string" and ConditionsData[conditionId] or nil
+	if not weight or weight <= 0 or weight ~= weight or weight == math.huge or not condition then
+		return nil
 	end
+	local price = ItemStatUtil.CalculatePrice(
+		item,
+		weight,
+		condition.ValueMult,
+		MutationDataUtil.GetPriceRate(record.MutationId)
+	)
 	if price ~= price or price < 0 or price == math.huge then
 		return nil
 	end
+	record.Price = price
 	return math.round(price)
 end
 
@@ -109,9 +107,9 @@ local function finishSale(player: Player, itemIds: { string }, totalCash: number
 		profile.Data.Items[instanceId] = nil
 		soldIds[instanceId] = true
 	end
+	Knit.GetService("PlotFishService"):RefreshInventoryIncome(player)
 	destroyItemTools(player, soldIds)
 	Knit.GetService("HotbarLayoutService"):RemoveItemDescriptors(player, itemIds)
-	Knit.GetService("CarryCapacityService"):RefreshPlayer(player)
 	local earnedCash = math.round(totalCash * GamePassEffectUtil.GetSaleMultiplier(profile.Data))
 	PlayerDataService:AdjustWins(player, earnedCash, false)
 

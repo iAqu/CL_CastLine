@@ -80,19 +80,27 @@ for _, f in variants do
 	replacement.Parent = storage.Models.Fish
 	table.insert(swaps, { old, replacement })
 end
-local function measure(fish, data, scale, frame, fov)
-	local result = 0
-	local count = 0
+local function projection(frame, fov, viewport)
 	local tangent = math.tan(math.rad(fov * 0.5))
-	local aspect = camera.ViewportSize.X / math.max(camera.ViewportSize.Y, 1)
-	local view = frame:Inverse()
+	return {
+		view = frame:Inverse(),
+		tangent = tangent,
+		horizontalTangent = tangent * viewport.X / math.max(viewport.Y, 1),
+	}
+end
+
+local function measure(fish, data, scale, projections)
+	local result = 0
+	local lowest = math.huge
 	local function check(world)
-		local p = view:PointToWorldSpace(world)
-		local ratio = if p.Z >= 0
-			then math.huge
-			else math.max(math.abs(p.X) / (-p.Z * tangent * aspect), math.abs(p.Y) / (-p.Z * tangent))
-		result = math.max(result, ratio)
-		count += 1
+		lowest = math.min(lowest, world.Y)
+		for _, shot in projections do
+			local p = shot.view:PointToWorldSpace(world)
+			local ratio = if p.Z >= 0
+				then math.huge
+				else math.max(math.abs(p.X) / (-p.Z * shot.horizontalTangent), math.abs(p.Y) / (-p.Z * shot.tangent))
+			result = math.max(result, ratio)
+		end
 	end
 	if not data then
 		for _, p in fish:GetDescendants() do
@@ -112,7 +120,11 @@ local function measure(fish, data, scale, frame, fov)
 			local transforms = {}
 			for i, name in data.bones do
 				local b = p:FindFirstChild(name, true)
-				transforms[i] = b.TransformedWorldCFrame * b.WorldCFrame:Inverse() * p.CFrame
+				local bind, parent = b.CFrame, b.Parent
+				while parent:IsA("Bone") do
+					bind, parent = parent.CFrame * bind, parent.Parent
+				end
+				transforms[i] = b.TransformedWorldCFrame * bind:Inverse()
 			end
 			for vi, v in spec.vertices do
 				local pos = Vector3.new(v[1], v[2], v[3]) * scale
@@ -125,7 +137,8 @@ local function measure(fish, data, scale, frame, fov)
 			end
 		end
 	end
-	return result, count
+	assert(lowest < math.huge, "Fish has no visible geometry")
+	return result, lowest
 end
 
 task.spawn(function()
@@ -145,8 +158,7 @@ task.spawn(function()
 				folder = folder,
 				forward = Vector3.zAxis,
 				bait = bait,
-				statusLabel = {},
-				returnLabel = {},
+					continueLabel = {},
 				root = { CFrame = CFrame.identity },
 				impulses = {},
 				spin = 0,
@@ -170,7 +182,9 @@ task.spawn(function()
 				_impulse = function() end,
 				_setPhase = function() end,
 			}, Cast)
-			active = Bite.new(owner, 100, 100, Random.new(index))
+			active = Bite.new(owner, 100, 100, Random.new(index), nil, storage.Models.Fish[template.Name], {
+				DefaultWeight = 1,
+			})
 			owner.bite = active
 			local bodySize = template:GetAttribute("FishBodySize") or template.PrimaryPart.Size
 			assert(math.abs(active.halfLength - bodySize.Z * 0.5) < 0.0001, "Whole-fish length ignored")
@@ -186,6 +200,8 @@ task.spawn(function()
 			local clips = {}
 			local moved = {}
 			local maxFraming = 0
+			local minClearance = math.huge
+			local framedSamples = 0
 			local framingByPhase = {}
 			local samples = 0
 			local maxMouthError = 0
@@ -209,12 +225,16 @@ task.spawn(function()
 				if phase == "Nibbling" then
 					active.timeline.nibbleIndex = 1
 					duration = active.timeline:GetNibbleTiming().duration
+				elseif phase == "Lifting" then
+					active:SetCaughtWeight(1e9)
+					assert(active.catchScale == active.catchScaleLimit, "Showcase QA did not use the maximum fish scale")
 				end
 				if entry[3] then
 					active.motion.mirror = entry[3]
 				end
 				active.timeline:_enter(phase, startedAt, duration)
 				local phaseFraming = 0
+				local settledEye
 				for sample = 0, 19 do
 					local elapsed = duration * sample / 20
 					local now = startedAt + elapsed
@@ -257,11 +277,42 @@ task.spawn(function()
 								< 0.002,
 							"Line lost mouth"
 						)
-						if sample % 4 == 0 then
-							local ratio =
-								measure(active.fish, bodyGeometry, active.scale, camera.CFrame, camera.FieldOfView)
-							phaseFraming = math.max(phaseFraming, ratio)
-							maxFraming = math.max(maxFraming, ratio)
+						local closeupEntry, pullback = owner:_showcaseProgress(now)
+						if closeupEntry == 1 and pullback == 0 then
+							assert(
+								math.abs((camera.CFrame.Position - active.showcasePosition).Magnitude
+									- settings.ShowcaseCloseupDistance) < 0.1,
+								"Fish size pushed the fixed closeup camera away"
+							)
+						end
+						if phase == "Caught" and pullback == 1 then
+							settledEye = settledEye or owner.cameraFrame.Position
+							assert(
+								(owner.cameraFrame.Position - settledEye).Magnitude < 0.001,
+								"Fish motion changed the base showcase camera distance"
+							)
+						end
+						local apexSample = phase == "Lifting" and sample == math.ceil(settings.LiftRiseEnd * 20)
+						if sample % 2 == 0 or apexSample then
+							local projections = { projection(camera.CFrame, camera.FieldOfView, camera.ViewportSize) }
+							if phase == "Caught" then
+								for _, viewport in { Vector2.new(390, 844), Vector2.new(1877, 1240) } do
+									local view = owner:_showcaseCamera(target, viewport)
+									table.insert(projections, projection(view, settings.ShowcaseFov, viewport))
+								end
+							end
+							local ratio, lowest = measure(active.fish, bodyGeometry, active.scale, projections)
+							if pullback == 1 then
+								assert(ratio < 1, "Showcase clipped the fish after pulling back")
+								framedSamples += 1
+								phaseFraming = math.max(phaseFraming, ratio)
+								maxFraming = math.max(maxFraming, ratio)
+							end
+							if phase == "Caught" or apexSample or elapsed / settings.LiftTime >= settings.LiftRiseEnd then
+								local clearance = lowest - target.Y
+								assert(clearance >= settings.WaterClearance - 0.001, "Showcase fish dipped into the water")
+								minClearance = math.min(minClearance, clearance)
+							end
 						end
 					end
 					samples += 1
@@ -272,6 +323,7 @@ task.spawn(function()
 			for name in settings.Motion.Animation.Clips do
 				assert(clips[name], "Gameplay missed " .. name)
 			end
+			assert(framedSamples > 0, "Showcase never completed its pullback")
 			for _, name in (bodyGeometry and bodyGeometry.bones or settings.Motion.Animation.Bones) do
 				if name ~= "FishBody" then
 					assert(moved[name], "Gameplay did not move " .. name)
@@ -301,6 +353,7 @@ task.spawn(function()
 				visibleParts = partCount,
 				clips = clips,
 				maxMouthError = maxMouthError,
+				minWaterClearance = minClearance,
 				framingByPhase = framingByPhase,
 				maxFramingRatio = maxFraming,
 				framingPassed = maxFraming < 0.98,

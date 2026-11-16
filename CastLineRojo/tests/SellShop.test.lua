@@ -18,7 +18,6 @@ assert(service:find("getPlacedItemIds(profile.Data)", 1, true), "Displayed items
 assert(service:find("not placed[instanceId]", 1, true), "Bulk sales must preserve displayed items")
 assert(service:find("profile.Data.Items[instanceId] = nil", 1, true), "Sold records must be removed from Items")
 assert(service:find("RemoveItemDescriptors(player, itemIds)", 1, true), "Sold items must be removed from the saved hotbar")
-assert(service:find("RefreshPlayer(player)", 1, true), "Sales must refresh carry weight")
 assert(service:find("AdjustWins(player, totalCash, false)", 1, true), "Sales must award authoritative Cash without TotalWins progress")
 assert(service:find("if price ~= price or price < 0 or price == math.huge", 1, true), "Invalid prices must be rejected")
 assert(service:find("You don't have any items to sell!", 1, true), "Empty bulk sales need an English response")

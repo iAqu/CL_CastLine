@@ -90,7 +90,7 @@ local function normalizeItemRecord(record): (any?, any?)
 		return nil, nil
 	end
 	local mutationId = MutationDataUtil.NormalizeMutationId(record.MutationId)
-	local price = tonumber(record.Price) or ItemStatUtil.CalculatePrice(
+	local price = ItemStatUtil.CalculatePrice(
 		item,
 		weight,
 		condition.ValueMult,
@@ -286,29 +286,30 @@ local function transferItem(sender: Player, recipient: Player, instanceId: strin
 	end
 	recipientProfile.Data.Items[instanceId] = transferredRecord
 
-	local tool = ItemToolUtil.Create(instanceId, item, itemData)
+	local tool = ItemToolUtil.Create(instanceId, item, itemData, recipient)
 	if not tool then
 		recipientProfile.Data.Items[instanceId] = nil
 		senderProfile.Data.Items[instanceId] = transferredRecord
 		local senderBackpack = sender:FindFirstChildOfClass("Backpack")
 		if senderBackpack then
-			local restoredTool = ItemToolUtil.Create(instanceId, item, itemData)
+			local restoredTool = ItemToolUtil.Create(instanceId, item, itemData, sender)
 			if restoredTool then
 				restoredTool.Parent = senderBackpack
 			end
 		end
+		Knit.GetService("PlotFishService"):RefreshInventoryIncome(sender)
+		Knit.GetService("PlotFishService"):RefreshInventoryIncome(recipient)
 		return false, "Gift failed."
 	end
 	tool.Parent = backpack
+	Knit.GetService("PlotFishService"):RefreshInventoryIncome(sender)
+	Knit.GetService("PlotFishService"):RefreshInventoryIncome(recipient)
 
 	if typeof(recipientProfile.Data.NewItemTagSeenLog) ~= "table" then
 		recipientProfile.Data.NewItemTagSeenLog = {}
 	end
 	recipientProfile.Data.NewItemTagSeenLog[item.ItemID] = true
 
-	local carryCapacityService = Knit.GetService("CarryCapacityService")
-	carryCapacityService:RefreshPlayer(sender)
-	carryCapacityService:RefreshPlayer(recipient)
 	Knit.GetService("IndexService"):DiscoverItem(recipient, item.ItemID)
 
 	return true, nil

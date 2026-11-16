@@ -5,53 +5,45 @@ local function read(path: string): string
 	return source
 end
 
-local config = read("src/ReplicatedStorage/Modules/UpgradeShopConfig.lua")
-local service = read("src/ServerScriptService/Services/UpgradeService.lua")
-local controller = read("src/StarterPlayer/StarterPlayerScripts/Controllers/GUI/UpgradeShopGuiController.lua")
-local highlightUtil = read("src/ReplicatedStorage/Modules/ShopHighlightUtil.lua")
-local template = read("src/ReplicatedStorage/PlayerData/Template.lua")
+local config = assert(loadstring(read("src/ReplicatedStorage/Modules/UpgradeShopConfig.lua")))()
+local upgradeService = read("src/ServerScriptService/Services/UpgradeService.lua")
+local playerDataService = read("src/ServerScriptService/Services/PlayerDataService.lua")
 
-local function unitPrice(coefficient: number, exponent: number, level: number): number
-	return math.floor(coefficient * (level + 1) ^ exponent + 0.5)
-end
+local profile = { Data = { Wins = 10000, Upgrades = { Upgrade_MoveSpeed = 3, Upgrade_WinsBoost = 2 } } }
+local services = {
+	ReplicatedStorage = {
+		Packages = { Knit = { CreateService = function(service) return service end, CreateSignal = function() return {} end } },
+		Modules = { Constants = {}, UpgradeShopConfig = config },
+	},
+	ServerScriptService = { Services = { PlayerDataService = {
+		GetProfile = function() return profile end,
+		AdjustWins = function() error("Retired upgrades must never charge the player") end,
+	} } },
+}
+local service = assert(load(upgradeService, "UpgradeService", "t", setmetatable({
+	game = { GetService = function(_, name) return services[name] end },
+	require = function(module) return assert(module) end,
+}, { __index = getfenv() })))()
+service.Client.Server = service
+assert(not config.IsValidUpgradeId("Upgrade_MoveSpeed"), "The retired speed upgrade must be invalid")
+local result = service.Client:PurchaseUpgrade({}, "Upgrade_MoveSpeed", 1)
+assert(not result.ok and result.message == "Invalid upgrade", "A stale speed purchase must be rejected")
+assert(not service:SetUpgradeLevel({}, "Upgrade_MoveSpeed", 4).ok, "The level setter must reject the retired speed upgrade")
+assert(profile.Data.Wins == 10000 and profile.Data.Upgrades.Upgrade_MoveSpeed == 3, "Rejecting an upgrade must leave the profile intact")
 
-assert(unitPrice(20, 2.5, 0) == 20, "Carry level 0 unit price must be 20")
-assert(unitPrice(20, 2.5, 1) == 113, "Carry level 1 unit price must be 113")
-assert(unitPrice(50, 3, 0) == 50, "Speed level 0 unit price must be 50")
-assert(unitPrice(50, 3, 1) == 400, "Speed level 1 unit price must be 400")
-assert(unitPrice(20, 2.5, 0) * 10 == 200, "Carry level 0 +10 bundle must cost 200")
-assert(unitPrice(50, 3, 0) * 10 == 500, "Speed level 0 +10 bundle must cost 500")
-assert(config:find("BASE_CARRY_WEIGHT = 20", 1, true), "Base carry weight must be 20kg")
-assert(config:find("Coefficient = 20", 1, true) and config:find("Exponent = 2.5", 1, true), "Carry price curve must match the design")
-assert(config:find("Coefficient = 50", 1, true) and config:find("Exponent = 3", 1, true), "Speed price curve must match the design")
-assert(config:find("{ 1, 5, 10 }", 1, true), "The shop must expose +1, +5 and +10 bundles")
-assert(config:find("GetUnitPrice(upgradeId, currentLevel) * amount", 1, true), "Bundle prices must follow the reference shop's current unit price multiplier")
-assert(service:find("UpgradeShopConfig.IsValidUpgradeId", 1, true), "The server must validate upgrade ids")
-assert(service:find("UpgradeShopConfig.IsValidBundleAmount", 1, true), "The server must validate bundle amounts")
-assert(service:find("function UpgradeService:SetUpgradeLevel", 1, true), "The service must support administrator level overrides")
-assert(service:find("level >= 0", 1, true), "Administrator level overrides must allow level zero")
-assert(service:find("level % 1 == 0", 1, true), "Administrator level overrides must reject decimal levels")
-assert(service:find('"Invalid upgrade"', 1, true), "Administrator level overrides must reject unknown upgrade IDs")
-assert(service:find('"Player data is unavailable"', 1, true), "Administrator level overrides must reject unloaded profiles")
-assert(service:find("profile.Data.Upgrades[upgradeId] = newLevel", 1, true), "Administrator level overrides must set the exact requested level")
-assert(service:find("self.Client.Upgrade:Fire(player, upgradeId, true, message, newLevel)", 1, true), "Administrator level overrides must sync the final level")
-assert(service:find("profile.Data.Wins < price", 1, true), "The server must authoritatively check funds")
-assert(service:find("currentUpgradeLevel + typedAmount", 1, true), "Purchases must grant the selected fixed amount")
-assert(controller:find('WaitForChild("UpgradeShop", 20)', 1, true), "The controller must use Workspace.Areas.Items.UpgradeShop")
-assert(controller:find('FindFirstChild("HighlightModel")', 1, true), "Only UpgradeShop.HighlightModel may be highlighted")
-assert(controller:find('PROMPT_ANCHOR_NAME = "UpgradeShopPromptAnchor"', 1, true), "The prompt needs a stable visible anchor")
-assert(controller:find('promptAnchor = Instance.new("Part")', 1, true), "The custom prompt renderer needs a BasePart adornee")
-assert(controller:find("promptAnchor.CFrame = CFrame.new(highlightTarget:GetPivot().Position)", 1, true), "The prompt anchor must align with the highlighted shop model")
-assert(controller:find("PromptUtil.Ensure(promptAnchor, PROMPT_NAME", 1, true), "The shop must use the shared custom prompt")
-assert(controller:find('ActionText = "Upgrade"', 1, true), "The prompt must describe the upgrade action")
-assert(controller:find("HoldDuration = 0", 1, true), "The shop prompt must open immediately")
-assert(controller:find("prompt.PromptShown:Connect", 1, true), "Approaching the shop must enable its highlight")
-assert(controller:find("prompt.Triggered:Connect", 1, true), "Only prompt activation may open the shop")
-assert(controller:find("ShopHighlightUtil.Apply(highlight, highlightTarget)", 1, true), "Upgrade shop must use the shared shop highlight style")
-assert(highlightUtil:find("FILL_TRANSPARENCY = 0.6", 1, true), "Shop highlights must use a translucent white fill")
-assert(highlightUtil:find("highlight.FillColor = Color3.new(1, 1, 1)", 1, true), "Shop highlight fill must be white")
-assert(highlightUtil:find("highlight.DepthMode = Enum.HighlightDepthMode.Occluded", 1, true), "Shop highlighting must not show through walls")
-assert(not controller:find("RunService.Heartbeat", 1, true), "Proximity alone must not open the shop UI")
-assert(template:find("Constants.UPGRADE_ID.CARRY_WEIGHT", 1, true), "Carry upgrades must be reconciled into player saves")
+assert(not io.open("src/StarterPlayer/StarterPlayerScripts/Controllers/GUI/UpgradeShopGuiController.lua", "r"),
+	"The retired shop must not install a purchase prompt or bind buttons")
+
+local migrationSource = assert(playerDataService:match("(local REMOVED_PROFILE_FIELDS = .-)\nlocal function migratePlotHome"))
+local migrate = assert(loadstring(migrationSource .. "\nreturn migrateRemovedLegacyFields"))()
+local legacy = {
+	Upgrades = { Upgrade_MoveSpeed = 3, Upgrade_WinsBoost = 2 },
+	GamePasses = { FastMove = true, SuperLuck = true },
+}
+migrate(legacy)
+migrate(legacy)
+assert(legacy.Upgrades.Upgrade_MoveSpeed == nil and legacy.GamePasses.FastMove == nil, "Migration must remove retired speed fields")
+assert(legacy.Upgrades.Upgrade_WinsBoost == 2 and legacy.GamePasses.SuperLuck, "Migration must preserve active upgrades and passes")
+assert(playerDataService:find("migrateRemovedLegacyFields(profile.Data)", 1, true), "Profile loading must run the migration")
 
 print("UpgradeShop.test.lua passed")

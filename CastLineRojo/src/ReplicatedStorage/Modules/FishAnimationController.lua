@@ -22,14 +22,20 @@ local function smooth(alpha)
 	return alpha * alpha * (3 - 2 * alpha)
 end
 
-function FishAnimationController.NewState(startedAt, random)
-	return setmetatable({ startedAt = startedAt, random = random or Random.new() }, State)
+function FishAnimationController.NewState(startedAt, random, struggleTime, approachTime)
+	return setmetatable({
+		startedAt = startedAt,
+		random = random or Random.new(),
+		struggleTime = struggleTime or Settings.StruggleTime,
+		approachTime = approachTime or Settings.ApproachTime,
+	}, State)
 end
 
 -- 这里只选择固定动画、权重和播放时间；骨骼姿势由 Animator 的关键帧插值产生。
-function State:Sample(phase, phaseStartedAt, now, mirror, swimWeight, nibbleSpeed)
+function State:Sample(phase, phaseStartedAt, now, mirror, swimWeight, nibbleSpeed, nibbleAttackTime, liftDuration)
 	local elapsed = math.max(0, now - phaseStartedAt)
 	local clips = AnimationSettings.Clips
+	liftDuration = liftDuration or (Settings.FishLift.RiseTime + Settings.FishLift.PeakHold + Settings.FishLift.FallTime + Settings.FishLift.SettleTime)
 	local name, token, position, speed, weight
 	if phase == "Approaching" or phase == "Holding" or phase == "Nibbling" or phase == "Bite" or phase == "Escaped" then
 		name, token, speed = "SwimLoop", "SwimLoop", 1
@@ -41,15 +47,15 @@ function State:Sample(phase, phaseStartedAt, now, mirror, swimWeight, nibbleSpee
 					1
 					- (1 - AnimationSettings.HoldWeight)
 						* smooth(
-							(elapsed - Settings.ApproachTime + AnimationSettings.FadeTime) / AnimationSettings.FadeTime
+								(elapsed - self.approachTime + AnimationSettings.FadeTime) / AnimationSettings.FadeTime
 						)
 				)
 		elseif phase == "Nibbling" then
-			elapsed *= nibbleSpeed or 1
-			local retreatAt = Settings.Nibble.AttackTime + Settings.Nibble.ContactTime
-			weight *= if elapsed < retreatAt
-				then 1 - smooth(elapsed / Settings.Nibble.AttackTime)
-				else smooth((elapsed - retreatAt) / (Settings.NibbleTime - retreatAt))
+			local rhythm = nibbleSpeed or 1
+			local attackTime = nibbleAttackTime or Settings.Nibble.AttackTime / rhythm
+			local retreatAt = attackTime + Settings.Nibble.ContactTime / rhythm
+			local recovery = (Settings.NibbleTime - Settings.Nibble.AttackTime - Settings.Nibble.ContactTime) / rhythm
+			weight *= if elapsed < retreatAt then 1 - smooth(elapsed / attackTime) else smooth((elapsed - retreatAt) / recovery)
 		elseif phase == "Bite" then
 			weight *= 1 - smooth(elapsed / Settings.BiteSinkTime)
 		elseif phase == "Escaped" then
@@ -59,7 +65,7 @@ function State:Sample(phase, phaseStartedAt, now, mirror, swimWeight, nibbleSpee
 			weight = swimWeight
 		end
 	elseif phase == "Struggling" then
-		if elapsed < Settings.StruggleTime then
+		if elapsed < self.struggleTime then
 			local cycle = Settings.Struggle.AnimationCycle
 			name = if (mirror or 1) > 0 then "StruggleLeft" else "StruggleRight"
 			-- 同一轨道连续循环，避免每个周期重播时淡入造成鱼身回直。
@@ -67,9 +73,9 @@ function State:Sample(phase, phaseStartedAt, now, mirror, swimWeight, nibbleSpee
 			speed = clips[name].Duration / cycle
 			position, weight = (elapsed % cycle) * speed, 1
 		end
-	elseif phase == "Lifting" and elapsed < Settings.LiftTime then
+	elseif phase == "Lifting" and elapsed < liftDuration then
 		name, token = "LiftFlop", phaseStartedAt
-		speed = clips.LiftFlop.Duration / Settings.LiftTime
+		speed = clips.LiftFlop.Duration / liftDuration
 		position, weight = elapsed * speed, 1
 	elseif phase == "Caught" then
 		if self.caughtAt ~= phaseStartedAt then
@@ -96,9 +102,9 @@ function State:Sample(phase, phaseStartedAt, now, mirror, swimWeight, nibbleSpee
 	return { name = name, token = token, position = position, speed = speed, weight = weight }
 end
 
-function FishAnimationController.new(fish, startedAt, random)
+function FishAnimationController.new(fish, startedAt, random, onlyClip: string?, struggleTime: number?, approachTime: number?)
 	local self = setmetatable(
-		{ fish = fish, tracks = {}, state = FishAnimationController.NewState(startedAt, random) },
+		{ fish = fish, tracks = {}, state = FishAnimationController.NewState(startedAt, random, struggleTime, approachTime) },
 		FishAnimationController
 	)
 	local parent = fish.PrimaryPart
@@ -111,7 +117,7 @@ function FishAnimationController.new(fish, startedAt, random)
 		end
 		parent = bone
 	end
-	local controller = fish:FindFirstChildOfClass("AnimationController")
+	local controller = fish:FindFirstChildOfClass("Humanoid") or fish:FindFirstChildOfClass("AnimationController")
 	if not controller then
 		controller = Instance.new("AnimationController")
 		controller.Name, controller.Parent = "FishAnimationController", fish
@@ -131,6 +137,9 @@ function FishAnimationController.new(fish, startedAt, random)
 			folder = folder and folder:FindFirstChild("Fish")
 			local assets = {}
 			for name in pairs(AnimationSettings.Clips) do
+				if onlyClip and name ~= onlyClip then
+					continue
+				end
 				local asset = localFolder and localFolder:FindFirstChild(name)
 				if not asset then
 					asset = folder and folder:FindFirstChild(name)
@@ -190,11 +199,11 @@ function FishAnimationController:_stop(fade)
 	end
 end
 
-function FishAnimationController:Update(phase, phaseStartedAt, now, mirror, swimWeight, nibbleSpeed)
+function FishAnimationController:Update(phase, phaseStartedAt, now, mirror, swimWeight, nibbleSpeed, nibbleAttackTime, liftDuration)
 	if self.destroyed then
 		return
 	end
-	local request = self.state:Sample(phase, phaseStartedAt, now, mirror, swimWeight, nibbleSpeed)
+	local request = self.state:Sample(phase, phaseStartedAt, now, mirror, swimWeight, nibbleSpeed, nibbleAttackTime, liftDuration)
 	if self.loading or self.failed then
 		return request
 	end

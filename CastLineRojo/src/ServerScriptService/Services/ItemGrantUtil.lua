@@ -74,7 +74,6 @@ function ItemGrantUtil.Grant(player: Player, itemId: string, options: GrantOptio
 	weight = weight or ItemStatUtil.RollWeight(item, random)
 	-- Roll from the item's intrinsic Luck so a Condition never improves its own chance.
 	local conditionLuck = ItemStatUtil.CalculateLuck(item, weight, 1)
-	conditionLuck += Knit.GetService("IndexService"):GetDiscoveryLuck(player)
 	conditionLuck *= GamePassEffectUtil.GetItemLuckMultiplier(profile.Data)
 	local conditionId, condition = ItemRollUtil.RollCondition(ConditionsData, conditionLuck, random)
 	conditionId = conditionId or DEFAULT_CONDITION_ID
@@ -93,7 +92,7 @@ function ItemGrantUtil.Grant(player: Player, itemId: string, options: GrantOptio
 		Price = price,
 		MutationId = mutationId,
 	}
-	local tool = ItemToolUtil.Create("pending", item, instanceData)
+	local tool = ItemToolUtil.Create("pending", item, instanceData, player)
 	if not tool then
 		return nil, "Item model is unavailable: " .. tostring(item.Model)
 	end
@@ -116,17 +115,17 @@ function ItemGrantUtil.Grant(player: Player, itemId: string, options: GrantOptio
 		MutationId = mutationId,
 	}
 	tool.Parent = backpack
+	Knit.GetService("PlotFishService"):RefreshInventoryIncome(player)
 	if typeof(profile.Data.NewItemTagSeenLog) ~= "table" then
 		profile.Data.NewItemTagSeenLog = {}
 	end
 	local isFirstItemAcquisition = profile.Data.NewItemTagSeenLog[itemId] ~= true
 	profile.Data.NewItemTagSeenLog[itemId] = true
-	Knit.GetService("IndexService"):DiscoverItem(player, itemId)
+	local isNewDiscovery = Knit.GetService("IndexService"):DiscoverItem(player, itemId)
 	if options and options.CountTowardTotalWeight then
 		PlayerDataService:AdjustTotalItemWeightTenths(player, math.round(weight * 10))
 	end
 
-	Knit.GetService("CarryCapacityService"):RefreshPlayer(player)
 
 	return {
 		Item = item,
@@ -138,6 +137,7 @@ function ItemGrantUtil.Grant(player: Player, itemId: string, options: GrantOptio
 		BasePrice = basePrice,
 		Price = price,
 		IsFirstItemAcquisition = isFirstItemAcquisition,
+		IsNewDiscovery = isNewDiscovery,
 		MutationId = mutationId,
 	}
 end

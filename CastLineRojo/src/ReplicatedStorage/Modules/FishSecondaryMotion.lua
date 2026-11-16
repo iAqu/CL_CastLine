@@ -9,12 +9,13 @@ local function smooth(alpha)
 end
 
 -- 绝对时间采样整鱼角度；不修改 Animator 驱动的骨骼。
-function FishSecondaryMotion.Sample(phase, elapsed, turnRate, request, _mirror)
+function FishSecondaryMotion.Sample(phase, elapsed, turnRate, request, _mirror, struggleTime, approachTime)
 	local pitch, yaw, roll = 0, 0, 0
 	if phase == "Approaching" or phase == "Struggling" or phase == "Escaped" then
 		local duration = if phase == "Approaching"
-			then Settings.ApproachTime
-			else if phase == "Struggling" then Settings.StruggleTime else Settings.EscapeTime
+			then approachTime or Settings.ApproachTime
+			elseif phase == "Struggling" then struggleTime or Settings.StruggleTime
+			else Settings.EscapeTime
 		local fade = smooth(elapsed / Motion.FadeTime) * smooth((duration - elapsed) / Motion.FadeTime)
 		roll = Motion.Bank.MaxAngle * math.clamp(turnRate / math.rad(Motion.Bank.FullTurnRate), -1, 1)
 		return math.rad(pitch * fade), 0, math.rad(roll * fade)

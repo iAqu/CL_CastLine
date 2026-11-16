@@ -26,7 +26,7 @@ local function resolveJoinLocation(placements, items, slot, instanceId)
 	local itemUid = PlotPlacementUtil.GetItemUid(placements, slot)
 	local canDisplay = itemUid == instanceId
 	if canDisplay then
-		return "pedestal"
+		return "plot"
 	end
 	if PlotPlacementUtil.IsPlaced(placements, instanceId) then
 		return "lost"
@@ -52,18 +52,18 @@ local stringKeyedPlacements = stringifyKeys({
 
 assert(oldRestoreLookup(stringKeyedPlacements, 2) == nil, "DataStore string keys must miss a raw numeric slot lookup")
 assert(PlotPlacementUtil.GetItemUid(stringKeyedPlacements, 2) == ITEM_UID, "Restore must read either numeric or string slot keys")
-assert(resolveJoinLocation(stringKeyedPlacements, items, 2, ITEM_UID) == "pedestal", "A saved placement must stay on the pedestal after a DataStore round-trip")
+assert(resolveJoinLocation(stringKeyedPlacements, items, 2, ITEM_UID) == "plot", "A saved placement must stay on the plot after a DataStore round-trip")
 
 -- Old restore treated a missed lookup as an empty slot and only cleared the numeric key.
 local wipedLikeOldRestore = stringifyKeys({ [2] = ITEM_UID })
 wipedLikeOldRestore[2] = nil
 assert(oldRestoreLookup(wipedLikeOldRestore, 2) == nil, "Old restore still cannot see the string-keyed placement")
 assert(PlotPlacementUtil.GetItemUid(wipedLikeOldRestore, 2) == ITEM_UID, "Clearing placements[2] must not erase placements['2']")
-assert(resolveJoinLocation(wipedLikeOldRestore, items, 2, ITEM_UID) == "pedestal", "The item must remain placeable after a numeric-only clear")
+assert(resolveJoinLocation(wipedLikeOldRestore, items, 2, ITEM_UID) == "plot", "The item must remain placeable after a numeric-only clear")
 assert(
 	PlotPlacementUtil.IsPlaced(wipedLikeOldRestore, ITEM_UID)
 		and oldRestoreLookup(wipedLikeOldRestore, 2) == nil,
-	"A missed restore plus a still-marked placement hides the item from both the pedestal and backpack"
+	"A missed restore plus a still-marked placement hides the item from both the plot and backpack"
 )
 
 local emptyPlacements = {}
@@ -80,15 +80,15 @@ assert(writable["1"] == nil, "Writes must clear the string twin key")
 PlotPlacementUtil.ClearSlot(writable, 1)
 assert(writable[1] == nil and writable["1"] == nil, "Clears must remove both slot key forms")
 
-local pedestalService = read("src/ServerScriptService/Services/PlotPedestalService.lua")
+local plotFishService = read("src/ServerScriptService/Services/PlotFishService.lua")
 local playerDataService = read("src/ServerScriptService/Services/PlayerDataService.lua")
-local cashPoolService = read("src/ServerScriptService/Services/PlotCashPoolService.lua")
+local cashPoolService = read("src/ReplicatedStorage/Modules/PlotFishIncome.lua")
 
-assert(pedestalService:find("PlotPlacementUtil.GetItemUid", 1, true), "Pedestal restore must coerce saved slot keys")
-assert(pedestalService:find("PlotPlacementUtil.SetItemUid", 1, true), "Placing must write a numeric slot key")
-assert(pedestalService:find("PlotPlacementUtil.ClearSlot", 1, true), "Pickup and failed restore must clear both key forms")
+assert(plotFishService:find("PlotPlacementUtil.GetItemUid", 1, true), "Fish restore must coerce saved slot keys")
+assert(plotFishService:find("PlotPlacementUtil.SetItemUid", 1, true), "Placing must write a numeric slot key")
+assert(plotFishService:find("PlotPlacementUtil.ClearSlot", 1, true), "Pickup must clear both key forms")
 assert(
-	not pedestalService:find('typeof(slot) == "number" and profile.Data.PlotPlacements[slot]', 1, true),
+	not plotFishService:find('typeof(slot) == "number" and profile.Data.PlotPlacements[slot]', 1, true),
 	"Raw numeric PlotPlacements lookup is the DataStore key-mismatch bug"
 )
 assert(playerDataService:find("PlotPlacementUtil.CoerceNumericKeys", 1, true), "Loaded profiles must sanitize placement keys")

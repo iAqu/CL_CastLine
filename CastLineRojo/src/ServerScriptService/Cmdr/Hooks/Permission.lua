@@ -10,6 +10,7 @@ local OWNER_USER_IDS = {
     7199074950,   -- May4th66
     10305940897,  -- ALICE20210611a
     10311335740,  -- Emily20210611
+    10938171089,  -- may4th62
     8727275519,
     -1,
     -2,
@@ -28,7 +29,10 @@ local GM_COMMANDS = {       -- gm limited commands
     "giveDiamond",
     "givePotion",
     "giveItem",
+    "giveFish",
     "giveRandomItem",
+    "givePet",
+    "giveEgg",
     "giveAnimal",
     "giveFruit",
 	"giveProp",
@@ -36,8 +40,6 @@ local GM_COMMANDS = {       -- gm limited commands
     "adjustPlayerStrength",
     "adjustPlayerWin",
     "adjustPlayerDiamond",
-    "setMoveSpeedLevel",
-    "setBackpackLevel",
     "removeLeaderboard"
 }
 

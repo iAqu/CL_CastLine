@@ -7,7 +7,7 @@ local Audio = require(ReplicatedStorage.Modules.FishingAudio)
 local config = require(ReplicatedStorage.Modules.FishingConfig)
 local settings = config.Bite
 local originalFishName = settings.FishName
-settings.FishName = "Elder Fish"
+settings.FishName = "GreenSeahorse"
 local template = ReplicatedStorage.Models.Fish[settings.FishName]
 local originalTexture, originalColor = template.PrimaryPart.TextureID, template.PrimaryPart.Color
 local folder = Instance.new("Folder")
@@ -39,6 +39,7 @@ local ok, result = xpcall(function()
 	local line = Instance.new("Beam")
 	line.Attachment0, line.Attachment1, line.Parent = tip, endAttachment, folder
 	owner = setmetatable({
+		options = {},
 		folder = folder,
 		phase = "Waiting",
 		forward = Vector3.zAxis,
@@ -62,8 +63,7 @@ local ok, result = xpcall(function()
 		lineTop = lineTop,
 		lineTopAttachment = topAttachment,
 		tip = tip,
-		statusLabel = {},
-		returnLabel = {},
+		continueLabel = {},
 		wind = { Volume = 0, Stop = function() end },
 		_waterTarget = function()
 			return target
@@ -73,13 +73,16 @@ local ok, result = xpcall(function()
 		_nibbleRipple = function() end,
 		_nibbleFeedback = function() end,
 		_sound = function(self, name)
+			if name == "CameraWhoosh" then return end
 			assert(name == "FishBiteHeavey", "Unexpected bite cue")
 			self.biteCues = (self.biteCues or 0) + 1
 		end,
 	}, Cast)
 	owner.fishAudio = setmetatable({
 		Play = function(_, name)
-			if name == "FishBiteHeavey" then owner:_sound(name) end
+			if name == "FishBiteHeavey" then
+				owner:_sound(name)
+			end
 		end,
 		StartLoop = function() end,
 		StopLoop = function() end,
@@ -144,6 +147,45 @@ local ok, result = xpcall(function()
 		return count
 	end
 
+	round(0, 1, 1)
+	do
+		local bite = owner.bite
+		local timeline = bite.timeline
+		local tail = bite.fish.PrimaryPart:FindFirstChild("FishTail", true)
+		local deadline = os.clock() + settings.Motion.Animation.LoadTimeout
+		while bite.animation.loading and os.clock() < deadline do
+			task.wait()
+		end
+		assert(not bite.animation.loading and not bite.animation.failed, "Shadow animation failed to load")
+		local function assertTailMoves(name, start, duration)
+			local previous, moved
+			for index = 0, 8 do
+				update(start + duration * index / 8)
+				task.wait(0.025)
+				local pose = tail.Transform
+				moved = moved or (previous and not pose:FuzzyEq(previous, 0.001))
+				previous = pose
+			end
+			assert(moved, "Fish shadow tail stayed still during " .. name)
+		end
+		local approach = timeline.appearAt
+		local hold = approach + timeline.approachTime
+		assertTailMoves("approach", approach + 0.2, timeline.approachTime - 0.4)
+		assertTailMoves("hold", hold + 0.1, 0.6)
+		local nibble = hold + 1
+		local timing = timeline:GetNibbleTiming(1)
+		update(nibble + timing.attackTime)
+		local cameraPosition = owner.cameraFrame.Position
+		bite:Present(cameraPosition)
+		local yaw = bite:_feedingState("Nibbling", timing.attackTime)
+		local mouth = bite.fish.PrimaryPart.MouthAttachment.WorldPosition
+		local contact = bait.Position + bite:_contactOffset(yaw, bait.Size)
+		local screenError = (mouth - cameraPosition).Unit:Cross((contact - cameraPosition).Unit).Magnitude
+		assert(screenError < 0.0001, "Nibble animation moved the mouth off the bait on screen")
+		local returnDuration = timeline.repositionDurations[1]
+		assertTailMoves("return", nibble + timing.returnAt + returnDuration * 0.2, returnDuration * 0.6)
+	end
+
 	-- 三个出现方向保持实际尺寸，通过透明度和深度显现。
 	for sector = 1, 3 do
 		round(0, 0, sector)
@@ -155,9 +197,17 @@ local ok, result = xpcall(function()
 				and bite.fish.PrimaryPart.Transparency == 1,
 			"New fish flashed before its first update"
 		)
+		local shadowHumanoid = bite.fish:FindFirstChildOfClass("Humanoid")
 		assert(
-			bite.animation.animator.Parent:IsA("AnimationController"),
-			"Shadow rendering replaced the animation controller"
+			shadowHumanoid
+				and not shadowHumanoid.EvaluateStateMachine
+				and not shadowHumanoid.AutomaticScalingEnabled
+				and shadowHumanoid.DisplayDistanceType == Enum.HumanoidDisplayDistanceType.None,
+			"Transparent shadow highlight requires a passive Humanoid"
+		)
+		assert(
+			bite.animation.animator.Parent == shadowHumanoid and not bite.fish:FindFirstChildOfClass("AnimationController"),
+			"Shadow must have a single animation controller under its Humanoid"
 		)
 		update(2)
 		local start = owner.bite.lastPosition
@@ -175,7 +225,8 @@ local ok, result = xpcall(function()
 				assert(math.abs(bite.fish.PrimaryPart.Transparency - fade) < 1e-6, "Fish appearance easing is wrong")
 				assert(
 					bite.fish.PrimaryPart.Material
-						== (if elapsed > 0 then Enum.Material.Glass else template.PrimaryPart.Material),
+						== (if elapsed > 0 then Enum.Material.Neon else template.PrimaryPart.Material)
+						and bite.fish.PrimaryPart.Reflectance == (if elapsed > 0 then 0 else template.PrimaryPart.Reflectance),
 					"Fish shadow material is wrong"
 				)
 				assert(
@@ -184,7 +235,7 @@ local ok, result = xpcall(function()
 							- (settings.ShadowTransparency + (1 - settings.ShadowTransparency) * fade)
 					)
 							< 1e-6
-						and bite.highlight.OutlineTransparency == bite.highlight.FillTransparency,
+						and math.abs(bite.highlight.OutlineTransparency - (0.2 + 0.8 * fade ^ 3)) < 1e-6,
 					"Fish shadow did not follow appearance easing"
 				)
 			end
@@ -234,7 +285,7 @@ local ok, result = xpcall(function()
 	local deadline = owner.bite.timeline.endsAt
 	update(deadline)
 	assert(owner.phase == "Escaped" and not owner:CanReturn(deadline + 10), "Failure enabled return")
-	assert(not owner.returnLabel.Visible, "Escaped fish displayed return prompt")
+	assert(not owner.continueLabel.Visible, "Escaped fish displayed return prompt")
 	local oldFish, oldRound = owner.bite.fish, owner.round
 	for frame = 0, 42 do
 		local progress = frame / 42
@@ -246,12 +297,13 @@ local ok, result = xpcall(function()
 			math.abs(
 				owner.bite.highlight.FillTransparency
 					- (settings.ShadowTransparency + (1 - settings.ShadowTransparency) * fade)
-			) < 1e-6,
+			) < 1e-6
+				and math.abs(owner.bite.highlight.OutlineTransparency - (0.2 + 0.8 * fade ^ 3)) < 1e-6,
 			"Escaping shadow fade is wrong"
 		)
 	end
 	assert(not owner.bite.highlight.Enabled, "Fully escaped shadow stayed enabled")
-	assert(oldFish.PrimaryPart.Material == template.PrimaryPart.Material, "Escaped fish retained Glass material")
+	assert(oldFish.PrimaryPart.Material == template.PrimaryPart.Material, "Escaped fish retained the shadow material")
 	update(deadline + settings.EscapeTime + 0.01)
 	assert(
 		owner.round == oldRound + 1 and oldFish.Parent == nil and fishCount() == 1,
@@ -259,7 +311,7 @@ local ok, result = xpcall(function()
 	)
 	assert(bait.Transparency == 0.25 and line.Attachment0 == tip, "Retry did not restore bait/line")
 	assert(
-		owner.returnLabel.Text == settings.Text.Waiting and not owner.statusLabel.Visible,
+		owner.continueLabel.Text == settings.Text.Waiting,
 		"Retry kept the failure prompt"
 	)
 	local restartedAt = deadline + settings.EscapeTime + 0.01
@@ -311,7 +363,7 @@ local ok, result = xpcall(function()
 	assert((bait.Position - initialBait.Position).Magnitude < 0.001, "Reeling snapped bait at entry")
 	local _, entryAngle = initialBait.Rotation:ToObjectSpace(bait.CFrame.Rotation):ToAxisAngle()
 	assert(math.abs(entryAngle) < 0.001, "Reeling snapped bait rotation at entry")
-	assert(not owner.returnLabel.Visible and not owner.statusLabel.Visible, "Reeling showed premature result UI")
+	assert(not owner.continueLabel.Visible, "Reeling showed premature result UI")
 	local reelPeak = -math.huge
 	local reelBottom = math.huge
 	local expectedBottom = initialBait.Position.Y - owner.baitBaseSize.Y * reelConfig.SinkDepth
@@ -409,14 +461,13 @@ local ok, result = xpcall(function()
 	assert(reelEnd, "Spring did not report physical settling")
 	update(reelEnd + reelConfig.HoldTime - 0.01)
 	assert(
-		not owner:CanReturn(reelEnd + reelConfig.HoldTime - 0.01) and not owner.returnLabel.Visible,
+		not owner:CanReturn(reelEnd + reelConfig.HoldTime - 0.01) and not owner.continueLabel.Visible,
 		"Empty reel did not wait to settle"
 	)
 	update(reelEnd + reelConfig.HoldTime)
 	assert(
 		owner:CanReturn(reelEnd + reelConfig.HoldTime)
-			and not owner.returnLabel.Visible
-			and not owner.statusLabel.Visible,
+			and not owner.continueLabel.Visible,
 		"Empty reel showed a manual return prompt"
 	)
 	local firstSway
@@ -504,7 +555,7 @@ local ok, result = xpcall(function()
 		local transparency = bite.highlight.FillTransparency
 		assert(
 			math.abs(transparency - (settings.ShadowTransparency + (1 - settings.ShadowTransparency) * eased)) < 1e-6
-				and bite.highlight.OutlineTransparency == transparency
+				and math.abs(bite.highlight.OutlineTransparency - (0.2 + 0.8 * eased ^ 3)) < 1e-6
 				and transparency >= previousHighlight,
 			"Struggle highlight did not fade smoothly"
 		)
@@ -519,7 +570,8 @@ local ok, result = xpcall(function()
 	update(hookAt + 1.03)
 	assert((first - owner.bite.fish.PrimaryPart.Position).Magnitude > 0.1, "Orbit paused")
 	update(hookAt + 1.35)
-	assert((first - owner.bite.fish.PrimaryPart.Position).Magnitude > 0.5, "Orbit stopped moving")
+	local orbitRadius = ((first - target) * Vector3.new(1, 0, 1)).Magnitude
+	assert((first - owner.bite.fish.PrimaryPart.Position).Magnitude > orbitRadius * 0.05, "Orbit stopped moving")
 	local body = owner.bite.fish.PrimaryPart
 	local mouth = body.CFrame:PointToWorldSpace(owner.bite.mouthOffset)
 	assert(
@@ -539,6 +591,7 @@ local ok, result = xpcall(function()
 
 	-- 出水保持竖线，完全出水才恢复彩色；最终鱼头朝上。
 	local liftingAt = owner.bite.timeline.endsAt
+	local liftImpulsesBefore = owner.impulseCount
 	update(liftingAt)
 	assert(
 		not owner.bite.highlight.Enabled
@@ -551,12 +604,12 @@ local ok, result = xpcall(function()
 		line.Attachment0 == topAttachment and body.TextureID == "" and bait.Transparency == 1,
 		"Lift did not switch the upper anchor or colored fish too early"
 	)
-	assert(owner.impulseCount == 1, "Exit must trigger one strong camera impulse")
+	assert(owner.impulseCount == liftImpulsesBefore, "Wait for the fish to cross the water before the exit impulse")
 	local caughtAt = owner.bite.timeline.endsAt
 	local highest = -math.huge
 	local peakScale, bounceHeight = 0, 0
 	for index = 1, 100 do
-		local at = liftingAt + settings.LiftTime * index / 100
+		local at = liftingAt + owner.bite:GetLiftTiming().duration * index / 100
 		update(at)
 		owner:_updateCamera(at, 1 / 60)
 		if owner.bite.originalShown then
@@ -565,11 +618,12 @@ local ok, result = xpcall(function()
 			assert(not owner.bite.highlight.Enabled, "Black outline appeared before the fish surfaced")
 		end
 		peakScale = math.max(peakScale, owner.bite.scale)
-		if index / 100 > settings.LiftFallEnd then
+		if at - liftingAt > owner.bite:GetLiftTiming().landAt then
 			bounceHeight = math.max(bounceHeight, body.Position.Y - target.Y - settings.ShowcaseHeight)
 		end
-		if index == 35 then
-			assert(camera.CFrame.LookVector.Y > 0.3, "Camera did not tilt up to follow fish")
+		if index == 20 then
+			assert((camera.Focus.Position - owner.bite.showcasePosition).Magnitude > 0.01,
+				"Rising camera must retain visible follow lag")
 		end
 		highest = math.max(highest, body.Position.Y)
 		assertFishShowcaseLine()
@@ -592,7 +646,7 @@ local ok, result = xpcall(function()
 		bounceHeight > 1 and peakScale > 1.3 and math.abs(owner.bite.scale - 1) < 0.001,
 		"Fish did not scale-punch and rebound"
 	)
-	assert(owner.impulseCount == 1, "Exit replayed its camera impulse")
+	assert(owner.impulseCount == liftImpulsesBefore + 2, "Exit and landing must each trigger once")
 	owner:_updateCamera(caughtAt + settings.ShowcaseHold, 1 / 60)
 	assert(math.abs(owner.cameraFrame.LookVector.Y) < 0.0001, "Base showcase camera did not return to level")
 	assert(camera.CFrame.LookVector.Y < 0.02, "Showcase camera sway is too strong")
@@ -602,7 +656,7 @@ local ok, result = xpcall(function()
 		"Caught fish cannot return or unexpectedly retried"
 	)
 	assert(
-		bait.Transparency == 1 and owner.returnLabel.Text == settings.Text.Return,
+		bait.Transparency == 1 and owner.continueLabel.Text == settings.Text.Return,
 		"Caught fish restored bait or lost return prompt"
 	)
 
@@ -719,7 +773,7 @@ local ok, result = xpcall(function()
 		"Source fish appearance changed"
 	)
 	-- 单网格与多部件鱼都复用同一个模型级描边，出水前关闭，显色后保持。
-	for index, name in ipairs({ "ThresherShark", "YaoYu_04_00" }) do
+	for index, name in ipairs({ "GreenSeahorse", "AncientMegalodon" }) do
 		settings.FishName = name
 		local at = 5000 + index * 100
 		round(at)
@@ -729,7 +783,7 @@ local ok, result = xpcall(function()
 		update(liftAt)
 		assert(not bite.highlight.Enabled, "Outline validation fish showed black outline underwater")
 		for frame = 1, 60 do
-			update(liftAt + settings.LiftTime * frame / 60)
+			update(liftAt + owner.bite:GetLiftTiming().duration * frame / 60)
 			if bite.originalShown then
 				assertCaughtOutline(bite)
 			else
@@ -737,7 +791,7 @@ local ok, result = xpcall(function()
 			end
 		end
 		assertCaughtOutline(bite)
-		update(liftAt + settings.LiftTime + settings.ShowcaseHold)
+		update(liftAt + owner.bite:GetLiftTiming().duration + settings.ShowcaseHold)
 		assertCaughtOutline(bite)
 		bite:_appearance(false, true, 0, "Caught", 0)
 		assert(
@@ -755,7 +809,7 @@ local ok, result = xpcall(function()
 	)
 	return {
 		passed = true,
-		checks = "three spawn sectors, Glass shadow render support and original material restoration, shared 30/60 fps appearance easing, escape fade endpoints, keyframe animation, actual size/fade/rise, bait outline/red fill, side contact, timeout retry, spr reel with continuous retargeting and physical settling, struggle shake, single exit impulse, sky spin/fall/bounce, camera tracking, three idle bursts, fixed mouth/focus/line, centered bait anchor, fish anchor one world stud below scaled mouth, landscape/portrait animation framing, single-mesh and multipart surfaced black outline, hidden outline and cleanup",
+		checks = "three spawn sectors, Neon shadow and original material restoration, 30/60 fps body and outline easing, escape fade endpoints, keyframe animation, actual size/fade/rise, bait outline/red fill, side contact, timeout retry, spr reel with continuous retargeting and physical settling, struggle shake, synchronized exit and landing impulses, sky spin/fall/bounce, camera tracking, three idle bursts, fixed mouth/focus/line, centered bait anchor, fish anchor one world stud below scaled mouth, landscape/portrait animation framing, single-mesh and multipart surfaced black outline, hidden outline and cleanup",
 	}
 end, debug.traceback)
 

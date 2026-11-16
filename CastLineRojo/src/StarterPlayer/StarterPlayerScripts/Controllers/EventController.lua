@@ -24,6 +24,7 @@ local activeMutationId: string? = nil
 local originalWaterColors: { [Instance]: Color3 } = {}
 local updateElapsed = UI_UPDATE_INTERVAL
 local earlyStateStarted = false
+local eventFishActive = false
 
 local function formatCountdown(seconds: number): string
 	local wholeSeconds = math.max(0, math.ceil(seconds))
@@ -88,12 +89,27 @@ local function setActiveMutation(mutationId: string?)
 	if activeMutationId == mutationId then
 		return
 	end
-	if not mutationId then
+	if not mutationId and not eventFishActive then
 		restoreWaterColors()
 	end
 	activeMutationId = mutationId
-	if mutationId and mutationId ~= "Rainbow" then
+	if mutationId and mutationId ~= "Rainbow" and not eventFishActive then
 		applyWaterColor(MutationDataUtil.GetLabelColor(mutationId))
+	end
+end
+
+function EventController:SetEventFishActive(active: boolean)
+	if eventFishActive == active then
+		return
+	end
+	eventFishActive = active
+	if active then
+		applyWaterColor(Color3.fromHSV((Workspace:GetServerTimeNow() * RAINBOW_HUE_SPEED) % 1, 1, 1))
+	else
+		restoreWaterColors()
+		if activeMutationId and activeMutationId ~= "Rainbow" then
+			applyWaterColor(MutationDataUtil.GetLabelColor(activeMutationId))
+		end
 	end
 end
 
@@ -159,7 +175,7 @@ function EventController:BeginEarlyState()
 	end)
 
 	RunService.RenderStepped:Connect(function(deltaTime)
-		if activeMutationId == "Rainbow" then
+		if eventFishActive or activeMutationId == "Rainbow" then
 			applyWaterColor(Color3.fromHSV((Workspace:GetServerTimeNow() * RAINBOW_HUE_SPEED) % 1, 1, 1))
 		end
 		updateElapsed += deltaTime

@@ -362,3 +362,11 @@ assert(duringNibble.name == "SwimLoop" and duringNibble.weight == 1)
 assert(duringHold.token == duringNibble.token and duringHold.weight == 1)
 assert(not returning:Sample("Holding", 0.55, 2.5, 1, 0), "Stopped fish did not settle")
 assert(returning:Sample("Holding", 0.55, 2.7, 1, settings.HoldWeight).weight == settings.HoldWeight)
+
+do
+	local duration = 1.55
+	local request = sampler:Sample("Lifting", 10, 10.5, nil, nil, nil, nil, duration)
+	assert(math.abs(request.speed - settings.Clips.LiftFlop.Duration / duration) < 1e-9)
+	assert(math.abs(request.position - 0.5 * request.speed) < 1e-9)
+	assert(not sampler:Sample("Lifting", 10, 11.56, nil, nil, nil, nil, duration))
+end

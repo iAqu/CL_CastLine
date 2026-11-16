@@ -23,7 +23,6 @@ function PlayerLuckService:GetPlayerRollLuck(player: Player): number?
 	end
 	return PlayerLuckUtil.CombineRollLuck(
 		PlayerLuckUtil.GetPlacedItemLuck(profile.Data, FishInventoryData, ConditionsData),
-		Knit.GetService("IndexService"):GetDiscoveryLuck(player),
 		GamePassEffectUtil.GetItemLuckMultiplier(profile.Data)
 	)
 end

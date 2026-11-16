@@ -32,16 +32,6 @@ function GameDataUtil.CalculateWinsBoost(playerData: Template.PlayerData): numbe
     return totalBoost
 end
 
-function GameDataUtil.CalculateMoveSpeedBoost(playerData: Template.PlayerData): number
-    local boost = 1
-
-    local moveSpeedUpgradeBoost = UpgradesDataHelper.GetPlayerBoostValue(playerData, Constants.UPGRADE_ID.MOVE_SPEED)
-    boost += moveSpeedUpgradeBoost
-    if playerData.GamePasses[Constants.GAMEPASS.FAST_MOVE] then boost += 0.5 end
-
-    return boost
-end
-
 function GameDataUtil.IsTradeSystemLocked(playerData): boolean
     if not playerData then warn("playerData is nil!") return end
 

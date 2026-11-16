@@ -234,7 +234,6 @@ Constants.SUPER_REBIRTH_UPGRADE_ID = {
 Constants.UPGRADE_ID = {
     WINS_BOOST = "Upgrade_WinsBoost",
     MOVE_SPEED = "Upgrade_MoveSpeed",
-    CARRY_WEIGHT = "Upgrade_CarryWeight",
 }
 
 Constants.GAMEPASS = {
@@ -302,6 +301,8 @@ Constants.DETECT_RANGE = {
 }
 
 Constants.SETTINGS_ID = {
+    SHOW_YOUR_PETS = "ShowYourPets",
+    SHOW_OTHER_PETS = "ShowOtherPets",
     MUSIC = "Music",
     AUTO_REBIRTH = "AutoRebirth",
     SOUND = "Sound",

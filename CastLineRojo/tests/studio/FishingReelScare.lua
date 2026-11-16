@@ -13,14 +13,13 @@ local ok, result = xpcall(function()
 	bait.Anchored, bait.CanCollide, bait.Parent = true, false, folder
 	local baseSize = bait.Size
 	local top = assert(Water.GetWaterTop())
-	local target = Vector3.new(top.Position.X, Water.GetWaterSurfaceY() + baseSize.Y * 0.15, top.Position.Z)
+	local target = Vector3.new(top.Position.X, Water.GetWaterSurfaceY(), top.Position.Z)
 	local owner = {
 		folder = folder,
 		bait = bait,
 		baitBaseSize = baseSize,
 		forward = Vector3.zAxis,
-		statusLabel = {},
-		returnLabel = {},
+		continueLabel = {},
 		lineEnd = {},
 		lineTop = {},
 		line = {},
@@ -82,7 +81,7 @@ local ok, result = xpcall(function()
 			assert((body.Position - initialFrame.Position).Magnitude < 0.001, "Reel entry snapped visible fish position: " .. case.phase)
 		end
 		assert(math.abs(body.Transparency - initialTransparency) < 0.001, "Reel entry changed fish visibility")
-		assert(not owner.returnLabel.Visible, "Reeling showed a manual return prompt")
+		assert(not owner.continueLabel.Visible, "Reeling showed a manual return prompt")
 		if case.visible then
 			visibleCases += 1
 			local captured = assert(active.reelFish, "Visible fish was not captured")
@@ -90,10 +89,10 @@ local ok, result = xpcall(function()
 			update(now + 0.1)
 			assert(not captured.startedAt and body.Transparency < 1, "Fish fled before the lift")
 			motion.lifting = true
-			motion.position = Vector3.yAxis * (-baseSize.Y * 0.15 - 0.05)
+			motion.position = -Vector3.yAxis * 0.05
 			update(now + 0.2)
 			assert(not captured.startedAt, "Fish fled below the water surface")
-			motion.position = Vector3.yAxis * (-baseSize.Y * 0.15 + 0.05)
+			motion.position = Vector3.yAxis * 0.05
 			update(now + 0.3)
 			local scaredAt = assert(captured.startedAt, "Fish did not flee after the bait left water")
 			assert((body.Position - initialFrame.Position).Magnitude < 0.001, "Scare entry snapped fish position")
@@ -125,7 +124,7 @@ local ok, result = xpcall(function()
 			assert(not active:CanReturn(settledAt + Config.Reel.HoldTime - 0.001), "Showcase ended before 0.5 seconds")
 			update(settledAt + Config.Reel.HoldTime)
 			assert(
-				active:CanReturn(settledAt + Config.Reel.HoldTime) and not owner.returnLabel.Visible,
+				active:CanReturn(settledAt + Config.Reel.HoldTime) and not owner.continueLabel.Visible,
 				"Auto-return readiness or prompt is wrong"
 			)
 		else

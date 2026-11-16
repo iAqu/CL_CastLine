@@ -3,13 +3,14 @@ local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local StarterGui = game:GetService("StarterGui")
 local Lighting = game:GetService("Lighting")
-local ContentProvider = game:GetService("ContentProvider")
 local ProximityPromptService = game:GetService("ProximityPromptService")
 local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local SoundService = game:GetService("SoundService")
 local Workspace = game:GetService("Workspace")
 
 local LoadingAttributes = require(ReplicatedFirst:WaitForChild("LoadingAttributes"))
+local CriticalResourcePreloader = require(ReplicatedFirst:WaitForChild("CriticalResourcePreloader"))
+CriticalResourcePreloader.Start()
 
 local localPlayer = Players.LocalPlayer
 local playerGui = localPlayer:WaitForChild("PlayerGui")
@@ -44,9 +45,6 @@ local logoTween: Tween? = nil
 local originalFieldOfView: number? = nil
 local originalPromptEnabled = ProximityPromptService.Enabled
 local anchoringEnabled = true
-local preloadDone = false
-local preloadLoaded = 0
-local preloadTotal = 0
 
 local function getCurrentCamera(): Camera
 	local camera = Workspace.CurrentCamera
@@ -189,40 +187,6 @@ local function restoreLighting()
 		end
 		depthOfFieldStates[effect] = nil
 	end
-end
-
-local function startCriticalPreload()
-	local assets = {}
-	if loadingPart then
-		for _, descendant in ipairs(loadingPart:GetDescendants()) do
-			if descendant:IsA("ImageLabel") or descendant:IsA("ImageButton") or descendant:IsA("Sound") then
-				table.insert(assets, descendant)
-			end
-		end
-	end
-	for _, soundName in ipairs({ "Whoosh", "Click" }) do
-		local sound = SoundService:FindFirstChild(soundName, true)
-		if sound and sound:IsA("Sound") then
-			table.insert(assets, sound)
-		end
-	end
-	preloadTotal = #assets
-	if preloadTotal == 0 then
-		preloadDone = true
-		return
-	end
-	task.spawn(function()
-		local success, err = pcall(function()
-			ContentProvider:PreloadAsync(assets, function()
-				preloadLoaded += 1
-			end)
-		end)
-		if not success then
-			warn("LoadingScreen: critical asset preload failed", err)
-		end
-		preloadLoaded = preloadTotal
-		preloadDone = true
-	end)
 end
 
 local function disconnectConnections()
@@ -440,7 +404,10 @@ local function restoreRuntimeState()
 end
 
 local function getLoadingTarget(): (number, string, boolean)
-	if localPlayer:GetAttribute(LoadingAttributes.PLAYER_DATA_LOADED) == true
+	local preload = CriticalResourcePreloader.GetStatus()
+	if game:IsLoaded()
+		and preload.phase ~= "Idle" and preload.phase ~= "Loading"
+		and localPlayer:GetAttribute(LoadingAttributes.PLAYER_DATA_LOADED) == true
 		and localPlayer:GetAttribute(LoadingAttributes.CLIENT_CONTROLLERS_READY) == true
 	then
 		return 1, "Ready!", true
@@ -448,9 +415,9 @@ local function getLoadingTarget(): (number, string, boolean)
 	if not game:IsLoaded() then
 		return 0.05, "Loading game...", false
 	end
-	if not preloadDone then
-		local ratio = if preloadTotal > 0 then math.clamp(preloadLoaded / preloadTotal, 0, 1) else 0
-		return 0.05 + ratio * 0.15, ("Preloading assets... (%d/%d)"):format(math.min(preloadLoaded, preloadTotal), preloadTotal), false
+	if preload.phase == "Idle" or preload.phase == "Loading" then
+		local ratio = if preload.total > 0 then math.clamp(preload.loaded / preload.total, 0, 1) else 0
+		return 0.05 + ratio * 0.15, ("Preloading assets... (%d/%d)"):format(preload.loaded, preload.total), false
 	end
 	if localPlayer:GetAttribute(LoadingAttributes.PLAYER_DATA_LOADED) ~= true then
 		return 1, "Loading player data...", false
@@ -537,7 +504,6 @@ setLoadingCamera()
 cameraConnection = RunService.RenderStepped:Connect(setLoadingCamera)
 menuConnection = RunService.RenderStepped:Connect(updateMenuPlacement)
 updateMenuPlacement()
-startCriticalPreload()
 
 task.delay(15, function()
 	if localPlayer:GetAttribute(LoadingAttributes.LOADING_SCREEN_ACTIVE) == true and not getLoadingCameraPart() then

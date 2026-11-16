@@ -1,13 +1,20 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Config = require(script.Parent.FishingConfig)
 local Settings = Config.Bite
+local DEFAULT_SWIM_SPEED = Settings.ApproachDistance / Settings.ApproachTime
 local BaitElasticMotion = require(script.Parent.BaitElasticMotion)
 local FishingReelSpring = require(script.Parent.FishingReelSpring)
 local WaterSurfaceUtil = require(script.Parent.WaterSurfaceUtil)
 local FishAnimationController = require(script.Parent.FishAnimationController)
+local FishShadowAppearance = require(script.Parent.FishShadowAppearance)
 local FishSecondaryMotion = require(script.Parent.FishSecondaryMotion)
 local FishRepositionPath = require(script.Parent.FishRepositionPath)
 local FishDripEffect = require(script.Parent.FishDripEffect)
+local FishingShowcaseVFX = require(script.Parent.FishingShowcaseVFX)
+local MutationVisualUtil = require(script.Parent.MutationVisualUtil)
+local ItemStatUtil = require(script.Parent.ItemStatUtil)
+local EggMotion = require(script.Parent.FishingEggMotion)
+local LiftMotion = require(script.Parent.FishingLiftMotion)
 
 local FishingBiteSequence = {}
 FishingBiteSequence.__index = FishingBiteSequence
@@ -16,13 +23,19 @@ FishingBiteSequence.__index = FishingBiteSequence
 local Timeline = {}
 Timeline.__index = Timeline
 
-local function nibbleTiming(speed)
+local function nibbleTiming(speed, swimSpeed)
+	local settings = Settings.Nibble
+	local attackTime = math.clamp(
+		settings.AttackTime / speed * (DEFAULT_SWIM_SPEED / (swimSpeed or DEFAULT_SWIM_SPEED)),
+		settings.AttackTimeMin, settings.AttackTimeMax
+	)
+	local returnAt = attackTime + settings.ContactTime / speed
 	return {
 		nibbleSpeed = speed,
-		duration = Settings.NibbleTime / speed,
-		attackTime = Settings.Nibble.AttackTime / speed,
-		returnAt = (Settings.Nibble.AttackTime + Settings.Nibble.ContactTime) / speed,
-		reboundEnd = (Settings.Nibble.AttackTime + Settings.Nibble.ContactTime + Settings.Nibble.ReboundTime) / speed,
+		duration = attackTime + (Settings.NibbleTime - settings.AttackTime) / speed,
+		attackTime = attackTime,
+		returnAt = returnAt,
+		reboundEnd = returnAt + settings.ReboundTime / speed,
 	}
 end
 
@@ -40,16 +53,52 @@ function Timeline:_enter(phase, now, duration)
 	end
 end
 
-function FishingBiteSequence.NewTimeline(startedAt, random, readyAt)
+local function validNumber(value, minimum)
+	return type(value) == "number" and value >= minimum and value < math.huge
+end
+
+function FishingBiteSequence.NewTimeline(startedAt, random, readyAt, fish, catchKind)
 	local rng = random or Random.new()
+	local minNibbles, maxNibbles = 0, Settings.MaxNibbles
+	local appearTime, hookWindow, struggleTime = nil, Settings.HookWindow, Settings.StruggleTime
+	local swimSpeed, turnRadiusScale = DEFAULT_SWIM_SPEED, Settings.Nibble.ReturnRadiusScale
+	readyAt = math.max(startedAt, readyAt or startedAt)
+	if fish then
+		if validNumber(fish.SwimSpeed, 0) and fish.SwimSpeed > 0 then
+			swimSpeed = fish.SwimSpeed
+		end
+		if validNumber(fish.TurnRadiusScale, 0) and fish.TurnRadiusScale > 0 then
+			turnRadiusScale = fish.TurnRadiusScale
+		end
+		local min, max = fish.NibbleCountMin, fish.NibbleCountMax
+		if validNumber(min, 0) and validNumber(max, min) and min % 1 == 0 and max % 1 == 0 then
+			minNibbles, maxNibbles = min, max
+		end
+		if validNumber(fish.AppearTime, 0) then
+			appearTime = fish.AppearTime
+		end
+		if validNumber(fish.HookWindow, 0) and fish.HookWindow > 0 then
+			hookWindow = fish.HookWindow
+		end
+		if validNumber(fish.StruggleTime, 0) and fish.StruggleTime > 0 then
+			struggleTime = fish.StruggleTime
+		end
+	end
 	local timeline = setmetatable({
 		random = rng,
 		nibbleIndex = 0,
 		completedNibbles = 0,
-		nibbles = rng:NextInteger(0, Settings.MaxNibbles),
-		appearAt = startedAt + rng:NextNumber(Settings.AppearDelayMin, Settings.AppearDelayMax),
+		nibbles = rng:NextInteger(minNibbles, maxNibbles),
+		appearAt = if appearTime then readyAt + appearTime
+			else startedAt + rng:NextNumber(Settings.AppearDelayMin, Settings.AppearDelayMax),
+		swimSpeed = swimSpeed,
+		approachTime = math.max(Settings.ApproachTimeMin, Settings.ApproachDistance / swimSpeed),
+		turnRadiusScale = turnRadiusScale,
+		hookWindow = hookWindow,
+		struggleTime = struggleTime,
+		liftTiming = LiftMotion.Timing(Settings, catchKind == "Egg"),
 	}, Timeline)
-	timeline:_enter("Settling", startedAt, math.max(0, (readyAt or startedAt) - startedAt))
+	timeline:_enter("Settling", startedAt, readyAt - startedAt)
 	return timeline
 end
 
@@ -59,7 +108,7 @@ function Timeline:Advance(now)
 		if phase == "Settling" then
 			self:_enter("Waiting", at, math.max(0, self.appearAt - at))
 		elseif phase == "Waiting" then
-			self:_enter("Approaching", at, Settings.ApproachTime)
+			self:_enter("Approaching", at, self.approachTime)
 		elseif phase == "Approaching" or phase == "Nibbling" then
 			local pause = self.random:NextNumber(Settings.PauseMin, Settings.PauseMax)
 			if phase == "Nibbling" then
@@ -77,12 +126,12 @@ function Timeline:Advance(now)
 				self.nibbleIndex += 1
 				self:_enter("Nibbling", at, self:GetNibbleTiming().duration)
 			else
-				self:_enter("Bite", at, Settings.HookWindow)
+				self:_enter("Bite", at, self.hookWindow)
 			end
 		elseif phase == "Bite" then
 			self:_enter("Escaped", at)
 		elseif phase == "Struggling" then
-			self:_enter("Lifting", at, Settings.LiftTime)
+			self:_enter("Lifting", at, self.liftTiming.duration)
 		elseif phase == "Lifting" then
 			self:_enter("Caught", at)
 		else
@@ -95,7 +144,7 @@ end
 function Timeline:TryHook(now)
 	self:Advance(now)
 	if self.phase == "Bite" then
-		self:_enter("Struggling", now, Settings.StruggleTime)
+		self:_enter("Struggling", now, self.struggleTime)
 		return true
 	elseif
 		self.phase == "Waiting"
@@ -136,8 +185,8 @@ Motion.__index = Motion
 
 -- 解析积分平滑起步，之后匀角速绕行；半径先展开再收拢，水花独立采样。
 function Motion:SampleOrbit(elapsed)
-	local time = math.clamp(elapsed, 0, Settings.StruggleTime)
-	local blendTime = Settings.Struggle.BlendTime
+	local time = math.clamp(elapsed, 0, self.struggleTime)
+	local blendTime = self.struggleBlendTime
 	local blend = math.clamp(time / blendTime, 0, 1)
 	local travel = time - blendTime * (blend - blend ^ 3 + 0.5 * blend ^ 4)
 	local orbit = self.orbit
@@ -150,7 +199,7 @@ function Motion:SampleOrbit(elapsed)
 		radius = 1 + (peakRadius - 1) * smooth(blend)
 		radialVelocity = (peakRadius - 1) * 6 * blend * (1 - blend) / blendTime
 	else
-		local duration = Settings.StruggleTime - blendTime
+		local duration = self.struggleTime - blendTime
 		local progress = (time - blendTime) / duration
 		radius = peakRadius - (peakRadius - orbit.endRadius) * smooth(progress)
 		radialVelocity = -(peakRadius - orbit.endRadius) * 6 * progress * (1 - progress) / duration
@@ -163,31 +212,32 @@ end
 function Motion:SampleNibble(index, elapsed)
 	local settings = Settings.Nibble
 	local entry = self.nibbles[math.max(1, index)]
-	elapsed *= entry.nibbleSpeed
-	local progress = smooth(elapsed / settings.AttackTime)
-	local retreatAt = settings.AttackTime + settings.ContactTime
-	local pressure = smooth(elapsed / settings.AttackTime) * (1 - smooth((elapsed - retreatAt) / settings.ReboundTime))
+	local progress = smooth(elapsed / entry.attackTime)
+	local pressure = progress * (1 - smooth((elapsed - entry.returnAt) / (settings.ReboundTime / entry.nibbleSpeed)))
 	return progress, pressure * entry.depth, entry
 end
 
-function FishingBiteSequence.NewMotion(startedAt, random)
+function FishingBiteSequence.NewMotion(startedAt, random, nibbleCount, struggleTime, swimSpeed)
 	-- 表现随机数独立于咬钩时序，不因渲染频率改变玩法抽样。
 	local rng = random or Random.new()
+	struggleTime = struggleTime or Settings.StruggleTime
 	local motion = setmetatable({
 		startedAt = startedAt,
 		random = rng,
 		nibbles = {},
+		struggleTime = struggleTime,
+		struggleBlendTime = math.min(Settings.Struggle.BlendTime, struggleTime * 0.5),
 		mirror = if rng:NextInteger(0, 1) == 0 then -1 else 1,
 	}, Motion)
 	local settings, yaw, gap = Settings.Nibble, 0, 1
-	for index = 1, Settings.MaxNibbles do
+	for index = 1, math.max(Settings.MaxNibbles, nibbleCount or 0) do
 		local turn = rng:NextNumber(settings.TurnMin, settings.TurnMax) * (if rng:NextInteger(0, 1) == 0 then -1 else 1)
 		if math.abs(yaw + turn) > settings.TurnLimit then
 			turn = -turn
 		end
 		local nextYaw = yaw + turn
 		local nextGap = rng:NextNumber(settings.GapMin, settings.GapMax)
-		local entry = nibbleTiming(rng:NextNumber(settings.SpeedMin, settings.SpeedMax))
+		local entry = nibbleTiming(rng:NextNumber(settings.SpeedMin, settings.SpeedMax), swimSpeed)
 		entry.beforeYaw, entry.yaw = math.rad(yaw), math.rad(nextYaw)
 		entry.beforeGap, entry.gap = gap, nextGap
 		entry.depth = rng:NextNumber(settings.DepthMin, settings.DepthMax)
@@ -225,31 +275,40 @@ function FishingBiteSequence.SelectFishTemplate(fishFolder, random)
 	return candidates[rng:NextInteger(1, #candidates)]
 end
 
-local function prepareRound(owner, template, startedAt, readyAt, random, visualRandom)
+local function prepareRound(owner, template, startedAt, readyAt, random, visualRandom, fish, catchKind)
 	local rng = random or Random.new()
+	local timeline = FishingBiteSequence.NewTimeline(startedAt, rng, readyAt, fish, catchKind)
 	local self = setmetatable({
 		owner = owner,
-		timeline = FishingBiteSequence.NewTimeline(startedAt, rng, readyAt),
-		motion = FishingBiteSequence.NewMotion(startedAt, visualRandom),
+		isEgg = catchKind == "Egg",
+		timeline = timeline,
+		motion = FishingBiteSequence.NewMotion(startedAt, visualRandom, timeline.nibbles, timeline.struggleTime, timeline.swimSpeed),
 		originals = {},
 		surfaces = {},
 	}, FishingBiteSequence)
+	local scaleConfig = fish or { DefaultWeight = 1 }
+	self.defaultScale, self.catchScaleLimit = ItemStatUtil.GetScaleRatio(
+		scaleConfig, tonumber(scaleConfig.DefaultWeight) or 1, template
+	)
+	if self.isEgg then
+		self.defaultScale, self.catchScaleLimit = 1, math.huge
+	end
+	self.baseScale, self.scale = template:GetScale(), self.defaultScale
 	local body = template.PrimaryPart
 	-- 多部件鱼的 PrimaryPart 可能只覆盖半段鱼身，制作时标定完整体形尺寸。
 	local bodySize = template:GetAttribute("FishBodySize")
 	if typeof(bodySize) ~= "Vector3" or math.min(bodySize.X, bodySize.Y, bodySize.Z) <= 0 then
 		bodySize = body.Size
 	end
-	self.halfLength, self.depth = bodySize.Z * 0.5, bodySize.Y * 0.5 + Settings.WaterClearance
+	-- 长度与局部偏移保留模板空间数值，使用时只乘一次当前倍率。
+	self.halfLength = bodySize.Z * 0.5
+	self.depth = bodySize.Y * 0.5 * self.defaultScale + Settings.WaterClearance
 	self.bodyWidth = math.max(bodySize.X, bodySize.Y)
-	-- 美术导出时测量全部蒙皮部件在五个动作中的范围，包含宽鳍、长尾与装饰。
-	self.presentationRadius = template:GetAttribute("PresentationRadius")
-	local mouth = body:FindFirstChild("MouthAttachment")
+	local mouth = body:FindFirstChild(if self.isEgg then "HookAttachment" else "MouthAttachment")
 	self.mouthOffset = if mouth and mouth:IsA("Attachment")
 		then mouth.Position
 		else body.Size * Vector3.new(unpack(Settings.MouthOffset))
 	self.bodyOffset = template:GetPivot():ToObjectSpace(body.CFrame)
-	self.baseScale, self.scale = template:GetScale(), 1
 	self.biteDepth = BaitElasticMotion.BaseSize(owner).Y * Settings.BiteDepthFraction
 	self.side = owner.forward:Cross(Vector3.yAxis)
 	self.spawnSector = rng:NextInteger(1, 3)
@@ -264,9 +323,9 @@ local function prepareRound(owner, template, startedAt, readyAt, random, visualR
 	return self
 end
 
-function FishingBiteSequence.GetBiteWindow(template, baitSize, startedAt, readyAt, seed, motionSeed, spin)
+function FishingBiteSequence.GetBiteWindow(template, baitSize, startedAt, readyAt, seed, motionSeed, spin, fish, catchKind)
 	local owner = { baitBaseSize = baitSize, forward = Vector3.zAxis, spin = spin }
-	local round = prepareRound(owner, template, startedAt, readyAt, Random.new(seed), Random.new(motionSeed))
+	local round = prepareRound(owner, template, startedAt, readyAt, Random.new(seed), Random.new(motionSeed), fish, catchKind)
 	local timeline = round.timeline
 	while timeline.phase ~= "Bite" do
 		timeline:Advance(timeline.endsAt)
@@ -274,55 +333,31 @@ function FishingBiteSequence.GetBiteWindow(template, baitSize, startedAt, readyA
 	return timeline.startedAt, timeline.endsAt
 end
 
-function FishingBiteSequence.new(owner, startedAt, readyAt, random, visualRandom, template)
+function FishingBiteSequence.new(owner, startedAt, readyAt, random, visualRandom, template, fishConfig, catchKind)
 	owner.baitBaseSize = BaitElasticMotion.BaseSize(owner)
 	if not template then
 		local models = ReplicatedStorage:FindFirstChild("Models")
 		local fishFolder = models and models:FindFirstChild("Fish")
 		template = FishingBiteSequence.SelectFishTemplate(fishFolder)
 	end
-	local self = prepareRound(owner, template, startedAt, readyAt, random, visualRandom)
+	local self = prepareRound(owner, template, startedAt, readyAt, random, visualRandom, fishConfig, catchKind)
+	self.template, self.fishConfig = template, fishConfig
+	self.presentationRadius = ItemStatUtil.GetModelBounds(template).framingRadius
 	local fish = template:Clone()
+	fish:ScaleTo(self.baseScale * self.scale)
 	fish.Name, fish.Parent = "BitingFish", owner.folder
 	self.fish = fish
-	for _, part in ipairs(fish:GetDescendants()) do
-		if
-			part:IsA("BaseScript")
-			or part:IsA("JointInstance")
-			or part:IsA("Constraint")
-			or part:IsA("WeldConstraint")
-			or part:IsA("Highlight")
-		then
-			part:Destroy()
-		elseif part:IsA("BasePart") then
-			part.Anchored, part.CanCollide, part.CanTouch, part.CanQuery = true, false, false, false
-			part.LocalTransparencyModifier = 0
-			if part.Transparency < 1 and part.Name ~= "CameraPart" then
-				self.originals[part] = {
-					color = part.Color,
-					transparency = part.Transparency,
-					material = part.Material,
-					materialVariant = part.MaterialVariant,
-					texture = part:IsA("MeshPart") and part.TextureID or nil,
-				}
-				part.Color, part.Transparency = Color3.new(0, 0, 0), 1
-				if part:IsA("MeshPart") then
-					part.TextureID = ""
-				end
-			end
-		elseif part:IsA("SurfaceAppearance") then
-			table.insert(self.surfaces, { instance = part, parent = part.Parent })
-			part.Parent = nil
-		end
-	end
-	local highlight = Instance.new("Highlight")
-	highlight.Name, highlight.Adornee = "FishShadow", fish
-	highlight.FillColor, highlight.OutlineColor = Color3.new(0, 0, 0), Color3.fromRGB(254, 254, 254)
-	highlight.FillTransparency, highlight.OutlineTransparency = 1, 1
-	highlight.DepthMode, highlight.Enabled = Enum.HighlightDepthMode.AlwaysOnTop, false
-	highlight.Parent, self.highlight = fish, highlight
-	self.animation = FishAnimationController.new(fish, startedAt, self.motion.random)
+	local appearance = FishShadowAppearance.Prepare(fish)
+	self.originals, self.surfaces, self.highlight = appearance.originals, appearance.surfaces, appearance.highlight
+	self.animation = if self.isEgg then EggMotion.Animator() else FishAnimationController.new(
+		fish, startedAt, self.motion.random, nil, self.timeline.struggleTime, self.timeline.approachTime
+	)
 	return self
+end
+
+function FishingBiteSequence:SetCaughtWeight(weight: number)
+	self.catchWeight = weight
+	self.catchScale, self.catchScaleLimit = ItemStatUtil.GetScaleRatio(self.fishConfig, weight, self.template)
 end
 
 function FishingBiteSequence:_captureReelFish(target)
@@ -339,7 +374,7 @@ function FishingBiteSequence:_captureReelFish(target)
 	}
 end
 
-function FishingBiteSequence:TryHook(now)
+function FishingBiteSequence:TryHook(now, mutationId)
 	if self.destroyed then
 		return false
 	end
@@ -361,6 +396,9 @@ function FishingBiteSequence:TryHook(now)
 	end
 	local previous = self.timeline.phase
 	local hooked = self.timeline:TryHook(now)
+	if hooked then
+		self.mutationId = mutationId
+	end
 	if self.owner.fishAudio then
 		self.owner.fishAudio:SetPhase(self.timeline.phase)
 	end
@@ -394,9 +432,9 @@ function FishingBiteSequence:_trueBiteFeedback(now, target)
 	end
 	self.trueBiteEmitted = true
 	local owner = self.owner
+	owner:_impulse(Config.Camera.Bite, now)
 	owner:_waterFeedback(now, target, 0.8, false)
-	local surface = target - Vector3.yAxis * BaitElasticMotion.BaseSize(owner).Y * 0.15
-	owner:_playWaterVFX(now, Config.WaterVFX.Heavy, surface)
+	owner:_playWaterVFX(now, Config.WaterVFX.Heavy, target)
 end
 
 function FishingBiteSequence:CanReturn(now)
@@ -410,54 +448,31 @@ end
 function FishingBiteSequence:_appearance(visible, original, fade, phase, elapsed)
 	self.appearanceFade = if visible then math.clamp(fade, 0, 1) else 1
 	fade = if visible then smooth(fade) else 1
-	local shadow = visible and not original and fade < 1
 	-- 挣扎只淡出高亮，鱼身保持可见；出水前也保持淡出终点，避免阶段切换闪回。
 	local highlightFade = if phase == "Struggling"
 		then smooth(elapsed / Settings.Struggle.HighlightFadeTime)
 		elseif phase == "Lifting" or phase == "Caught" then 1
 		else 0
 	highlightFade = 1 - (1 - fade) * (1 - highlightFade)
-	self.highlight.FillTransparency = if shadow
-		then Settings.ShadowTransparency + (1 - Settings.ShadowTransparency) * highlightFade
-		else 1
-	-- 出水显色后复用鱼影高亮，只保留遵循场景遮挡的黑色描边。
-	self.highlight.OutlineColor = if original then Color3.new(0, 0, 0) else Color3.fromRGB(254, 254, 254)
-	self.highlight.OutlineTransparency = if original then fade else self.highlight.FillTransparency
-	self.highlight.DepthMode = if original
-		then Enum.HighlightDepthMode.Occluded
-		else Enum.HighlightDepthMode.AlwaysOnTop
-	for part, saved in pairs(self.originals) do
-		-- Plastic 半透明网格会被 Highlight 排除；Glass 让填充和描边完整参与渐变。
-		-- 仅在可见鱼影阶段使用，隐藏和出水时恢复，避免全透明 Glass 残影。
-		part.Material = if shadow then Enum.Material.Glass else saved.material
-		part.MaterialVariant = if shadow then "" else saved.materialVariant
-		part.Transparency = if visible then saved.transparency + (1 - saved.transparency) * fade else 1
-		if original and not self.originalShown then
-			part.Color = saved.color
-			if saved.texture then
-				part.TextureID = saved.texture
-			end
-		end
-	end
-	if original and not self.originalShown then
-		self.originalShown = true
-		for _, surface in ipairs(self.surfaces) do
-			surface.instance.Parent = surface.parent
-		end
-	end
-	-- 外观就绪后再启用；完全淡出后关闭，避免首尾帧使用旧的填充/描边。
-	self.highlight.Enabled = (visible and original and fade < 1) or (shadow and highlightFade < 1)
+	FishShadowAppearance.Apply(self, visible, original, fade, highlightFade)
 end
 
 function FishingBiteSequence:_scaleAt(phase, elapsed)
+	local defaultScale = self.defaultScale or 1
 	if phase == "Lifting" then
-		local punch = math.sin(math.pi * math.clamp(elapsed / Settings.LiftScaleTime, 0, 1))
-		local recover = math.sin(math.pi * math.clamp((elapsed - Settings.LiftScaleTime) / 0.25, 0, 1))
+		local timing = self:GetLiftTiming()
+		local progress = math.clamp(elapsed / timing.scaleTime, 0, 1)
+		local punch = math.sin(math.pi * progress)
+		local recover = math.sin(math.pi * math.clamp((elapsed - timing.scaleTime) / 0.25, 0, 1))
 		local bounce =
-			BaitElasticMotion.Rebound((elapsed / Settings.LiftTime - Settings.LiftFallEnd) / (1 - Settings.LiftFallEnd))
-		return 1 + (Settings.LiftScalePeak - 1) * punch - 0.06 * recover + Settings.LiftBounceScale * bounce
+			BaitElasticMotion.Rebound((elapsed - timing.landAt) / (timing.duration - timing.landAt))
+		local animationScale = 1 + (Settings.LiftScalePeak - 1) * punch - 0.06 * recover + Settings.LiftBounceScale * bounce
+		local size = defaultScale + ((self.catchScale or defaultScale) - defaultScale) * progress
+		return math.min(size * animationScale, self.catchScaleLimit or math.huge)
+	elseif phase == "Caught" then
+		return self.catchScale or defaultScale
 	end
-	return 1
+	return defaultScale
 end
 
 function FishingBiteSequence:_frameAtMouth(mouth, yaw, pitch)
@@ -515,9 +530,9 @@ function FishingBiteSequence:_restMouth(target, gap, yaw)
 	local outward = self:_outward(yaw)
 	local center = target
 		+ self:_contactOffset(yaw)
-		+ outward * (self.halfLength + Settings.NibbleGap * gap)
+		+ outward * (self.halfLength * self.defaultScale + Settings.NibbleGap * gap)
 		- Vector3.yAxis * self.depth
-	return CFrame.lookAt(center, center - outward):PointToWorldSpace(self.mouthOffset)
+	return CFrame.lookAt(center, center - outward):PointToWorldSpace(self.mouthOffset * self.defaultScale)
 end
 
 function FishingBiteSequence:_biteFrame(baitPosition, yaw, size)
@@ -525,17 +540,18 @@ function FishingBiteSequence:_biteFrame(baitPosition, yaw, size)
 	return self:_frameAtMouth(baitPosition + self:_contactOffset(yaw, size), yaw, Settings.BiteTilt)
 end
 
--- 所有回游路径以落水点为局部原点，在建轮时预计算，不能依赖上一渲染帧。
+-- 回游路径以水面的落点为局部原点，在建轮时预计算，不能依赖上一渲染帧。
 function FishingBiteSequence:_prepareRepositions()
 	self.repositions = {}
 	self.timeline.nibbleTimings = self.motion.nibbles
 	self.timeline.repositionDurations = {}
 	local settings = Settings.Nibble
-	local speed = Settings.ApproachDistance / Settings.ApproachTime * settings.ReturnSpeedScale
-	local radius = math.max(0.5, self.halfLength * settings.ReturnRadiusScale)
+	local speed = self.timeline.swimSpeed * settings.ReturnSpeedScale
+	local radius = self.halfLength * self.defaultScale * self.timeline.turnRadiusScale
+	radius = if self.isEgg then math.max(0.5, radius) else math.clamp(radius, 0.5, settings.ReturnRadiusMax)
 	for index, entry in ipairs(self.motion.nibbles) do
 		local rest = self:_restMouth(Vector3.zero, entry.beforeGap, entry.beforeYaw)
-		local _, contactScale = BaitElasticMotion.Sample("Nibbling", entry.returnAt, nil, entry.nibbleSpeed)
+		local _, contactScale = BaitElasticMotion.Sample("Nibbling", entry.returnAt, nil, entry.nibbleSpeed, entry.attackTime)
 		local contact = self:_contactOffset(entry.beforeYaw, BaitElasticMotion.BaseSize(self.owner) * contactScale)
 		local mouth = Vector3.new(contact.X, rest.Y - BaitElasticMotion.BaseSize(self.owner).Y * entry.depth, contact.Z)
 		local first = self:_frameAtMouth(mouth, entry.beforeYaw, settings.Pitch)
@@ -548,7 +564,10 @@ function FishingBiteSequence:_prepareRepositions()
 			}
 		end
 		local path = FishRepositionPath.new(
-			planar(first), planar(last), radius, speed * entry.returnSpeed, settings.ReturnRampTime, settings.ReturnTurnBlendTime
+			planar(first), planar(last), radius,
+			if self.isEgg then speed * entry.returnSpeed else math.min(speed * entry.returnSpeed, settings.ReturnSpeedMaxStuds),
+			settings.ReturnRampTime, settings.ReturnTurnBlendTime,
+			if self.isEgg then nil else math.rad(settings.ReturnTurnRateMax)
 		)
 		self.repositions[index] = { path = path, first = first, last = last }
 		self.timeline.repositionDurations[index] = path.duration
@@ -576,12 +595,12 @@ function FishingBiteSequence:_viewRoute(index, target, cameraPosition)
 	local function corrected(frame, yaw, pressure)
 		local size = BaitElasticMotion.BaseSize(self.owner)
 		if pressure > 0 then
-			local _, scale = BaitElasticMotion.Sample("Nibbling", entry.returnAt, nil, entry.nibbleSpeed)
+			local _, scale = BaitElasticMotion.Sample("Nibbling", entry.returnAt, nil, entry.nibbleSpeed, entry.attackTime)
 			size *= scale
 		end
 		local contact = self:_contactOffset(yaw, size)
 			- Vector3.yAxis * BaitElasticMotion.BaseSize(self.owner).Y * pressure
-		local mouth = frame:PointToWorldSpace(self.mouthOffset)
+		local mouth = frame:PointToWorldSpace(self.mouthOffset * self.defaultScale)
 		return frame + self:_viewOffset(contact, mouth.Y, camera)
 	end
 	local first = corrected(source.first, entry.beforeYaw, entry.depth)
@@ -602,17 +621,17 @@ function FishingBiteSequence:_repositionPose(index, elapsed, target, cameraPosit
 	local route = if cameraPosition then self:_viewRoute(index, target, cameraPosition) else source
 	local path = source.path
 	-- 镜头只能改变表现路径，不能改变既定的回游时长和咬钩时序。
-	local distance, speed = source.path:DistanceAt(elapsed)
-	local weight = speed / source.path.speed
-	if elapsed >= source.path.duration then
-		weight = Settings.Motion.Animation.HoldWeight
+	if elapsed >= path.duration then
+		local weight = Settings.Motion.Animation.HoldWeight
 			* smooth((elapsed - path.duration) / Settings.Nibble.ReturnRampTime)
 		return CFrame.new(target) * route.last, weight
 	elseif elapsed <= 0 then
 		return CFrame.new(target) * route.first, 0
 	end
-	local u = distance / source.path.length
-	local x, z, heading = path:Sample(u * path.length)
+	local distance, speed = path:DistanceAt(elapsed)
+	local weight = speed / path.speed
+	local u = distance / path.length
+	local x, z, heading = path:Sample(distance)
 	-- 高度以弧长做 Hermite 衔接；俯仰直接取高度斜率，完整三维速度仍朝前。
 	local firstY, lastY = route.first.Position.Y, route.last.Position.Y
 	local slope = math.tan(math.asin(route.first.LookVector.Y)) * path.length
@@ -634,6 +653,28 @@ local function horizontalUnit(vector, fallback)
 	return if flat.Magnitude > 0.00001 then flat.Unit else fallback
 end
 
+function FishingBiteSequence:GetShowcaseRadius()
+	local showcase = Settings.Motion.Secondary.Showcase
+	local maxTurn = 0
+	for axis = 1, 3 do
+		maxTurn += math.max(math.abs(showcase.IdleAngles[axis]), math.abs(showcase.BurstAngles[axis]))
+	end
+	-- 绕鱼嘴转动会带动主部件中心位移，给整段展示预留固定空间。
+	local mouthSwing = 2 * self.mouthOffset.Magnitude * math.sin(math.rad(maxTurn) * 0.5)
+	return (self.presentationRadius + mouthSwing) * (self.catchScale or self.defaultScale or 1)
+end
+
+function FishingBiteSequence:GetShowcaseHeight()
+	local radius = self.presentationRadius * (self.catchScale or self.defaultScale or 1)
+	local clearance = self:GetShowcaseRadius()
+	-- 回弹缩放和位移使用同一条曲线。检查每段极值，包含向下的那一次回弹。
+	for _, amplitude in Config.BaitElastic.LobeAmplitudes do
+		local reach = radius * (1 + Settings.LiftBounceScale * amplitude) - Settings.LiftBounceHeight * amplitude
+		clearance = math.max(clearance, reach)
+	end
+	return math.max(Settings.ShowcaseHeight, clearance + Settings.WaterClearance)
+end
+
 -- 从真实提竿姿态接入螺旋线；先展开大圈，再沿真实切线持续收小。
 function FishingBiteSequence:_struggleFrame(elapsed, target)
 	local initial = if self.hookFrame
@@ -647,7 +688,7 @@ function FishingBiteSequence:_struggleFrame(elapsed, target)
 	local outward = radial * math.cos(angle) + side * math.sin(angle)
 	local tangent = outward * radius * radialVelocity
 		+ (-radial * math.sin(angle) + side * math.cos(angle)) * radius * fraction * velocity
-	local blend = smooth(elapsed / Settings.Struggle.BlendTime)
+	local blend = smooth(elapsed / self.motion.struggleBlendTime)
 	local position = target
 		+ outward * radius * fraction
 		+ Vector3.yAxis * (initial.Position.Y - target.Y + (target.Y - self.depth - initial.Position.Y) * blend)
@@ -656,26 +697,55 @@ function FishingBiteSequence:_struggleFrame(elapsed, target)
 	return CFrame.new(position) * rotation
 end
 
+function FishingBiteSequence:GetLiftTiming()
+	return (self.timeline and self.timeline.liftTiming) or LiftMotion.Timing(Settings, self.isEgg)
+end
+
+function FishingBiteSequence:_prepareLift(target)
+	if self.liftPlan then return end
+	local initial = self:_struggleFrame(self.timeline.struggleTime, target)
+	self.liftInitial = CFrame.new(-target) * initial
+	local diameter = 2 * self.presentationRadius * (self.catchScale or self.defaultScale or 1)
+	self.liftPlan = LiftMotion.New(Settings, Config.BaitElastic, initial.Position.Y - target.Y, self:GetShowcaseHeight(), diameter)
+end
+
 function FishingBiteSequence:_liftFrame(elapsed, target)
-	local alpha = math.clamp(elapsed / Settings.LiftTime, 0, 1)
-	local goal = CFrame.lookAt(
-		target + Vector3.yAxis * Settings.ShowcaseHeight,
-		target + Vector3.yAxis * (Settings.ShowcaseHeight + 1),
-		self.side
-	)
-	local peak = target + Vector3.yAxis * Settings.LiftPeakHeight
-	if alpha < Settings.LiftRiseEnd then
-		local rise = smooth(alpha / Settings.LiftRiseEnd)
-		local initial = self:_struggleFrame(Settings.StruggleTime, target)
-		local position = initial.Position:Lerp(peak, rise)
-		local rotation = initial.Rotation:Lerp(goal.Rotation, rise)
-		return CFrame.new(position) * rotation * CFrame.Angles(0, 0, math.pi * 2 * Settings.LiftSpinTurns * rise)
-	elseif alpha < Settings.LiftFallEnd then
-		local fall = (alpha - Settings.LiftRiseEnd) / (Settings.LiftFallEnd - Settings.LiftRiseEnd)
-		return CFrame.new(peak:Lerp(goal.Position, fall * fall)) * goal.Rotation
+	self:_prepareLift(target)
+	local sample = LiftMotion.Sample(self.liftPlan, elapsed)
+	local initial = self.liftInitial
+	local horizontal = initial.Position * Vector3.new(1, 0, 1) * (1 - sample.rise)
+	local position = target + horizontal + Vector3.yAxis * sample.height
+	local showcaseUp = if self.fishConfig and self.fishConfig.DisplayFacing == "Front"
+		then -self.owner.forward
+		else self.side
+	local goal = CFrame.lookAt(Vector3.zero, Vector3.yAxis, showcaseUp).Rotation
+	local turn = smooth(elapsed / self.liftPlan.timing.riseEnd)
+	local rotation = initial.Rotation:Lerp(goal, turn)
+	return CFrame.new(position) * rotation * CFrame.Angles(0, 0, math.pi * 2 * Settings.LiftSpinTurns * turn)
+end
+
+function FishingBiteSequence:_updateLiftFeedback(phase, elapsed, now, target)
+	if self.isEgg or (phase ~= "Lifting" and phase ~= "Caught") then return end
+	self:_prepareLift(target)
+	local time = if phase == "Caught" then self.liftPlan.timing.duration + elapsed else elapsed
+	local previous = self.liftFeedbackAt or -1
+	local exit, land = LiftMotion.Events(self.liftPlan, previous, time)
+	self.liftFeedbackAt = math.max(previous, time)
+	if exit then
+		self.owner:_waterFeedback(now, target, 0.8, false, true)
+		self.owner:_playWaterVFX(now, Config.WaterVFX.Exit, target, nil, math.clamp(self.liftPlan.diameter / 12, 1, 3))
+		self.owner:_impulse(Settings.FishLift.Exit, now)
+		if self.owner.fishAudio then
+			self.owner.fishAudio:Play("FishWaterOut")
+		end
+		self.owner:_sound("CameraWhoosh")
 	end
-	local bounce = (alpha - Settings.LiftFallEnd) / (1 - Settings.LiftFallEnd)
-	return goal + Vector3.yAxis * Settings.LiftBounceHeight * BaitElasticMotion.Rebound(bounce)
+	if land then
+		if self.owner.fishAudio then
+			self.owner.fishAudio:Play("FishDrop")
+		end
+		self.owner:_impulse(Settings.FishLift.Land, now)
+	end
 end
 
 function FishingBiteSequence:_reelFrame(target)
@@ -684,10 +754,11 @@ end
 
 function FishingBiteSequence:_baitScaleAt(phase, elapsed)
 	local duration = self.timeline.endsAt - self.timeline.startedAt
-	local _, scale = BaitElasticMotion.Sample(phase, elapsed, duration, self.timeline:GetNibbleTiming().nibbleSpeed)
+	local timing = self.timeline:GetNibbleTiming()
+	local _, scale = BaitElasticMotion.Sample(phase, elapsed, duration, timing.nibbleSpeed, timing.attackTime)
 	local from, blendTime
 	if phase == "Struggling" then
-		from, blendTime = self.hookScale, Settings.Struggle.BlendTime
+		from, blendTime = self.hookScale, self.motion.struggleBlendTime
 	elseif phase == "Reeling" then
 		from, blendTime = self.reelScale, Config.Reel.SinkTime
 	end
@@ -714,9 +785,9 @@ function FishingBiteSequence:_basePose(phase, elapsed, target, cameraPosition)
 		baitPosition += Vector3.yAxis * BaitElasticMotion.BaseSize(self.owner).Y * offset
 	end
 	if phase == "Approaching" then
-		local progress = smooth(elapsed / Settings.ApproachTime)
+		local progress = smooth(elapsed / self.timeline.approachTime)
 		local start = contact
-			+ outward * (Settings.ApproachDistance + self.halfLength)
+			+ outward * (Settings.ApproachDistance + self.halfLength * self.defaultScale)
 			- Vector3.yAxis * (self.depth + Settings.AppearRise)
 		local position = start:Lerp(frame.Position, progress)
 		frame = CFrame.lookAt(position, position - outward)
@@ -726,7 +797,8 @@ function FishingBiteSequence:_basePose(phase, elapsed, target, cameraPosition)
 		frame = self:_repositionPose(index, time, target, cameraPosition)
 	elseif phase == "Nibbling" then
 		local progress, pressure = self.motion:SampleNibble(self.timeline.nibbleIndex, elapsed)
-		local bounce = BaitElasticMotion.Sample("Nibbling", elapsed, nil, self.timeline:GetNibbleTiming().nibbleSpeed)
+		local timing = self.timeline:GetNibbleTiming()
+		local bounce = BaitElasticMotion.Sample("Nibbling", elapsed, nil, timing.nibbleSpeed, timing.attackTime)
 		baitPosition = target + Vector3.yAxis * BaitElasticMotion.BaseSize(self.owner).Y * (bounce - pressure)
 		local index, time = self:_repositionState(phase, elapsed)
 		if index then
@@ -739,15 +811,14 @@ function FishingBiteSequence:_basePose(phase, elapsed, target, cameraPosition)
 				rest.Y - BaitElasticMotion.BaseSize(self.owner).Y * pressure,
 				contactMouth.Z
 			)
-			local mouth = rest:Lerp(contactMouth, progress)
-			local arc =
-				math.min(math.abs(math.sin(yaw)) * Settings.NibbleGap, Settings.NibbleGap * Settings.Nibble.ArcLimit)
-			mouth += outward:Cross(Vector3.yAxis) * arc * math.sin(math.pi * progress) * math.sign(yaw)
+			local arc = math.min(math.abs(math.sin(yaw)) * Settings.NibbleGap, Settings.NibbleGap * Settings.Nibble.ArcLimit)
+			local side = arc * math.sin(math.pi * progress) * math.sign(yaw)
+			local mouth = rest:Lerp(contactMouth, progress) + outward:Cross(Vector3.yAxis) * side
 			frame = self:_frameAtMouth(mouth, yaw, Settings.Nibble.Pitch * progress)
 		end
 	elseif phase == "Bite" then
 		local alpha = smooth(elapsed / Settings.BiteSinkTime)
-		local bounce = BaitElasticMotion.Sample("Bite", elapsed)
+		local bounce = BaitElasticMotion.Sample("Bite", elapsed, self.timeline.hookWindow)
 		baitPosition = target
 			- Vector3.yAxis * self.biteDepth * alpha
 			+ Vector3.yAxis * BaitElasticMotion.BaseSize(self.owner).Y * bounce
@@ -760,7 +831,7 @@ function FishingBiteSequence:_basePose(phase, elapsed, target, cameraPosition)
 		baitPosition = mouth - right * size.X * 0.5
 		baitRotation = CFrame.fromMatrix(Vector3.zero, right, Vector3.yAxis)
 		if self.hookBaitOffset then
-			local blend = smooth(elapsed / Settings.Struggle.BlendTime)
+			local blend = smooth(elapsed / self.motion.struggleBlendTime)
 			baitPosition = frame:PointToWorldSpace(self.hookBaitOffset):Lerp(baitPosition, blend)
 			baitRotation = (frame.Rotation * self.hookBaitRotation):Lerp(baitRotation, blend)
 			if self.hookContact then
@@ -769,7 +840,7 @@ function FishingBiteSequence:_basePose(phase, elapsed, target, cameraPosition)
 			end
 		end
 	elseif phase == "Lifting" or phase == "Caught" then
-		frame = self:_liftFrame(if phase == "Caught" then Settings.LiftTime else elapsed, target)
+		frame = self:_liftFrame(if phase == "Caught" then self:GetLiftTiming().duration else elapsed, target)
 		baitPosition = frame:PointToWorldSpace(self.mouthOffset * self.scale)
 	elseif phase == "Reeling" or phase == "Reeled" then
 		local reel = self:_reelFrame(target)
@@ -811,6 +882,7 @@ function FishingBiteSequence:_basePose(phase, elapsed, target, cameraPosition)
 end
 
 function FishingBiteSequence:_pose(phase, elapsed, target, _now, request, cameraPosition)
+	if self.isEgg then return EggMotion.Pose(self, phase, elapsed, target) end
 	local frame, baitPosition, fade, baitRotation = self:_basePose(phase, elapsed, target, cameraPosition)
 	-- 镜头使用基础路径的中心，程序姿态只绕缩放后的嘴部支点旋转。
 	self.showcasePosition = if phase == "Lifting" or phase == "Caught" then frame.Position else nil
@@ -824,7 +896,9 @@ function FishingBiteSequence:_pose(phase, elapsed, target, _now, request, camera
 		local to = horizontalUnit(after.LookVector, frame.LookVector)
 		turnRate = math.atan2(from:Cross(to).Y, from:Dot(to)) / (elapsed + step - beforeAt)
 	end
-	local pitch, yaw, roll = FishSecondaryMotion.Sample(phase, elapsed, turnRate, request, self.motion.mirror)
+	local pitch, yaw, roll = FishSecondaryMotion.Sample(
+		phase, elapsed, turnRate, request, self.motion.mirror, self.timeline.struggleTime, self.timeline.approachTime
+	)
 	local mouth = CFrame.new(self.mouthOffset * self.scale)
 	frame = frame * mouth * CFrame.Angles(pitch, yaw, roll) * mouth:Inverse()
 	return frame, baitPosition, fade, baitRotation
@@ -878,8 +952,9 @@ function FishingBiteSequence:_createFishTrail()
 	trail:Clear()
 end
 
-function FishingBiteSequence:_updateFishTrail(phase)
-	if phase == "Lifting" and not self.fishTrailAttempted then
+function FishingBiteSequence:_updateFishTrail(phase, elapsed)
+	local rising = phase == "Lifting" and elapsed < self:GetLiftTiming().riseEnd
+	if rising and not self.fishTrailAttempted then
 		local waterY = WaterSurfaceUtil.GetWaterSurfaceY()
 		if waterY and self.fish.PrimaryPart.Position.Y >= waterY then
 			self:_createFishTrail()
@@ -890,7 +965,53 @@ function FishingBiteSequence:_updateFishTrail(phase)
 		effect.att0.Position = Vector3.new(effect.maxX * self.scale, 0, 0)
 		effect.att1.Position = Vector3.new(effect.minX * self.scale, 0, 0)
 		-- 展示阶段只关闭生成，让最后一段拖尾按模板寿命自然消散。
-		effect.trail.Enabled = phase == "Lifting"
+		effect.trail.Enabled = rising
+	end
+end
+
+function FishingBiteSequence:_updateRarityVFX(phase, now)
+	local stage
+	if phase == "Caught" then
+		-- 跨过出水阶段时不补播；两个阶段各自只消费一次。
+		self.rarityExitPlayed = true
+		if not self.rarityShowcasePlayed then
+			self.rarityShowcasePlayed = true
+			stage = "Showcase"
+		end
+	elseif phase == "Lifting" and not self.rarityExitPlayed then
+		local waterY = WaterSurfaceUtil.GetWaterSurfaceY()
+		if waterY and self.fish.PrimaryPart.Position.Y >= waterY then
+			self.rarityExitPlayed = true
+			stage = "Exit"
+		end
+	end
+	if not stage and not self.rarityEffects then
+		return
+	end
+	local center = self.fish:GetBoundingBox()
+	local diameter = 2 * self.presentationRadius * self.scale
+	if stage then
+		local effect = self.owner:_playRarityVFX(now, center.Position, self.fishConfig and self.fishConfig.Rarity, diameter, stage)
+		if effect then
+			self.rarityEffects = self.rarityEffects or {}
+			table.insert(self.rarityEffects, effect)
+		end
+	end
+	for index = #(self.rarityEffects or {}), 1, -1 do
+		if not self.rarityEffects[index]:Update(now, center.Position, diameter) then
+			table.remove(self.rarityEffects, index)
+		end
+	end
+end
+
+function FishingBiteSequence:_updateShowcaseVFX(now)
+	if self.showcasePending and not self.showcasePlayed then
+		self.showcasePending = nil
+		self.showcasePlayed = true
+		self.showcaseVFX = FishingShowcaseVFX.new(self, now)
+	end
+	if self.showcaseVFX and not self.showcaseVFX:Update(now) then
+		self.showcaseVFX = nil
 	end
 end
 
@@ -898,7 +1019,7 @@ end
 function FishingBiteSequence:Present(cameraPosition)
 	self.presentationCamera = cameraPosition
 	local pose = self.pendingPose
-	if not pose then
+	if self.destroyed or not pose then
 		return
 	end
 	local frame, baitPosition, _, baitRotation =
@@ -906,24 +1027,23 @@ function FishingBiteSequence:Present(cameraPosition)
 	local offset = CFrame.new(self.bodyOffset.Position * self.scale) * self.bodyOffset.Rotation
 	self.fish:PivotTo(frame * offset:Inverse())
 	self.displayFrame = frame
-	self:_updateFishTrail(pose.phase)
-	if pose.phase == "Lifting" and not self.rarityVFXPlayed then
-		self.rarityVFXPlayed = true
-		local center = self.fish:GetBoundingBox()
-		self.rarityVFX = self.owner:_playRarityVFX(pose.now, center.Position)
+	if not self.isEgg then
+		self:_updateFishTrail(pose.phase, pose.elapsed)
 	end
-	if self.rarityVFX and self.rarityVFX.model.Parent then
-		local center = self.fish:GetBoundingBox()
-		self.rarityVFX.model:PivotTo(CFrame.new(center.Position) * self.rarityVFX.rotation)
+	if self.originalShown and self.mutationId and not self.mutationShown then
+		self.mutationShown = true
+		MutationVisualUtil.Apply(self.fish, self.mutationId, self.template.Name)
 	end
+	self:_updateRarityVFX(pose.phase, pose.now)
+	self:_updateShowcaseVFX(pose.now)
 	-- 在鱼的本帧缩放、姿态与位置落定后发射，避免甩尾水珠从旧位置出现。
-	if pose.phase == "Caught" and not self.drip then
+	if not self.isEgg and pose.phase == "Caught" and not self.drip then
 		self.drip = FishDripEffect.new(self.fish)
 	end
 	local active = self.animation.active
 	local request = pose.request
 	local playing = active and request and active.name == request.name and active.token == request.token and active.track.IsPlaying
-	if self.owner.fishAudio then
+	if self.owner.fishAudio and not self.isEgg then
 		self.owner.fishAudio:UpdateFlap(pose.phase, request, playing)
 	end
 	if self.drip then
@@ -998,16 +1118,16 @@ function FishingBiteSequence:Update(now, deferPresentation)
 	if phase ~= self.lastPhase or timeline.startedAt ~= self.lastStartedAt then
 		if phase == "Escaped" then
 			self.escapeOffset = self.lastPosition and self.lastPosition - target
-		elseif phase == "Struggling" or phase == "Lifting" then
+		elseif phase == "Struggling" or (phase == "Lifting" and self.isEgg) then
 			owner:_waterFeedback(now, target, 0.8, false, phase == "Lifting")
 			if phase == "Lifting" then
-				local surface = target - Vector3.yAxis * BaitElasticMotion.BaseSize(owner).Y * 0.15
-				owner:_playWaterVFX(now, Config.WaterVFX.Exit, surface)
+				owner:_playWaterVFX(now, Config.WaterVFX.Exit, target)
 				owner:_impulse(Config.Camera.FishExit, timeline.startedAt)
 			end
 		end
 		self.lastPhase, self.lastStartedAt = phase, timeline.startedAt
 	end
+	self:_updateLiftFeedback(phase, elapsed, now, target)
 	if phase ~= "Settling" then
 		local scale = self:_scaleAt(phase, elapsed)
 		if math.abs(scale - self.scale) > 0.00001 then
@@ -1028,7 +1148,7 @@ function FishingBiteSequence:Update(now, deferPresentation)
 			animationAt = self.reelFish.startedAt or timeline.startedAt
 		end
 		local request = self.animation:Update(
-			animationPhase, animationAt, now, self.motion.mirror, swimWeight, timing.nibbleSpeed
+			animationPhase, animationAt, now, self.motion.mirror, swimWeight, timing.nibbleSpeed, timing.attackTime, self:GetLiftTiming().duration
 		)
 		local frame, baitPosition, fade = self:_pose(phase, elapsed, target, now, request)
 		self.lastPosition = frame.Position
@@ -1067,11 +1187,10 @@ function FishingBiteSequence:Update(now, deferPresentation)
 			local tick = math.floor((elapsed + 1e-8) / Config.WaterVFX.StruggleInterval)
 			if self.struggleVFXTick ~= tick then
 				self.struggleVFXTick = tick
-				local waterY = target.Y - BaitElasticMotion.BaseSize(owner).Y * 0.15
 				local effectPosition = target:Lerp(baitPosition, Config.WaterVFX.StrugglePositionScale)
 				owner:_playWaterVFX(
 					now, Config.WaterVFX.Struggle,
-					Vector3.new(effectPosition.X, waterY, effectPosition.Z), frame.LookVector
+					Vector3.new(effectPosition.X, target.Y, effectPosition.Z), frame.LookVector, self.scale
 				)
 			end
 			if now >= (self.nextRipple or 0) then
@@ -1088,13 +1207,11 @@ function FishingBiteSequence:Update(now, deferPresentation)
 	end
 	owner:_setPhase(if phase == "Settling" then "Waiting" else phase)
 	local text = Settings.Text
-	owner.statusLabel.Visible = phase == "Escaped" or (phase == "Caught" and timeline:CanReturn(now))
-	owner.statusLabel.Text = if phase == "Caught" then text.Caught else text.Escaped
-	owner.returnLabel.Text = if phase == "Caught"
-		then text.Return
+	owner.continueLabel.Text = if phase == "Caught"
+		then owner.continueText or text.Return
 		elseif phase == "Bite" then text.Hook
 		else text.Waiting
-	owner.returnLabel.Visible = if phase == "Caught"
+	owner.continueLabel.Visible = if phase == "Caught"
 		then timeline:CanReturn(now)
 		else phase ~= "Settling"
 			and phase ~= "Struggling"
@@ -1102,8 +1219,8 @@ function FishingBiteSequence:Update(now, deferPresentation)
 			and phase ~= "Escaped"
 			and phase ~= "Reeling"
 			and phase ~= "Reeled"
-	owner.returnLabel.TextTransparency = 0
-	owner.returnLabel.TextColor3 = if phase == "Bite" then Color3.fromRGB(255, 220, 100) else Color3.new(1, 1, 1)
+	owner.continueLabel.TextTransparency = 0
+	owner.continueLabel.TextColor3 = if phase == "Bite" then Color3.fromRGB(255, 220, 100) else Color3.new(1, 1, 1)
 	return phase
 end
 
@@ -1112,14 +1229,19 @@ function FishingBiteSequence:Destroy()
 		return
 	end
 	self.destroyed = true
+	self.showcasePending = nil
+	if self.showcaseVFX then
+		self.showcaseVFX:Destroy()
+		self.showcaseVFX = nil
+	end
 	if self.fishTrail then
 		self.fishTrail.trail.Enabled = false
 		self.fishTrail.trail:Clear()
 		self.fishTrail.att0:Destroy()
 		self.fishTrail.att1:Destroy()
 	end
-	if self.rarityVFX then
-		self.rarityVFX.model:Destroy()
+	for _, effect in ipairs(self.rarityEffects or {}) do
+		effect:Destroy()
 	end
 	if self.drip then
 		self.drip:Destroy()
@@ -1130,9 +1252,7 @@ function FishingBiteSequence:Destroy()
 	if self.animation then
 		self.animation:Destroy()
 	end
-	for _, surface in ipairs(self.surfaces) do
-		surface.instance:Destroy()
-	end
+	FishShadowAppearance.Destroy(self)
 	self.fish:Destroy()
 end
 

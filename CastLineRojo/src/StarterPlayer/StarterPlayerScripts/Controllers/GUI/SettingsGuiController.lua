@@ -8,6 +8,7 @@ local NotificationClient = require(ReplicatedStorage.Modules.NotificationClient)
 local NumberUtil = require(ReplicatedStorage.Modules.NumberUtil)
 local GuiAnimation = require(ReplicatedStorage.Modules.GuiAnimation)
 local Constants = require(ReplicatedStorage.Modules.Constants)
+local PetFeatureConfig = require(ReplicatedStorage.Modules.PetFeatureConfig)
 local LogHelper = require(ReplicatedStorage.Modules.LogHelper)
 
 local Players = game:GetService("Players")
@@ -52,9 +53,25 @@ function SettingsGuiController:UpdateSettingButtons()
     self:SetButtonState(SoundButton, playerData.Settings[Constants.SETTINGS_ID.SOUND])
     self:SetButtonState(GlobalMessageButton, playerData.Settings[Constants.SETTINGS_ID.GLOBAL_MESSAGE])
     self:SetPerformanceModeButtonState(playerData.Settings[Constants.SETTINGS_ID.PERFORMANCE_MODE])
+    for _, name in ipairs({ "ShowYourPets", "ShowOtherPets" }) do
+        local row = ScrollingFrame:FindFirstChild(name)
+        local button = row and row:FindFirstChild("SwitchButton")
+        if PetFeatureConfig.Enabled and button then
+            self:SetButtonState(button, playerData.Settings[name] ~= false)
+        end
+    end
 end
 
 function SettingsGuiController:SetButtonState(button: GuiButton, isEnable: boolean)
+    local on = button:FindFirstChild("ON")
+    local off = button:FindFirstChild("OFF")
+    if not on or not off then
+        if button:IsA("TextButton") then
+            button.Text = if isEnable then "On" else "Off"
+            button.BackgroundColor3 = if isEnable then Color3.fromRGB(65, 170, 90) else Color3.fromRGB(100, 100, 100)
+        end
+        return
+    end
     if isEnable then
         -- button.Text = "On"
         -- button.BackgroundColor3 = Constants.COLOR.GREEN
@@ -116,6 +133,16 @@ function SettingsGuiController:KnitStart()
     LogHelper.Print("SettingsGuiController started")
 
     local SettingsService = Knit.GetService("SettingsService")
+    for _, name in ipairs({ "ShowYourPets", "ShowOtherPets" }) do
+        local row = ScrollingFrame:FindFirstChild(name)
+        local button = row and row:FindFirstChild("SwitchButton")
+        if row then
+            row.Visible = PetFeatureConfig.Enabled
+        end
+        if PetFeatureConfig.Enabled and button and button:IsA("GuiButton") then
+            button.Activated:Connect(function() self:ChangeSetting(name) end)
+        end
+    end
 
     CloseButton.Activated:Connect(function()
         GuiAnimation.CloseGui(SettingsGui)

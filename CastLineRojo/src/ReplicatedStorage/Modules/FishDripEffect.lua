@@ -27,25 +27,34 @@ local function emissionCount(elapsed)
 	return math.floor(count + 0.000001)
 end
 
-local function surfaceBinding(body, point)
+local function surfaceBinding(body, point, scale)
 	local rest = point:GetAttribute("RigV2SurfaceBind")
 	local encoded = point:GetAttribute("RigV2SurfaceWeights")
 	if typeof(rest) ~= "CFrame" or type(encoded) ~= "string" then
 		return nil
 	end
+	local surface = CFrame.new(rest.Position * scale) * rest.Rotation
 	local influences, total = {}, 0
 	for name, value in string.gmatch(encoded, "([^:;]+):([^;]+)") do
 		local joint, weight = body:FindFirstChild(name, true), tonumber(value)
 		if not joint or not joint:IsA("Bone") or not weight or weight <= 0 or weight > 1 then
 			return nil
 		end
-		table.insert(influences, { joint = joint, weight = weight })
+		-- WorldCFrame already includes animated ancestors. Build the bind frame from local offsets.
+		local bind, parent = joint.CFrame, joint.Parent
+		while parent and parent:IsA("Bone") do
+			bind, parent = parent.CFrame * bind, parent.Parent
+		end
+		if parent ~= body then
+			return nil
+		end
+		table.insert(influences, { joint = joint, weight = weight, offset = bind:ToObjectSpace(surface) })
 		total += weight
 	end
 	if #influences == 0 or #influences > 4 or math.abs(total - 1) > 0.001 then
 		return nil
 	end
-	return { point = point, rest = rest, influences = influences }
+	return { point = point, influences = influences }
 end
 
 function FishDripEffect.new(fish, random)
@@ -77,9 +86,13 @@ function FishDripEffect.new(fish, random)
 		end
 		table.insert(points, point)
 	end
+	local hasWeightedSurface = type(self.surfaceScale) == "number" and self.surfaceScale > 0
+	if hasWeightedSurface then
+		self.bindScale = fish:GetScale()
+	end
 	for _, point in ipairs(points) do
-		if type(self.surfaceScale) == "number" and self.surfaceScale > 0 then
-			local binding = surfaceBinding(fish.PrimaryPart, point)
+		if hasWeightedSurface then
+			local binding = surfaceBinding(fish.PrimaryPart, point, self.bindScale / self.surfaceScale)
 			if binding then
 				table.insert(self.surfaces, binding)
 			end
@@ -109,15 +122,12 @@ function FishDripEffect:_updateSurfaces()
 	if #self.surfaces == 0 then
 		return
 	end
-	local bodyFrame = self.fish.PrimaryPart.CFrame
-	local scale = self.fish:GetScale() / self.surfaceScale
+	local scale = self.fish:GetScale() / self.bindScale
 	for _, binding in ipairs(self.surfaces) do
-		local rest = binding.rest
-		local worldBind = bodyFrame * CFrame.new(rest.Position * scale) * rest.Rotation
 		local position, right, up = Vector3.zero, Vector3.zero, Vector3.zero
 		for _, influence in ipairs(binding.influences) do
-			local joint, weight = influence.joint, influence.weight
-			local frame = joint.TransformedWorldCFrame * joint.WorldCFrame:ToObjectSpace(worldBind)
+			local joint, weight, offset = influence.joint, influence.weight, influence.offset
+			local frame = joint.TransformedWorldCFrame * CFrame.new(offset.Position * scale) * offset.Rotation
 			position += frame.Position * weight
 			right += frame.RightVector * weight
 			up += frame.UpVector * weight

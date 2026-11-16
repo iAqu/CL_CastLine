@@ -45,12 +45,6 @@ function UpgradeService:_applyUpgradeLevel(
 	end
 	profile.Data.Upgrades[upgradeId] = newLevel
 
-	if upgradeId == Constants.UPGRADE_ID.MOVE_SPEED then
-		Knit.GetService("MovementSpeedService"):RefreshPlayer(player)
-	elseif upgradeId == Constants.UPGRADE_ID.CARRY_WEIGHT then
-		Knit.GetService("CarryCapacityService"):RefreshPlayer(player)
-	end
-
 	self.Client.Upgrade:Fire(player, upgradeId, true, message, newLevel)
 	return result(true, message, newLevel, price)
 end

@@ -3,6 +3,39 @@ local function angleError(a, b)
 	return math.abs(math.atan2(math.sin(a - b), math.cos(a - b)))
 end
 
+-- 弯道降低线速度，直线恢复；按绝对时钟采样且位置导数与返回速度一致。
+do
+	local first, last = { x = 0, z = 0, heading = 0 }, { x = 20, z = 8, heading = math.pi / 2 }
+	local rate = math.rad(140)
+	local path = Path.new(first, last, 1, 10, 0.2, 0.3, rate)
+	local unbounded = Path.new(first, last, 1, 10, 0.2, 0.3)
+	assert(path.duration > unbounded.duration, "Turns did not extend the shared return duration")
+	local curved, straight = false, false
+	local previous = 0
+	for sample = 1, 999 do
+		local at = path.duration * sample / 1000
+		local distance, speed = path:DistanceAt(at)
+		local _, _, _, curvature = path:Sample(distance)
+		assert(distance >= previous and speed >= 0 and speed <= 10 + 1e-9)
+		assert(speed * math.abs(curvature) <= rate * 1.02, "Fish turned too fast")
+		curved = curved or (math.abs(curvature) > 0.5 and speed < 5)
+		straight = straight or (math.abs(curvature) < 1e-6 and speed > 9)
+		local step = 1e-6
+		local derivative = (path:DistanceAt(at + step) - path:DistanceAt(at - step)) / (2 * step)
+		assert(math.abs(derivative - speed) < 0.001, "Return clock speed disagrees with motion")
+		previous = distance
+	end
+	assert(curved and straight, "Fixture must slow in bends and recover on straights")
+	assert(path:DistanceAt(-1) == 0 and path:DistanceAt(path.duration) == path.length)
+	local empty = Path.new(first, first, 1, 10, 0.2, 0.3, rate)
+	assert(empty:DistanceAt(1) == 0 and empty.duration == 0)
+	local expected = path:DistanceAt(path.duration * 0.37)
+	for _, fps in ipairs({ 15, 30, 60, 144 }) do
+		for frame = 0, math.ceil(path.duration * fps) do path:DistanceAt(frame / fps) end
+		assert(path:DistanceAt(path.duration * 0.37) == expected, "Frame rate changed turn timing")
+	end
+end
+
 -- 原路径在这些段交接处的转向速度会瞬间跳变；平滑后左右极限必须一致。
 do
 	local path = Path.new({ x = 0, z = 0, heading = 0 }, { x = 8, z = 4, heading = math.pi / 2 }, 1.5, 7.5, 0.15, 0.3)
@@ -29,6 +62,15 @@ for index = 1, 1200 do
 	end
 	local radius = random(0.5, 5)
 	local path = Path.new(first, last, radius, 7.5, 0.15, 0.3)
+	if index <= 32 then
+		local rate = math.rad(140)
+		local limited = Path.new(first, last, radius, 10, 0.15, 0.3, rate)
+		for frame = 0, 300 do
+			local distance, speed = limited:DistanceAt(limited.duration * frame / 300)
+			local _, _, _, curvature = limited:Sample(distance)
+			assert(speed * math.abs(curvature) <= rate * 1.02, "Seeded path exceeded turn rate")
+		end
+	end
 	merged = merged or path.mergedWindows > 0
 	retried = retried or path.planningRadius > radius
 	assert(path.planningRadius <= radius * 2 + 1e-9, "Planning retries escaped the radius bound")

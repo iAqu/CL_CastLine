@@ -32,18 +32,27 @@ icon:bindToggleKey(Enum.KeyCode.Backquote)
 icon:autoDeselect(false)
 icon:setCaption("Inventory")
 
-BackpackScript.StateChanged.Event:Connect(function(isNowOpen)
-	if isNowOpen then
+local function syncIconState()
+	if BackpackScript.IsOpen then
 		icon:select()
 	else
 		icon:deselect()
 	end
-end)
+end
 
-icon.toggled:Connect(function(_isSelected, fromSource)
+BackpackScript.StateChanged.Event:Connect(syncIconState)
+
+icon.toggled:Connect(function(isSelected, fromSource)
 	if fromSource == "User" then
-		if BackpackScript.OpenClose then
-			BackpackScript.OpenClose()
+		-- A queued deselect must not toggle a window that is already closed.
+		if isSelected then
+			BackpackScript.Open()
+		else
+			BackpackScript.Close()
 		end
+		-- Opening may be blocked during fishing; reflect the actual window state.
+		syncIconState()
 	end
 end)
+
+syncIconState()

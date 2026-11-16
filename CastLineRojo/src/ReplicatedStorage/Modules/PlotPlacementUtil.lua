@@ -1,4 +1,4 @@
-local PlotPlacementUtil = {}
+local PlotPlacementUtil = { CAPACITY = 10 }
 
 local function toSlot(slot)
 	local numericSlot = tonumber(slot)

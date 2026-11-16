@@ -23,8 +23,7 @@ local ok, result = xpcall(function()
 		_nibbleRipple = function() end,
 		_nibbleFeedback = function() end,
 		_setPhase = function() end,
-		statusLabel = {},
-		returnLabel = {},
+		continueLabel = {},
 	}
 	local samples, maxPixelError, maxUncorrectedError = 0, 0, 0
 	local viewports = { Vector2.new(1920, 1080), Vector2.new(1080, 1920), Vector2.new(844, 390) }

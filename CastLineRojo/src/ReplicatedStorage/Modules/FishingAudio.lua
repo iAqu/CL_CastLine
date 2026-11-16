@@ -1,20 +1,62 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local SoundService = game:GetService("SoundService")
+local ContentProvider = game:GetService("ContentProvider")
 local Config = require(script.Parent.FishingConfig)
 
 local FishingAudio = {}
 FishingAudio.__index = FishingAudio
 local tails = {}
 local warned = {}
+local preloadStarted = false
+
+function FishingAudio.PreloadLuckSounds()
+	if preloadStarted then
+		return
+	end
+	preloadStarted = true
+	task.spawn(function()
+		local sounds, seen = {}, {}
+		local meterTickCache
+		for _, name in { "MeterTick", "LuckTick", "LuckWhole", "ButtonClick", "Perfect" } do
+			local id = Config.Sounds[name].Id
+			if not seen[id] then
+				seen[id] = true
+				local sound = Instance.new("Sound")
+				sound.SoundId = id
+				if name == "MeterTick" then
+					sound.Name, sound.Volume = "FishingMeterTickCache", 0
+					sound.Parent = SoundService
+					meterTickCache = sound
+				end
+				table.insert(sounds, sound)
+			end
+		end
+		local ok, err = pcall(ContentProvider.PreloadAsync, ContentProvider, sounds)
+		local meterTickReady = ok and meterTickCache and meterTickCache.IsLoaded
+		for _, sound in sounds do
+			-- 仅 MeterTick 保留一份不播放的客户端缓存，跨次钓鱼维持资源就绪。
+			-- 每次实际提示仍独立创建声音并正常清理，不重启或截断上一声。
+			if sound ~= meterTickCache or not meterTickReady then
+				sound:Destroy()
+			end
+		end
+		if not ok then
+			warn("FishingAudio: luck sound preload failed: " .. tostring(err))
+		elseif not meterTickReady then
+			warn("FishingAudio: MeterTick did not load; resident cache was released")
+		end
+	end)
+end
 
 local function template(name)
 	local sounds = ReplicatedStorage:FindFirstChild("Sound")
-	local fish = sounds and sounds:FindFirstChild("Fish")
-	local sound = fish and fish:FindFirstChild(name)
+	local group = if name == "Gui_Fuse_Success" then "Gui" else "Fishing"
+	local folder = sounds and sounds:FindFirstChild(group)
+	local sound = folder and folder:FindFirstChild(name)
 	if not sound or not sound:IsA("Sound") or sound.SoundId == "" then
 		if not warned[name] then
 			warned[name] = true
-			warn("FishingAudio: Sound.Fish." .. name .. " is missing or invalid; skipping sound")
+			warn("FishingAudio: Sound." .. group .. "." .. name .. " is missing or invalid; skipping sound")
 		end
 		return nil
 	end
@@ -114,7 +156,12 @@ function FishingAudio:StopLoop(name)
 	end
 end
 
-function FishingAudio:SetPhase(phase)
+function FishingAudio:PlayShowcase()
+	self:Play("FishSuccess")
+	self:Play("Gui_Fuse_Success")
+end
+
+function FishingAudio:SetPhase(phase, timedLift)
 	if self.destroyed or self.phase == phase then
 		return
 	end
@@ -126,11 +173,11 @@ function FishingAudio:SetPhase(phase)
 	end
 	if phase == "Bite" then
 		self:Play("FishBiteHeavey")
-	elseif phase == "Lifting" then
+		self:Play("FishBite")
+	elseif phase == "Lifting" and not timedLift then
 		self:Play("FishWaterOut")
-	elseif phase == "Caught" then
+	elseif phase == "Caught" and not timedLift then
 		self:Play("FishDrop")
-		self:Play("FishSuccess")
 	end
 end
 

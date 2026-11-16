@@ -1,12 +1,10 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local ServerScriptService = game:GetService("ServerScriptService")
 local Workspace = game:GetService("Workspace")
 
 local Knit = require(ReplicatedStorage.Packages.Knit)
 local Zone = require(ReplicatedStorage.Libs.Zone)
 local MovementSpeedUtil = require(ReplicatedStorage.Modules.MovementSpeedUtil)
-local PlayerDataService = require(ServerScriptService.Services.PlayerDataService)
 
 type ActiveZones = { [string]: boolean }
 
@@ -43,7 +41,7 @@ local MovementSpeedService = Knit.CreateService({
 	_BoundZoneRoots = {} :: { [Instance]: any },
 })
 
-function MovementSpeedService:_getZoneWalkSpeedPercent(player: Player, playerData): number
+function MovementSpeedService:_getZoneWalkSpeedPercent(player: Player): number
 	local activeZones = self._ActiveZonesByPlayer[player]
 	if not activeZones then
 		return 1
@@ -51,20 +49,15 @@ function MovementSpeedService:_getZoneWalkSpeedPercent(player: Player, playerDat
 
 	local percent = 1
 	for zoneId in pairs(activeZones) do
-		percent = math.min(percent, MovementSpeedUtil.GetZoneWalkSpeedPercent(playerData, zoneId))
+		percent = math.min(percent, MovementSpeedUtil.GetZoneWalkSpeedPercent(zoneId))
 	end
 	return percent
 end
 
 function MovementSpeedService:RefreshPlayer(player: Player)
-	local profile = PlayerDataService:GetProfile(player)
-	if not profile then
-		return
-	end
-
 	local activeZones = self._ActiveZonesByPlayer[player]
 	local isInDigZone = activeZones ~= nil and next(activeZones) ~= nil
-	local percent = self:_getZoneWalkSpeedPercent(player, profile.Data)
+	local percent = self:_getZoneWalkSpeedPercent(player)
 	player:SetAttribute(MovementSpeedUtil.ZONE_WALK_SPEED_PERCENT_ATTRIBUTE, percent)
 	player:SetAttribute(MovementSpeedUtil.IS_IN_DIG_ZONE_ATTRIBUTE, isInDigZone)
 	if not isInDigZone then
@@ -77,7 +70,7 @@ function MovementSpeedService:RefreshPlayer(player: Player)
 		return
 	end
 
-	humanoid.WalkSpeed = MovementSpeedUtil.CalculateWalkSpeed(profile.Data, percent)
+	humanoid.WalkSpeed = MovementSpeedUtil.CalculateWalkSpeed(percent)
 end
 
 function MovementSpeedService:_setPlayerZoneState(player: Player, zoneId: string, isInside: boolean)
@@ -181,10 +174,6 @@ function MovementSpeedService:KnitStart()
 	end)
 	Players.PlayerRemoving:Connect(function(player)
 		self._ActiveZonesByPlayer[player] = nil
-	end)
-
-	PlayerDataService.ProfileLoaded:Connect(function(player: Player)
-		self:RefreshPlayer(player)
 	end)
 
 	task.spawn(function()

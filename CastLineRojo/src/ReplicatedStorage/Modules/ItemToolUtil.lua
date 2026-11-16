@@ -4,13 +4,10 @@ local FishingAssets = require(ReplicatedStorage.Modules.FishingAssets)
 local StarterGui = game:GetService("StarterGui")
 
 local ConditionsData = require(ReplicatedFirst.Data.ConditionsData)
-local ConditionLabelUtil = require(ReplicatedStorage.Modules.ConditionLabelUtil)
-local GuiUtil = require(ReplicatedStorage.Modules.GuiUtil)
-local RarityConfig = require(ReplicatedStorage.Modules.RarityConfig)
+local FishTitleUtil = require(ReplicatedStorage.Modules.FishTitleUtil)
 local ItemBoundsUtil = require(ReplicatedStorage.Modules.ItemBoundsUtil)
 local ItemStatUtil = require(ReplicatedStorage.Modules.ItemStatUtil)
 local ItemTitlePositionUtil = require(ReplicatedStorage.Modules.ItemTitlePositionUtil)
-local MutationTitleUtil = require(ReplicatedStorage.Modules.MutationTitleUtil)
 local MutationVisualUtil = require(ReplicatedStorage.Modules.MutationVisualUtil)
 local NumberUtil = require(ReplicatedStorage.Modules.NumberUtil)
 local WeightFormat = require(ReplicatedStorage.Modules.WeightFormat)
@@ -32,7 +29,6 @@ local HELD_ITEM_REAR_GRIP_RATIO = 0.1
 local FRONT_FACING_ROTATION = CFrame.Angles(0, math.pi, 0)
 local HELD_ITEM_TITLE_NAME = "HeldItemTitle"
 local HELD_ITEM_TITLE_ANCHOR_NAME = "HeldItemTitleAnchor"
-local TITLE_TEMPLATE_NAME = "ItemTitleTemplate_New"
 local TITLE_WEIGHT_COLOR = "#B1DAF8"
 local TOOLTIP_PRICE_COLOR = "#FFBD30"
 
@@ -42,7 +38,9 @@ export type ItemConfig = {
 	Rarity: string,
 	Model: string,
 	DefaultPrice: number,
+	CpsPrice: number,
 	DefaultWeight: number,
+	ModelDefaultScale: number?,
 	MinWeight: number,
 	MaxWeight: number,
 	SpecialLuckMult: number,
@@ -100,65 +98,33 @@ local function attachVisualPartsToTool(tool: Tool, visual: Model, handle: BasePa
 	visual:Destroy()
 end
 
-local function findLabel(gui: BillboardGui, name: string): TextLabel?
-	local label = gui:FindFirstChild(name, true)
-	return if label and label:IsA("TextLabel") then label else nil
-end
-
 local function createHeldItemTitle(
 	visual: Model,
 	handle: BasePart,
 	item: ItemConfig,
 	instanceData: ItemInstanceData,
-	condition: any
+	owner: Player?
 )
 	local titleGui = StarterGui:FindFirstChild("TitleGui")
-	local template = titleGui and titleGui:FindFirstChild(TITLE_TEMPLATE_NAME)
-	if not template or not template:IsA("BillboardGui") then
-		warn("ItemToolUtil: missing held item title template")
-		return
-	end
 
 	local titleAnchor = Instance.new("Attachment")
 	titleAnchor.Name = HELD_ITEM_TITLE_ANCHOR_NAME
 	titleAnchor.Position = Vector3.zero
 	titleAnchor.Parent = handle
 
-	local title = template:Clone()
+	local title = FishTitleUtil.Create(titleGui, item, instanceData.MutationId, owner, instanceData.Weight)
+	if not title then
+		warn("ItemToolUtil: missing held fish title template")
+		return
+	end
 	title.Name = HELD_ITEM_TITLE_NAME
 	title.Adornee = titleAnchor
 	title.Enabled = true
-
-	local nameLabel = findLabel(title, "NameLabel")
-	if nameLabel then
-		nameLabel.RichText = true
-		nameLabel.Text = `{item.DisplayName} <font color="{TITLE_WEIGHT_COLOR}">[{WeightFormat.FormatKg(instanceData.Weight)}]</font>`
-	end
-	local rarityLabel = findLabel(title, "RarityLabel")
-	if rarityLabel then
-		rarityLabel.Text = RarityConfig.Normalize(item.Rarity)
-		GuiUtil.SetRarityGradient(rarityLabel, item.Rarity)
-	end
-	local priceLabel = findLabel(title, "PriceLabel")
-	if priceLabel then
-		priceLabel.Text = "$" .. NumberUtil.FormatItemPriceCompact(instanceData.Price)
-	end
-	local frame = title:FindFirstChild("Frame")
-	if frame then
-		ConditionLabelUtil.Show(frame, instanceData.ConditionId)
-		MutationTitleUtil.Show(frame, instanceData.MutationId)
-	end
-	local luckLabel = findLabel(title, "LuckLabel")
-	if luckLabel then
-		local luck = ItemStatUtil.CalculateLuck(item, instanceData.Weight, condition and condition.LuckMult or 1)
-		luckLabel.Text = "Luck: " .. ItemStatUtil.FormatLuckPercent(luck)
-	end
-
 	title.Parent = titleAnchor
 	ItemTitlePositionUtil.ApplyBottomOffset(title, visual)
 end
 
-function ItemToolUtil.Create(instanceId: string, item: ItemConfig, instanceData: ItemInstanceData): Tool?
+function ItemToolUtil.Create(instanceId: string, item: ItemConfig, instanceData: ItemInstanceData, owner: Player?): Tool?
 	local template = FishingAssets.GetFish(item.Model)
 	if not template then
 		warn("ItemToolUtil: missing item model", item.Model)
@@ -191,7 +157,8 @@ function ItemToolUtil.Create(instanceId: string, item: ItemConfig, instanceData:
 	tool:SetAttribute(ItemToolUtil.MUTATION_ID_ATTRIBUTE, instanceData.MutationId)
 
 	local visual = template:Clone()
-	ItemStatUtil.ScaleModel(visual, item, instanceData.Weight)
+	MutationVisualUtil.ApplyAppearance(visual, instanceData.MutationId, template.Name)
+	ItemStatUtil.ScaleModel(visual, item, instanceData.Weight, template)
 	local handle = visual:FindFirstChild("Handle", true)
 	if not handle or not handle:IsA("BasePart") then
 		handle = visual:FindFirstChildWhichIsA("BasePart", true)
@@ -219,7 +186,7 @@ function ItemToolUtil.Create(instanceId: string, item: ItemConfig, instanceData:
 			descendant.Massless = true
 		end
 	end
-	createHeldItemTitle(visual, handle, item, instanceData, condition)
+	createHeldItemTitle(visual, handle, item, instanceData, owner)
 	visual.Parent = tool
 	tool.Grip = getBottomRearGrip(visual, handle)
 	-- Equipped Tools replicate their direct parts reliably to the owning client.

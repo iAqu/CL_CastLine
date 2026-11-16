@@ -4,6 +4,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local AreasData = require(ReplicatedFirst.Data.AreasData)
 local PurchaseDataHelper = require(ReplicatedFirst.DataHelpers.PurchaseDataHelper)
 local Constants = require(ReplicatedStorage.Modules.Constants)
+local FishingConfig = require(ReplicatedStorage.Modules.FishingConfig)
 local UpgradesDataHelper = require(ReplicatedFirst.DataHelpers.UpgradesDataHelper)
 local GiftBoxesDataHelper = require(ReplicatedFirst.DataHelpers.GiftBoxesDataHelper)
 
@@ -29,6 +30,8 @@ for _, potionId in Constants.POTION_ID do
 end
 
 local DEFAULT_SETTINGS = {
+    [Constants.SETTINGS_ID.SHOW_YOUR_PETS] = true,
+    [Constants.SETTINGS_ID.SHOW_OTHER_PETS] = true,
     [Constants.SETTINGS_ID.MUSIC] = true,
     [Constants.SETTINGS_ID.SOUND] = true,
     [Constants.SETTINGS_ID.TRADE] = false,
@@ -87,9 +90,10 @@ end
 
 local DEFAULT_UPGRADES = {}
 for upgradeId, _ in UpgradesDataHelper.GetAllData() do
-    DEFAULT_UPGRADES[upgradeId] = 0
+    if upgradeId ~= Constants.UPGRADE_ID.MOVE_SPEED then
+        DEFAULT_UPGRADES[upgradeId] = 0
+    end
 end
-DEFAULT_UPGRADES[Constants.UPGRADE_ID.CARRY_WEIGHT] = 0
 
 local DEFAULT_GIFT_BOX_CLAIM_LOG = {}
 for giftBoxId, _ in GiftBoxesDataHelper.GetAllData() do
@@ -99,10 +103,12 @@ end
 local Template = {
 
     FirstJoinTime = os.time(),
-    LastOnlineTime = os.time(),
+    LastOnlineTime = 0,
     UpdateReadLog = {},
     Strength = 10,
     Wins = 0,
+    OwnedRods = { [FishingConfig.DefaultRodId] = true },
+    EquippedRodId = FishingConfig.DefaultRodId,
     Rebirths = 0,
     Diamonds = 0,
     RobuxSpent = 0,
@@ -175,6 +181,9 @@ local Template = {
 
     HotbarLayout = {},
     Items = {},
+	Pets = {},
+	PetIndex = {},
+	Eggs = {},
     -- Index progress intentionally starts empty for every existing profile; it is
     -- populated only by items obtained after the Index feature is introduced.
     IndexDiscoveryLog = {},
@@ -184,7 +193,7 @@ local Template = {
     -- starts counting from its release rather than their prior inventory.
     NewItemTagSeenLog = {},
     PlotPlacements = {},
-    PlotCashPools = {},
+    PendingPlotOfflineCash = 0,
 
     SuperRebirths = 0,
     SuperRebirthTokens = 0,

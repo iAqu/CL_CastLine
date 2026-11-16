@@ -7,11 +7,14 @@ end
 local config = assert(loadstring(read("src/ReplicatedStorage/Modules/FishingConfig.lua")))()
 local reelDuration = 1.5 -- Fixture-reported settling time; real spr is tested separately.
 local source = read("src/StarterPlayer/StarterPlayerScripts/Controllers/FishingController.lua")
-local function fixture()
+local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: boolean?)
 	local now, render, locked, movement = 0, nil, false, false
 	local created, warnings = {}, {}
+	local requests, cancellations, notices = {}, {}, {}
+	local castReplies = {}
+	local pickerShows, pickerDestroys = 0, 0
 	local fishingAudio = { active = false, starts = 0 }
-	local effectAudio = { clears = 0, refreshes = 0 }
+	local effectAudio = { clears = 0, refreshes = 0, preloads = 0 }
 	local function signal()
 		local handlers = {}
 		return {
@@ -74,6 +77,21 @@ local function fixture()
 	}
 	local function object(class, children)
 		local obj = { Parent = true, ClassName = class, children = children or {}, DescendantAdded = signal() }
+		local attributes = {}
+		local properties, propertySignals = {}, {}
+		setmetatable(obj, {
+			__index = properties,
+			__newindex = function(self, key, value)
+				if key ~= "Enabled" and key ~= "Visible" then
+					rawset(self, key, value)
+				elseif properties[key] ~= value then
+					properties[key] = value
+					if propertySignals[key] then
+						propertySignals[key]:Fire()
+					end
+				end
+			end,
+		})
 		function obj:IsA(kind)
 			return kind == self.ClassName
 				or kind == "Instance"
@@ -98,13 +116,27 @@ local function fixture()
 			return result
 		end
 		function obj:GetDescendants()
-			return {}
+			local result = {}
+			for _, child in pairs(self.children) do
+				table.insert(result, child)
+				for _, descendant in ipairs(child:GetDescendants()) do
+					table.insert(result, descendant)
+				end
+			end
+			return result
+		end
+		function obj:GetAttribute(name)
+			return attributes[name]
+		end
+		function obj:SetAttribute(name, value)
+			attributes[name] = value
 		end
 		function obj:IsDescendantOf(_)
 			return self.Parent ~= nil
 		end
-		function obj:GetPropertyChangedSignal(_)
-			return signal()
+		function obj:GetPropertyChangedSignal(property)
+			propertySignals[property] = propertySignals[property] or signal()
+			return propertySignals[property]
 		end
 		function obj:Destroy()
 			self.Parent = nil
@@ -134,24 +166,52 @@ local function fixture()
 		self.teleports = (self.teleports or 0) + 1
 	end
 	local baitGui = object("ScreenGui")
-	local playerGui = object("PlayerGui", { CastMeterGui = meter, BaitSelectGui = baitGui })
+	baitGui.Enabled = false
+	local wins, luck, layout = object("Frame"), object("Frame"), object("UIListLayout")
+	local currency = object("Frame", { Wins = wins, Luck = luck, UIListLayout = layout })
+	local bottom = object("Frame", { CurrencyFrame = currency })
+	local backpack = object("Frame")
+	local homeGui = object("ScreenGui", { BottomFrame = bottom, BackpackPanel = backpack })
+	bottom.Parent, currency.Parent, wins.Parent = homeGui, bottom, currency
+	homeGui.Enabled, bottom.Visible, currency.Visible, wins.Visible = true, true, true, true
+	backpack.Visible, luck.Visible = true, false
+	local sequenceGui = object("ScreenGui")
+	sequenceGui.Enabled = true
+	local vignetteGui = object("ScreenGui")
+	vignetteGui.Name, vignetteGui.Enabled = "FishingVignetteGui", true
+	local playerGui = object("PlayerGui", {
+		CastMeterGui = meter, BaitSelectGui = baitGui, HomeGui = homeGui, FishingSequenceGui = sequenceGui,
+		FishingVignetteGui = vignetteGui,
+	})
 	playerGui.ChildAdded = signal()
 	function playerGui:GetGuiObjectsAtPosition()
 		return {}
 	end
 	local player = object("Player", { PlayerGui = playerGui })
-	player.Character, player.CharacterRemoving = character, signal()
-	function player:GetAttribute()
-		return true
+	player.Character, player.CharacterRemoving, player.UserId = character, signal(), 123
+	function player:GetAttribute(name)
+		return if name == "PlotSlotId" then 1 else true
 	end
 	local start = object("Part")
 	start.Position, start.CFrame, start.Size = vec(0, 0, 0), frame(), vec(20, 1, 20)
+	function start:GetAttribute(name)
+		return if name == "FishingWaterSurfaceY" then 775.01 else nil
+	end
 	local spawn = object("Part")
 	spawn.CFrame, spawn.Size = frame(vec(100, 0, 0)), vec(10, 1, 10)
 	local camera = { CFrame = frame(), Focus = frame(), FieldOfView = 70 }
-	local workspace =
-		object("Workspace", { Areas = object("Folder", { CastStartPart = start }), SpawnLocation = spawn })
+	local plot = object("Model", { FishingStartPart = start, AreaSpawnPoint = spawn })
+	plot.Name, plot.owner = "Plot_1", player.UserId
+	function plot:GetAttribute() return self.owner end
+	local workspace = object("Workspace", { Areas = object("Folder", { Plot = object("Folder", { Plot_1 = plot }) }) })
 	workspace.CurrentCamera = camera
+	local billboards = {}
+	for _, container in ipairs({ workspace, playerGui }) do
+		local visible, hidden = object("BillboardGui"), object("BillboardGui")
+		visible.Enabled, hidden.Enabled = true, false
+		container.children.SceneLabels = object("Folder", { Visible = visible, Hidden = hidden })
+		table.insert(billboards, { visible = visible, hidden = hidden })
+	end
 	local input, heartbeat = signal(), signal()
 	local sequence, failCreate = nil, false
 	local chooseBait
@@ -165,10 +225,42 @@ local function fixture()
 		}
 	end
 	local fishingService = {
-		Begin = function() return resolved({ ok = true, token = "test" }) end,
-		SelectBait = function() return resolved({ ok = true, initialYaw = 0 }) end,
-		Cast = function() return resolved({ ok = true, distance = 50 }) end,
-		Cancel = function() return resolved({ ok = true }) end,
+		Begin = function()
+			if not deferBegin then
+				return resolved({ ok = true, token = "test", rodId = "Rod_101" })
+			end
+			return {
+				andThen = function(self, callback)
+					table.insert(requests, callback)
+					return self
+				end,
+				catch = function(self) return self end,
+			}
+		end,
+		SelectBait = function(_, _, baitId)
+			if baitId == "Unaffordable" then
+				return resolved({ ok = false, message = "Not enough cash" })
+			end
+			return resolved({ ok = true, initialYaw = 0, luck = 7.25 })
+		end,
+		Cast = function(_, _, progress)
+			assert(progress == 0.5, "Send the locked visible meter progress")
+			assert(sequence.clickSounds == 1, "Local click feedback must occur before the server request")
+			if deferCast then
+				return {
+					andThen = function(self, callback)
+						table.insert(castReplies, callback)
+						return self
+					end,
+					catch = function(self) return self end,
+				}
+			end
+			return resolved({ ok = true, distance = 30, luck = 3.9875 })
+		end,
+		Cancel = function(_, token)
+			table.insert(cancellations, token)
+			return resolved({ ok = true })
+		end,
 	}
 	local controllers = {
 		MusicController = {
@@ -187,6 +279,7 @@ local function fixture()
 		SettingsGuiController = { ToggleSound = signal() },
 	}
 	local modules = {
+		PetFeatureConfig = { Enabled = false },
 		Knit = {
 			CreateController = function(value)
 				return value
@@ -197,17 +290,28 @@ local function fixture()
 			end,
 		},
 		Config = config,
-		RodsData = { Rod_101 = { Model = "Alien Antenna", DistanceMin = 5, DistanceMax = 100 } },
+		RodsData = { Rod_101 = { Model = "Alien Antenna", MaxWeight = 10 } },
 		BaitsData = {},
 		FishesData = {},
-		ProjectileMath = { Distance = function(value) return 5 + math.round(value * 95) end },
-		NotificationClient = { RedNotify = function() end },
+		EggsData = {},
+		NotificationClient = { RedNotify = function(message) table.insert(notices, message) end },
 		FishingAssets = { GetBait = function() return object("Part") end },
 		FishingBaitSelect = { Bind = function(gui, _, _, choose)
 			chooseBait = choose
-			return { SetBusy = function() end, Destroy = function() gui.Enabled = false end }
+			return {
+				Show = function()
+					pickerShows += 1
+					gui.Enabled = true
+				end,
+				SetBusy = function() end,
+				Destroy = function()
+					pickerDestroys += 1
+					gui.Enabled = false
+				end,
+			}
 		end },
 		FishingAudio = {
+			PreloadLuckSounds = function() effectAudio.preloads += 1 end,
 			ClearTails = function() effectAudio.clears += 1 end,
 			RefreshTails = function() effectAudio.refreshes += 1 end,
 			new = function()
@@ -239,11 +343,14 @@ local function fixture()
 			end,
 		},
 		FishingCastSequence = {
-			new = function()
+			new = function(_, _, _, _, _, options)
+				vignetteGui.Enabled = true
+					assert(options.fixedCast and options.launchPosition == start.Position)
+					assert(options.initialLuck == 7.25, "Forward the server's initial luck to the presentation")
+					assert(options.waterSurfaceY == nil, "Ignore the legacy water height on FishingStartPart")
 				sequence = {
 					phase = "Preparing",
 					gui = object("ScreenGui"),
-					UpdateMeter = function() end,
 					RefreshSoundSetting = function() end,
 					Update = function(self, now)
 						if self.phase == "Reeling" and now >= self.reelStarted + reelDuration then
@@ -251,10 +358,18 @@ local function fixture()
 						end
 					end,
 					Destroy = function(self, keepFail)
+						vignetteGui.Enabled = false
 						self.keepFail = keepFail
 						self.destroyCount = (self.destroyCount or 0) + 1
 					end,
-					Cast = function(self)
+					LockCastMeter = function(self)
+						self.meterLocks = (self.meterLocks or 0) + 1
+						self.clickSounds = (self.clickSounds or 0) + 1
+						return 0.5
+					end,
+					Cast = function(self, progress, distance, luck)
+						assert(progress == 0.5 and distance == 30 and luck == 3.9875,
+							"Use the locked meter and the server-confirmed luck")
 						self.phase = "Casting"
 						self.casts = (self.casts or 0) + 1
 					end,
@@ -283,13 +398,15 @@ local function fixture()
 	})
 	storage.Packages = { Knit = "Knit" }
 	storage.Modules = {
+		PetFeatureConfig = "PetFeatureConfig",
 		FishingRigUtil = "FishingRigUtil",
 		FishingCastSequence = "FishingCastSequence",
 		FishingAudio = "FishingAudio",
 		FishingConfig = "Config",
 		FishingAssets = "FishingAssets",
 		FishingBaitSelect = "FishingBaitSelect",
-		FishingProjectileMath = "ProjectileMath",
+		FishingSpotUtil = "FishingSpotUtil",
+		PlotWorkspaceUtil = "PlotWorkspaceUtil",
 		NotificationClient = "NotificationClient",
 		Constants = "Constants",
 		GameplayInputGate = "GameplayInputGate",
@@ -357,7 +474,7 @@ local function fixture()
 				return now
 			end,
 		},
-		Vector3 = { new = vec, zero = vec(0, 0, 0), zAxis = vec(0, 0, 1) },
+		Vector3 = { new = vec, zero = vec(0, 0, 0), yAxis = vec(0, 1, 0) },
 		CFrame = {
 			new = function(x, y, z)
 				return frame(if type(x) == "table" then x else vec(x or 0, y or 0, z or 0))
@@ -395,15 +512,48 @@ local function fixture()
 			table.insert(warnings, message)
 		end,
 	}, { __index = getfenv() })
+	for _, name in ipairs({ "FishingSpotUtil", "PlotWorkspaceUtil" }) do
+		modules[name] = assert(load(read("src/ReplicatedStorage/Modules/" .. name .. ".lua"), name, "t", env))()
+	end
 	local controller = assert(load(source, "FishingController", "t", env))()
+	controller:KnitInit()
+	assert(effectAudio.preloads == 1, "Preload UI feedback sounds during client initialization")
+	assert(not sequenceGui.Enabled, "Hide sequence sample labels before the first fishing session")
+	assert(not vignetteGui.Enabled, "Hide the vignette before the first fishing session")
 	controller:KnitStart()
+	if startOutside then
+		root.Position = vec(0, 3.5, -20)
+	end
 	heartbeat:Fire()
 	return {
 		controller = controller,
+		plot = plot,
 		root = root,
 		character = character,
 		camera = camera,
 		warnings = warnings,
+		billboards = billboards,
+		addBillboard = function(inPlayerGui, enabled, exempt)
+			local container = if inPlayerGui then playerGui else workspace
+			local billboard = object("BillboardGui")
+			billboard.Enabled = enabled
+			billboard:SetAttribute("FishingBillboardExempt", exempt)
+			container.children[billboard] = billboard
+			container.DescendantAdded:Fire(billboard)
+			return billboard
+		end,
+		requests = requests,
+		cancellations = cancellations,
+		notices = notices,
+		castReplies = castReplies,
+		leave = function()
+			root.Position = vec(0, 3.5, -20)
+			heartbeat:Fire()
+		end,
+		move = function(z)
+			root.Position = vec(0, 3.5, z)
+			heartbeat:Fire()
+		end,
 		fishingAudio = fishingAudio,
 		effectAudio = effectAudio,
 		toggleSound = function() controllers.SettingsGuiController.ToggleSound:Fire() end,
@@ -425,7 +575,12 @@ local function fixture()
 			humanoid.Died:Fire()
 		end,
 		baitVisible = function() return baitGui.Enabled == true end,
-		choose = function() chooseBait("NONE") end,
+		vignetteVisible = function() return vignetteGui.Enabled == true end,
+		pickerShows = function() return pickerShows end,
+		pickerDestroys = function() return pickerDestroys end,
+		choose = function(baitId) chooseBait(baitId or "NONE") end,
+		cashVisible = function() return homeGui.Enabled and bottom.Visible and currency.Visible and wins.Visible end,
+		backpackVisible = function() return homeGui.Enabled and backpack.Visible end,
 		sequence = function()
 			return sequence
 		end,
@@ -445,23 +600,98 @@ local function fixture()
 		end,
 	}
 end
+local function revealPicker(fishing)
+	fishing.advance(0.121)
+	fishing.advance(0.101)
+end
+
+do
+	local fishing = fixture()
+	for _, pair in ipairs(fishing.billboards) do
+		assert(not pair.visible.Enabled and not pair.hidden.Enabled, "Hide nested scene billboards at session start")
+		pair.visible.Enabled, pair.hidden.Enabled = true, true
+		assert(not pair.visible.Enabled and not pair.hidden.Enabled, "Hold both original states hidden")
+	end
+	revealPicker(fishing)
+	local addedWorld = fishing.addBillboard(false, true)
+	local addedGui = fishing.addBillboard(true, false)
+	local bitePrompt = fishing.addBillboard(false, false, true)
+	bitePrompt.Enabled = true
+	assert(not addedWorld.Enabled and not addedGui.Enabled and bitePrompt.Enabled,
+		"Hide newly added scene billboards while allowing the bite prompt")
+	addedWorld.Enabled, addedGui.Enabled = true, true
+	assert(not addedWorld.Enabled and not addedGui.Enabled, "Keep new billboards hidden when enabled externally")
+	fishing.controller:ReturnToSpawn()
+	fishing.advance(0.15)
+	assert(not fishing.billboards[1].visible.Enabled, "Keep billboards hidden until return is covered")
+	fishing.advance(0.16)
+	for _, pair in ipairs(fishing.billboards) do
+		assert(pair.visible.Enabled and not pair.hidden.Enabled, "Restore each billboard's original Enabled state")
+		pair.hidden.Enabled = true
+		assert(pair.hidden.Enabled, "Release the property listener during covered return")
+	end
+	assert(addedWorld.Enabled and not addedGui.Enabled, "Restore original states for billboards added during fishing")
+	addedGui.Enabled = true
+	assert(addedGui.Enabled and fishing.addBillboard(false, true).Enabled and fishing.addBillboard(true, true).Enabled,
+		"Release property and descendant listeners before the return reveal finishes")
+	fishing.advance(0.36)
+	assert(not fishing.controller:IsPreparing() and #fishing.warnings == 0)
+end
+
+for _, exit in ipairs({ "abort", "die", "prepareFailure", "sequenceFailure" }) do
+	local fishing = fixture()
+	if exit == "prepareFailure" then
+		fishing.failCreate()
+		fishing.advance(0.121)
+	elseif exit == "sequenceFailure" then
+		revealPicker(fishing)
+		fishing.choose()
+		fishing.sequence().Update = function() error("Sequence update failed") end
+		fishing.advance(0.016)
+	else
+		revealPicker(fishing)
+		fishing[exit]()
+	end
+	for _, pair in ipairs(fishing.billboards) do
+		assert(pair.visible.Enabled and not pair.hidden.Enabled, "Restore billboards after " .. exit)
+	end
+	assert(fishing.addBillboard(false, true).Enabled and fishing.addBillboard(true, true).Enabled,
+		"Stop watching new billboards after " .. exit)
+end
+
 local normal = fixture()
 assert(normal.locked() and normal.root.Anchored)
 assert(not normal.fishingAudio.active and normal.fishingAudio.starts == 0, "Entering cover must not start ocean audio yet")
-normal.advance(0.15)
+normal.advance(0.06)
 assert(normal.covered() > 0 and normal.covered() < 1)
 assert(normal.sequence() == nil, "Do not replace the character before the screen is covered")
 assert(not normal.fishingAudio.active, "Ocean audio must wait for fishing scene preparation")
 normal.tap()
-normal.advance(0.16)
+normal.advance(0.061)
+assert(normal.covered() == 1, "Entry cover must reach full opacity by 0.121 seconds")
 assert(not normal.sequence() and not normal.baitVisible(), "Keep the selection hidden until the scene is revealed")
+assert(not normal.cashVisible(), "Keep the HUD hidden under the entry cover")
 assert(normal.fishingAudio.active and normal.fishingAudio.starts == 1, "Preparing the covered fishing scene must start ocean audio once")
-normal.advance(0.36)
+normal.advance(0.09)
+assert(not normal.baitVisible() and normal.pickerShows() == 0, "Keep the picker hidden while fading out")
+normal.advance(0.011)
 assert(normal.baitVisible() and not normal.sequence(), "Select bait before starting the meter")
+assert(normal.covered() == 0 and normal.pickerShows() == 1, "Show the picker as soon as the entry cover clears")
+assert(normal.cashVisible() and not normal.backpackVisible(), "Show only the cash HUD during selection")
+normal.advance(0.016)
+assert(normal.pickerShows() == 1, "Subsequent frames must not restart the picker animation")
+normal.choose("Unaffordable")
+assert(
+	normal.notices[1] == "Not enough cash" and normal.cashVisible() and normal.baitVisible() and not normal.sequence(),
+	"Keep cash and the picker visible after an unaffordable purchase"
+)
 normal.tap()
 assert(not normal.sequence(), "Scene input during selection must not cast")
 normal.choose()
 assert(normal.sequence() and normal.sequence().phase == "Preparing" and not normal.baitVisible())
+assert(normal.vignetteVisible(), "The fishing HUD filter must allow the sequence to enable its vignette")
+assert(normal.pickerDestroys() == 1, "Choosing bait must clean up the picker")
+assert(not normal.cashVisible(), "Hide cash when the casting meter opens")
 normal.tap()
 normal.tap()
 assert(
@@ -483,20 +713,44 @@ assert(normal.sequence().destroyCount == nil, "Keep the sequence visible until r
 assert(normal.fishingAudio.active, "Keep ocean audio until the fishing scene is restored")
 normal.advance(0.16)
 assert(normal.character.teleports == 1 and normal.sequence().destroyCount == 1)
+assert(not normal.vignetteVisible(), "Covered return must clean up the vignette")
+assert(normal.root.Position.X == 100, "A catch returns to the assigned plot spawn")
 assert(normal.sequence().keepFail, "Normal covered return must allow the failure tail")
 assert(not normal.fishingAudio.active, "Covered return must stop ocean audio")
 assert(normal.locked(), "Keep gameplay blocked until the world is revealed")
 normal.advance(0.36)
 assert(not normal.locked() and not normal.root.Anchored and normal.covered() == 0)
+assert(normal.cashVisible() and normal.backpackVisible(), "Restore the full HUD on return")
 assert(normal.effectAudio.clears == 1, "Finishing a normal return must not clear the tail")
 normal.toggleSound()
 assert(normal.effectAudio.refreshes == 1, "Sound settings must reach tails outside fishing")
 assert(normal.camera.FieldOfView == 70 and not normal.controller:IsPreparing())
 assert(#normal.warnings == 0)
+local purchased = fixture()
+revealPicker(purchased)
+purchased.choose("PaidBait")
+assert(
+	purchased.sequence() and not purchased.baitVisible() and not purchased.cashVisible(),
+	"A successful purchase must close the picker and cash HUD"
+)
+local delayedCast = fixture(false, false, true)
+revealPicker(delayedCast)
+delayedCast.choose()
+delayedCast.tap()
+assert(delayedCast.sequence().clickSounds == 1 and delayedCast.sequence().casts == nil,
+	"A pending response must already have local click feedback")
+delayedCast.advance(0.5)
+delayedCast.tap()
+assert(#delayedCast.castReplies == 1 and delayedCast.sequence().meterLocks == 1,
+	"Repeated input must not relock the meter or submit another pending cast")
+assert(delayedCast.sequence().phase == "Preparing", "Wait for server confirmation before casting")
+delayedCast.castReplies[1]({ ok = true, distance = 30, luck = 3.9875 })
+assert(delayedCast.sequence().casts == 1 and delayedCast.sequence().phase == "Casting",
+	"The pending cast must complete once with its original meter snapshot")
+assert(delayedCast.sequence().clickSounds == 1, "Server confirmation must not repeat the click feedback")
 for _, phase in ipairs({ "Waiting", "Escaped" }) do
 	local reeled = fixture()
-	reeled.advance(0.31)
-	reeled.advance(0.36)
+	revealPicker(reeled)
 	reeled.choose()
 	reeled.sequence().phase = phase
 	reeled.tap()
@@ -521,8 +775,7 @@ for _, phase in ipairs({ "Waiting", "Escaped" }) do
 end
 for _, delay in ipairs({ 0.1, reelDuration + 0.1 }) do
 	local cancelled = fixture()
-	cancelled.advance(0.31)
-	cancelled.advance(0.36)
+	revealPicker(cancelled)
 	cancelled.choose()
 	cancelled.sequence().phase = "Waiting"
 	cancelled.tap()
@@ -532,18 +785,23 @@ for _, delay in ipairs({ 0.1, reelDuration + 0.1 }) do
 	assert(cancelled.sequence().destroyCount == 1 and not cancelled.controller:IsPreparing(), "Cancelled reel returned again")
 	assert(not cancelled.fishingAudio.active, "Cancelled reel must stop ocean audio")
 end
-for _, elapsed in ipairs({ 0.15, 0.31, 0.67 }) do
+for _, steps in ipairs({ { 0.06 }, { 0.121, 0.05 }, { 0.121, 0.101 } }) do
 	local interrupted = fixture()
-	interrupted.advance(elapsed)
+	for _, dt in ipairs(steps) do
+		interrupted.advance(dt)
+	end
+	local pickerShows = interrupted.pickerShows()
 	interrupted.abort()
 	assert(not interrupted.locked() and not interrupted.root.Anchored and interrupted.covered() == 0)
+	assert(interrupted.cashVisible() and interrupted.backpackVisible(), "Restore the HUD after character removal")
+	assert(not interrupted.baitVisible() and interrupted.pickerDestroys() == (#steps - 1), "Clean up a bound picker on abort")
 	interrupted.advance(5)
 	assert(not interrupted.controller:IsPreparing(), "Cancelled transitions must not reopen")
+	assert(interrupted.pickerShows() == pickerShows, "An interrupted entry must not replay the picker animation")
 	assert(not interrupted.fishingAudio.active, "Interrupted transitions must leave ocean audio stopped")
 end
 local returning = fixture()
-returning.advance(0.31)
-returning.advance(0.36)
+revealPicker(returning)
 returning.choose()
 returning.controller:ReturnToSpawn()
 returning.advance(0.15)
@@ -553,23 +811,83 @@ assert(returning.covered() == 0 and not returning.locked() and returning.sequenc
 assert(not returning.fishingAudio.active, "Interrupted return must stop ocean audio")
 local failed = fixture()
 failed.failCreate()
-failed.advance(0.31)
+failed.advance(0.121)
 assert(not failed.locked() and not failed.root.Anchored and failed.covered() == 0 and #failed.warnings == 1)
 assert(not failed.fishingAudio.active and failed.fishingAudio.starts == 0, "Failed preparation must never start ocean audio")
 local dead = fixture()
-dead.advance(0.31)
-dead.advance(0.36)
+revealPicker(dead)
 dead.choose()
 assert(dead.fishingAudio.active)
 dead.die()
 assert(dead.sequence().keepFail == false, "Death must not preserve a failure tail")
 assert(not dead.fishingAudio.active and not dead.controller:IsPreparing(), "Death must stop ocean audio")
+assert(not dead.vignetteVisible(), "Death must clean up the vignette")
 local broken = fixture()
-broken.advance(0.31)
-broken.advance(0.36)
+revealPicker(broken)
 broken.choose()
 assert(broken.fishingAudio.active)
 broken.sequence().Update = function() error("Sequence update failed") end
 broken.advance(0.36)
 assert(not broken.fishingAudio.active and not broken.controller:IsPreparing(), "Runtime errors must stop ocean audio")
 assert(#broken.warnings == 1, "Runtime errors must retain their warning")
+
+local outside = fixture(true, true)
+outside.advance(0.5)
+assert(#outside.requests == 0 and not outside.locked(), "The client must not initiate fishing outside the trigger")
+
+local otherPlot = fixture(true, true)
+otherPlot.plot.owner = 456
+otherPlot.move(0)
+assert(#otherPlot.requests == 0, "The client must ignore a marker on a plot it does not own")
+local noMarker = fixture(true, true)
+noMarker.plot.children.FishingStartPart = nil
+noMarker.move(0)
+assert(#noMarker.requests == 0 and #noMarker.warnings == 0, "An unconfigured plot must be ignored")
+local missingSpawn = fixture()
+revealPicker(missingSpawn)
+missingSpawn.plot.children.AreaSpawnPoint = nil
+missingSpawn.controller:ReturnToSpawn()
+missingSpawn.advance(0.31)
+assert(missingSpawn.character.teleports == 1 and missingSpawn.root.Position.X == 0, "Cancel falls back to entry")
+local cancelledAtHome = fixture()
+revealPicker(cancelledAtHome)
+cancelledAtHome.controller:ReturnToSpawn()
+cancelledAtHome.advance(0.31)
+assert(cancelledAtHome.root.Position.X == 100, "Cancel returns to the assigned plot spawn")
+
+local displaced = fixture()
+displaced.move(20)
+assert(displaced.locked() and displaced.root.Anchored, "A 20 stud displacement must not end fishing")
+displaced.move(20.01)
+assert(not displaced.locked() and not displaced.root.Anchored and displaced.cancellations[1] == "test")
+
+local loading = { ok = false, code = "ProfileNotReady", message = "Your fishing data is still loading" }
+local entering = fixture(true)
+assert(#entering.requests == 1 and not entering.root.Anchored and not entering.locked())
+entering.advance(0.05)
+assert(#entering.requests == 1, "Only one Begin request may be in flight")
+entering.requests[1](loading)
+assert(not entering.root.Anchored and #entering.notices == 0 and entering.covered() == 0)
+entering.advance(0.051)
+assert(#entering.requests == 2)
+entering.requests[2]({ ok = true, token = "confirmed", rodId = "Rod_101" })
+assert(entering.root.Anchored and entering.locked())
+revealPicker(entering)
+assert(entering.baitVisible() and #entering.requests == 2, "Opening the picker must not call Begin again")
+
+for _, invalidate in ipairs({ "leave", "die", "abort" }) do
+	local abandoned = fixture(true)
+	abandoned[invalidate]()
+	abandoned.advance(0.2)
+	abandoned.requests[1]({ ok = true, token = "stale" })
+	assert(abandoned.cancellations[1] == "stale" and #abandoned.cancellations == 1)
+	assert(not abandoned.root.Anchored and not abandoned.baitVisible() and #abandoned.notices == 0)
+end
+
+local timedOut = fixture(true)
+timedOut.advance(1.01)
+timedOut.advance(0.5)
+assert(#timedOut.requests == 1 and #timedOut.notices == 1 and not timedOut.root.Anchored)
+timedOut.requests[1]({ ok = true, token = "late" })
+timedOut.advance(0.5)
+assert(timedOut.cancellations[1] == "late" and #timedOut.notices == 1)
