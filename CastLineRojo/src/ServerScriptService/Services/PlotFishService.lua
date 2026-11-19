@@ -1,10 +1,9 @@
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
-local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Onboarding = require(ReplicatedStorage.Modules.FishingOnboarding)
 local ServerScriptService = game:GetService("ServerScriptService")
 
-local ConditionsData = require(ReplicatedFirst.Data.ConditionsData)
 local FishInventoryData = require(ReplicatedStorage.Modules.FishInventoryData)
 local Knit = require(ReplicatedStorage.Packages.Knit)
 local ItemStatUtil = require(ReplicatedStorage.Modules.ItemStatUtil)
@@ -42,8 +41,6 @@ local function getHeldItemTool(player: Player, instanceId: string): Tool?
 	return nil
 end
 
-local DEFAULT_CONDITION_ID = "Codition_1"
-
 local function readItemRecord(record, repair: boolean?): (any?, any?)
 	if typeof(record) ~= "table" or typeof(record.ItemId) ~= "string" then
 		return nil, nil
@@ -53,24 +50,17 @@ local function readItemRecord(record, repair: boolean?): (any?, any?)
 		return nil, nil
 	end
 	local weight = tonumber(record.Weight)
-	local conditionId = record.ConditionId
-	local condition = typeof(conditionId) == "string" and ConditionsData[conditionId] or nil
-	if not condition then
-		conditionId = DEFAULT_CONDITION_ID
-		condition = ConditionsData[conditionId]
-	end
-	if not weight or weight ~= weight or weight == math.huge or weight <= 0 or not condition then
+	if not weight or weight ~= weight or weight == math.huge or weight <= 0 then
 		return nil, nil
 	end
 	local mutationId = MutationDataUtil.NormalizeMutationId(record.MutationId)
-	local price = ItemStatUtil.CalculatePrice(item, weight, condition.ValueMult, MutationDataUtil.GetPriceRate(mutationId))
+	local price = ItemStatUtil.CalculatePrice(item, weight, MutationDataUtil.GetPriceRate(mutationId))
 	if repair then
 		record.Weight = weight
-		record.ConditionId = conditionId
 		record.Price = price
 		record.MutationId = mutationId
 	end
-	return item, { Weight = weight, ConditionId = conditionId, Price = price, MutationId = mutationId }
+	return item, { Weight = weight, Price = price, MutationId = mutationId, PaidOrigin = record.PaidOrigin }
 end
 
 local function getRoot(player: Player): BasePart?
@@ -105,7 +95,6 @@ local function createFish(uid, item, data, slot, boundary, entry, now)
 	fish.Name = uid
 	fish:SetAttribute("ItemId", item.ItemID)
 	fish:SetAttribute("Weight", data.Weight)
-	fish:SetAttribute("ConditionId", data.ConditionId)
 	fish:SetAttribute("MutationId", data.MutationId)
 	fish:SetAttribute("Slot", slot)
 	fish:SetAttribute("StartedAt", now)
@@ -142,7 +131,7 @@ local function getEquippedFish(player: Player, data)
 	local fish = {}
 	local bestBaseCps = PlotFishIncome.GetBestOwnedBaseCps(data)
 	local seen = {}
-	for slot = 1, PlotPlacementUtil.CAPACITY do
+	for slot = 1, PlotPlacementUtil.GetCapacity(data) do
 		local uid = PlotPlacementUtil.GetItemUid(data.PlotPlacements, slot)
 		if uid and not seen[uid] then
 			local item, record = readItemRecord(data.Items[uid])
@@ -161,7 +150,7 @@ local function getEquippedFish(player: Player, data)
 	table.sort(fish, function(a, b)
 		return if a.income == b.income then a.uid < b.uid else a.income > b.income
 	end)
-	return { revision = rosterRevisions[player] or 0, fish = fish }
+	return { revision = rosterRevisions[player] or 0, fish = fish, capacity = PlotPlacementUtil.GetCapacity(data) }
 end
 
 local function settle(player: Player, data, now: number)
@@ -212,10 +201,11 @@ function PlotFishService:_restore(player: Player)
 	if not profile or not plot or not boundary then
 		return
 	end
+	Knit.GetService("PlotUpgradeService"):ApplyForPlayer(player, plot)
 	local folder = getFishFolder(plot, player)
 	local placements = profile.Data.PlotPlacements
 	local now = Workspace:GetServerTimeNow()
-	for slot = 1, PlotFishMotion.CAPACITY do
+	for slot = 1, PlotPlacementUtil.GetCapacity(profile.Data) do
 		local uid = PlotPlacementUtil.GetItemUid(placements, slot)
 		if uid and not folder:FindFirstChild(uid) then
 			local item, data = readItemRecord(profile.Data.Items[uid], true)
@@ -251,14 +241,14 @@ function PlotFishService:RequestPlace(player: Player, uid: unknown)
 		return reject("This fish is already in your plot.")
 	end
 	local emptySlot
-	for slot = 1, PlotFishMotion.CAPACITY do
+	for slot = 1, PlotPlacementUtil.GetCapacity(profile.Data) do
 		if not PlotPlacementUtil.GetItemUid(placements, slot) then
 			emptySlot = slot
 			break
 		end
 	end
 	if not emptySlot then
-		return reject(string.format("Your plot is full (%d/%d).", PlotFishMotion.CAPACITY, PlotFishMotion.CAPACITY))
+		return reject(string.format("Your plot is full (%d/%d).", PlotPlacementUtil.GetCapacity(profile.Data), PlotPlacementUtil.GetCapacity(profile.Data)))
 	end
 	local item, data = readItemRecord(profile.Data.Items[uid])
 	local geometry = item and data and PlotFishMotion.GetGeometry(item, data.Weight, boundary)
@@ -274,6 +264,7 @@ function PlotFishService:RequestPlace(player: Player, uid: unknown)
 	local position = PlotFishMotion.GetSurfacePoint(boundary, entry)
 	local previousRate = state.rate
 	PlotPlacementUtil.SetItemUid(placements, emptySlot, uid)
+	Onboarding.Advance(player, profile.Data, "PlaceFish", "Train")
 	createFish(uid, item, data, emptySlot, boundary, entry, now).Parent = getFishFolder(plot, player)
 	heldTool:Destroy()
 	rosterChanged(player, profile.Data, state)
@@ -322,7 +313,7 @@ local function commitMenuRoster(player: Player, context, desired)
 	local data = context.data
 	local placements = data.PlotPlacements
 	local outgoing, incoming = {}, {}
-	for slot = 1, PlotPlacementUtil.CAPACITY do
+	for slot = 1, PlotPlacementUtil.GetCapacity(data) do
 		local uid = PlotPlacementUtil.GetItemUid(placements, slot)
 		local nextUid = desired[slot]
 		if uid == nextUid then
@@ -386,6 +377,9 @@ local function commitMenuRoster(player: Player, context, desired)
 	for _, tool in pairs(returnTools) do
 		tool.Parent = context.backpack
 	end
+	if next(incoming) then
+		Onboarding.Advance(player, data, "PlaceFish", "Train")
+	end
 	rosterChanged(player, data, state)
 	return { ok = true }
 end
@@ -400,7 +394,7 @@ function PlotFishService:RequestUnequip(player: Player, uid: unknown)
 	end
 	local desired = {}
 	local found = false
-	for slot = 1, PlotPlacementUtil.CAPACITY do
+	for slot = 1, PlotPlacementUtil.GetCapacity(context.data) do
 		local placedUid = PlotPlacementUtil.GetItemUid(context.data.PlotPlacements, slot)
 		if placedUid == uid then
 			found = true
@@ -420,16 +414,23 @@ function PlotFishService:RequestEquipBest(player: Player)
 		return reject("Your fish pond or backpack is unavailable.")
 	end
 	local placements = context.data.PlotPlacements
+	local capacity = PlotPlacementUtil.GetCapacity(context.data)
 	local candidates, seen = {}, {}
 	local bestBaseCps = PlotFishIncome.GetBestOwnedBaseCps(context.data)
 	local function addCandidate(uid: string, slot: number?)
 		local item, record = readItemRecord(context.data.Items[uid])
 		if item and record then
 			seen[uid] = true
-			table.insert(candidates, { uid = uid, slot = slot, income = getIncome(item, record, bestBaseCps) })
+			table.insert(candidates, {
+				uid = uid,
+				slot = slot,
+				income = getIncome(item, record, bestBaseCps),
+				item = item,
+				weight = record.Weight,
+			})
 		end
 	end
-	for slot = 1, PlotPlacementUtil.CAPACITY do
+	for slot = 1, capacity do
 		local uid = PlotPlacementUtil.GetItemUid(placements, slot)
 		if uid and not seen[uid] then
 			addCandidate(uid, slot)
@@ -451,8 +452,16 @@ function PlotFishService:RequestEquipBest(player: Player)
 	end)
 
 	local desired, additions = {}, {}
-	for index = 1, math.min(#candidates, PlotPlacementUtil.CAPACITY) do
-		local fish = candidates[index]
+	local selected = 0
+	for _, fish in ipairs(candidates) do
+		if selected == capacity then
+			break
+		end
+		-- A carried fish can have a fallback tool without a pond model.
+		if not fish.slot and not PlotFishMotion.GetGeometry(fish.item, fish.weight, context.boundary) then
+			continue
+		end
+		selected += 1
 		if fish.slot then
 			desired[fish.slot] = fish.uid
 		else
@@ -460,7 +469,7 @@ function PlotFishService:RequestEquipBest(player: Player)
 		end
 	end
 	local nextAddition = 1
-	for slot = 1, PlotPlacementUtil.CAPACITY do
+	for slot = 1, capacity do
 		if not desired[slot] and additions[nextAddition] then
 			desired[slot] = additions[nextAddition]
 			nextAddition += 1
@@ -518,6 +527,10 @@ function PlotFishService:KnitStart()
 		self:_restore(player)
 	end)
 	slotService.SlotReleased:Connect(function(plot)
+		-- Signal callbacks can run after this slot has already been claimed again.
+		if plot:GetAttribute("OwnerUserId") ~= 0 then
+			return
+		end
 		local folder = plot:FindFirstChild(PlotFishMotion.FOLDER_NAME)
 		if folder and plot:GetAttribute("OwnerUserId") == 0 then
 			for _, fish in folder:GetChildren() do
@@ -525,6 +538,7 @@ function PlotFishService:KnitStart()
 			end
 			folder:Destroy()
 		end
+		Knit.GetService("PlotUpgradeService"):ResetPlot(plot)
 	end)
 
 	local function initialize(player)

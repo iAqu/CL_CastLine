@@ -8,6 +8,8 @@ local Assets = require(ReplicatedStorage.Modules.FishingAssets)
 local FishesData = require(ReplicatedFirst.Data.FishesData)
 local Knit = require(ReplicatedStorage.Packages.Knit)
 
+local RAINBOW_VFX_Y_OFFSET = -14.477272 -- 760.889 target Y minus 775.366272 marker Y.
+
 local EventFishService = Knit.CreateService({
 	Name = "EventFishService",
 	Client = {},
@@ -55,9 +57,48 @@ function EventFishService:_publish(snapshot)
 	folder:SetAttribute("Revision", self._Revision)
 end
 
+function EventFishService:_updateRainbowVFX(marker: Instance?, active: boolean)
+	local rainbow = self._RainbowVFX
+	if rainbow then
+		if active and marker and rainbow.Parent == marker then
+			return
+		end
+		rainbow:Destroy()
+		self._RainbowVFX = nil
+	end
+	if not active or not marker or not marker:IsA("BasePart") then
+		return
+	end
+
+	local vfx = ReplicatedStorage:FindFirstChild("VFX")
+	local event = vfx and vfx:FindFirstChild("Event")
+	local template = event and event:FindFirstChild("RainbowVFX")
+	local clone = template and template:IsA("Model") and template:Clone()
+	if not clone then
+		if not self._WarnedRainbowVFX then
+			self._WarnedRainbowVFX = true
+			warn("EventFishService: ReplicatedStorage.VFX.Event.RainbowVFX is missing or cannot be cloned")
+		end
+		return
+	end
+
+	for _, descendant in clone:GetDescendants() do
+		if descendant:IsA("BasePart") then
+			descendant.CanCollide = false
+			descendant.CanTouch = false
+			descendant.CanQuery = false
+		end
+	end
+	clone:PivotTo(marker:GetPivot() + Vector3.new(0, RAINBOW_VFX_Y_OFFSET, 0))
+	self._RainbowVFX = clone
+	clone.Parent = marker
+end
+
 function EventFishService:_updateMarker(snapshot, now: number)
 	local areas = Workspace:FindFirstChild("Areas")
 	local marker = areas and areas:FindFirstChild("EventFish")
+	local active = snapshot.Phase == "Active"
+	self:_updateRainbowVFX(marker, active)
 	if not marker then
 		if not self._WarnedMarker then
 			self._WarnedMarker = true
@@ -69,7 +110,6 @@ function EventFishService:_updateMarker(snapshot, now: number)
 		self._Marker = marker
 		table.clear(self._Effects)
 	end
-	local active = snapshot.Phase == "Active"
 	local overhead = marker:FindFirstChild("Overhead")
 	local content = overhead and overhead:FindFirstChild("Content")
 	local header = content and content:FindFirstChild("Header")
@@ -81,12 +121,23 @@ function EventFishService:_updateMarker(snapshot, now: number)
 		local deadline = if active then snapshot.EndsAt else snapshot.NextStartsAt
 		time.Text = Config.FormatCountdown(deadline - now)
 	end
+	local rainbow = self._RainbowVFX
 	for _, effect in marker:GetDescendants() do
+		-- The cloned effects keep their authored Enabled settings.
+		if rainbow and effect:IsDescendantOf(rainbow) then
+			continue
+		end
 		if effect:IsA("Beam") or effect:IsA("ParticleEmitter") or effect:IsA("Light") then
 			if self._Effects[effect] == nil then
 				self._Effects[effect] = effect.Enabled
 			end
-			effect.Enabled = active and self._Effects[effect]
+			local enabled = active and self._Effects[effect]
+			if effect:GetAttribute(Config.MarkerEnabledAttribute) ~= enabled then
+				effect:SetAttribute(Config.MarkerEnabledAttribute, enabled)
+			end
+			effect.Enabled = enabled
+		elseif effect:IsA("BillboardGui") and effect:GetAttribute(Config.MarkerEnabledAttribute) == nil then
+			effect:SetAttribute(Config.MarkerEnabledAttribute, effect.Enabled)
 		end
 	end
 end

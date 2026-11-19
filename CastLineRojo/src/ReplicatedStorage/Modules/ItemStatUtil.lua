@@ -82,20 +82,17 @@ end
 function ItemStatUtil.CalculatePrice(
 	item: ItemConfig,
 	actualWeight: number,
-	conditionValueMult: number?,
 	mutationPriceRate: number?
 ): number
-	local conditionMultiplier = math.max(0, tonumber(conditionValueMult) or 1)
 	local mutationMultiplier = math.max(0, tonumber(mutationPriceRate) or 1)
 	return math.round(
 		(tonumber(item.DefaultPrice) or 0)
 			* ItemStatUtil.GetWeightValueMultiplier(item, actualWeight)
-			* conditionMultiplier
 			* mutationMultiplier
 	)
 end
 
-function ItemStatUtil.CalculateLuck(item: ItemConfig, actualWeight: number, conditionLuckMult: number?): number
+function ItemStatUtil.CalculateLuck(item: ItemConfig, actualWeight: number): number
 	local weight = tonumber(actualWeight) or ITEM_LUCK_MIN_WEIGHT
 	if weight ~= weight then
 		weight = ITEM_LUCK_MIN_WEIGHT
@@ -105,7 +102,6 @@ function ItemStatUtil.CalculateLuck(item: ItemConfig, actualWeight: number, cond
 	local rarityLuck = ItemStatUtil.RARITY_LUCK[RarityConfig.Normalize(item.Rarity)] or ItemStatUtil.RARITY_LUCK.Common
 	return rarityLuck
 		* math.sqrt(weight)
-		* getPositiveMultiplier(conditionLuckMult)
 		* ITEM_LUCK_BASE
 		* getPositiveMultiplier(item.SpecialLuckMult)
 end
@@ -139,9 +135,8 @@ function ItemStatUtil.CalculateMaxHealth(
 	)
 end
 
-local MAX_FISH_LENGTH = 50
--- A 45-stud plot must leave at least one stud of travel on either side of center.
-local MAX_FISH_RADIUS = 45 / 2 - 1
+local FISH_LENGTH_SOFT_CAP = 80
+local FISH_LENGTH_CURVE = 0.3
 local modelBounds = setmetatable({}, { __mode = "k" })
 
 function ItemStatUtil.GetModelBounds(template: Model)
@@ -182,12 +177,22 @@ function ItemStatUtil.GetModelBounds(template: Model)
 	return metrics
 end
 
+function ItemStatUtil.CompressScaleRatio(template: Model, rawRatio: number): number
+	local longest = ItemStatUtil.GetModelBounds(template).longest
+	local rawLength = longest * rawRatio
+	if rawLength <= FISH_LENGTH_SOFT_CAP then
+		return rawRatio
+	end
+
+	local length = FISH_LENGTH_SOFT_CAP * (1 + FISH_LENGTH_CURVE * math.log(rawLength / FISH_LENGTH_SOFT_CAP))
+	return length / longest
+end
+
 function ItemStatUtil.GetScaleRatio(item: ItemConfig, actualWeight: number, template: Model): (number, number)
-	local metrics = ItemStatUtil.GetModelBounds(template)
-	local cap = math.min(MAX_FISH_LENGTH / math.max(metrics.longest, 0.01), MAX_FISH_RADIUS / math.max(metrics.radius, 0.01))
 	local weightRatio = getWeightRatio(item, actualWeight)
-	local ratio = if weightRatio > 0 then weightRatio ^ (1 / 3) else 1
-	return math.min(getPositiveMultiplier(item.ModelDefaultScale) * ratio, cap), cap
+	local weightScale = if weightRatio > 0 then weightRatio ^ (1 / 3) else 1
+	local rawRatio = getPositiveMultiplier(item.ModelDefaultScale) * weightScale
+	return ItemStatUtil.CompressScaleRatio(template, rawRatio), rawRatio
 end
 
 function ItemStatUtil.ScaleModel(model: Model, item: ItemConfig, actualWeight: number, template: Model)

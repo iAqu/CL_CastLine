@@ -1,7 +1,6 @@
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
-local RarityConfig = require(script.Parent.RarityConfig)
+local RarityPresentation = require(script.Parent.RarityPresentation)
 
 local GuiUtil = {}
 
@@ -267,75 +266,23 @@ function GuiUtil.ClearGradeint(parent: Instance)
 	end)
 end
 
-local function getRarityGradientTemplate(rarity: string?, quiet: boolean?): UIGradient?
+function GuiUtil.GetRarityGradientColor(rarity: string?): Color3?
 	if not rarity or rarity == "" then
 		return nil
 	end
-
-	local guiFolder = ReplicatedStorage:FindFirstChild("Gui")
-	local gradientsFolder = guiFolder and guiFolder:FindFirstChild("UIGradient")
-	local gradientName = "UIGradient_" .. rarity
-	local gradient = gradientsFolder and gradientsFolder:FindFirstChild(gradientName)
-	if not gradient or not gradient:IsA("UIGradient") then
-		if not quiet then
-			warn("Gradient not found:", gradientName)
-		end
-		return nil
-	end
-
-	return gradient
-end
-
-local function getColorSequenceColorAt(colorSequence: ColorSequence, time: number): Color3
-	local keypoints = colorSequence.Keypoints
-	local previousKeypoint = keypoints[1]
-	if time <= previousKeypoint.Time then
-		return previousKeypoint.Value
-	end
-
-	for index = 2, #keypoints do
-		local nextKeypoint = keypoints[index]
-		if time <= nextKeypoint.Time then
-			local span = nextKeypoint.Time - previousKeypoint.Time
-			if span <= 0 then
-				return nextKeypoint.Value
-			end
-
-			local alpha = (time - previousKeypoint.Time) / span
-			return previousKeypoint.Value:Lerp(nextKeypoint.Value, alpha)
-		end
-		previousKeypoint = nextKeypoint
-	end
-
-	return previousKeypoint.Value
-end
-
-function GuiUtil.GetRarityGradientColor(rarity: string?): Color3?
-	local entry = RarityConfig.ByName[RarityConfig.Normalize(rarity)]
-	if entry and entry.Name ~= "Exclusive" then
-		return entry.Color
-	end
-	local gradient = getRarityGradientTemplate(rarity, entry ~= nil)
-	return if gradient then getColorSequenceColorAt(gradient.Color, 0.5) else entry and entry.Color
+	return RarityPresentation.GetColor(rarity)
 end
 
 function GuiUtil.SetRarityGradient(parent: Instance, rarity: string?)
 	GuiUtil.ClearGradeint(parent)
-	local entry = RarityConfig.ByName[RarityConfig.Normalize(rarity)]
-	if not entry or entry.Name == "Exclusive" then
-		local template = getRarityGradientTemplate(rarity, entry ~= nil)
-		if template then
-			local clone = template:Clone()
-			clone.Enabled = true
-			clone.Parent = parent
-			return
-		end
+	if not rarity or rarity == "" then
+		return
 	end
-	if entry then
-		local gradient = Instance.new("UIGradient")
-		gradient.Name = "UIGradient_" .. entry.Name
-		gradient.Color = entry.Gradient
-		gradient.Parent = parent
+	local template = RarityPresentation.GetTemplate(rarity)
+	if template then
+		local clone = template:Clone()
+		clone.Enabled = true
+		clone.Parent = parent
 	end
 end
 

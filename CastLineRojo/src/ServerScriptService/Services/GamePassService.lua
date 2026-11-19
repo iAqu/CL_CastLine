@@ -15,6 +15,8 @@ local GamePassService = Knit.CreateService {
 }
 
 function GamePassService:GiveGamePass(player: Player, gamePassId: string)
+    local config = PurchaseDataHelper.GetData(gamePassId)
+    if not config or config.Type ~= "GamePass" then return end
     if PurchaseDataHelper.IsRetired(gamePassId) then return end
     local profile = PlayerDataService:GetProfile(player)
     if not profile then return end

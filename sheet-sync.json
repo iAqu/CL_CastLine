@@ -14,6 +14,18 @@
     },
     {
       "sheetName": "EventsData"
+    },
+    {
+      "sheetName": "TrainingData",
+      "sheetId": 1700117101
+    },
+    {
+      "sheetName": "TrainingLevelsData",
+      "sheetId": 1700117102
     }
-  ]
+  ],
+  "studio": {
+    "placeId": 84106335829275,
+    "dataPath": "ReplicatedFirst.Data"
+  }
 }

@@ -1,9 +1,7 @@
-local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local FishingAssets = require(ReplicatedStorage.Modules.FishingAssets)
 local StarterGui = game:GetService("StarterGui")
 
-local ConditionsData = require(ReplicatedFirst.Data.ConditionsData)
 local FishTitleUtil = require(ReplicatedStorage.Modules.FishTitleUtil)
 local ItemBoundsUtil = require(ReplicatedStorage.Modules.ItemBoundsUtil)
 local ItemStatUtil = require(ReplicatedStorage.Modules.ItemStatUtil)
@@ -19,14 +17,16 @@ ItemToolUtil.INSTANCE_ID_ATTRIBUTE = "ItemInstanceId"
 ItemToolUtil.ITEM_ID_ATTRIBUTE = "ItemId"
 ItemToolUtil.DISPLAY_NAME_ATTRIBUTE = "DisplayName"
 ItemToolUtil.WEIGHT_ATTRIBUTE = "Weight"
-ItemToolUtil.CONDITION_ID_ATTRIBUTE = "ConditionId"
 ItemToolUtil.PRICE_ATTRIBUTE = "Price"
 ItemToolUtil.MUTATION_ID_ATTRIBUTE = "MutationId"
 ItemToolUtil.VISUAL_PIVOT_OFFSET_ATTRIBUTE = "ItemVisualPivotOffset"
+ItemToolUtil.FISH_CARRY_GRIP_ATTRIBUTE = "FishCarryGrip"
+ItemToolUtil.FISH_CARRY_SPAN_ATTRIBUTE = "FishCarrySpan"
 
 -- Keep carried items slightly in front of the hand after anchoring their bottom.
 local HELD_ITEM_REAR_GRIP_RATIO = 0.1
 local FRONT_FACING_ROTATION = CFrame.Angles(0, math.pi, 0)
+local FISH_CARRY_ROTATION = CFrame.Angles(0, math.pi / 2, 0)
 local HELD_ITEM_TITLE_NAME = "HeldItemTitle"
 local HELD_ITEM_TITLE_ANCHOR_NAME = "HeldItemTitleAnchor"
 local TITLE_WEIGHT_COLOR = "#B1DAF8"
@@ -49,7 +49,7 @@ export type ItemConfig = {
 
 export type ItemInstanceData = {
 	Weight: number,
-	ConditionId: string,
+	PaidOrigin: string?,
 	Price: number,
 	MutationId: string?,
 }
@@ -76,7 +76,22 @@ local function getBottomRearGrip(visual: Model, handle: BasePart): CFrame
 	return handle.CFrame:ToObjectSpace(bottomRearPoint * FRONT_FACING_ROTATION)
 end
 
+local function setFishCarryGrip(tool: Tool, visual: Model, handle: BasePart)
+	local bounds = ItemStatUtil.GetModelBounds(visual)
+	local center = (bounds.minimum + bounds.maximum) * 0.5
+	local belly = Vector3.new(center.X, bounds.minimum.Y, center.Z)
+	local body = if visual.PrimaryPart then visual.PrimaryPart.CFrame else visual:GetPivot()
+	-- RightGrip.C1 is in Handle space. Its inverse places the belly across the palms.
+	tool:SetAttribute(
+		ItemToolUtil.FISH_CARRY_GRIP_ATTRIBUTE,
+		handle.CFrame:ToObjectSpace(body * CFrame.new(belly) * FISH_CARRY_ROTATION:Inverse())
+	)
+	tool:SetAttribute(ItemToolUtil.FISH_CARRY_SPAN_ATTRIBUTE, bounds.maximum.Z - bounds.minimum.Z)
+end
+
 local function attachVisualPartsToTool(tool: Tool, visual: Model, handle: BasePart)
+	local rigRoot = visual.PrimaryPart
+	local animations = visual:FindFirstChild("Animations")
 	handle.Parent = tool
 
 	local visualParts: { BasePart } = {}
@@ -95,6 +110,10 @@ local function attachVisualPartsToTool(tool: Tool, visual: Model, handle: BasePa
 		weld.Parent = handle
 	end
 
+	tool.PrimaryPart = rigRoot or handle
+	if animations then
+		animations.Parent = tool
+	end
 	visual:Destroy()
 end
 
@@ -128,16 +147,15 @@ function ItemToolUtil.Create(instanceId: string, item: ItemConfig, instanceData:
 	local template = FishingAssets.GetFish(item.Model)
 	if not template then
 		warn("ItemToolUtil: missing item model", item.Model)
-		return nil
+		if not instanceData.PaidOrigin then
+			return nil
+		end
 	end
 
-	local condition = ConditionsData[instanceData.ConditionId]
-	local conditionName = condition and condition.DisplayName or "Normal"
 	local tool = Instance.new("Tool")
 	tool.Name = "Item_" .. instanceId
 	tool.ToolTip = string.format(
-		"%s %s | <font color=\"%s\">%s</font> | <font color=\"%s\">$%s</font>",
-		conditionName,
+		"%s | <font color=\"%s\">%s</font> | <font color=\"%s\">$%s</font>",
 		item.DisplayName,
 		TITLE_WEIGHT_COLOR,
 		WeightFormat.FormatKgCompact(instanceData.Weight),
@@ -152,18 +170,36 @@ function ItemToolUtil.Create(instanceId: string, item: ItemConfig, instanceData:
 	tool:SetAttribute(ItemToolUtil.ITEM_ID_ATTRIBUTE, item.ItemID)
 	tool:SetAttribute(ItemToolUtil.DISPLAY_NAME_ATTRIBUTE, item.DisplayName)
 	tool:SetAttribute(ItemToolUtil.WEIGHT_ATTRIBUTE, instanceData.Weight)
-	tool:SetAttribute(ItemToolUtil.CONDITION_ID_ATTRIBUTE, instanceData.ConditionId)
+	tool:SetAttribute("PaidOrigin", instanceData.PaidOrigin)
 	tool:SetAttribute(ItemToolUtil.PRICE_ATTRIBUTE, instanceData.Price)
 	tool:SetAttribute(ItemToolUtil.MUTATION_ID_ATTRIBUTE, instanceData.MutationId)
 
-	local visual = template:Clone()
-	MutationVisualUtil.ApplyAppearance(visual, instanceData.MutationId, template.Name)
-	ItemStatUtil.ScaleModel(visual, item, instanceData.Weight, template)
+	local visual
+	if template then
+		visual = template:Clone()
+		MutationVisualUtil.ApplyAppearance(visual, instanceData.MutationId, template.Name)
+		ItemStatUtil.ScaleModel(visual, item, instanceData.Weight, template)
+	else
+		-- A paid fish still has a usable inventory icon while its world model is unavailable.
+		visual = Instance.new("Model")
+		local fallback = Instance.new("Part")
+		fallback.Name = "Handle"
+		fallback.Size = Vector3.one
+		fallback.Transparency = 1
+		fallback.Parent = visual
+		visual.PrimaryPart = fallback
+	end
 	local handle = visual:FindFirstChild("Handle", true)
 	if not handle or not handle:IsA("BasePart") then
-		handle = visual:FindFirstChildWhichIsA("BasePart", true)
-		if handle then
+		local gripPart = visual:FindFirstChildWhichIsA("BasePart", true)
+		if gripPart then
+			-- Preserve the original mesh name so the fish clips can still bind to it.
+			handle = Instance.new("Part")
 			handle.Name = "Handle"
+			handle.CFrame, handle.Size = gripPart.CFrame, gripPart.Size
+			handle.Transparency = 1
+			handle.CastShadow = false
+			handle.CanCollide, handle.CanTouch, handle.CanQuery, handle.Massless = false, false, false, true
 		end
 	end
 	if not handle or not handle:IsA("BasePart") then
@@ -189,6 +225,7 @@ function ItemToolUtil.Create(instanceId: string, item: ItemConfig, instanceData:
 	createHeldItemTitle(visual, handle, item, instanceData, owner)
 	visual.Parent = tool
 	tool.Grip = getBottomRearGrip(visual, handle)
+	setFishCarryGrip(tool, visual, handle)
 	-- Equipped Tools replicate their direct parts reliably to the owning client.
 	-- Keep every visual part beside Handle and weld it into the Tool assembly.
 	attachVisualPartsToTool(tool, visual, handle)

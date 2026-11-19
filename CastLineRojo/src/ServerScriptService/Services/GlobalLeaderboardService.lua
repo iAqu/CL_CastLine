@@ -213,6 +213,7 @@ function GlobalLeaderboardService:LoadPlayerLeaderboardData(player: Player)
 end
 
 function GlobalLeaderboardService:SyncPlayerLeaderboardData(player: Player)
+    if PlayerDataService:IsStudioOnboardingTest() then return end
     local profile = PlayerDataService:GetProfile(player)
     if not profile then return end
 

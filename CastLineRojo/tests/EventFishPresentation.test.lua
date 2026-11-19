@@ -10,7 +10,31 @@ local function object(class, properties)
 	return value
 end
 local function quietSignal() return { Connect = function() end } end
-local player = { FindFirstChildOfClass = function() return nil end }
+local flags, signals = {}, {}
+local function ui(children)
+	return setmetatable({ Parent = true }, { __index = {
+		IsA = function() return true end,
+		FindFirstChild = function(_, key) return children[key] end,
+	} })
+end
+local eventName, eventTime = ui({}), ui({})
+local eventFrame = ui({ EventName = eventName, EventTime = eventTime })
+local playerGui = ui({ HomeGui = ui({ LeftFrame = ui({ EventFrame = eventFrame }) }) })
+local player = {
+	FindFirstChildOfClass = function() return playerGui end,
+	GetAttribute = function(_, flag) return flags[flag] end,
+	GetAttributeChangedSignal = function(_, flag)
+		return { Connect = function(_, callback) signals[flag] = callback end }
+	end,
+}
+local function change(flag, value)
+	flags[flag] = value
+	if signals[flag] then signals[flag]() end
+end
+local gate = loadSource("src/ReplicatedStorage/Modules/EventPresentationGate.lua", {
+	script = { Parent = { FishingOnboarding = loadSource("src/ReplicatedStorage/Modules/FishingOnboarding.lua", {}) } },
+	require = function(value) return value end,
+})
 local waterPart = object("BasePart", { Color = "water", Parent = true })
 local texture = object("Decal", { Color3 = "texture", Parent = true })
 local water = object("Model", { GetDescendants = function() return { waterPart, texture } end })
@@ -23,6 +47,7 @@ local folder = object("Folder", { GetAttributeChangedSignal = quietSignal, GetAt
 local storage = {
 	FindFirstChild = function() return folder end,
 	Modules = {
+		EventPresentationGate = gate,
 		EventConfig = { AUTO_SCHEDULE_ENABLED = false, STATE_FOLDER_NAME = "EventState", STATE_ATTRIBUTE = {
 			REVISION = "Revision", ENDS_AT = "EndsAt", NEXT_STARTS_AT = "NextStartsAt",
 		} },
@@ -62,11 +87,41 @@ oldEvent = nil
 render(0.1)
 assert(waterPart.Color == "water" and texture.Color3 == "texture", "Repeated overrides must not capture a tinted baseline")
 
+oldEvent = { EventType = "mutation", MutationId = "Golden", DisplayName = "Golden Water" }
+render(0.1)
+assert(eventFrame.Visible and eventName.Text == "Golden Water" and waterPart.Color == "golden")
+change("FishingIntroActive", true)
+assert(not eventFrame.Visible and waterPart.Color == "water" and texture.Color3 == "texture")
+waterController:SetEventFishActive(true)
+render(0.1)
+assert(not eventFrame.Visible and waterPart.Color == "water", "Starting an activity inside the intro must not tint the water")
+change("FishingOnboardingStage", "FirstCatch")
+change("FishingIntroActive", false)
+assert(not eventFrame.Visible and waterPart.Color == "water", "Keep activities hidden during the intro-to-onboarding handoff")
+change("FishingOnboardingLessonActive", true)
+change("FishingOnboardingStage", "Complete")
+assert(not eventFrame.Visible and waterPart.Color == "water", "Caught the final fish but the gameplay camera has not returned")
+waterController:SetEventFishActive(false)
+oldEvent = { EventType = "mutation", MutationId = "Rainbow", DisplayName = "Rainbow Water" }
+change("FishingOnboardingLessonActive", false)
+assert(eventFrame.Visible and eventName.Text == "Rainbow Water" and waterPart.Color == "rainbow",
+	"Return to the event that is live at the end, not the one active before the intro")
+change("FishingIntroActive", true)
+oldEvent = nil
+change("FishingIntroActive", false)
+assert(not eventFrame.Visible and waterPart.Color == "water", "Do not restore a finished event")
+
 -- Exercise the actual local visibility lifecycle with lightweight visual fixtures.
 local attributes = { Phase = "Active", StartsAt = 600, EndsAt = 630, SlotId = 1, FishId = "A" }
 folder = { GetAttribute = function(_, key) return attributes[key] end }
 storage.FindFirstChild = function(_, key) return if key == "EventFishState" then folder else nil end
 local marker = object("BasePart", { Position = { X = 0, Z = 0 } })
+local countdown = object("BillboardGui", { Parent = marker, Enabled = true, desired = true })
+local markerParticles = object("ParticleEmitter", { Parent = marker, Enabled = true, desired = true, cleared = 0 })
+function countdown:GetAttribute() return self.desired end
+function markerParticles:GetAttribute() return self.desired end
+function markerParticles:Clear() self.cleared += 1 end
+function marker:GetDescendants() return { countdown, markerParticles } end
 workspace.FindFirstChild = function() return { FindFirstChild = function() return marker end } end
 local humanoid = { Health = 100 }
 player.Character = { FindFirstChildOfClass = function() return humanoid end }
@@ -77,6 +132,7 @@ end
 local fish = { FishID = "A", Model = "A" }
 local config = { StateFolderName = "EventFishState", Shadow = { Period = 24, Radius = 15, Clearance = 1.5 } }
 storage.Modules = {
+	EventPresentationGate = gate,
 	EventFishConfig = config, FishingAssets = {}, ItemStatUtil = {},
 	FishAnimationController = { new = animation },
 	FishShadowAppearance = { Destroy = function() end },
@@ -125,3 +181,26 @@ local second = shadowController._Shadow
 humanoid.Health = 0
 shadowController:_update(1202)
 assert(not shadowController._Shadow and second.model.destroyed, "Death releases the old visual and animation")
+
+humanoid.Health = 100
+shadowController:_update(1203)
+local resumed = shadowController._Shadow
+change("FishingOnboardingStage", "Train")
+shadowController:_update(1204)
+assert(not countdown.Enabled and not markerParticles.Enabled and markerParticles.cleared == 1)
+assert(tint and not shadowController._Shadow and resumed.model.destroyed, "Keep the server activity live but remove its local fish")
+local creationsWhileHidden = created
+shadowController:_update(1205)
+assert(created == creationsWhileHidden and not shadowController._Shadow)
+change("FishingOnboardingStage", "Complete")
+shadowController:_update(1206)
+assert(shadowController._Shadow and created == creationsWhileHidden + 1)
+change("FishingIntroActive", true)
+shadowController:_update(1207)
+markerParticles.desired = false
+shadowController:_update(1230)
+assert(not countdown.Enabled and not markerParticles.Enabled)
+change("FishingIntroActive", false)
+shadowController:_update(1231)
+assert(countdown.Enabled and not markerParticles.Enabled,
+	"Resume the marker countdown but leave an ended event's particles off")

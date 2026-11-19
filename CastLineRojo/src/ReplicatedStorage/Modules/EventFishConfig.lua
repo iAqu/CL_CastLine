@@ -1,7 +1,8 @@
 local EventFishConfig = {
-	Interval = 10 * 60,
-	Duration = 30,
+	Interval = 15 * 60,
+	Duration = 15,
 	StateFolderName = "EventFishState",
+	MarkerEnabledAttribute = "EventFishMarkerEnabled",
 	WaitingHeader = "SECRET FISH SPAWN IN:",
 	ActiveHeader = "SECRET FISH SPAWN!",
 	Shadow = table.freeze({ Length = 100, Clearance = 1.5, Radius = 15, Period = 24 }),

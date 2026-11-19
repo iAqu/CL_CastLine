@@ -32,6 +32,13 @@ function BackRodService:AttachBackRod(player: Player, character: Model)
 	-- Read the equipped ID after waiting for the torso so a stale refresh cannot replace a newer one.
 	local rodId = player:GetAttribute("EquippedRodId") or Config.DefaultRodId
 	local existing = character:FindFirstChild(ROD_NAME)
+	-- Recheck after the torso wait so a queued refresh cannot restore it during training.
+	if player:GetAttribute("IsTraining") == true then
+		if existing then
+			existing:Destroy()
+		end
+		return
+	end
 	if existing and existing:GetAttribute("RodId") == rodId then
 		return
 	end
@@ -117,6 +124,7 @@ function BackRodService:KnitStart()
 		end
 		player.CharacterAdded:Connect(refresh)
 		player:GetAttributeChangedSignal("EquippedRodId"):Connect(refresh)
+		player:GetAttributeChangedSignal("IsTraining"):Connect(refresh)
 		refresh()
 	end
 	Players.PlayerAdded:Connect(bindPlayer)

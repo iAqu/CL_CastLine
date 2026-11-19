@@ -1062,7 +1062,7 @@ function HomeGuiController:KnitStart()
         if not GuiHelper.CanOpenGui() then return end
         if not StoreGui.Enabled then
             -- GuiAnimation.OpenGui(StoreGui, true)
-            Knit.GetController("StoreGuiController"):OpenGui("GamePass")
+            Knit.GetController("StoreGuiController"):OpenGui()
         else
             GuiAnimation.CloseGui(StoreGui)
         end

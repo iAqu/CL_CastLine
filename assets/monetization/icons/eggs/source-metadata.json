@@ -1,0 +1,13 @@
+{
+  "assetId": 131317608690788,
+  "file": "/Users/gx/.codex/tmp/egg-131317608690788/Egg_R_1.png",
+  "width": 1024,
+  "height": 1024,
+  "alphaRange": [
+    0,
+    255
+  ],
+  "pngBytes": 1253611,
+  "sha256": "6dbb532b1bb17dbb439f3baaba8c262b116936f072450bfc1674c511d3056b4e",
+  "method": "Studio AssetService CreateEditableImageAsync -> ReadPixelsBuffer; read-only extraction; no redraw or scaling"
+}

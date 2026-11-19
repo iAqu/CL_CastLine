@@ -54,7 +54,10 @@ for slot = 1, 2 do
 	plots[slot] = plot
 end
 
-local knit = { CreateService = function(spec) return spec end, CreateSignal = signal }
+local resumeFrame
+local knit = { CreateService = function(spec) return spec end, CreateSignal = signal, GetService = function()
+	return { ApplyForPlayer = function() end, ConsumeResumeSpawn = function() return resumeFrame end }
+end }
 local storage = { Packages = { Knit = knit, Signal = { new = signal } }, Modules = {
 	PlotWorkspaceUtil = {
 		getSortedPlots = function() return plots end,
@@ -181,6 +184,12 @@ for _, invalid in ipairs({ false, { IsA = function() return false end } }) do
 end
 assert(#warnings == 2, "Missing and invalid spawns must warn")
 ownPlot.spawn = savedSpawn
+
+resumeFrame = { training = true }
+respawn(first, character(true))
+step()
+assert(first.Character.destination == resumeFrame and first.Character.moves == 1, "Resume must replace normal home teleport, not add a second teleport")
+resumeFrame = nil
 
 local leaving = character(false)
 respawn(first, leaving)

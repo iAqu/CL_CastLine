@@ -44,7 +44,7 @@ function GameplayInputGate.IsWorldActionAllowed(): boolean
 end
 
 function GameplayInputGate.IsPlacementActionAllowed(): boolean
-	return GameplayInputGate.IsWorldActionAllowed()
+	return GameplayInputGate.IsWorldActionAllowed() and not GameplayInputGate.IsActive("Training")
 end
 
 return GameplayInputGate

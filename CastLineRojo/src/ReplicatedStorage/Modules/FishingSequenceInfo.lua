@@ -3,7 +3,7 @@ local ItemStatUtil = require(script.Parent.ItemStatUtil)
 local MutationDataUtil = require(script.Parent.MutationDataUtil)
 local NumberUtil = require(script.Parent.NumberUtil)
 local PlotFishIncome = require(script.Parent.PlotFishIncome)
-local RarityConfig = require(script.Parent.RarityConfig)
+local RarityPresentation = require(script.Parent.RarityPresentation)
 
 local FishingSequenceInfo = {}
 FishingSequenceInfo.__index = FishingSequenceInfo
@@ -63,9 +63,11 @@ end
 function FishingSequenceInfo.new(gui, owner, initialLuck, now)
 	local luck = child(gui, "LuckMeter", "Frame")
 	local reveal = child(gui, "RevealInfo", "Frame")
+	local isTutorial = owner.options and owner.options.tutorial
 	local self = setmetatable({
 		owner = owner,
 		luck = luck,
+		showLuck = not isTutorial,
 		reveal = reveal,
 		value = child(luck, "Value", "TextLabel"),
 		glow = child(luck, "Glow", "Frame"),
@@ -111,9 +113,14 @@ function FishingSequenceInfo.new(gui, owner, initialLuck, now)
 	if newBadge and newBadge:IsA("GuiObject") then
 		self.newBadge = newBadge
 		owner:_save(newBadge, { "Visible" })
+		if isTutorial then
+			-- Leave room for the larger continue instruction above the fish name.
+			owner:_save(newBadge, { "Position" })
+			newBadge.Position += UDim2.fromScale(0.26, 0)
+		end
 		newBadge.Visible = false
 	end
-	luck.Visible, reveal.Visible = true, false
+	luck.Visible, reveal.Visible = self.showLuck, false
 	self.value.TextColor3 = Color3.new(1, 1, 1)
 	self:_applyWhole(1)
 	self.value.Text = "1.00X"
@@ -178,30 +185,47 @@ function FishingSequenceInfo:_updateLuck(now)
 	self.glow.BackgroundTransparency = self.glowTransparency + (0.55 - self.glowTransparency) * strength
 end
 
+function FishingSequenceInfo.FillReveal(reveal, item, weight, mutation, isNew)
+	local nameRow = child(reveal, "Name", "Frame")
+	local nameLabel = child(nameRow, "Label", "TextLabel")
+	local badge = nameRow:FindFirstChild("New")
+	if badge then
+		badge.Visible = isNew == true
+	end
+	local sizeTitle = ItemStatUtil.GetSizeTitle(item, weight)
+	nameLabel.Text = item.DisplayName .. (if sizeTitle then " (" .. sizeTitle .. ")" else "")
+	nameLabel.TextColor3 = RarityPresentation.GetColor(item.Rarity)
+	local mutationId = MutationDataUtil.NormalizeMutationId(mutation)
+	local mutationRow = child(reveal, "Mutation", "Frame")
+	local visible = false
+	for _, id in MUTATION_LABEL_IDS do
+		local label = child(mutationRow, "MutationLabel_" .. id, "TextLabel")
+		label.Visible = id == mutationId
+		visible = visible or label.Visible
+	end
+	local legacy = mutationRow:FindFirstChild("Label")
+	if legacy then
+		legacy.Visible = false
+	end
+	mutationRow.Visible = visible
+	child(reveal, "Rarity", "Frame").Visible = false
+	local incomeRow = child(reveal, "Income", "Frame")
+	incomeRow.Visible, nameRow.Visible = true, true
+	local bestBaseCps
+	if PlotFishIncome.UsesPercentageCps(item.Rarity) then
+		local player = game:GetService("Players").LocalPlayer
+		bestBaseCps = player and player:GetAttribute(PlotFishIncome.BEST_CPS_ATTRIBUTE)
+	end
+	local income = PlotFishIncome.GetCpsPrice(item, MutationDataUtil.GetEarnCashRate(mutation), bestBaseCps, weight)
+	child(incomeRow, "Label", "TextLabel").Text = "$" .. NumberUtil.FormatItemPriceCompact(income) .. "/s"
+end
+
 function FishingSequenceInfo:_showCatch(bite)
 	if self.revealedBite == bite then
 		return
 	end
-	if self.newBadge then
-		self.newBadge.Visible = bite.isNewDiscovery == true
-	end
 	local item = bite.fishConfig or { DisplayName = bite.template.Name, CpsPrice = 0 }
-	local rarity = RarityConfig.Get(item.Rarity)
-	local sizeTitle = ItemStatUtil.GetSizeTitle(item, bite.catchWeight)
-	self.name.Text = item.DisplayName .. (if sizeTitle then " (" .. sizeTitle .. ")" else "")
-	self.name.TextColor3 = rarity.Color
-	local mutationId = MutationDataUtil.NormalizeMutationId(bite.mutationId)
-	for id, label in self.mutationLabels do
-		label.Visible = id == mutationId
-	end
-	self.mutationRow.Visible = mutationId ~= nil and self.mutationLabels[mutationId] ~= nil
-	local bestBaseCps
-	if item.Rarity == "Event" then
-		local player = game:GetService("Players").LocalPlayer
-		bestBaseCps = player and player:GetAttribute(PlotFishIncome.BEST_CPS_ATTRIBUTE)
-	end
-	local income = PlotFishIncome.GetCpsPrice(item, MutationDataUtil.GetEarnCashRate(bite.mutationId), bestBaseCps, bite.catchWeight)
-	self.income.Text = "$" .. NumberUtil.FormatItemPriceCompact(income) .. "/s"
+	FishingSequenceInfo.FillReveal(self.reveal, item, bite.catchWeight, bite.mutationId, bite.isNewDiscovery)
 	self.revealedBite = bite
 	self.owner:_celebrateCatch(bite)
 end
@@ -215,7 +239,7 @@ function FishingSequenceInfo:Update(now, bite)
 		else (if bite and bite.isEgg then Config.Bite.LiftTime * Config.Bite.LiftRiseEnd else Config.Bite.FishLift.RiseTime)
 	local revealed = timeline and (timeline.phase == "Caught"
 		or (timeline.phase == "Lifting" and now - timeline.startedAt >= revealAt))
-	self.luck.Visible, self.reveal.Visible = not revealed, revealed == true
+	self.luck.Visible, self.reveal.Visible = self.showLuck and not revealed, revealed == true
 	self:_updateLuck(now)
 	self.audioReady = true
 	if revealed then

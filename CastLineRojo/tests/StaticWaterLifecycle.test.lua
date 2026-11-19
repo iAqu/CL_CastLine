@@ -37,28 +37,4 @@ assert(debugPanel:find("setPanelCollapsed(frame.Visible)", 1, true), "The remain
 local footprintController = read("src/StarterPlayer/StarterPlayerScripts/Controllers/FootprintController.lua")
 assert(footprintController:find('zone.Name:match("^Zone_%d+$")', 1, true), "Footprints must discover authored zones without a tide configuration")
 
-local movementUtil = read("src/ReplicatedStorage/Modules/MovementSpeedUtil.lua")
-local movementService = read("src/ServerScriptService/Services/MovementSpeedService.lua")
-assert(
-	movementUtil:find('IS_IN_DIG_ZONE_ATTRIBUTE = "IsInDigZone"', 1, true),
-	"The shared dig-zone attribute must be defined"
-)
-assert(
-	movementUtil:find('CURRENT_DIG_ZONE_ATTRIBUTE = "CurrentDigZone"', 1, true),
-	"The shared current dig-zone attribute must be defined"
-)
-assert(
-	movementService:find("activeZones ~= nil and next(activeZones) ~= nil", 1, true),
-	"The player must remain inside while any overlapping dig zone is active"
-)
-assert(
-	movementService:find("MovementSpeedUtil.CURRENT_DIG_ZONE_ATTRIBUTE, zoneId", 1, true)
-		and movementService:find("getFallbackActiveZoneId(activeZones)", 1, true),
-	"The server must publish the last-entered zone and fall back to an overlapping zone on exit"
-)
-assert(
-	movementService:find("MovementSpeedUtil.CURRENT_DIG_ZONE_ATTRIBUTE, nil", 1, true),
-	"The current dig zone must clear outside dig zones and across respawns"
-)
-
 print("StaticWaterLifecycle.test.lua passed")

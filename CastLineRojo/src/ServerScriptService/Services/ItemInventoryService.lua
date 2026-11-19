@@ -1,9 +1,7 @@
 local Players = game:GetService("Players")
-local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
-local ConditionsData = require(ReplicatedFirst.Data.ConditionsData)
 local FishInventoryData = require(ReplicatedStorage.Modules.FishInventoryData)
 local ItemStatUtil = require(ReplicatedStorage.Modules.ItemStatUtil)
 local ItemToolUtil = require(ReplicatedStorage.Modules.ItemToolUtil)
@@ -11,7 +9,6 @@ local Knit = require(ReplicatedStorage.Packages.Knit)
 local MutationDataUtil = require(ReplicatedStorage.Modules.MutationDataUtil)
 local PlayerDataService = require(ServerScriptService.Services.PlayerDataService)
 
-local DEFAULT_CONDITION_ID = "Codition_1"
 local ItemInventoryService = Knit.CreateService({ Name = "ItemInventoryService", Client = {} })
 
 local function findExistingItemTool(player: Player, instanceId: string): Tool?
@@ -44,20 +41,12 @@ local function normalizeStoredItem(record, item)
 	if not weight or weight ~= weight or weight <= 0 or weight == math.huge then
 		return nil
 	end
-	local conditionId = if typeof(record.ConditionId) == "string" and ConditionsData[record.ConditionId]
-		then record.ConditionId
-		else DEFAULT_CONDITION_ID
-	local condition = ConditionsData[conditionId]
-	if not condition then
-		return nil
-	end
 	local mutationId = MutationDataUtil.NormalizeMutationId(record.MutationId)
-	local price = ItemStatUtil.CalculatePrice(item, weight, condition.ValueMult, MutationDataUtil.GetPriceRate(mutationId))
+	local price = ItemStatUtil.CalculatePrice(item, weight, MutationDataUtil.GetPriceRate(mutationId))
 	record.Weight = weight
-	record.ConditionId = conditionId
 	record.Price = price
 	record.MutationId = mutationId
-	return { Weight = weight, ConditionId = conditionId, Price = price, MutationId = mutationId }
+	return { Weight = weight, Price = price, MutationId = mutationId, PaidOrigin = record.PaidOrigin }
 end
 
 function ItemInventoryService:RestoreItemTools(player: Player)

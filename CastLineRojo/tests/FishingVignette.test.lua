@@ -6,11 +6,16 @@ local function read(path)
 end
 
 local prefix = "src/ReplicatedStorage/Modules/"
-local rarity = require("./helpers/RarityHarness")({ RarityConfig = read(prefix .. "RarityConfig.lua") }).load("RarityConfig")
+local harness = require("./helpers/RarityHarness")({
+	RarityConfig = read(prefix .. "RarityConfig.lua"),
+	RarityPresentation = read(prefix .. "RarityPresentation.lua"),
+})
+harness.addRarityTemplates()
+local presentation = harness.load("RarityPresentation")
 local config = assert(loadstring(read(prefix .. "FishingConfig.lua")))()
 local chunk = assert(loadstring(read(prefix .. "FishingVignette.lua")))
 setfenv(chunk, setmetatable({
-	script = { Parent = { FishingConfig = config, RarityConfig = rarity } },
+	script = { Parent = { FishingConfig = config, RarityPresentation = presentation } },
 	require = function(module) return module end,
 	UDim2 = { fromOffset = function(x, y) return { X = x, Y = y } end },
 }, { __index = getfenv() }))
@@ -72,7 +77,7 @@ view:Update(1.31, bite)
 near(view.rings[26].stroke.Transparency, 0.46)
 assert(gui.Enabled and view.rings[1].stroke.Transparency > view.rings[26].stroke.Transparency, "Keep the inner rings lighter")
 for _, ring in ipairs(view.rings) do
-	assert(ring.stroke.Color == rarity.Get("Rare").Color, "Use the fish's configured rarity color")
+	assert(ring.stroke.Color == presentation.GetColor("Rare"), "Use the fish's configured rarity color")
 end
 for index, phase in ipairs({ "Holding", "Nibbling", "Holding", "Bite", "Struggling", "Lifting", "Caught" }) do
 	bite.timeline.phase = phase
@@ -91,7 +96,7 @@ assert(not gui.Enabled and view.rings[26].stroke.Transparency == 1, "Escaping mu
 local nextBite = fish("Legendary", "Approaching")
 view:Update(11, nextBite)
 view:Update(11.31, nextBite)
-assert(view.rings[26].stroke.Color == rarity.Get("Legendary").Color, "Replace the color for the new round")
+assert(view.rings[26].stroke.Color == presentation.GetColor("Legendary"), "Replace the color for the new round")
 nextBite.timeline.phase = "Reeling"
 view:Update(12, nextBite)
 near(view.rings[26].stroke.Transparency, 0.46)
@@ -101,7 +106,7 @@ view:Update(13.1, nextBite)
 local retry = fish("Unknown")
 view:Update(13.11, retry)
 assert(not gui.Enabled and view.rings[26].stroke.Transparency == 1, "Do not carry the previous fade into a retry")
-assert(view.rings[26].stroke.Color == rarity.Get("Common").Color, "Unknown rarity falls back to Common")
+assert(view.rings[26].stroke.Color == presentation.GetColor("Common"), "Unknown rarity falls back to Common")
 retry.timeline.phase = "Reeling"
 view:Update(14, retry)
 assert(not gui.Enabled, "Reeling before a fish appears must not create a vignette")

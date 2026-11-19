@@ -1,0 +1,309 @@
+local function loadSource(path, environment)
+	local f = assert(io.open(path, "r"))
+	local source = f:read("*a")
+	f:close()
+	return assert(load(source, path, "t", environment or getfenv()))()
+end
+local root = "src/ReplicatedStorage/Modules/"
+local function new()
+	local h = {
+		now = 100,
+		sample = 0.5,
+		guid = 0,
+		grants = 0,
+		cashRefreshes = 0,
+		equippedCatches = {},
+		failGrant = false,
+		activeEvent = nil,
+		ready = true,
+		footZ = 0,
+	}
+	local function signal()
+		return { Connect = function() end }
+	end
+	local function instance(class, children)
+		return {
+			IsA = function(_, name)
+				return name == class
+			end,
+			FindFirstChild = function(_, name)
+				return children and children[name]
+			end,
+			FindFirstChildOfClass = function(_, name)
+				return children and children[name]
+			end,
+		}
+	end
+	local function vector(x, y, z)
+		return setmetatable({ X = x or 1, Y = y or 2, Z = z or 3 }, {
+			__mul = function(a, b)
+				return vector(a.X * b, a.Y * b, a.Z * b)
+			end,
+			__sub = function()
+				return vector()
+			end,
+		})
+	end
+	local start = instance("BasePart")
+	start.Size = { X = 10, Y = 1, Z = 10 }
+	start.CFrame = {
+		PointToObjectSpace = function()
+			return { X = 0, Y = 0.5, Z = h.footZ }
+		end,
+	}
+	local rootPart = instance("BasePart")
+	rootPart.Position = vector()
+	rootPart.Size = { Y = 2 }
+	h.humanoid = { Health = 100, HipHeight = 2, RigType = "R15" }
+	h.player = {
+		UserId = 12,
+		Character = instance("Model", { HumanoidRootPart = rootPart, Humanoid = h.humanoid }),
+		CharacterRemoving = signal(),
+		SetAttribute = function(self, name, value)
+			self[name] = value
+		end,
+	}
+	h.plot = instance("Model", { FishingStartPart = start })
+	h.profile =
+		{ Data = { Wins = 100000, OwnedRods = { Rod_101 = true, Rod_102 = true, Rod_103 = true }, EquippedRodId = "Rod_101" } }
+	h.rods = loadSource("src/ReplicatedFirst/Data/RodsData.lua")
+	h.baits = loadSource("src/ReplicatedFirst/Data/BaitsData.lua")
+	h.fishes = {}
+	for i = 1, 30 do
+		local id = "Fish_" .. tostring(100 + i)
+		h.fishes[id] = {
+			FishID = id,
+			Model = id,
+			Rarity = if i <= 10 then "Common" elseif i <= 20 then "Uncommon" else "Rare",
+			Index = i,
+			DefaultWeight = i,
+			RollWeight = 1,
+			LuckExponent = i,
+		}
+	end
+	h.fishes.Event = { FishID = "Event", Model = "Event", Rarity = "Event", Index = 100, DefaultWeight = 10 }
+	h.progression = loadSource(root .. "FishingProgression.lua", setmetatable({
+ script={Parent={FishingConfig=loadSource(root.."FishingConfig.lua")}},require=function(v) return v end,
+},{__index=getfenv()}))
+	h.baitConfig = loadSource(root .. "FishingBaitConfig.lua")
+	local config = loadSource(root .. "FishingConfig.lua")
+	local petConfig = loadSource(root .. "PetFeatureConfig.lua")
+	h.roll = loadSource(
+		root .. "FishingRoll.lua",
+		setmetatable({
+			script = { Parent = { FishingConfig = config, PetFeatureConfig = petConfig } },
+			require = function(v)
+				return v
+			end,
+		}, { __index = getfenv() })
+	)
+	h.rng = {
+		NextNumber = function()
+			return h.sample
+		end,
+		NextInteger = function()
+			return 1
+		end,
+	}
+	h.assets = {
+		GetRod = function()
+			return {}
+		end,
+		GetFish = function()
+			return {}
+		end,
+		GetBait = function()
+			return { Size = vector() }
+		end,
+	}
+	local modules = {
+		TrainingProgress = loadSource(root .. "TrainingProgress.lua"),
+		FishingOnboarding = loadSource(root .. "FishingOnboarding.lua"),
+		FishingConfig = config,
+		PetFeatureConfig = petConfig,
+		FishingAssets = h.assets,
+		FishingRoll = h.roll,
+		FishingProgression = h.progression,
+		FishingBaitConfig = h.baitConfig,
+		FishingBiteSequence = {
+			GetBiteWindow = function(_, size, _, ready, _, _, _, fish)
+				h.biteSize = size
+				h.biteFish = fish
+				return ready + 1, ready + 2
+			end,
+		},
+		FishingProjectileMath = {
+			FlightTime = function()
+				return 1
+			end,
+		},
+	}
+	modules.RodInventory = {
+		GetEquippedId = function(data)
+			return data.EquippedRodId or "Rod_101"
+		end,
+	}
+	modules.FishingSpotUtil = loadSource(
+		root .. "FishingSpotUtil.lua",
+		setmetatable(
+			{ Enum = { HumanoidRigType = { R6 = "R6" } }, Vector3 = { yAxis = vector() } },
+			{ __index = getfenv() }
+		)
+	)
+	local data = {
+		FishesData = h.fishes,
+		BaitsData = h.baits,
+		RodsData = h.rods,
+		TrainingLevelsData = loadSource("src/ReplicatedFirst/Data/TrainingLevelsData.lua"),
+		MutationsData = loadSource("src/ReplicatedFirst/Data/MutationsData.lua"),
+	}
+	h.playerData = {
+		GetProfile = function()
+			return if h.ready then h.profile else nil
+		end,
+		AdjustWins = function(_, _, amount)
+			h.profile.Data.Wins += amount
+			h.cashRefreshes += 1
+			return true
+		end,
+	}
+	local services = {
+		HttpService = {
+			GenerateGUID = function()
+				h.guid += 1
+				return "guid" .. h.guid
+			end,
+		},
+		Players = {},
+		Workspace = {
+			GetServerTimeNow = function()
+				return h.now
+			end,
+		},
+		ReplicatedFirst = {
+			WaitForChild = function()
+				return {
+					WaitForChild = function(_, name)
+						return data[name]
+					end,
+				}
+			end,
+		},
+		ReplicatedStorage = {
+			Modules = modules,
+			Packages = {
+				Knit = {
+					CreateService = function(v)
+						return v
+					end,
+					GetService = function(name)
+						if name == "TrainingService" then
+							return { Stop = function() end, GetMaxCatchWeight = function() return h.maxCatchWeight or 10 end }
+						end
+						if name == "PlotSlotService" then
+							return {
+								GetPlayerPlot = function()
+									return h.plot
+								end,
+							}
+						end
+						if name == "EventFishService" then
+							return {
+								GetActiveFish = function()
+									return h.activeEvent
+								end,
+							}
+						end
+						return {
+							GetLuckMultiplier = function()
+								return 1
+							end,
+						}
+					end,
+				},
+			},
+		},
+	}
+	h.env = setmetatable({
+		game = {
+			GetService = function(_, name)
+				return services[name]
+			end,
+		},
+		require = function(v)
+			return v
+		end,
+		Random = {
+			new = function()
+				return h.rng
+			end,
+		},
+		warn = function() end,
+		script = {
+			Parent = {
+				PlayerDataService = h.playerData,
+				ItemGrantUtil = {
+					EquipCaughtFish = function(player, character, uid)
+						assert(player == h.player and character == h.player.Character)
+						table.insert(h.equippedCatches, uid)
+					end,
+					Grant = function(_, id, options)
+						if h.onGrant then
+							h.onGrant(options)
+						end
+						if h.failGrant then
+							return nil, "Backpack unavailable"
+						end
+						local ok, reason = options.BeforeCommit()
+						if not ok then
+							return nil, reason
+						end
+						h.grants += 1
+						h.lastOptions = options
+						h.lastFish = id
+						options.OnCommitted()
+					if h.afterGrant then
+						h.afterGrant()
+					end
+						if h.throwAfterCommit then
+							error("Presentation unavailable")
+						end
+						return { Weight = options.Weight, MutationId = options.MutationId, IsNewDiscovery = true }
+					end,
+				},
+			},
+		},
+	}, { __index = getfenv() })
+	function h.reload()
+		h.client = loadSource("src/ServerScriptService/Services/FishingService.lua", h.env).Client
+	end
+	h.reload()
+	function h.begin(bait)
+		local r = h.client:Begin(h.player)
+		assert(r.ok, r.message)
+		h.token = r.token
+		h.beginResult = r
+		if bait then
+			local s = h.client:SelectBait(h.player, h.token, bait)
+			assert(s.ok, s.message)
+		end
+		return r
+	end
+	function h.cast()
+		assert(h.client:Cast(h.player, h.token, 1).ok)
+		h.now += 5
+		local r = h.client:NextRound(h.player, h.token, 0)
+		assert(r.ok, r.message)
+		h.round = r
+		return r
+	end
+	function h.hook()
+		h.now = h.round.readyAt + 1.1
+		return h.client:Hook(h.player, h.token, h.round.round, h.now)
+	end
+	function h.cancel()
+		h.client:Cancel(h.player, h.token)
+	end
+	return h
+end
+return new

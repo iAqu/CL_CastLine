@@ -222,7 +222,7 @@ task.spawn(function()
 					duration = active.timeline:GetNibbleTiming().duration
 				elseif phase == "Lifting" then
 					active:SetCaughtWeight(1e9)
-					assert(active.catchScale == active.catchScaleLimit, "Showcase QA did not use the maximum fish scale")
+						assert(active.catchScale < active.rawCatchScale, "Showcase QA did not exercise the size curve")
 				end
 				if entry[3] then
 					active.motion.mirror = entry[3]

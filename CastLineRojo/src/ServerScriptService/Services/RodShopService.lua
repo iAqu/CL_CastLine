@@ -6,10 +6,15 @@ local Knit = require(ReplicatedStorage.Packages.Knit)
 local Constants = require(Modules.Constants)
 local FishingAssets = require(Modules.FishingAssets)
 local RodInventory = require(Modules.RodInventory)
+local Onboarding = require(Modules.FishingOnboarding)
+local RodShopZone = require(Modules.RodShopZone)
 local PlayerDataService = require(script.Parent.PlayerDataService)
 local RodsData = require(ReplicatedFirst:WaitForChild("Data"):WaitForChild("RodsData"))
 
-local RodShopService = Knit.CreateService({ Name = "RodShopService", Client = {} })
+local RodShopService = Knit.CreateService({
+	Name = "RodShopService",
+	Client = { InventoryChanged = Knit.CreateSignal() },
+})
 local purchasing = {}
 
 local function failure(message: string)
@@ -33,7 +38,7 @@ local function getShopData(player: Player)
 	return profile.Data
 end
 
-local function changeRod(player: Player, rodId: unknown, buy: boolean)
+local function changeRod(player: Player, rodId: unknown, buy: boolean, claim: boolean?)
 	if purchasing[player] then
 		return failure("A rod purchase is already in progress")
 	end
@@ -48,7 +53,23 @@ local function changeRod(player: Player, rodId: unknown, buy: boolean)
 
 	local id = rod.RodID
 	local owned = RodInventory.Owns(data, id)
-	if buy then
+	local progress = data.FishingOnboarding
+	local stage = progress and progress.Stage
+	if claim then
+		if id ~= Onboarding.RewardRodId or stage ~= "RodReward" or owned then
+			return failure("Training reward unavailable")
+		end
+		local plot = Knit.GetService("PlotSlotService"):GetPlayerPlot(player)
+		local anchor = RodShopZone.GetAnchor(plot)
+		if not anchor or not RodShopZone.Contains(anchor, player.Character, RodShopZone.ExitMargin) then
+			return failure("Visit your rod shop to claim the training reward")
+		end
+		data.OwnedRods[id] = true
+	elseif buy then
+		if id == Onboarding.RewardRodId and not owned and Onboarding.IsActiveStage(stage) then
+			return failure(if stage == "RodReward" then "Claim your training reward at your rod shop"
+				else "Finish training to get the Park Rod")
+		end
 		if owned then
 			return failure("You already own this fishing rod")
 		end
@@ -67,8 +88,17 @@ local function changeRod(player: Player, rodId: unknown, buy: boolean)
 		return failure("You do not own this fishing rod")
 	end
 	data.EquippedRodId = id
+	local upgraded = rod.LayoutOrder >= RodsData[Onboarding.RewardRodId].LayoutOrder
+	if upgraded then
+		Onboarding.Advance(player, data, "RodReward", "FinalCatch")
+	else
+		Onboarding.Advance(player, data, "FinalCatch", "RodReward")
+	end
 	player:SetAttribute("EquippedRodId", id)
-	return state(data, if buy then `Purchased and equipped {rod.DisplayName}` else `Equipped {rod.DisplayName}`)
+	local result = state(data, if claim then `Claimed and equipped {rod.DisplayName}`
+		elseif buy then `Purchased and equipped {rod.DisplayName}` else `Equipped {rod.DisplayName}`)
+	RodShopService.Client.InventoryChanged:Fire(player, result)
+	return result
 end
 
 function RodShopService.Client:GetState(player: Player)
@@ -82,6 +112,10 @@ end
 
 function RodShopService.Client:EquipRod(player: Player, rodId: unknown)
 	return changeRod(player, rodId, false)
+end
+
+function RodShopService.Client:ClaimTrainingRod(player: Player)
+	return changeRod(player, Onboarding.RewardRodId, false, true)
 end
 
 return RodShopService

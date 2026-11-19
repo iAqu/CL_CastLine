@@ -1,6 +1,4 @@
-local ReplicatedFirst = game:GetService("ReplicatedFirst")
 
-local ConditionsData = require(ReplicatedFirst.Data.ConditionsData)
 local FishInventoryData = require(script.Parent.FishInventoryData)
 local ItemStatUtil = require(script.Parent.ItemStatUtil)
 local MutationDataUtil = require(script.Parent.MutationDataUtil)
@@ -16,9 +14,8 @@ return function(data)
 		end
 		local item = FishInventoryData[record.ItemId]
 		local weight = tonumber(record.Weight)
-		local condition = ConditionsData[record.ConditionId] or ConditionsData.Codition_1
-		if item and condition and weight and weight > 0 and weight < math.huge then
-			record.Price = ItemStatUtil.CalculatePrice(item, weight, condition.ValueMult, MutationDataUtil.GetPriceRate(record.MutationId))
+		if item and weight and weight > 0 and weight < math.huge then
+			record.Price = ItemStatUtil.CalculatePrice(item, weight, MutationDataUtil.GetPriceRate(record.MutationId))
 		end
 	end
 end

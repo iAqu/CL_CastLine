@@ -15,6 +15,7 @@ local PlayerDataController = require(StarterPlayer.StarterPlayerScripts.Controll
 local NotificationClient = require(ReplicatedStorage.Modules.NotificationClient)
 local AreasWorkspace = require(ReplicatedStorage.Modules.AreasWorkspace)
 local NumberUtil = require(ReplicatedStorage.Modules.NumberUtil)
+local PaidEggStoreView = require(ReplicatedStorage.Modules.PaidEggStoreView)
 
 local localPlayer = Players.LocalPlayer
 -- local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
@@ -100,23 +101,14 @@ local function initShopModels()
     end)
 end
 
-function StoreGuiController:OpenGui(scrollingLabel: string?)
-    -- self:SetGiftingState(false)
-    GuiAnimation.OpenGui(StoreGui)
-    if scrollingLabel ~= nil then
-        local targetUiElement = ScrollingFrame.GamePassFrame
-        if scrollingLabel == "Wins" then
-            targetUiElement = ScrollingFrame.WinsFrame
-        elseif scrollingLabel == "Code" then
-            targetUiElement = ScrollingFrame.CodeFrame
-        end
-
-        if targetUiElement then
-            task.delay(0.2, function()
-                self:ScrollingToPosition(targetUiElement)
-            end)
-        end
+function StoreGuiController:OpenGui()
+    if self._scrollTween then
+        self._scrollTween:Cancel()
+        self._scrollTween = nil
     end
+    ScrollingFrame.CanvasPosition = Vector2.zero
+    GuiAnimation.ResetNavigationFocus(StoreGui, CloseButton)
+    GuiAnimation.OpenGui(StoreGui)
 end
 
 function StoreGuiController:SetGiftingState(isGiftingState: boolean, giftedPlayer: Player?)
@@ -139,13 +131,18 @@ function StoreGuiController:SetGiftingState(isGiftingState: boolean, giftedPlaye
         GiftButton.Cancel.Visible = false
         GiftedPlayerLabel.Visible = false
     end
+    if self._paidEggView then
+        task.defer(function()
+            self._paidEggView:Refresh()
+        end)
+    end
 end
 
 function StoreGuiController:OpenGuiFromGift(giftedPlayer: Player)
     if not giftedPlayer then warn("No gifted player found!") return end
 
-    StoreGuiController:SetGiftingState(true, giftedPlayer)
-    GuiAnimation.OpenGui(StoreGui)
+    self:SetGiftingState(true, giftedPlayer)
+    self:OpenGui()
 end
 
 -- function StoreGuiController:UpdateTokensLabel()
@@ -292,11 +289,14 @@ function StoreGuiController:UpdateWins()
 end
 
 function StoreGuiController:ScrollingToPosition(targetUiElement)
+    if self._scrollTween then
+        self._scrollTween:Cancel()
+    end
     local y = ScrollingFrame.CanvasPosition.Y + targetUiElement.AbsolutePosition.Y - ScrollingFrame.AbsolutePosition.Y - 20
-    -- TweenService:Create(ScrollingFrame, TweenInfo.new(0.2, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CanvasPosition = Vector2.new(0, y)}):Play()
-    -- local x = ScrollingFrame.CanvasPosition.X + targetUiElement.AbsolutePosition.X - ScrollingFrame.AbsolutePosition.X
-    -- TweenService:Create(ScrollingFrame, TweenInfo.new(0.2, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CanvasPosition = Vector2.new(x, 0)}):Play()
-    TweenService:Create(ScrollingFrame, TweenInfo.new(0.2, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {CanvasPosition = Vector2.new(0, y)}):Play()
+    self._scrollTween = TweenService:Create(ScrollingFrame, TweenInfo.new(0.2, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
+        CanvasPosition = Vector2.new(0, y),
+    })
+    self._scrollTween:Play()
 end
 
 -- function StoreGuiController:InitLimitedShop(worldIndex: number)
@@ -349,7 +349,7 @@ local function detectPlayerClosing()
     if detected then
         if not isClosingToShopModel then
             if not StoreGui.Enabled then
-                GuiAnimation.OpenGui(StoreGui)
+                StoreGuiController:OpenGui()
             end
             isClosingToShopModel = true
         end
@@ -470,12 +470,14 @@ function StoreGuiController:KnitStart()
     initShopModels()
     self:GenerateGamePassList()
     self:GenerateWinsList()
-    for _, frameName in ipairs({ "StarterPackFrame", "PotionFrame", "PacksFrame", "LimitedPetFrame", "LimitedEggFrame" }) do
+    for _, frameName in ipairs({ "StarterPackFrame", "PotionFrame", "PacksFrame", "LimitedPetFrame" }) do
         local frame = ScrollingFrame:FindFirstChild(frameName)
         if frame and frame:IsA("GuiObject") then
             frame.Visible = false
         end
     end
+
+    self._paidEggView = PaidEggStoreView.Bind(StoreGui, PurchaseService, Knit.GetService("PaidEggService"))
 
     RunService.Heartbeat:Connect(function()
         detectPlayerClosing()

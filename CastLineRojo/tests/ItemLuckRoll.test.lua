@@ -28,7 +28,6 @@ assert(adjusted(10, 10, 100) == 10, "Equal RollChance values must remain unchang
 assert(rollUtil:find("if baseWeight > 0 then", 1, true), "Zero RollChance candidates must be excluded")
 assert(rollUtil:find("RollItemInRarity", 1, true), "Item selection must happen inside a resolved rarity")
 assert(playerLuckUtil:find("playerData.PlotPlacements", 1, true), "Placed items must be the passive Item Luck source")
-assert(playerLuckUtil:find("condition.LuckMult", 1, true), "Placed Item Luck must preserve Condition multipliers")
 assert(not playerLuckUtil:find("discoveryLuck", 1, true), "Discoveries must not contribute to Item Luck")
 assert(playerLuckUtil:find("baseLuck * getPositiveMultiplier(gamePassMultiplier)", 1, true), "GamePass Luck must multiply the combined base")
 

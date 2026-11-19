@@ -1,4 +1,4 @@
-return {
+local Config = {
 	EggCatchChance = 0.10,
 	EggMotion = { RockDegrees = 12, BobHeight = 0.3, StruggleRadius = 0.8, SinkDistance = 8 },
 	DefaultRodId = "Rod_101",
@@ -8,6 +8,7 @@ return {
 	RodWeightLimitEnabled = false,
 	BaseDistance = 55,
 	MeterBonus = 20,
+	BaitFlightScale = 1.5, -- 飞行中逐渐放大，落水后作为新的基础尺寸。
 	BaseFlightTime = 1.6,
 	FlightTimeExponent = 0.585,
 	MaxFlightTime = 6,
@@ -35,20 +36,43 @@ return {
 		BaseSpeed = 0.55,
 		TopSpeedFactor = 2.6,
 		Enter = 0.45,
-		Hold = 0.45,
-		Exit = 0.25,
+		Hold = 0.9,
+		Exit = 0.3,
 		MarkerPunch = 1.35,
 		PromptPunch = 1.6,
 		GlowAttack = 0.12,
 		GlowRecovery = 0.35,
-		PopupDuration = 1,
-		PopupRise = 0.12,
+		PopupDuration = 1.5,
+		PopupFadeAt = 1.05,
+		PopupRise = 0.08,
 		PerfectFlash = 0.35,
 		Ratings = {
-			{ Min = 0.92, Text = "PERFECT!", Color = { 120, 255, 120 } },
-			{ Min = 0.72, Text = "GREAT!", Color = { 190, 255, 90 } },
-			{ Min = 0.45, Text = "GOOD", Color = { 255, 220, 80 } },
-			{ Min = 0, Text = "BAD", Color = { 255, 90, 90 } },
+			{
+				Id = "GODLIKE",
+				Min = 0.95,
+				Exclusive = true,
+				Text = "GODLIKE!",
+				Color = { 255, 255, 255 },
+				Rainbow = true,
+				ProbabilityGrade = "PERFECT",
+				Perfect = true,
+			},
+			{
+				Id = "PERFECT",
+				Min = 0.8,
+				Text = "PERFECT",
+				Color = { 120, 255, 120 },
+				ProbabilityGrade = "PERFECT",
+				Perfect = true,
+			},
+			{ Id = "GOOD", Min = 0.5, Text = "GOOD", Color = { 255, 220, 80 }, ProbabilityGrade = "GOOD" },
+			{ Id = "BAD", Min = 0, Text = "BAD", Color = { 255, 90, 90 }, ProbabilityGrade = "BAD" },
+		},
+		-- Each row is low/middle/high probability followed by the successful-catch pity limit.
+		ProbabilityCurves = {
+			BAD = { { 0.8, 0.18, 0.02, 12 }, { 0.65, 0.3, 0.05, 8 }, { 0.5, 0.4, 0.1, 5 } },
+			GOOD = { { 0.7, 0.25, 0.05, 12 }, { 0.45, 0.4, 0.15, 8 }, { 0.25, 0.45, 0.3, 5 } },
+			PERFECT = { { 0.6, 0.3, 0.1, 12 }, { 0.3, 0.45, 0.25, 8 }, { 0.1, 0.4, 0.5, 5 } },
 		},
 	},
 	Camera = {
@@ -56,6 +80,21 @@ return {
 		FollowFishMaxDistance = 24,
 		WaterViewSmoothSpeed = 5, -- 约 0.6 秒完成 95% 的水面镜头过渡。
 		BaitView = { Distance = 12, Height = 8, Fov = 60 },
+		WaterFraming = {
+			MaxTurn = 8,
+			BaitCenterFraction = 0.3,
+			BaitFrameFraction = 0.65,
+			SizeWidenStart = 0.5,
+			SizeWidenFull = 1.25,
+			SizeFov = 8,
+			DistanceStart = 2,
+			DistanceFull = 14,
+			DistanceFov = 8,
+			AimHalfLife = 0.18,
+			WidenHalfLife = 0.35,
+			NarrowDelay = 0.3,
+			NarrowHalfLife = 0.75,
+		},
 		Attack = 0.05,
 		-- 在 1.8 秒挥竿爆发前完成环绕，留出能容纳 Impact 的身后全景。
 		CastOrbit = { Duration = 0.3, Distance = 18, Height = 4.5, FocusHeight = -2 },
@@ -183,6 +222,10 @@ return {
 		HoldTime = 0.5,
 	},
 	Bite = {
+		MutationTrail = {
+			WidthRatio = 0.30, MinWidth = 0.6, EdgeDivisor = 28,
+			Lifetime = 0.70, LengthRatio = 2, MinLength = 10,
+		},
 		Prompt = { PopTime = 0.08, StartScale = 0.7, HeightOffset = 3.2 },
 		-- 独立演出测试可用 FishName 指定鱼种；正式钓鱼使用服务器抽取结果。
 		-- 相对鱼身尺寸的嘴部连接位置。
@@ -239,9 +282,30 @@ return {
 		Drip = {
 			Template = "Fish_Drip",
 			Points = {
-				"Belly01", "Belly02", "Belly03", "Belly04", "Belly05", "Belly06", "Belly07", "Belly08",
-				"Belly09", "Belly10", "Belly11", "Belly12", "Belly13", "Belly14", "Belly15", "Belly16",
-				"Tail01", "Tail02", "Tail03", "Tail04", "Tail05", "Tail06", "Tail07", "Tail08",
+				"Belly01",
+				"Belly02",
+				"Belly03",
+				"Belly04",
+				"Belly05",
+				"Belly06",
+				"Belly07",
+				"Belly08",
+				"Belly09",
+				"Belly10",
+				"Belly11",
+				"Belly12",
+				"Belly13",
+				"Belly14",
+				"Belly15",
+				"Belly16",
+				"Tail01",
+				"Tail02",
+				"Tail03",
+				"Tail04",
+				"Tail05",
+				"Tail06",
+				"Tail07",
+				"Tail08",
 			},
 			DecayTime = 4,
 			StartRate = 20, -- 全部表面点合计，不随点数增加。
@@ -277,6 +341,8 @@ return {
 				ShowcaseIdleWeight = 0.25,
 				GapMin = 3,
 				GapMax = 5,
+				HeldGapMin = 2,
+				HeldGapMax = 3,
 				LoadTimeout = 8,
 				SyncTolerance = 0.06,
 				Clips = {
@@ -363,3 +429,88 @@ return {
 		FovImpact = { Id = "rbxassetid://9120705982", Volume = 0.5 },
 	},
 }
+
+-- Animation-relative clocks shared by presentation and the server's earliest landing gate.
+Config.CastProfiles = {
+	Normal = {
+		Id = "Normal",
+		Animation = "CastRod",
+		LeadTime = Config.CastLeadTime,
+		Duration = 2.1666667,
+		ReleaseTime = Config.ReleaseTime,
+		ImpactTime = Config.CharacterVFX.SwingTime,
+		FrontTime = Config.FrontShotTime,
+		OrbitTime = Config.OrbitShotTime,
+		ReleaseImpulse = Config.Camera.Release,
+	},
+	Godlike = {
+		Id = "Godlike",
+		Animation = "SpecialCastRod",
+		LeadTime = Config.CastLeadTime,
+		Duration = 2.5166667,
+		ReleaseTime = 2.49,
+		ImpactTime = 2.43,
+		TrailTime = 0.20,
+		LandingTime = 1.03,
+		ChargeTime = 1.03,
+		OrbitTime = 1.70,
+		Trails = {
+			Rod = { Width = 1.4, Lifetime = 0.85, MaxLength = 18, EdgeWidth = 0.05 },
+			Flight = { Width = 1.2, Lifetime = 0.70, MaxLength = 20, EdgeWidth = 0.04 },
+		},
+		VFX = {
+			LandCount = 1.3,
+			WindScale = 1.25,
+			WindRate = 1.5,
+			ImpactScale = 1.5,
+			ImpactCount = 1.6,
+			ReducedBudget = 0.6,
+		},
+		Camera = {
+			MaxDistance = 22,
+			SafeFraction = 0.72,
+			MaxFitFov = 85,
+			-- time, FOV, yaw (root-relative), distance, height
+			Nodes = {
+				{ 0, 54, 145, 9, -0.4 },
+				{ 0.20, 54, 145, 9, -0.4 },
+				{ 0.45, 66, 145, 11, 1.5 },
+				{ 1.03, 66, 145, 11, 1.5 },
+				{ 1.30, 60, 145, 10, 1 },
+				{ 1.70, 60, 145, 10, 1 },
+				{ 2.30, 70, 45, 12, 2 },
+				{ 2.49, 70, 45, 12, 2 },
+			},
+		},
+		LandingImpulse = { Shake = 0.25, Duration = 0.12, Frequency = 20 },
+		ImpactImpulse = { Shake = 1.25, Duration = 0.20, Frequency = 24 },
+		ReleaseImpulse = { Fov = 12, Recovery = 0.5, Duration = 0.20, Frequency = 24 },
+	},
+}
+
+Config.CastRainbow = {
+	{ 255, 60, 60 },
+	{ 255, 145, 35 },
+	{ 255, 235, 60 },
+	{ 70, 240, 95 },
+	{ 65, 225, 255 },
+	{ 90, 130, 255 },
+	{ 195, 80, 255 },
+}
+
+function Config.GetCastProfile(castRating: string?)
+	return if castRating == "GODLIKE" then Config.CastProfiles.Godlike else Config.CastProfiles.Normal
+end
+
+-- Pure shared classification. Internal compatibility callers omit progress to use the top curve.
+function Config.GetCastRating(progress: number?)
+	local value = if progress == nil then 1 else progress
+	for _, rating in ipairs(Config.Meter.Ratings) do
+		if (rating.Exclusive and value > rating.Min) or (not rating.Exclusive and value >= rating.Min) then
+			return rating
+		end
+	end
+	return Config.Meter.Ratings[#Config.Meter.Ratings]
+end
+
+return Config

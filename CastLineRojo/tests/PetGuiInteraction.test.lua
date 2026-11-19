@@ -74,7 +74,7 @@ local modules = {
 	EggToolUtil = {},
 	ButtonAnimation = {},
 	GuiUtil = {},
-	RarityConfig = {},
+	RarityPresentation = {},
 }
 local configs = { A = { LuckBoost = 2 } }
 local services = {

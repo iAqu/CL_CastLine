@@ -5,6 +5,7 @@ local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 
 local Config = require(ReplicatedStorage.Modules.EventFishConfig)
+local EventPresentationGate = require(ReplicatedStorage.Modules.EventPresentationGate)
 local FishesData = require(ReplicatedFirst.Data.FishesData)
 local Assets = require(ReplicatedStorage.Modules.FishingAssets)
 local FishAnimationController = require(ReplicatedStorage.Modules.FishAnimationController)
@@ -52,6 +53,41 @@ function EventFishController:_makeShadow(fish, slotId, startsAt)
 	}
 end
 
+function EventFishController:_updateMarker(marker, suppressed: boolean)
+	local hidden = self._HiddenMarkerEffects
+	if not suppressed then
+		if hidden then
+			for effect, original in hidden do
+				if effect.Parent then
+					local intended = effect:GetAttribute(Config.MarkerEnabledAttribute)
+					effect.Enabled = if typeof(intended) == "boolean" then intended else original
+				end
+			end
+			self._HiddenMarkerEffects = nil
+		end
+		return
+	end
+	if not hidden then
+		hidden = setmetatable({}, { __mode = "k" })
+		self._HiddenMarkerEffects = hidden
+	end
+	if not marker then
+		return
+	end
+	for _, effect in marker:GetDescendants() do
+		if effect:IsA("BillboardGui") or effect:IsA("Beam") or effect:IsA("ParticleEmitter") or effect:IsA("Light") then
+			local firstSeen = hidden[effect] == nil
+			if firstSeen then
+				hidden[effect] = effect.Enabled
+			end
+			if (firstSeen or effect.Enabled) and effect:IsA("ParticleEmitter") then
+				effect:Clear()
+			end
+			effect.Enabled = false
+		end
+	end
+end
+
 function EventFishController:_update(now: number)
 	local state = ReplicatedStorage:FindFirstChild(Config.StateFolderName)
 	local phase = state and state:GetAttribute("Phase")
@@ -60,12 +96,14 @@ function EventFishController:_update(now: number)
 	local active = phase == "Active" and typeof(startsAt) == "number" and typeof(endsAt) == "number"
 		and now >= startsAt and now < endsAt
 	Knit.GetController("EventController"):SetEventFishActive(active)
-	if not active then
+	local suppressed = EventPresentationGate.IsSuppressed(LOCAL_PLAYER)
+	local areas = Workspace:FindFirstChild("Areas")
+	local marker = areas and areas:FindFirstChild("EventFish")
+	self:_updateMarker(marker, suppressed)
+	if not active or suppressed then
 		self:_clearShadow()
 		return
 	end
-	local areas = Workspace:FindFirstChild("Areas")
-	local marker = areas and areas:FindFirstChild("EventFish")
 	local waterY = WaterSurfaceUtil.GetWaterSurfaceY()
 	local character = LOCAL_PLAYER.Character
 	local humanoid = character and character:FindFirstChildOfClass("Humanoid")

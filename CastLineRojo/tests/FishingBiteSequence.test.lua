@@ -7,6 +7,10 @@ end
 
 local config = assert(loadstring(read("src/ReplicatedStorage/Modules/FishingConfig.lua")))()
 local water = { GetWaterSurfaceY = function() return 0 end }
+local function compressScale(_, rawScale)
+	return if rawScale <= 4 then rawScale else 4 * (1 + 0.3 * math.log(rawScale / 4))
+end
+
 local environment = setmetatable({
 	Vector3 = { new = function(x, y, z) return { X = x, Y = y, Z = z } end },
 	Enum = {
@@ -49,10 +53,14 @@ local environment = setmetatable({
 			return require("../src/ReplicatedStorage/Modules/FishRepositionPath")
 		end
 		if name == "stats" then
-			return { GetScaleRatio = function(_, weight)
-				assert(weight == 64000, "Use the weight returned by the server")
-				return 4.2, 4.3
-			end }
+			return {
+				GetScaleRatio = function(_, weight, template)
+					assert(weight == 64000, "Use the weight returned by the server")
+					local rawScale = 8
+					return compressScale(template, rawScale), rawScale
+				end,
+				CompressScaleRatio = compressScale,
+			}
 		end
 		assert(name == "config")
 		return config
@@ -153,24 +161,28 @@ local caught = setmetatable({}, Bite)
 caught:SetCaughtWeight(64000)
 assert(caught:_scaleAt("Bite", 0) == 1, "Keep the pre-catch size for bite timing")
 assert(caught:_scaleAt("Lifting", 0) == 1, "Start the lift at the pre-catch size")
-for index = 1, 100 do
-	assert(caught:_scaleAt("Lifting", caught:GetLiftTiming().duration * index / 100) <= 4.3, "Limit the lift animation peak")
-end
-assert(caught:_scaleAt("Caught", 0) == 4.2, "Hold the final fish size at the shared weight scale")
+local halfLiftScaleTime = caught:GetLiftTiming().scaleTime * 0.5
+local expectedPeak = compressScale(nil, (1 + 8) * 0.5 * settings.LiftScalePeak)
+assert(math.abs(caught:_scaleAt("Lifting", halfLiftScaleTime) - expectedPeak) < 1e-5,
+	"Interpolate and animate the raw fish size before applying compression")
+local finalScale = compressScale(nil, 8)
+assert(caught:_scaleAt("Caught", 0) == finalScale, "Hold the final fish size at the shared weight scale")
 
-local scaled = setmetatable({ defaultScale = 1.5 }, Bite)
+local scaled = setmetatable({ defaultScale = compressScale(nil, 5), rawDefaultScale = 5 }, Bite)
 scaled:SetCaughtWeight(64000)
 for _, phase in { "Settling", "Waiting", "Approaching", "Holding", "Nibbling", "Bite", "Struggling", "Escaped", "Reeling" } do
-	assert(scaled:_scaleAt(phase, 0) == 1.5, "Apply the base size throughout underwater fishing: " .. phase)
+	assert(scaled:_scaleAt(phase, 0) == scaled.defaultScale, "Apply the base size throughout underwater fishing: " .. phase)
 end
-assert(scaled:_scaleAt("Lifting", 0) == 1.5, "Start the lift at the base size without a jump")
-for index = 1, 100 do
-	assert(scaled:_scaleAt("Lifting", caught:GetLiftTiming().duration * index / 100) <= 4.3, "Cap the combined animated size")
-end
-assert(math.abs(scaled:_scaleAt("Lifting", scaled:GetLiftTiming().duration) - 4.2) < 1e-5, "Finish the lift at the final size")
-assert(scaled:_scaleAt("Caught", 0) == 4.2, "Do not multiply the base size twice after catching")
+assert(scaled:_scaleAt("Lifting", 0) == scaled.defaultScale, "Start at the compressed base size")
+assert(math.abs(scaled:_scaleAt("Lifting", scaled:GetLiftTiming().duration) - finalScale) < 1e-5,
+	"Finish the lift at the final size")
+assert(scaled:_scaleAt("Caught", 0) == finalScale, "Keep the compressed final size after catching")
 local unweighed = setmetatable({ defaultScale = 1.5 }, Bite)
 assert(unweighed:_scaleAt("Caught", 0) == 1.5, "Preview rounds without a caught weight must keep their base size")
+
+local eggLift = setmetatable({ isEgg = true, defaultScale = 1, rawDefaultScale = 1 }, Bite)
+assert(math.abs(eggLift:_scaleAt("Lifting", eggLift:GetLiftTiming().scaleTime * 0.5) - settings.LiftScalePeak) < 1e-5,
+	"Keep the egg lift animation on its own scale")
 
 local small = setmetatable({ presentationRadius = 1, mouthOffset = { Magnitude = 0.5 } }, Bite)
 assert(small:GetShowcaseHeight() == settings.ShowcaseHeight, "Keep the original height for small fish")
@@ -939,4 +951,60 @@ do
 	sequence.liftFeedbackAt = nil
 	sequence:_updateLiftFeedback("Caught", 5, 20, {})
 	assert(#played == 2 and effects == 1, "Expired boundaries replayed")
+end
+
+
+-- 教学短退路在起点/终点连续，等待超时也不能继续绕圈。
+do
+    local savedCFrame = environment.CFrame
+    environment.CFrame = { new = function()
+        return setmetatable({}, { __mul = function(_, frame) return frame end })
+    end }
+    local last = {}
+    local first = { Lerp = function(_, destination, alpha)
+        assert(destination == last)
+        return { progress = alpha }
+    end }
+    local sequence = setmetatable({
+        timeline = { tutorial = true },
+        repositions = { { first = first, last = last, duration = 0.9 } },
+    }, Bite)
+    local previous = -1
+    for _, elapsed in { -0.1, 0, 0.225, 0.45, 0.675, 0.9, 2 } do
+        local frame, weight = sequence:_repositionPose(1, elapsed, {}, nil)
+        assert(frame.progress >= previous and frame.progress >= 0 and frame.progress <= 1)
+        assert(weight >= 0 and weight <= settings.Motion.Animation.HoldWeight)
+        if elapsed <= 0 then assert(frame.progress == 0) end
+        if elapsed >= 0.9 then assert(frame.progress == 1) end
+        if elapsed == 0.45 then assert(math.abs(frame.progress - 0.5) < 1e-6) end
+        previous = frame.progress
+    end
+    environment.CFrame = savedCFrame
+end
+
+-- Long protected bites keep moving with bounded amplitude after the sink has finished.
+do
+ for _, start in {1, 5, 15, 1000} do
+  local variation = 0
+  local previousX, previousY
+  for tick = 0, 24 do
+   local x,y,angle = Bite.SampleTutorialHold(start + tick / 240)
+   assert(math.sqrt(x*x+y*y) <= 0.06 and math.abs(angle) <= math.rad(1.5) + 1e-8)
+   if previousX then variation += math.abs(x-previousX) + math.abs(y-previousY) end
+   previousX,previousY=x,y
+  end
+  assert(variation > 0.15, "Protected bite stopped moving while waiting for input")
+ end
+ local x,y,angle = Bite.SampleTutorialHold(0)
+ assert(x==0 and y==0 and angle==0, "Waiting shake must blend in after the initial sink")
+end
+
+-- A server-provided default-weight tutorial fish never inflates during the lift or reveal.
+do
+ local fixed=setmetatable({fixedSize=true,defaultScale=1.03,catchScale=1.03},{__index=Bite})
+ for _, phase in {"Waiting","Approaching","Holding","Nibbling","Bite","Struggling","Lifting","Caught"} do
+  for _, elapsed in {0,0.1,0.4,1,5,15} do
+   assert(fixed:_scaleAt(phase,elapsed)==1.03,"Default tutorial size changed in "..phase)
+  end
+ end
 end

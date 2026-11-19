@@ -77,7 +77,8 @@ function State:Sample(phase, phaseStartedAt, now, mirror, swimWeight, nibbleSpee
 		name, token = "LiftFlop", phaseStartedAt
 		speed = clips.LiftFlop.Duration / liftDuration
 		position, weight = elapsed * speed, 1
-	elseif phase == "Caught" then
+	elseif phase == "Caught" or phase == "Held" then
+		local held = phase == "Held"
 		if self.caughtAt ~= phaseStartedAt then
 			self.caughtAt = phaseStartedAt
 			-- 展示镜头落位时先甩尾一次，结束后再恢复随机间隔。
@@ -85,12 +86,14 @@ function State:Sample(phase, phaseStartedAt, now, mirror, swimWeight, nibbleSpee
 		end
 		if now >= self.nextBurst + clips.ShowcaseFlop.Duration then
 			-- 长帧跳过过期动作，不追赶或积压挣动次数。
-			self.nextBurst = now + self.random:NextNumber(AnimationSettings.GapMin, AnimationSettings.GapMax)
+			local minimum = if held then AnimationSettings.HeldGapMin else AnimationSettings.GapMin
+			local maximum = if held then AnimationSettings.HeldGapMax else AnimationSettings.GapMax
+			self.nextBurst = now + self.random:NextNumber(minimum, maximum)
 		end
 		if now >= self.nextBurst then
 			name, token, speed = "ShowcaseFlop", self.nextBurst, 1
 			position, weight = now - self.nextBurst, 1
-		else
+		elseif not held then
 			name, token, speed = "SwimLoop", "ShowcaseIdle", AnimationSettings.ShowcaseIdleSpeed
 			position = elapsed * speed % clips.SwimLoop.Duration
 			weight = AnimationSettings.ShowcaseIdleWeight
@@ -102,20 +105,27 @@ function State:Sample(phase, phaseStartedAt, now, mirror, swimWeight, nibbleSpee
 	return { name = name, token = token, position = position, speed = speed, weight = weight }
 end
 
-function FishAnimationController.new(fish, startedAt, random, onlyClip: string?, struggleTime: number?, approachTime: number?)
-	local self = setmetatable(
-		{ fish = fish, tracks = {}, state = FishAnimationController.NewState(startedAt, random, struggleTime, approachTime) },
-		FishAnimationController
-	)
+function FishAnimationController.HasRig(fish: Model): boolean
 	local parent = fish.PrimaryPart
 	for index, name in ipairs(AnimationSettings.Bones) do
 		-- Keep the root directly under the mesh; expanded rigs can insert joints between anchors.
 		local bone = parent and parent:FindFirstChild(name, index > 1)
 		if not bone or not bone:IsA("Bone") then
-			warnOnce("rig", "fish rig anchors are missing; keeping neutral pose")
-			return self
+			return false
 		end
 		parent = bone
+	end
+	return true
+end
+
+function FishAnimationController.new(fish, startedAt, random, onlyClip: string?, struggleTime: number?, approachTime: number?)
+	local self = setmetatable(
+		{ fish = fish, tracks = {}, state = FishAnimationController.NewState(startedAt, random, struggleTime, approachTime) },
+		FishAnimationController
+	)
+	if not FishAnimationController.HasRig(fish) then
+		warnOnce("rig", "fish rig anchors are missing; keeping neutral pose")
+		return self
 	end
 	local controller = fish:FindFirstChildOfClass("Humanoid") or fish:FindFirstChildOfClass("AnimationController")
 	if not controller then

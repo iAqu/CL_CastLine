@@ -16,6 +16,7 @@ local LogHelper = require(ReplicatedStorage.Modules.LogHelper)
 local Constants = require(ReplicatedStorage.Modules.Constants)
 local PotionFeatureHelper = require(ReplicatedStorage.Modules.PotionFeatureHelper)
 local HGAnalyticsService = require(ServerScriptService.Services.HGAnalyticsService)
+local FishingBaitPurchases = require(script.Parent.FishingBaitPurchases)
 
 type Receipt = {PlayerId: number, PlaceIdWherePurchased: number, ProductId: number,
     PurchaseId: string, CurrencySpent: number, CurrencyType: Enum.CurrencyType}
@@ -257,6 +258,26 @@ function PurchaseService:HandlePurchase(player: Player, productId: number, sentT
 end
 
 function PurchaseService:processReceipt(receiptInfo: Receipt)
+    local paidEggs = Knit.GetService("PaidEggService")
+    if paidEggs:IsProduct(receiptInfo.ProductId) then
+        return if paidEggs:ProcessReceipt(receiptInfo)
+            then Enum.ProductPurchaseDecision.PurchaseGranted
+            else Enum.ProductPurchaseDecision.NotProcessedYet
+    end
+    if FishingBaitPurchases.GetRod(receiptInfo.ProductId) then
+        local player = Players:GetPlayerByUserId(receiptInfo.PlayerId)
+        local ok, granted, added = pcall(FishingBaitPurchases.Process, player, receiptInfo)
+        if not ok then
+            warn("PurchaseService: fishing bait receipt failed: " .. tostring(granted))
+        end
+        if ok and granted then
+            if added then
+                self.Client.PurchaseSuccess:Fire(player, receiptInfo.ProductId, false)
+            end
+            return Enum.ProductPurchaseDecision.PurchaseGranted
+        end
+        return Enum.ProductPurchaseDecision.NotProcessedYet
+    end
     -- Determine if the product was already granted by checking the data store
     local playerProductKey = receiptInfo.PlayerId .. "_" .. receiptInfo.PurchaseId
     local purchased = false
@@ -365,6 +386,13 @@ function PurchaseService:GetPolicyCache(player: Player) : {[string]: any}
 end
 
 function PurchaseService:PromptPurchase(player: Player, purchaseId: string)
+    if require(ReplicatedStorage.Modules.PaidEggConfig).Purchases[purchaseId] then
+        local success, message = Knit.GetService("PaidEggService"):Prompt(player, purchaseId)
+        if not success then
+            self.Client.PromptPurchaseFail:Fire(player, message or "Purchase unavailable.")
+        end
+        return
+    end
     if PurchaseDataHelper.IsRetired(purchaseId) then
         self.Client.PromptPurchaseFail:Fire(player, "This item is no longer for sale.")
         return

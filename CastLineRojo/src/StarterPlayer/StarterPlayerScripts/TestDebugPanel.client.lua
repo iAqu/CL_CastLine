@@ -31,10 +31,6 @@ local EVENT_BUTTONS = {
 		buttonName = "StartEvent_03Button",
 		eventId = "Event_03",
 	},
-	{
-		buttonName = "StartEvent_04Button",
-		eventId = "Event_04",
-	},
 }
 
 testGui.Enabled = true

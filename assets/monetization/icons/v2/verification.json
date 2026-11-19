@@ -1,0 +1,751 @@
+{
+  "DoubleWins": {
+    "source": "/Users/gx/Documents/RobloxProjects/CL_CastLine/assets/monetization/icons/v2/sources/DoubleWins.png",
+    "before": {
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "bounds": [
+        115,
+        205,
+        1224,
+        1214
+      ],
+      "visibleBounds": [
+        117,
+        207,
+        1139,
+        1154
+      ],
+      "margins": [
+        115,
+        205,
+        30,
+        40
+      ],
+      "visibleMargins": [
+        117,
+        207,
+        115,
+        100
+      ]
+    },
+    "after": {
+      "size": [
+        1024,
+        1024
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "bounds": [
+        20,
+        56,
+        1004,
+        968
+      ],
+      "visibleBounds": [
+        22,
+        58,
+        1002,
+        966
+      ],
+      "margins": [
+        20,
+        56,
+        20,
+        56
+      ],
+      "visibleMargins": [
+        22,
+        58,
+        22,
+        58
+      ]
+    },
+    "uploadPath": "/Users/gx/Documents/RobloxProjects/CL_CastLine/assets/monetization/icons/v1/upload/DoubleWins-v2.png",
+    "upload": {
+      "size": [
+        512,
+        512
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "bounds": [
+        11,
+        29,
+        501,
+        484
+      ],
+      "visibleBounds": [
+        11,
+        29,
+        501,
+        483
+      ],
+      "margins": [
+        11,
+        29,
+        11,
+        28
+      ],
+      "visibleMargins": [
+        11,
+        29,
+        11,
+        29
+      ]
+    },
+    "originalGenerationPath": "/Users/gx/.codex/generated_images/01a1e8cc-0e7c-72f3-b3af-f9ff3f4c385a/exec-16b0cb68-309a-49a2-ba00-d12a975b94ab.png"
+  },
+  "DoubleTrain": {
+    "source": "/Users/gx/Documents/RobloxProjects/CL_CastLine/assets/monetization/icons/v2/sources/DoubleTrain.png",
+    "before": {
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "bounds": [
+        0,
+        103,
+        1224,
+        1254
+      ],
+      "visibleBounds": [
+        122,
+        202,
+        1123,
+        1144
+      ],
+      "margins": [
+        0,
+        103,
+        30,
+        0
+      ],
+      "visibleMargins": [
+        122,
+        202,
+        131,
+        110
+      ]
+    },
+    "after": {
+      "size": [
+        1024,
+        1024
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "bounds": [
+        20,
+        49,
+        1004,
+        975
+      ],
+      "visibleBounds": [
+        22,
+        50,
+        1002,
+        973
+      ],
+      "margins": [
+        20,
+        49,
+        20,
+        49
+      ],
+      "visibleMargins": [
+        22,
+        50,
+        22,
+        51
+      ]
+    },
+    "uploadPath": "/Users/gx/Documents/RobloxProjects/CL_CastLine/assets/monetization/icons/v1/upload/DoubleTrain-v2.png",
+    "upload": {
+      "size": [
+        512,
+        512
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "bounds": [
+        11,
+        25,
+        501,
+        487
+      ],
+      "visibleBounds": [
+        11,
+        25,
+        501,
+        487
+      ],
+      "margins": [
+        11,
+        25,
+        11,
+        25
+      ],
+      "visibleMargins": [
+        11,
+        25,
+        11,
+        25
+      ]
+    },
+    "originalGenerationPath": "/Users/gx/.codex/generated_images/01a1e8cc-0e7c-72f3-b3af-f9ff3f4c385a/exec-507589e8-b8a2-4d4c-8040-0e9b5469526a.png"
+  },
+  "MegaLuck": {
+    "source": "/Users/gx/Documents/RobloxProjects/CL_CastLine/assets/monetization/icons/v2/sources/MegaLuck.png",
+    "before": {
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "bounds": [
+        33,
+        87,
+        1216,
+        1198
+      ],
+      "visibleBounds": [
+        184,
+        205,
+        1059,
+        1107
+      ],
+      "margins": [
+        33,
+        87,
+        38,
+        56
+      ],
+      "visibleMargins": [
+        184,
+        205,
+        195,
+        147
+      ]
+    },
+    "after": {
+      "size": [
+        1024,
+        1024
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "bounds": [
+        35,
+        20,
+        989,
+        1004
+      ],
+      "visibleBounds": [
+        36,
+        22,
+        987,
+        1002
+      ],
+      "margins": [
+        35,
+        20,
+        35,
+        20
+      ],
+      "visibleMargins": [
+        36,
+        22,
+        37,
+        22
+      ]
+    },
+    "uploadPath": "/Users/gx/Documents/RobloxProjects/CL_CastLine/assets/monetization/icons/v1/upload/MegaLuck-v2.png",
+    "upload": {
+      "size": [
+        512,
+        512
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "bounds": [
+        18,
+        11,
+        494,
+        501
+      ],
+      "visibleBounds": [
+        18,
+        11,
+        494,
+        501
+      ],
+      "margins": [
+        18,
+        11,
+        18,
+        11
+      ],
+      "visibleMargins": [
+        18,
+        11,
+        18,
+        11
+      ]
+    },
+    "originalGenerationPath": "/Users/gx/.codex/generated_images/01a1e8cc-0e7c-72f3-b3af-f9ff3f4c385a/exec-a721643a-c59e-441b-8935-ce93aa0b990b.png"
+  },
+  "PremiumBait": {
+    "source": "/Users/gx/Documents/RobloxProjects/CL_CastLine/assets/monetization/icons/v2/sources/PremiumBait.png",
+    "before": {
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "bounds": [
+        41,
+        39,
+        1220,
+        1254
+      ],
+      "visibleBounds": [
+        247,
+        105,
+        969,
+        1166
+      ],
+      "margins": [
+        41,
+        39,
+        34,
+        0
+      ],
+      "visibleMargins": [
+        247,
+        105,
+        285,
+        88
+      ]
+    },
+    "after": {
+      "size": [
+        1024,
+        1024
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "bounds": [
+        176,
+        20,
+        848,
+        1004
+      ],
+      "visibleBounds": [
+        178,
+        21,
+        846,
+        1003
+      ],
+      "margins": [
+        176,
+        20,
+        176,
+        20
+      ],
+      "visibleMargins": [
+        178,
+        21,
+        178,
+        21
+      ]
+    },
+    "uploadPath": "/Users/gx/Documents/RobloxProjects/CL_CastLine/assets/monetization/icons/v1/upload/PremiumBait-v2.png",
+    "upload": {
+      "size": [
+        512,
+        512
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "bounds": [
+        89,
+        11,
+        423,
+        501
+      ],
+      "visibleBounds": [
+        89,
+        11,
+        423,
+        501
+      ],
+      "margins": [
+        89,
+        11,
+        89,
+        11
+      ],
+      "visibleMargins": [
+        89,
+        11,
+        89,
+        11
+      ]
+    },
+    "originalGenerationPath": "/Users/gx/.codex/generated_images/01a1e8cc-0e7c-72f3-b3af-f9ff3f4c385a/exec-1af4557d-f534-4e83-a24e-3cdbf6b05b42.png"
+  },
+  "WinsTier1": {
+    "source": "/Users/gx/Documents/RobloxProjects/CL_CastLine/assets/monetization/icons/v2/sources/WinsTier1.png",
+    "before": {
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "bounds": [
+        0,
+        71,
+        1144,
+        1196
+      ],
+      "visibleBounds": [
+        166,
+        316,
+        1089,
+        997
+      ],
+      "margins": [
+        0,
+        71,
+        110,
+        58
+      ],
+      "visibleMargins": [
+        166,
+        316,
+        165,
+        257
+      ]
+    },
+    "after": {
+      "size": [
+        1024,
+        1024
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "bounds": [
+        20,
+        148,
+        1004,
+        876
+      ],
+      "visibleBounds": [
+        22,
+        150,
+        1002,
+        874
+      ],
+      "margins": [
+        20,
+        148,
+        20,
+        148
+      ],
+      "visibleMargins": [
+        22,
+        150,
+        22,
+        150
+      ]
+    },
+    "uploadPath": "/Users/gx/Documents/RobloxProjects/CL_CastLine/assets/monetization/icons/v1/upload/WinsTier1-v2.png",
+    "upload": {
+      "size": [
+        512,
+        512
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "bounds": [
+        10,
+        75,
+        501,
+        437
+      ],
+      "visibleBounds": [
+        11,
+        75,
+        501,
+        437
+      ],
+      "margins": [
+        10,
+        75,
+        11,
+        75
+      ],
+      "visibleMargins": [
+        11,
+        75,
+        11,
+        75
+      ]
+    },
+    "originalGenerationPath": "/Users/gx/.codex/generated_images/01a1e8cc-0e7c-72f3-b3af-f9ff3f4c385a/exec-09211675-1e06-427c-8836-9c54ae0686e4.png"
+  },
+  "WinsTier2": {
+    "source": "/Users/gx/Documents/RobloxProjects/CL_CastLine/assets/monetization/icons/v2/sources/WinsTier2.png",
+    "before": {
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "bounds": [
+        0,
+        47,
+        1222,
+        1254
+      ],
+      "visibleBounds": [
+        235,
+        178,
+        995,
+        1120
+      ],
+      "margins": [
+        0,
+        47,
+        32,
+        0
+      ],
+      "visibleMargins": [
+        235,
+        178,
+        259,
+        134
+      ]
+    },
+    "after": {
+      "size": [
+        1024,
+        1024
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "bounds": [
+        114,
+        20,
+        910,
+        1004
+      ],
+      "visibleBounds": [
+        116,
+        22,
+        908,
+        1002
+      ],
+      "margins": [
+        114,
+        20,
+        114,
+        20
+      ],
+      "visibleMargins": [
+        116,
+        22,
+        116,
+        22
+      ]
+    },
+    "uploadPath": "/Users/gx/Documents/RobloxProjects/CL_CastLine/assets/monetization/icons/v1/upload/WinsTier2-v2.png",
+    "upload": {
+      "size": [
+        512,
+        512
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "bounds": [
+        58,
+        11,
+        454,
+        502
+      ],
+      "visibleBounds": [
+        58,
+        11,
+        454,
+        501
+      ],
+      "margins": [
+        58,
+        11,
+        58,
+        10
+      ],
+      "visibleMargins": [
+        58,
+        11,
+        58,
+        11
+      ]
+    },
+    "originalGenerationPath": "/Users/gx/.codex/generated_images/01a1e8cc-0e7c-72f3-b3af-f9ff3f4c385a/exec-24893521-ccca-410a-afe9-cef87481f6aa.png"
+  },
+  "WinsTier3": {
+    "source": "/Users/gx/Documents/RobloxProjects/CL_CastLine/assets/monetization/icons/v2/sources/WinsTier3.png",
+    "before": {
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "bounds": [
+        0,
+        19,
+        1230,
+        1234
+      ],
+      "visibleBounds": [
+        144,
+        136,
+        1109,
+        1140
+      ],
+      "margins": [
+        0,
+        19,
+        24,
+        20
+      ],
+      "visibleMargins": [
+        144,
+        136,
+        145,
+        114
+      ]
+    },
+    "after": {
+      "size": [
+        1024,
+        1024
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "bounds": [
+        39,
+        20,
+        985,
+        1004
+      ],
+      "visibleBounds": [
+        41,
+        21,
+        983,
+        1002
+      ],
+      "margins": [
+        39,
+        20,
+        39,
+        20
+      ],
+      "visibleMargins": [
+        41,
+        21,
+        41,
+        22
+      ]
+    },
+    "uploadPath": "/Users/gx/Documents/RobloxProjects/CL_CastLine/assets/monetization/icons/v1/upload/WinsTier3-v2.png",
+    "upload": {
+      "size": [
+        512,
+        512
+      ],
+      "alphaRange": [
+        0,
+        255
+      ],
+      "bounds": [
+        20,
+        10,
+        492,
+        502
+      ],
+      "visibleBounds": [
+        20,
+        11,
+        492,
+        501
+      ],
+      "margins": [
+        20,
+        10,
+        20,
+        10
+      ],
+      "visibleMargins": [
+        20,
+        11,
+        20,
+        11
+      ]
+    },
+    "originalGenerationPath": "/Users/gx/.codex/generated_images/01a1e8cc-0e7c-72f3-b3af-f9ff3f4c385a/exec-a0b9a4e5-b2f4-4aee-93bb-0c157ad5343e.png"
+  }
+}

@@ -1,5 +1,5 @@
 local Settings = require(script.Parent.FishingConfig).Vignette
-local RarityConfig = require(script.Parent.RarityConfig)
+local RarityPresentation = require(script.Parent.RarityPresentation)
 
 local FishingVignette = {}
 FishingVignette.__index = FishingVignette
@@ -83,7 +83,7 @@ function FishingVignette:Update(now, bite)
 	if self.bite ~= bite then
 		self.bite, self.shown = bite, false
 		self.amount, self.target, self.startedAt = 0, 0, nil
-		local color = RarityConfig.Get(bite and bite.fishConfig and bite.fishConfig.Rarity).Color
+		local color = RarityPresentation.GetColor(bite and bite.fishConfig and bite.fishConfig.Rarity)
 		for _, ring in ipairs(self.rings) do
 			ring.stroke.Color = color
 		end

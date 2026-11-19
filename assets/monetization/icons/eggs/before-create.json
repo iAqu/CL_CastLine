@@ -1,0 +1,710 @@
+{
+  "sheet": {
+    "spreadsheetId": "1UlSnNuUBmQ1BQB43Jj3y8J9RYDzOF5g0Z5Js0PzHB8Y",
+    "spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1UlSnNuUBmQ1BQB43Jj3y8J9RYDzOF5g0Z5Js0PzHB8Y/edit",
+    "properties": {
+      "title": "#CL 正式表",
+      "locale": "en_US",
+      "timeZone": "Etc/GMT"
+    },
+    "sheets": [
+      {
+        "properties": {
+          "sheetId": 2083677018,
+          "title": "PurchaseData",
+          "index": 9,
+          "sheetType": "GRID",
+          "gridProperties": {
+            "rowCount": 925,
+            "columnCount": 26,
+            "frozenRowCount": 1,
+            "rowGroupControlAfter": true,
+            "columnGroupControlAfter": true
+          }
+        },
+        "data": [
+          {
+            "startRow": 10,
+            "rowData": [
+              {
+                "values": [
+                  {
+                    "userEnteredValue": {
+                      "stringValue": "Egg_R_1"
+                    },
+                    "effectiveValue": {
+                      "stringValue": "Egg_R_1"
+                    },
+                    "userEnteredFormat": {
+                      "verticalAlignment": "BOTTOM",
+                      "textFormat": {
+                        "fontFamily": "Arial",
+                        "fontSize": 12
+                      }
+                    }
+                  },
+                  {
+                    "userEnteredValue": {
+                      "stringValue": "COSMIC CHAOS EGG"
+                    },
+                    "effectiveValue": {
+                      "stringValue": "COSMIC CHAOS EGG"
+                    },
+                    "userEnteredFormat": {
+                      "numberFormat": {
+                        "type": "TEXT"
+                      },
+                      "verticalAlignment": "BOTTOM",
+                      "textFormat": {
+                        "fontFamily": "Arial",
+                        "fontSize": 12
+                      }
+                    }
+                  },
+                  {
+                    "userEnteredValue": {
+                      "stringValue": "Hatch"
+                    },
+                    "effectiveValue": {
+                      "stringValue": "Hatch"
+                    },
+                    "userEnteredFormat": {
+                      "numberFormat": {
+                        "type": "TEXT"
+                      },
+                      "verticalAlignment": "BOTTOM",
+                      "textFormat": {
+                        "fontFamily": "Arial",
+                        "fontSize": 12
+                      }
+                    }
+                  },
+                  {
+                    "userEnteredValue": {
+                      "numberValue": 79
+                    },
+                    "effectiveValue": {
+                      "numberValue": 79
+                    },
+                    "userEnteredFormat": {
+                      "horizontalAlignment": "RIGHT",
+                      "verticalAlignment": "BOTTOM",
+                      "textFormat": {
+                        "fontFamily": "Calibri",
+                        "fontSize": 12
+                      }
+                    }
+                  },
+                  {
+                    "userEnteredValue": {
+                      "numberValue": 1
+                    },
+                    "effectiveValue": {
+                      "numberValue": 1
+                    },
+                    "userEnteredFormat": {
+                      "horizontalAlignment": "RIGHT",
+                      "verticalAlignment": "BOTTOM",
+                      "textFormat": {
+                        "fontFamily": "Calibri",
+                        "fontSize": 12
+                      }
+                    }
+                  },
+                  {
+                    "userEnteredValue": {
+                      "numberValue": 0
+                    },
+                    "effectiveValue": {
+                      "numberValue": 0
+                    },
+                    "userEnteredFormat": {
+                      "horizontalAlignment": "RIGHT",
+                      "verticalAlignment": "BOTTOM",
+                      "textFormat": {
+                        "fontFamily": "Calibri",
+                        "fontSize": 12
+                      }
+                    }
+                  },
+                  {
+                    "userEnteredValue": {
+                      "numberValue": 0
+                    },
+                    "effectiveValue": {
+                      "numberValue": 0
+                    },
+                    "userEnteredFormat": {
+                      "horizontalAlignment": "RIGHT",
+                      "verticalAlignment": "BOTTOM",
+                      "textFormat": {
+                        "fontFamily": "Calibri",
+                        "fontSize": 12
+                      }
+                    }
+                  },
+                  {
+                    "userEnteredFormat": {
+                      "horizontalAlignment": "RIGHT",
+                      "verticalAlignment": "BOTTOM",
+                      "textFormat": {
+                        "fontFamily": "Arial",
+                        "fontSize": 12
+                      }
+                    }
+                  },
+                  {
+                    "userEnteredFormat": {
+                      "horizontalAlignment": "LEFT",
+                      "textFormat": {
+                        "fontFamily": "Calibri",
+                        "fontSize": 12,
+                        "foregroundColorStyle": {
+                          "themeColor": "TEXT"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "userEnteredFormat": {
+                      "horizontalAlignment": "RIGHT",
+                      "textFormat": {
+                        "fontFamily": "Calibri",
+                        "fontSize": 12,
+                        "foregroundColorStyle": {
+                          "themeColor": "TEXT"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "userEnteredValue": {
+                      "stringValue": "nil"
+                    },
+                    "effectiveValue": {
+                      "stringValue": "nil"
+                    },
+                    "userEnteredFormat": {
+                      "numberFormat": {
+                        "type": "TEXT"
+                      },
+                      "horizontalAlignment": "LEFT",
+                      "textFormat": {
+                        "fontFamily": "Arial",
+                        "fontSize": 12,
+                        "foregroundColorStyle": {
+                          "themeColor": "TEXT"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "userEnteredFormat": {
+                      "horizontalAlignment": "LEFT",
+                      "textFormat": {
+                        "fontFamily": "Calibri",
+                        "fontSize": 12,
+                        "foregroundColorStyle": {
+                          "themeColor": "TEXT"
+                        }
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "values": [
+                  {
+                    "userEnteredValue": {
+                      "stringValue": "Egg_R_1x3"
+                    },
+                    "effectiveValue": {
+                      "stringValue": "Egg_R_1x3"
+                    },
+                    "userEnteredFormat": {
+                      "verticalAlignment": "BOTTOM",
+                      "textFormat": {
+                        "fontFamily": "Arial",
+                        "fontSize": 12
+                      }
+                    }
+                  },
+                  {
+                    "userEnteredValue": {
+                      "stringValue": "COSMIC CHAOS EGG x3"
+                    },
+                    "effectiveValue": {
+                      "stringValue": "COSMIC CHAOS EGG x3"
+                    },
+                    "userEnteredFormat": {
+                      "numberFormat": {
+                        "type": "TEXT"
+                      },
+                      "verticalAlignment": "BOTTOM",
+                      "textFormat": {
+                        "fontFamily": "Arial",
+                        "fontSize": 12
+                      }
+                    }
+                  },
+                  {
+                    "userEnteredValue": {
+                      "stringValue": "Hatch"
+                    },
+                    "effectiveValue": {
+                      "stringValue": "Hatch"
+                    },
+                    "userEnteredFormat": {
+                      "numberFormat": {
+                        "type": "TEXT"
+                      },
+                      "verticalAlignment": "BOTTOM",
+                      "textFormat": {
+                        "fontFamily": "Arial",
+                        "fontSize": 12
+                      }
+                    }
+                  },
+                  {
+                    "userEnteredValue": {
+                      "numberValue": 199
+                    },
+                    "effectiveValue": {
+                      "numberValue": 199
+                    },
+                    "userEnteredFormat": {
+                      "horizontalAlignment": "RIGHT",
+                      "verticalAlignment": "BOTTOM",
+                      "textFormat": {
+                        "fontFamily": "Calibri",
+                        "fontSize": 12
+                      }
+                    }
+                  },
+                  {
+                    "userEnteredValue": {
+                      "numberValue": 3
+                    },
+                    "effectiveValue": {
+                      "numberValue": 3
+                    },
+                    "userEnteredFormat": {
+                      "horizontalAlignment": "RIGHT",
+                      "verticalAlignment": "BOTTOM",
+                      "textFormat": {
+                        "fontFamily": "Calibri",
+                        "fontSize": 12
+                      }
+                    }
+                  },
+                  {
+                    "userEnteredValue": {
+                      "numberValue": 0
+                    },
+                    "effectiveValue": {
+                      "numberValue": 0
+                    },
+                    "userEnteredFormat": {
+                      "horizontalAlignment": "RIGHT",
+                      "verticalAlignment": "BOTTOM",
+                      "textFormat": {
+                        "fontFamily": "Calibri",
+                        "fontSize": 12
+                      }
+                    }
+                  },
+                  {
+                    "userEnteredValue": {
+                      "numberValue": 0
+                    },
+                    "effectiveValue": {
+                      "numberValue": 0
+                    },
+                    "userEnteredFormat": {
+                      "horizontalAlignment": "RIGHT",
+                      "verticalAlignment": "BOTTOM",
+                      "textFormat": {
+                        "fontFamily": "Calibri",
+                        "fontSize": 12
+                      }
+                    }
+                  },
+                  {
+                    "userEnteredFormat": {
+                      "horizontalAlignment": "RIGHT",
+                      "verticalAlignment": "BOTTOM",
+                      "textFormat": {
+                        "fontFamily": "Arial",
+                        "fontSize": 12
+                      }
+                    }
+                  },
+                  {
+                    "userEnteredFormat": {
+                      "horizontalAlignment": "LEFT",
+                      "textFormat": {
+                        "fontFamily": "Calibri",
+                        "fontSize": 12,
+                        "foregroundColorStyle": {
+                          "themeColor": "TEXT"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "userEnteredFormat": {
+                      "horizontalAlignment": "RIGHT",
+                      "textFormat": {
+                        "fontFamily": "Calibri",
+                        "fontSize": 12,
+                        "foregroundColorStyle": {
+                          "themeColor": "TEXT"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "userEnteredValue": {
+                      "stringValue": "nil"
+                    },
+                    "effectiveValue": {
+                      "stringValue": "nil"
+                    },
+                    "userEnteredFormat": {
+                      "numberFormat": {
+                        "type": "TEXT"
+                      },
+                      "horizontalAlignment": "LEFT",
+                      "textFormat": {
+                        "fontFamily": "Arial",
+                        "fontSize": 12,
+                        "foregroundColorStyle": {
+                          "themeColor": "TEXT"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "userEnteredFormat": {
+                      "horizontalAlignment": "LEFT",
+                      "textFormat": {
+                        "fontFamily": "Calibri",
+                        "fontSize": 12,
+                        "foregroundColorStyle": {
+                          "themeColor": "TEXT"
+                        }
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "values": [
+                  {
+                    "userEnteredValue": {
+                      "stringValue": "Egg_R_1x10"
+                    },
+                    "effectiveValue": {
+                      "stringValue": "Egg_R_1x10"
+                    },
+                    "userEnteredFormat": {
+                      "verticalAlignment": "BOTTOM",
+                      "textFormat": {
+                        "fontFamily": "Arial",
+                        "fontSize": 12
+                      }
+                    }
+                  },
+                  {
+                    "userEnteredValue": {
+                      "stringValue": "COSMIC CHAOS EGG x10"
+                    },
+                    "effectiveValue": {
+                      "stringValue": "COSMIC CHAOS EGG x10"
+                    },
+                    "userEnteredFormat": {
+                      "numberFormat": {
+                        "type": "TEXT"
+                      },
+                      "verticalAlignment": "BOTTOM",
+                      "textFormat": {
+                        "fontFamily": "Arial",
+                        "fontSize": 12
+                      }
+                    }
+                  },
+                  {
+                    "userEnteredValue": {
+                      "stringValue": "Hatch"
+                    },
+                    "effectiveValue": {
+                      "stringValue": "Hatch"
+                    },
+                    "userEnteredFormat": {
+                      "numberFormat": {
+                        "type": "TEXT"
+                      },
+                      "verticalAlignment": "BOTTOM",
+                      "textFormat": {
+                        "fontFamily": "Arial",
+                        "fontSize": 12
+                      }
+                    }
+                  },
+                  {
+                    "userEnteredValue": {
+                      "numberValue": 649
+                    },
+                    "effectiveValue": {
+                      "numberValue": 649
+                    },
+                    "userEnteredFormat": {
+                      "horizontalAlignment": "RIGHT",
+                      "verticalAlignment": "BOTTOM",
+                      "textFormat": {
+                        "fontFamily": "Calibri",
+                        "fontSize": 12
+                      }
+                    }
+                  },
+                  {
+                    "userEnteredValue": {
+                      "numberValue": 10
+                    },
+                    "effectiveValue": {
+                      "numberValue": 10
+                    },
+                    "userEnteredFormat": {
+                      "horizontalAlignment": "RIGHT",
+                      "verticalAlignment": "BOTTOM",
+                      "textFormat": {
+                        "fontFamily": "Calibri",
+                        "fontSize": 12
+                      }
+                    }
+                  },
+                  {
+                    "userEnteredValue": {
+                      "numberValue": 0
+                    },
+                    "effectiveValue": {
+                      "numberValue": 0
+                    },
+                    "userEnteredFormat": {
+                      "horizontalAlignment": "RIGHT",
+                      "verticalAlignment": "BOTTOM",
+                      "textFormat": {
+                        "fontFamily": "Calibri",
+                        "fontSize": 12
+                      }
+                    }
+                  },
+                  {
+                    "userEnteredValue": {
+                      "numberValue": 0
+                    },
+                    "effectiveValue": {
+                      "numberValue": 0
+                    },
+                    "userEnteredFormat": {
+                      "horizontalAlignment": "RIGHT",
+                      "verticalAlignment": "BOTTOM",
+                      "textFormat": {
+                        "fontFamily": "Calibri",
+                        "fontSize": 12
+                      }
+                    }
+                  },
+                  {
+                    "userEnteredFormat": {
+                      "horizontalAlignment": "RIGHT",
+                      "verticalAlignment": "BOTTOM",
+                      "textFormat": {
+                        "fontFamily": "Arial",
+                        "fontSize": 12
+                      }
+                    }
+                  },
+                  {
+                    "userEnteredFormat": {
+                      "horizontalAlignment": "LEFT",
+                      "textFormat": {
+                        "fontFamily": "Calibri",
+                        "fontSize": 12,
+                        "foregroundColorStyle": {
+                          "themeColor": "TEXT"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "userEnteredFormat": {
+                      "horizontalAlignment": "RIGHT",
+                      "textFormat": {
+                        "fontFamily": "Calibri",
+                        "fontSize": 12,
+                        "foregroundColorStyle": {
+                          "themeColor": "TEXT"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "userEnteredValue": {
+                      "stringValue": "nil"
+                    },
+                    "effectiveValue": {
+                      "stringValue": "nil"
+                    },
+                    "userEnteredFormat": {
+                      "numberFormat": {
+                        "type": "TEXT"
+                      },
+                      "horizontalAlignment": "LEFT",
+                      "textFormat": {
+                        "fontFamily": "Arial",
+                        "fontSize": 12,
+                        "foregroundColorStyle": {
+                          "themeColor": "TEXT"
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "userEnteredFormat": {
+                      "horizontalAlignment": "LEFT",
+                      "textFormat": {
+                        "fontFamily": "Calibri",
+                        "fontSize": 12,
+                        "foregroundColorStyle": {
+                          "themeColor": "TEXT"
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "platform": {
+    "developerProducts": [
+      {
+        "productId": 3732742846,
+        "name": "Premium Bait",
+        "description": "",
+        "iconImageAssetId": 132669232893917,
+        "universeId": 10777315397,
+        "isForSale": true,
+        "priceInformation": {
+          "defaultPriceInRobux": 9,
+          "enabledFeatures": []
+        },
+        "isImmutable": false,
+        "createdTimestamp": "2026-11-17T09:54:54.989Z",
+        "updatedTimestamp": "2026-11-17T10:15:02.792Z",
+        "isManagedPricingEnabled": false
+      },
+      {
+        "productId": 3732742828,
+        "name": "Mega Pack",
+        "description": "",
+        "iconImageAssetId": 97713154008181,
+        "universeId": 10777315397,
+        "isForSale": true,
+        "priceInformation": {
+          "defaultPriceInRobux": 199,
+          "enabledFeatures": []
+        },
+        "isImmutable": false,
+        "createdTimestamp": "2026-11-17T09:54:52.056Z",
+        "updatedTimestamp": "2026-11-17T10:15:00.141Z",
+        "isManagedPricingEnabled": false
+      },
+      {
+        "productId": 3732742806,
+        "name": "Large Pack",
+        "description": "",
+        "iconImageAssetId": 114996568546760,
+        "universeId": 10777315397,
+        "isForSale": true,
+        "priceInformation": {
+          "defaultPriceInRobux": 79,
+          "enabledFeatures": []
+        },
+        "isImmutable": false,
+        "createdTimestamp": "2026-11-17T09:54:48.736Z",
+        "updatedTimestamp": "2026-11-17T10:14:57.234Z",
+        "isManagedPricingEnabled": false
+      },
+      {
+        "productId": 3732742786,
+        "name": "Small Pack",
+        "description": "",
+        "iconImageAssetId": 131898173375499,
+        "universeId": 10777315397,
+        "isForSale": true,
+        "priceInformation": {
+          "defaultPriceInRobux": 19,
+          "enabledFeatures": []
+        },
+        "isImmutable": false,
+        "createdTimestamp": "2026-11-17T09:54:45.526Z",
+        "updatedTimestamp": "2026-11-17T10:14:54.022Z",
+        "isManagedPricingEnabled": false
+      },
+      {
+        "productId": 3732742767,
+        "name": "Gift Ultra Luck",
+        "description": "Ultra luck for fishing",
+        "iconImageAssetId": 109069136174247,
+        "universeId": 10777315397,
+        "isForSale": true,
+        "priceInformation": {
+          "defaultPriceInRobux": 219,
+          "enabledFeatures": []
+        },
+        "isImmutable": false,
+        "createdTimestamp": "2026-11-17T09:54:42.389Z",
+        "updatedTimestamp": "2026-11-17T10:14:51.32Z",
+        "isManagedPricingEnabled": false
+      },
+      {
+        "productId": 3732742733,
+        "name": "Gift x2 Training Power",
+        "description": "Double XP on weightlifting",
+        "iconImageAssetId": 104229551668913,
+        "universeId": 10777315397,
+        "isForSale": true,
+        "priceInformation": {
+          "defaultPriceInRobux": 149,
+          "enabledFeatures": []
+        },
+        "isImmutable": false,
+        "createdTimestamp": "2026-11-17T09:54:37.953Z",
+        "updatedTimestamp": "2026-11-17T10:14:46.792Z",
+        "isManagedPricingEnabled": false
+      },
+      {
+        "productId": 3732742706,
+        "name": "Gift x2 Cash",
+        "description": "Double cash forom every animal",
+        "iconImageAssetId": 75170221504310,
+        "universeId": 10777315397,
+        "isForSale": true,
+        "priceInformation": {
+          "defaultPriceInRobux": 99,
+          "enabledFeatures": []
+        },
+        "isImmutable": false,
+        "createdTimestamp": "2026-11-17T09:54:33.015Z",
+        "updatedTimestamp": "2026-11-17T10:14:42.418Z",
+        "isManagedPricingEnabled": false
+      }
+    ],
+    "nextPageToken": null
+  }
+}

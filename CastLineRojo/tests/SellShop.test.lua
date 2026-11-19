@@ -1,68 +1,302 @@
-local function read(path: string): string
+local function loadSource(path, globals)
 	local file = assert(io.open(path, "r"))
 	local source = file:read("*a")
 	file:close()
-	return source
+	return assert(load(source, path, "t", setmetatable(globals or {}, { __index = getfenv() })))()
 end
+local stats = require("./helpers/ItemStats")
+local fish = {
+	Fish_101 = {
+		ItemID = "Fish_101",
+		LayoutOrder = 1,
+		DefaultWeight = 10,
+		DefaultPrice = 11,
+		CpsPrice = 4,
+		Rarity = "Common",
+	},
+	Rare = { ItemID = "Rare", LayoutOrder = 2, DefaultWeight = 10, DefaultPrice = 100, CpsPrice = 20, Rarity = "Rare" },
+}
+local mutations = {
+	NormalizeMutationId = function(id)
+		return if id == "Golden" then id else nil
+	end,
+	GetPriceRate = function(id)
+		return if id == "Golden" then 1.5 else 1
+	end,
+	GetEarnCashRate = function(id)
+		return if id == "Golden" then 1.5 else 1
+	end,
+}
+local modules = { FishInventoryData = fish, ItemStatUtil = stats, MutationDataUtil = mutations, PlotPlacementUtil = {} }
+modules.PlotFishIncome = loadSource("src/ReplicatedStorage/Modules/PlotFishIncome.lua", {
+	script = { Parent = modules },
+	require = function(value)
+		return value
+	end,
+})
+local backpack, character = { tools = {} }, { tools = {} }
+for _, container in { backpack, character } do
+	function container:GetChildren()
+		return table.clone(self.tools)
+	end
+end
+local player = { UserId = 42, Character = character }
+function player:FindFirstChildOfClass()
+	return backpack
+end
+local profile, atShop, multiplier, allowPayment, onCredit
+local refreshes, removed, credits, payments
+modules.SellShopZone = {
+	CanSell = function(_, serverTolerance)
+		assert(serverTolerance == true, "Service requests must use the generous server boundary")
+		return atShop
+	end,
+}
+modules.GamePassEffectUtil = {
+	GetSaleMultiplier = function()
+		return multiplier
+	end,
+}
+modules.ItemToolUtil = {
+	IsItemTool = function(tool)
+		return tool.uid ~= nil
+	end,
+	GetInstanceId = function(tool)
+		return tool.uid
+	end,
+}
+local service
+local knit = {
+	CreateService = function(value)
+		value.Client.Server = value
+		return value
+	end,
+	GetService = function(name)
+		if name == "PlotFishService" then
+			return {
+				RefreshInventoryIncome = function()
+					refreshes += 1
+				end,
+			}
+		end
+		assert(name == "HotbarLayoutService")
+		return {
+			RemoveItemDescriptors = function(_, _, ids)
+				removed = table.clone(ids)
+			end,
+		}
+	end,
+}
+local services = {
+	ReplicatedFirst = { Data = { ConditionsData = { Normal = { ValueMult = 1 } } } },
+	ReplicatedStorage = { Modules = modules, Packages = { Knit = knit } },
+	ServerScriptService = {
+		Services = {
+			PlayerDataService = {
+				GetProfile = function()
+					return profile
+				end,
+				AdjustWins = function(_, _, amount, countTowardTotalWins)
+					assert(countTowardTotalWins == false)
+					if onCredit then
+						onCredit()
+					end
+					if not allowPayment then
+						return false
+					end
+					credits += amount
+					payments += 1
+					return true
+				end,
+			},
+		},
+	},
+}
+service = loadSource("src/ServerScriptService/Services/SellService.lua", {
+	game = {
+		GetService = function(_, name)
+			return assert(services[name], name)
+		end,
+	},
+	require = function(value)
+		return value
+	end,
+})
+local function record(itemId, mutation)
+	return { ItemId = itemId or "Fish_101", Weight = 10, ConditionId = "Normal", MutationId = mutation, Price = 999999 }
+end
+local function tool(id, container)
+	local value = { uid = id }
+	function value:Destroy()
+		self.destroyed = true
+		local index = table.find(container.tools, self)
+		if index then
+			table.remove(container.tools, index)
+		end
+	end
+	table.insert(container.tools, value)
+	return value
+end
+local function reset()
+	profile = {
+		Data = {
+			Items = { a = record(), b = record(), placed = record("Rare"), gold = record("Rare", "Golden") },
+			PlotPlacements = { "placed" },
+		},
+	}
+	atShop, multiplier, allowPayment, onCredit = true, 1.2, true, nil
+	refreshes, removed, credits, payments = 0, nil, 0, 0
+	backpack.tools, character.tools = {}, {}
+	tool("a", backpack)
+	tool("b", character)
+	tool("placed", backpack)
+	tool("gold", backpack)
+end
+reset()
+local snapshot = service.Client:GetSellInventory(player)
+assert(snapshot.success and #snapshot.items == 3 and snapshot.totalPrice == 206)
+assert(
+	snapshot.items[1].instanceId == "a"
+		and snapshot.items[2].instanceId == "b"
+		and snapshot.items[3].instanceId == "gold"
+)
+assert(snapshot.items[1].price == 13 and snapshot.items[3].price == 180 and snapshot.items[3].income == 30)
+multiplier = 1.5
+local rounding = service:GetSellInventory(player)
+assert(
+	rounding.totalPrice ~= rounding.items[1].price + rounding.items[2].price + rounding.items[3].price,
+	"Bulk rounding must happen after summing base prices, matching existing sales"
+)
+multiplier = 1.2
+local carried, held = backpack.tools[1], character.tools[1]
+local result = service.Client:RequestSellItems(player, { "a" }, 13)
+assert(result.success and result.soldCount == 1 and result.earnedCash == 13)
+assert(credits == 13 and refreshes == 1 and payments == 1 and removed[1] == "a")
+assert(
+	not profile.Data.Items.a
+		and profile.Data.Items.b
+		and profile.Data.Items.placed
+		and carried.destroyed
+		and not held.destroyed
+)
+assert(not service:SellItems(player, { "a" }, 13).success and payments == 1, "A repeated sale cannot pay twice")
 
-local service = read("src/ServerScriptService/Services/SellService.lua")
-local controller = read("src/StarterPlayer/StarterPlayerScripts/Controllers/GUI/SellShopController.lua")
-local guiAnimationUtil = read("src/ReplicatedStorage/Modules/GuiAnimationUtil.lua")
-local highlightUtil = read("src/ReplicatedStorage/Modules/ShopHighlightUtil.lua")
+reset()
+for _, ids in { { "a", "a" }, { "a", "missing" }, { "a", "placed" }, { [2] = "a" }, { a = "a" }, {} } do
+	assert(not service:SellItems(player, ids, 13).success)
+	assert(profile.Data.Items.a and credits == 0 and refreshes == 0)
+end
+for _, total in { -1, math.huge, 0 / 0, "13", false } do
+	assert(not service:SellItems(player, { "a" }, total).success)
+end
+assert(not service:SellItems(player, nil, 13).success)
+assert(not service:SellItems(player, { "a" }, 1).success)
+profile.Data.Items.a.Weight = 20
+assert(not service:SellItems(player, { "a" }, 13).success, "Changed prices reject the entire sale")
+reset()
+profile.Data.PlotPlacements[2] = "a"
+assert(not service:SellItems(player, { "a", "b" }, 26).success and profile.Data.Items.b)
+reset()
+profile.Data.Items.a = nil
+assert(not service:SellItems(player, { "a", "b" }, 26).success and profile.Data.Items.b)
 
-assert(service:find("function SellService:SellHeldItem", 1, true), "Sell service must support held-item sales")
-assert(service:find("function SellService:SellAllItems", 1, true), "Sell service must support bulk sales")
-assert(service:find("function SellService:GetHeldItemQuote", 1, true), "Sell service must support held-item quotes")
-assert(service:find("getHeldItem(player)", 1, true), "The server must resolve the equipped item itself")
-assert(service:find("getPlacedItemIds(profile.Data)", 1, true), "Displayed items must be identified server-side")
-assert(service:find("not placed[instanceId]", 1, true), "Bulk sales must preserve displayed items")
-assert(service:find("profile.Data.Items[instanceId] = nil", 1, true), "Sold records must be removed from Items")
-assert(service:find("RemoveItemDescriptors(player, itemIds)", 1, true), "Sold items must be removed from the saved hotbar")
-assert(service:find("AdjustWins(player, totalCash, false)", 1, true), "Sales must award authoritative Cash without TotalWins progress")
-assert(service:find("if price ~= price or price < 0 or price == math.huge", 1, true), "Invalid prices must be rejected")
-assert(service:find("You don't have any items to sell!", 1, true), "Empty bulk sales need an English response")
+reset()
+atShop = false
+assert(not service:GetSellInventory(player).success)
+assert(not service:SellItems(player, { "a" }, 13).success)
+assert(not service:SellAllItems(player).success and not service:SellHeldItem(player).success and credits == 0)
+atShop = true
+profile = nil
+assert(not service:GetSellInventory(player).success and not service:SellItems(player, { "a" }, 13).success)
 
-assert(controller:find('WaitForChild("SellShop", 20)', 1, true), "The controller must use Workspace.Areas.Items.SellShop")
-assert(controller:find('FindFirstChild("HighlightModel")', 1, true), "Only SellShop.HighlightModel may be highlighted")
-assert(controller:find("ShopHighlightUtil.Apply(highlight, highlightTarget)", 1, true), "Sell shop must use the shared highlight style")
-assert(controller:find("PromptUtil.Ensure(anchor, PROMPT_NAME", 1, true), "Sell shop must use the custom prompt")
-assert(controller:find('ActionText = "Sell"', 1, true) and controller:find('ObjectText = "Sell Shop"', 1, true), "Sell prompt copy must be English")
-assert(controller:find("💰 Sell All Items", 1, true), "Sell-all option is missing")
-assert(controller:find("👋 Sell Held Item", 1, true), "Held-item option is missing")
-assert(controller:find("❌ Bye", 1, true), "Exit option is missing")
-assert(not controller:find("💵 Check Item Value", 1, true), "Item-value option must be hidden")
-assert(not controller:find('key = "quote"', 1, true), "The menu must not expose the quote action")
-assert(not controller:find("RequestHeldItemQuote", 1, true), "The menu must not request item quotes")
-assert(controller:find("Enum.KeyCode.One, Enum.KeyCode.Two, Enum.KeyCode.Three)", 1, true), "The three menu options need number-key support")
-assert(not controller:find("Enum.KeyCode.Four", 1, true), "The disabled quote option must not have a number key")
-assert(controller:find("imageButton.Activated:Connect", 1, true), "Mouse, touch and gamepad must share Activated handling")
-assert(controller:find("NotificationClient.RedNotify", 1, true), "Sale failures must use red toasts")
-assert(not controller:find("NpcResponse", 1, true), "The sell menu must not create an inline NPC response")
-assert(not controller:find("createResponseLabel", 1, true), "The old inline response layout must be removed")
-assert(controller:find("RequestSellAllItems()", 1, true), "Sell all must execute immediately without a confirmation dialog")
-assert(not controller:find("ConfirmGuiClient", 1, true), "Sell all must not open a confirmation dialog")
-assert(controller:find('FindFirstChild("CashRegister")', 1, true), "Successful sales must resolve the AF CashRegister sound")
-assert(controller:find("SoundHelper.PlaySound(cashRegisterSound)", 1, true), "Sell success must play CashRegister through SoundHelper")
-assert(not controller:find('FindFirstChild("Whoosh")', 1, true), "Sell success must not play the collect-cash whoosh")
-assert(not controller:find('FindFirstChild("Get_Coin")', 1, true), "Sell success must not play the collect-cash coin sound")
-assert(not controller:find('FindFirstChild("CashCollect")', 1, true), "Sell success must not play the collect-cash completion sound")
-local _, sellSuccessSoundEntryCount = controller:gsub("playSellSuccessSound%(", "")
-assert(sellSuccessSoundEntryCount == 2, "The shared sell-success sound entry point must be declared and called exactly once")
-assert(controller:find("\tplaySellSuccessSound()\n\tNotificationClient.GreenNotify", 1, true), "Only an authoritative successful sale may play CashRegister")
-assert(controller:find("GuiAnimationUtil.PlayCharacterCashGain(LOCAL_PLAYER.Character, earnedCash)", 1, true), "Successful sales must show the authoritative total above the character")
-assert(controller:find("CharacterRemoving:Connect", 1, true), "Respawning must close the sell menu")
-assert(controller:find("MENU_DISTANCE_POLL_SECONDS", 1, true), "Leaving the shop must close the sell menu")
+reset()
+local ids = {}
+for _, item in service:GetSellInventory(player).items do
+	table.insert(ids, item.instanceId)
+end
+profile.Data.Items.new = record("Rare")
+local extra = tool("new", backpack)
+result = service:SellItems(player, ids, 206)
+assert(result.success and result.soldCount == 3 and credits == 206)
+assert(
+	profile.Data.Items.new and profile.Data.Items.placed and not extra.destroyed,
+	"Only the confirmed snapshot is sold; newly received and placed fish survive"
+)
+assert(service:GetSellInventory(player).totalPrice == 120)
 
-assert(guiAnimationUtil:find("function GuiAnimationUtil.PlayCharacterCashGain", 1, true), "The shared GUI animation utility must expose the cash-gain effect")
-assert(guiAnimationUtil:find('FindFirstChild("WinsShadowLabel")', 1, true), "Cash gain must copy the HomeGui cash label style")
-assert(guiAnimationUtil:find('FindFirstChild("HumanoidRootPart")', 1, true), "Cash gain must follow the local character")
-assert(guiAnimationUtil:find('Instance.new("BillboardGui")', 1, true), "Cash gain must render above the character")
-assert(guiAnimationUtil:find('"+$" .. NumberUtil.FormatItemPriceCompact', 1, true), "Cash gain must use +$ and compact price formatting")
-assert(controller:find("NumberUtil.FormatItemPriceCompact(earnedCash)", 1, true), "Sell success notifications must use compact price formatting")
-assert(guiAnimationUtil:find("StudsOffsetWorldSpace = CASH_GAIN_END_OFFSET", 1, true), "Cash gain must float upward")
-assert(guiAnimationUtil:find("TextTransparency = 1", 1, true), "Cash gain text must fade out")
-assert(guiAnimationUtil:find("Debris:AddItem(billboard", 1, true), "Cash gain instances need a cleanup fallback")
+reset()
+onCredit = function()
+	assert(not service:SellItems(player, { "b" }, 13).success, "Reentrant sales must be rejected")
+end
+assert(service:SellItems(player, { "a" }, 13).success and payments == 1 and profile.Data.Items.b)
+onCredit = nil
+assert(service:SellItems(player, { "b" }, 13).success and payments == 2, "The transaction guard must be released")
+reset()
+allowPayment = false
+assert(not service:SellItems(player, { "a" }, 13).success and profile.Data.Items.a)
+assert(not backpack.tools[1].destroyed and refreshes == 0 and removed == nil)
+allowPayment = true
+assert(service:SellItems(player, { "a" }, 13).success, "Payment rejection restores inventory and releases the guard")
 
-assert(highlightUtil:find("FILL_TRANSPARENCY = 0.6", 1, true), "Both shop highlights need a white translucent fill")
+reset()
+profile.Data.Items.invalid = { ItemId = "Fish_101", Weight = math.huge, ConditionId = "Normal" }
+profile.Data.Items.unknown = record("Unknown")
+profile.Data.Items.broken = false
+assert(#service:GetSellInventory(player).items == 3)
+assert(service:SellAllItems(player).soldCount == 3 and profile.Data.Items.invalid and profile.Data.Items.placed)
+assert(#service:GetSellInventory(player).items == 0 and service:GetSellInventory(player).totalPrice == 0)
+assert(not service:SellAllItems(player).success)
 
-print("SellShop.test.lua passed")
+-- The shared zone resolves the owner's current slot, never another player's plot.
+local slot = 1
+local plots = {}
+for index = 1, 6 do
+	local anchor = {
+		IsA = function(_, kind)
+			return kind == "BasePart"
+		end,
+	}
+	plots[index] = {
+		GetAttribute = function()
+			return 42
+		end,
+		FindFirstChild = function(_, name)
+			return if name == "SellShopAnchor" then anchor else nil
+		end,
+	}
+end
+function player:GetAttribute()
+	return slot
+end
+local contains = true
+local zone = loadSource("src/ReplicatedStorage/Modules/SellShopZone.lua", {
+	script = {
+		Parent = {
+			PlotWorkspaceUtil = {
+				getPlotBySlot = function(id)
+					return plots[id]
+				end,
+			},
+			RodShopZone = {
+				ExitMargin = 2,
+				Contains = function()
+					return contains
+				end,
+			},
+		},
+	},
+	require = function(value)
+		return value
+	end,
+})
+for index = 1, 6 do
+	slot = index
+	assert(zone.GetOwnedAnchor(player) == plots[index]:FindFirstChild("SellShopAnchor") and zone.CanSell(player))
+end
+contains = false
+assert(not zone.CanSell(player), "Outside or dead characters must fail the shared geometry check")
+contains = true
+player.UserId = 99
+assert(zone.GetOwnedAnchor(player) == nil and not zone.CanSell(player))
+player.UserId, slot = 42, nil
+assert(not zone.CanSell(player))

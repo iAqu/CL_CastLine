@@ -44,7 +44,6 @@ assert(
 for _, labelName in ipairs({ "NameLabel", "RarityLabel", "PriceLabel", "LuckLabel" }) do
 	assert(drownDropController:find(`findLabel(title, "{labelName}")`, 1, true), `Drowned drop titles must populate {labelName}`)
 end
-assert(drownDropController:find("ConditionLabelUtil.Show(frame, conditionId)", 1, true), "Drowned drop titles must show the persisted Condition label")
 assert(drownDropService:find('ItemStatUtil.ScaleModel(model, candidate.item, candidate.record.Weight, template)', 1, true), "Drowned drops must apply weight scaling from the source template")
 assert(not drownDropService:find("hasRestedOnGround", 1, true), "Drops must not retain the removed rising-water cleanup state")
 assert(drownDropService:find("local maxGroundY = if waterTop then getWaterSurfaceY(waterTop) else nil", 1, true), "Ground sampling must use the actual water surface")

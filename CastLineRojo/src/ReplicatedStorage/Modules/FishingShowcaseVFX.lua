@@ -1,5 +1,6 @@
 local Settings = require(script.Parent.FishingConfig).ShowcaseVFX
 local RarityConfig = require(script.Parent.RarityConfig)
+local RarityPresentation = require(script.Parent.RarityPresentation)
 local MutationDataUtil = require(script.Parent.MutationDataUtil)
 
 local FishingShowcaseVFX = {}
@@ -36,19 +37,23 @@ function FishingShowcaseVFX:Update(now)
 		self:Destroy()
 		return false
 	end
+	if self.part and self.followFish then
+		self.part.Position = self.fish:GetBoundingBox().Position
+	end
 	-- 外观每帧会恢复黑边；在最终表现阶段覆盖，不干预剪影的填充或遮挡。
 	self.highlight.OutlineColor = if now < self.outlineEndsAt then self.color else Color3.new(0, 0, 0)
 	return true
 end
 
-function FishingShowcaseVFX.new(bite, now)
+function FishingShowcaseVFX.new(bite, now, followFish)
 	if bite.isEgg then
 		return nil
 	end
 	local self = setmetatable({
 		fish = bite.fish,
+		followFish = followFish == true,
 		highlight = bite.highlight,
-		color = RarityConfig.Get(bite.fishConfig and bite.fishConfig.Rarity).Color,
+		color = RarityPresentation.GetColor(bite.fishConfig and bite.fishConfig.Rarity),
 		outlineEndsAt = now + Settings.OutlineDuration,
 		expiresAt = now + Settings.OutlineDuration,
 	}, FishingShowcaseVFX)
@@ -72,7 +77,7 @@ function FishingShowcaseVFX.new(bite, now)
 		emitter.Speed = NumberRange.new(Settings.SpeedMin, Settings.SpeedMax)
 		emitter.SpreadAngle = Vector2.new(Settings.SpreadAngle, Settings.SpreadAngle)
 		emitter.LightEmission = Settings.LightEmission
-		emitter.Rate, emitter.Enabled, emitter.LockedToPart = 0, false, false
+		emitter.Rate, emitter.Enabled, emitter.LockedToPart = 0, false, self.followFish
 		emitter.Parent = part
 		part.Parent = bite.owner.folder
 		emitter:Emit(Settings.Count)

@@ -19,6 +19,7 @@ local MutationDataUtil = require(ReplicatedStorage.Modules.MutationDataUtil)
 local MutationVisualUtil = require(ReplicatedStorage.Modules.MutationVisualUtil)
 local NotificationClient = require(ReplicatedStorage.Modules.NotificationClient)
 local NumberUtil = require(ReplicatedStorage.Modules.NumberUtil)
+local PlotUpgradeData = require(ReplicatedStorage.Modules.PlotUpgradeData)
 local PlotFishMotion = require(ReplicatedStorage.Modules.PlotFishMotion)
 local PlotWorkspaceUtil = require(ReplicatedStorage.Modules.PlotWorkspaceUtil)
 
@@ -154,7 +155,7 @@ function PlotFishController:KnitStart()
 			end
 		end
 		local emptySlot
-		for slot = 1, PlotFishMotion.CAPACITY do
+		for slot = 1, PlotUpgradeData.GetCapacity(LOCAL_PLAYER:GetAttribute("PlotUpgradeLevel")) do
 			if not occupied[slot] then
 				emptySlot = slot
 				break

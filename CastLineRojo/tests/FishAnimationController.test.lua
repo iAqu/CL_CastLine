@@ -10,6 +10,7 @@ local settings = config.Bite.Motion.Animation
 local services = {}
 local warnings, tasks = {}, {}
 local environment = setmetatable({
+	Enum = { AnimationPriority = { Action = "Action" } },
 	script = { Parent = { FishingConfig = "config" } },
 	game = {
 		GetService = function(_, name)
@@ -136,6 +137,20 @@ assert(skipped.nextBurst == 1004)
 assert(idle:Sample("Caught", 2000, 2000).position == 0, "Next catch did not play its first showcase")
 assert(not sampler:Sample("Reeling", 10, 10.5))
 assert(not sampler:Sample("Reeled", 10, 10.5))
+
+for _, gap in ipairs({ 2, 3 }) do
+	local held = Animation.NewState(100, {
+		NextNumber = function(_, minimum, maximum)
+			assert(minimum == 2 and maximum == 3, "Held fish must draw a 2–3 second pause")
+			return gap
+		end,
+	})
+	assert(held:Sample("Held", 100, 100).position == 0)
+	assert(not held:Sample("Held", 100, firstEnd), "Held fish must rest after a flop")
+	assert(not held:Sample("Held", 100, firstEnd + gap - 0.001), "Held fish flopped too soon")
+	local resumed = held:Sample("Held", 100, firstEnd + gap)
+	assert(resumed.name == "ShowcaseFlop" and resumed.position == 0)
+end
 
 -- 首次甩尾连续采样只播放一次；随机间隔结束才播放下一次。
 do
@@ -336,6 +351,29 @@ local expanded = Animation.new(fish, 0, {})
 table.remove(tasks, 1)()
 assert(selected and #selected == 5, "Expanded spine could not load the five clips")
 expanded:Destroy()
+
+-- Carried fish use the authored showcase clip without loading the swim and catch tracks.
+local heldClip = { Name = "ShowcaseFlop", AnimationId = "rbxassetid://3", IsA = assets.ShowcaseFlop.IsA }
+fish.FindFirstChild = function(_, name)
+	return if name == "Animations" then node({ ShowcaseFlop = heldClip }) else nil
+end
+local heldTrack = {
+	Length = settings.Clips.ShowcaseFlop.Duration,
+	Stop = function() end,
+	Destroy = function() end,
+}
+services.ContentProvider.PreloadAsync = function(_, list)
+	assert(#list == 1 and list[1] == heldClip, "Held fish did not select its authored showcase clip")
+end
+animator.LoadAnimation = function(_, asset)
+	assert(asset == heldClip)
+	return heldTrack
+end
+assert(Animation.HasRig(fish))
+local held = Animation.new(fish, 0, {}, "ShowcaseFlop")
+table.remove(tasks, 1)()
+assert(not held.loading and not held.failed and held.tracks.ShowcaseFlop == heldTrack and not held.tracks.SwimLoop)
+held:Destroy()
 
 local stopped, destroyed = 0, 0
 local active = setmetatable({

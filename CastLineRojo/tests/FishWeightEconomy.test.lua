@@ -16,8 +16,9 @@ local mutations = loadSource(root .. "MutationDataUtil.lua", {
 	game = { GetService = function() return replicatedFirst end }, require = function(value) return value end,
 })
 local modules = {
+	SellShopZone = { CanSell = function() return true end },
 	FishInventoryData = { Fish = fish, Event = event }, ItemStatUtil = stats, MutationDataUtil = mutations,
-	PlotPlacementUtil = loadSource(root .. "PlotPlacementUtil.lua"),
+	PlotPlacementUtil = loadSource(root .. "PlotPlacementUtil.lua", require("./helpers/PlotUpgrades").environment),
 }
 local income = loadSource(root .. "PlotFishIncome.lua", {
 	script = { Parent = modules }, require = function(value) return value end,
@@ -29,12 +30,12 @@ end
 
 near(stats.GetWeightValueMultiplier(fish, 10), 1)
 near(stats.GetWeightValueMultiplier(fish, 1297.46337890625), 18.52921690319818)
-assert(stats.CalculatePrice(fish, 1297.46337890625, 1, 1) == 55588, "Sale value must use size^1.8 rather than size^3")
-assert(stats.CalculatePrice(fish, 1297.46337890625, 1, 1.5) == 83381, "Keep the existing mutation sale multiplier")
+assert(stats.CalculatePrice(fish, 1297.46337890625, 1) == 55588, "Sale value must use size^1.8 rather than size^3")
+assert(stats.CalculatePrice(fish, 1297.46337890625, 1.5) == 83381, "Keep the existing mutation sale multiplier")
 assert(income.GetCpsPrice(fish, 1.5, nil, 1297.46337890625) == 2779, "CPS must use the same size factor and keep flooring")
-assert(stats.CalculatePrice(fish, 10, 2.2, 2) == 13200, "Keep the condition sale multiplier")
+assert(stats.CalculatePrice(fish, 10, 2) == 6000, "Only the mutation multiplies the base sale price")
 for id, rate in pairs({ Golden = 1.5, Diamond = 2, Rainbow = 2.5 }) do
-	assert(stats.CalculatePrice(fish, 10, 1, mutations.GetPriceRate(id)) == 3000 * rate)
+	assert(stats.CalculatePrice(fish, 10, mutations.GetPriceRate(id)) == 3000 * rate)
 	assert(income.GetCpsPrice(fish, mutations.GetEarnCashRate(id), nil, 10) == 100 * rate)
 end
 assert(income.GetCpsPrice(fish, 1) == 100, "Missing historical/display weight defaults to base size")
@@ -59,7 +60,7 @@ local migrate = loadSource(root .. "ItemPriceMigration.lua", {
 	require = function(value) return value end,
 })
 migrate(data)
-assert(data.Items.held.Price == 83381 and data.Items.placed.Price == 13200, "Reprice carried and placed legacy fish")
+assert(data.Items.held.Price == 83381 and data.Items.placed.Price == 6000, "Reprice carried and placed legacy fish")
 assert(data.Items.held.Weight == 1297.46337890625 and data.Items.held.MutationId == "Golden", "Migration changes only cached sale values")
 assert(data.Items.unknown.Price == 123 and data.Items.invalid.Price == 456, "Invalid records are not deleted or repriced")
 local eventPrice = data.Items.event.Price
@@ -98,6 +99,7 @@ local services = {
 		AdjustWins = function(_, _, cash, progress)
 			assert(progress == false, "Sales must not change TotalWins")
 			credits += cash
+			return true
 		end,
 	} } },
 }

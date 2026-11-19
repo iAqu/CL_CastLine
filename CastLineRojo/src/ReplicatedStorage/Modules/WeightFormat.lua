@@ -19,4 +19,12 @@ function WeightFormat.FormatKgCompact(weight: number?): string
 	return NumberUtil.FormatNumberStartKWithDecimal(value, 1) .. "kg"
 end
 
+function WeightFormat.FormatMaxCatchWeight(weight: number?): string
+	local value = tonumber(weight) or 0
+	if value >= 1_000 then
+		return WeightFormat.FormatKgCompact(value)
+	end
+	return (string.format("%.2f", value):gsub("0+$", ""):gsub("%.$", "")) .. "kg"
+end
+
 return WeightFormat

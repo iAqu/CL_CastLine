@@ -3,10 +3,7 @@ local HttpService = game:GetService("HttpService")
 local FishingAssets = require(script.Parent.FishingAssets)
 local ItemStatUtil = require(script.Parent.ItemStatUtil)
 
-local PlotPlacementUtil = require(script.Parent.PlotPlacementUtil)
-
 local PlotFishMotion = {
-	CAPACITY = PlotPlacementUtil.CAPACITY,
 	FOLDER_NAME = "PlacedFish",
 	MOVE_ATTRIBUTE = "MoveState",
 }

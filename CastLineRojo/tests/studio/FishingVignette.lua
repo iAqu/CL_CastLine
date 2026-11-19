@@ -10,6 +10,7 @@ local playerGui = player:WaitForChild("PlayerGui")
 local gui = assert(playerGui:FindFirstChild("FishingVignetteGui"), "FishingVignetteGui did not clone from StarterGui")
 local Module = require(storage.Modules.FishingVignette)
 local RarityConfig = require(storage.Modules.RarityConfig)
+local Presentation = require(storage.Modules.RarityPresentation)
 local Settings = require(storage.Modules.FishingConfig).Vignette
 assert(not workspace:FindFirstChild("FishingRig"), "Finish the active fishing session before validation")
 assert(gui.DisplayOrder == 139 and gui.ScreenInsets == Enum.ScreenInsets.None and not gui.ClipToDeviceSafeArea,
@@ -53,7 +54,7 @@ local ok, result = xpcall(function()
 		active:Update(2 + Settings.FadeIn + 0.01, bite)
 		assert(math.abs(stroke.Transparency - (1 - Settings.Strength * 0.6)) < 1e-6, "Incorrect peak strength")
 		for _, ring in ipairs(active.rings) do
-			assert(ring.stroke.Color == rarity.Color, "Ring did not use RarityConfig.Color")
+			assert(ring.stroke.Color == Presentation.GetColor(rarity.Name), "Ring did not use the Studio template color")
 			assert(not ring.frame.Active and not ring.frame.Interactable, "Vignette must not intercept input")
 			assert(ring.frame.Size.X.Offset == ring.frame.Size.Y.Offset, "Ring must remain circular")
 		end

@@ -119,12 +119,12 @@ for _, multiplier in ipairs({ 1, 4.1, 1000 }) do
 end
 local _, lowEgg = choose(0.05, 1, 1000, 0.4)
 local _, highEgg = choose(0.05, 10, 1, 0.4)
-assert(lowEgg.EggId == "E1" and highEgg.EggId == "E2", "Base luck affects egg species")
+assert(lowEgg.EggId == "E1" and highEgg.EggId == "E1", "Display luck cannot affect species")
 local _, sameEgg = choose(0.05, 1, 1, 0.4)
 assert(sameEgg == lowEgg, "Pet luck does not affect egg species")
 local _, lowFish = choose(0.5, 1, 1, 0.4)
 local _, highFish = choose(0.5, 1, 10, 0.4)
-assert(lowFish.FishID == "F1" and highFish.FishID == "F2", "Pet luck affects fish species")
+assert(lowFish.FishID == "F1" and highFish.FishID == "F1", "Display luck cannot affect species")
 
 local petData = loadSource("src/ReplicatedFirst/Data/PetsData.lua")
 local eggData = loadSource("src/ReplicatedFirst/Data/EggsData.lua")

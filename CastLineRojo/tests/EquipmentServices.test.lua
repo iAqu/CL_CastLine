@@ -43,7 +43,7 @@ local dependencies = {
 	effects = { GetItemLuckMultiplier = function() return 1.5 end },
 	mutation = { NormalizeMutationId = function(id) return id end, GetPriceRate = function() return 1 end },
 	stats = {
-		CalculateLuck = function(_, weight, multiplier) return weight * multiplier end,
+		CalculateLuck = function(_, weight) return weight end,
 		CalculatePrice = function(_, weight, multiplier) return weight * multiplier end,
 	},
 }
@@ -80,7 +80,7 @@ profile = {
 	},
 }
 local luckService = loadModule("src/ServerScriptService/Services/PlayerLuckService.lua")
-assert(math.abs(luckService:GetPlayerRollLuck(player) - 9) < 0.000001, "Placed entries must count once and retain condition luck")
+assert(math.abs(luckService:GetPlayerRollLuck(player) - 3) < 0.000001, "Placed entries must count once using weight and the shared game pass")
 luckService:RefreshPlayerLuck(player)
 luckService:RefreshPlayerLuck(player)
 assert(luckService.Client.LuckChanged.count == 1, "Unchanged totals must not send redundant notifications")
@@ -91,7 +91,7 @@ profile.Data.Items.placed.Weight = 3
 luckService:RefreshPlayerLuck(player)
 assert(luckService.Client.LuckChanged.count == 2)
 assert(luckService.Client.LuckChanged.last[1] == player)
-assert(math.abs(luckService.Client.LuckChanged.last[2] - 13.5) < 0.000001)
+assert(math.abs(luckService.Client.LuckChanged.last[2] - 4.5) < 0.000001)
 local savedProfile = profile
 profile = nil
 assert(luckService:GetPlayerRollLuck(player) == nil)
@@ -121,7 +121,7 @@ local inventory = loadModule("src/ServerScriptService/Services/ItemInventoryServ
 inventory:RestoreItemTools(player)
 inventory:RestoreItemTools(player)
 assert(#created == 1 and created[1].id == "carried", "Restore must exclude placed/invalid items and avoid duplicates")
-assert(created[1].data.ConditionId == "Codition_1", "Unknown conditions must use the existing default")
+assert(created[1].data.ConditionId == nil, "Restored fish do not need a quality field")
 player.Character = { GetChildren = function() return { created[1] } end }
 backpack.children = {}
 inventory:RestoreItemTools(player)

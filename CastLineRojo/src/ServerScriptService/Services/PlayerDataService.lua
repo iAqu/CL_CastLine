@@ -2,6 +2,7 @@ local Players = game:GetService("Players")
 local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
+local RunService = game:GetService("RunService")
 
 local Knit = require(ReplicatedStorage.Packages.Knit)
 local Signal = require(ReplicatedStorage.Packages.Signal)
@@ -11,10 +12,20 @@ local LogHelper = require(ReplicatedStorage.Modules.LogHelper)
 local PlotFishIncome = require(ReplicatedStorage.Modules.PlotFishIncome)
 local PlotPlacementUtil = require(ReplicatedStorage.Modules.PlotPlacementUtil)
 local RodInventory = require(ReplicatedStorage.Modules.RodInventory)
+local FishingOnboarding = require(ReplicatedStorage.Modules.FishingOnboarding)
 local TimeUtil = require(ReplicatedStorage.Modules.TimeUtil)
 
 local DATA_BASE_NAME = "RELEASE_230724"
 local ProfileStore = ProfileService.GetProfileStore(DATA_BASE_NAME, Template)
+local isStudio = RunService:IsStudio()
+local testArgs = if isStudio and game.PlaceId == 84106335829275
+    then game:GetService("StudioTestService"):GetTestArgs()
+    else nil
+local studioOnboardingTest = type(testArgs) == "table" and testArgs.plugin == "RestartTest" and testArgs.castLineOnboarding == true
+local useMockProfiles = studioOnboardingTest or (isStudio and workspace:GetAttribute("StudioUseMockProfiles") == true)
+if useMockProfiles then
+    ProfileStore = ProfileStore.Mock
+end
 
 local KICK_MESSAGE = "Data issue, try again shortly. If issue persists, contact us!"
 local LOAD_PROFILE_MAX_ATTEMPTS = 5
@@ -108,6 +119,7 @@ local PlayerDataService = Knit.CreateService {
 	_PendingProfiles = {},
 	_EarlyLoadingStarted = false,
 	_FrameworkReady = false,
+	_BeforeProfileRelease = {},
 }
 
 local REMOVED_PROFILE_FIELDS = {
@@ -213,24 +225,26 @@ local function migrateRemovedLegacyFields(playerData)
         playerData.Upgrades.Upgrade_MoveSpeed = nil
     end
     if typeof(playerData.GamePasses) == "table" then
-        playerData.GamePasses.DoubleCarry = nil
         playerData.GamePasses.FastMove = nil
     end
 end
 
 local function migratePlotHome(playerData)
+    local upgradeData = require(ReplicatedStorage.Modules.PlotUpgradeData)
+    playerData.PlotUpgradeLevel = upgradeData.NormalizeLevel(playerData.PlotUpgradeLevel)
+    local capacity = PlotPlacementUtil.GetCapacity(playerData)
     if playerData.LastPlotSlotId == nil and typeof(playerData.LastFarmSlotId) == "number" then
         playerData.LastPlotSlotId = playerData.LastFarmSlotId
     end
     local placements = PlotPlacementUtil.CoerceNumericKeys(playerData.PlotPlacements)
     for slot in pairs(placements) do
-        if slot < 1 or slot > PlotPlacementUtil.CAPACITY then
+        if slot < 1 or slot > capacity then
             placements[slot] = nil
         end
     end
     local items = if typeof(playerData.Items) == "table" then playerData.Items else {}
     local seen = {}
-    for slot = 1, PlotPlacementUtil.CAPACITY do
+    for slot = 1, capacity do
         local uid = PlotPlacementUtil.GetItemUid(placements, slot)
         if not uid or seen[uid] or typeof(items[uid]) ~= "table" then
             placements[slot] = nil
@@ -243,6 +257,14 @@ end
 
 function PlayerDataService:GetProfile(player: Player)
     return self._Profiles[player]
+end
+
+function PlayerDataService:IsUsingMockProfiles()
+	return useMockProfiles
+end
+
+function PlayerDataService:IsStudioOnboardingTest()
+	return studioOnboardingTest
 end
 
 function PlayerDataService:AdjustStrength(player: Player, amount: number) : boolean
@@ -441,8 +463,20 @@ function PlayerDataService:CreateLeaderstats(player: Player)
     player:SetAttribute("Strength", profile.Data.Strength)
 end
 
+function PlayerDataService:RegisterBeforeProfileRelease(callback)
+	table.insert(self._BeforeProfileRelease, callback)
+end
+
 function PlayerDataService:_ReleasePlayerProfile(player: Player)
 	local profile = self._Profiles[player] or self._PendingProfiles[player]
+	if profile then
+		for _, callback in ipairs(self._BeforeProfileRelease) do
+			local ok, err = pcall(callback, player, profile.Data)
+			if not ok then
+				warn("PlayerDataService: profile release callback failed", err)
+			end
+		end
+	end
 	self._Profiles[player] = nil
 	self._PendingProfiles[player] = nil
 	self._LoadingProfiles[player] = nil
@@ -501,6 +535,89 @@ function PlayerDataService:MarkFrameworkReady()
 	self._FrameworkReady = true
 end
 
+-- Paid deliveries use the same profile store without taking over an offline session.
+function PlayerDataService:QueuePaidEggDelivery(userId, order)
+	local updates = ProfileStore:GlobalUpdateProfileAsync("Player_" .. userId, function(globalUpdates)
+		for _, list in ipairs({ globalUpdates:GetActiveUpdates(), globalUpdates:GetLockedUpdates() }) do
+			for _, update in ipairs(list) do
+				local value = update[2]
+				if type(value) == "table" and value.Kind == "PaidEggV1" and value.Order.OrderId == order.OrderId then
+					return
+				end
+			end
+		end
+		globalUpdates:AddActiveUpdate({ Kind = "PaidEggV1", Order = order })
+	end)
+	return updates ~= nil
+end
+
+function PlayerDataService:SavePaidEggProfile(player)
+	local profile = self:GetProfile(player)
+	if not profile or not profile:IsActive() then
+		return false
+	end
+	local state = require(ReplicatedStorage.Modules.PaidEggDelivery).Ensure(profile.Data)
+	state.Revision += 1
+	local revision = state.Revision
+	profile:SetMetaTag("PaidEggRevision", revision)
+	profile:Save()
+	local deadline = os.clock() + 10
+	repeat
+		if not profile:IsActive() or self:GetProfile(player) ~= profile then
+			return false
+		end
+		if (profile.MetaData.MetaTagsLatest.PaidEggRevision or -1) >= revision then
+			return true
+		end
+		task.wait(0.1)
+	until os.clock() >= deadline
+	return false
+end
+
+function PlayerDataService:WatchPaidEggDeliveries(player, callback)
+	local profile = self:GetProfile(player)
+	if not profile or not profile:IsActive() then
+		return {}
+	end
+	local updates = profile.GlobalUpdates
+	local function active(id, value)
+		if type(value) == "table" and value.Kind == "PaidEggV1" and profile:IsActive() then
+			updates:LockActiveUpdate(id)
+			profile:Save()
+		end
+	end
+	local function locked(id, value)
+		if type(value) == "table" and value.Kind == "PaidEggV1" then
+			task.spawn(callback, id, value.Order)
+		end
+	end
+	local connections = {
+		updates:ListenToNewActiveUpdate(active),
+		updates:ListenToNewLockedUpdate(locked),
+	}
+	for _, update in ipairs(updates:GetLockedUpdates()) do
+		locked(update[1], update[2])
+	end
+	for _, update in ipairs(updates:GetActiveUpdates()) do
+		active(update[1], update[2])
+	end
+	return connections
+end
+
+function PlayerDataService:ClearPaidEggDelivery(player, updateId)
+	local profile = self:GetProfile(player)
+	if not profile or not profile:IsActive() then
+		return
+	end
+	for _, update in ipairs(profile.GlobalUpdates:GetLockedUpdates()) do
+		if update[1] == updateId and update[2].Kind == "PaidEggV1" then
+			profile.GlobalUpdates:ClearLockedUpdate(updateId)
+			profile:Save()
+			return
+		end
+	end
+end
+
 function PlayerDataService:LoadProfile(player: Player)
     if self._Profiles[player] or self._PendingProfiles[player] or self._LoadingProfiles[player] then
         return
@@ -546,12 +663,22 @@ function PlayerDataService:LoadProfile(player: Player)
 
     profile:AddUserId(player.UserId)
 
+    if profile.MetaData.SessionLoadCount > 1 and profile.Data.Wins == nil then
+        profile.Data.Wins = 0
+    end
     profile:Reconcile()
+    if studioOnboardingTest and profile.MetaData.SessionLoadCount == 1 then
+        profile.Data.FishingOnboarding = { Stage = "FirstCatch" }
+    end
+    require(ReplicatedStorage.Modules.FishingProgression).Ensure(profile.Data, profile.MetaData.SessionLoadCount > 1)
     RodInventory.Reconcile(profile.Data)
     migrateRemovedLegacyFields(profile.Data)
 	require(ReplicatedStorage.Modules.PetInventory).Reconcile(profile.Data, require(ReplicatedFirst.Data.PetsData))
 	require(ReplicatedStorage.Modules.EggInventory).Reconcile(profile.Data, require(ReplicatedFirst.Data.EggsData))
     migratePlotHome(profile.Data)
+	require(ReplicatedStorage.Modules.TrainingProgress).Ensure(
+		profile.Data, require(ReplicatedFirst.Data.TrainingData), require(ReplicatedFirst.Data.TrainingLevelsData)
+	)
     sanitizeHotbarLayout(profile.Data)
 
     sanitizeIndexLogs(profile.Data)
@@ -589,6 +716,7 @@ function PlayerDataService:LoadProfile(player: Player)
 	self._Profiles[player] = profile
 	self:CreateLeaderstats(player)
 	player:SetAttribute("EquippedRodId", profile.Data.EquippedRodId)
+	FishingOnboarding.Publish(player, profile.Data)
 	local offline = PlotFishIncome.PrepareOffline(profile.Data, os.time())
 	player:SetAttribute("PlotOfflineAwaySeconds", offline.away)
 	player:SetAttribute("PlotOfflineCountedSeconds", offline.counted)
@@ -606,7 +734,7 @@ function PlayerDataService:KnitStart()
 
     task.spawn(function()
         local isLive = ProfileService.IsLive()
-        if isLive then
+        if isLive and not useMockProfiles then
             LogHelper.Print("[PlayerDataService] ProfileService is live. Data will persist.")
         else
             warn("[PlayerDataService] ProfileService is using mock store. Data will NOT persist across Studio restarts.")

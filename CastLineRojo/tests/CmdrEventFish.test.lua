@@ -5,18 +5,24 @@ local function loadSource(path, globals)
 	return assert(load(source, path, "t", setmetatable(globals or {}, { __index = getfenv() })))()
 end
 local root = "src/ServerScriptService/Cmdr/"
-local command = loadSource(root .. "Commands/StartEventFish.lua")
-assert(command.Name == "startEventFish" and command.Aliases[1] == "sef" and #command.Args == 0)
-assert(command.Group == "Admin")
 local result, calls = { DisplayName = "Hell Shark", FishID = "Fish_003" }, 0
-local run = loadSource(root .. "Commands/StartEventFishServer.lua", {
-	game = { GetService = function() return { Services = { EventFishService = { StartEvent = function()
+local services = {
+	ReplicatedStorage = { Modules = { EventFishConfig = { Duration = 17 } } },
+	ServerScriptService = { Services = { EventFishService = { StartEvent = function()
 		calls += 1
 		return result
-	end } } } end },
+	end } } },
+}
+local globals = {
+	game = { GetService = function(_, name) return assert(services[name]) end },
 	require = function(value) return value end,
-})
-assert(run({}):find("Fish_003", 1, true) and calls == 1)
+}
+local command = loadSource(root .. "Commands/StartEventFish.lua", globals)
+assert(command.Name == "startEventFish" and command.Aliases[1] == "sef" and #command.Args == 0)
+assert(command.Group == "Admin" and command.Description:find("17 seconds", 1, true))
+local run = loadSource(root .. "Commands/StartEventFishServer.lua", globals)
+local message = run({})
+assert(message:find("Fish_003", 1, true) and message:find("17 seconds", 1, true) and calls == 1)
 result = nil
 assert(run({}):find("not started", 1, true) and calls == 2)
 local beforeRun

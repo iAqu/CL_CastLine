@@ -79,6 +79,25 @@ function MusicController:SetFishingActive(active: boolean)
 	self:RefreshAmbientAudio()
 end
 
+-- Transient cinematic mix; callers release only their own contribution.
+function MusicController:SetCinematicDuck(source, amount)
+	self._CinematicDucks = self._CinematicDucks or {}
+	self._CinematicDucks[source] = amount
+	local bgm = self._Bgm
+	if not bgm then
+		return
+	end
+	local multiplier = 1
+	for _, value in pairs(self._CinematicDucks) do
+		multiplier = math.min(multiplier, value)
+	end
+	self._UnduckedVolume = self._UnduckedVolume or bgm.Volume
+	bgm.Volume = self._UnduckedVolume * multiplier
+	if not next(self._CinematicDucks) then
+		self._UnduckedVolume = nil
+	end
+end
+
 function MusicController:RefreshAmbientAudio()
 	self:ResolveAmbientSounds()
 	if self._OceanSound and not self._FishingActive then

@@ -59,6 +59,7 @@ local fish = {
 	Event = { ItemID = "Event", DisplayName = "Event", Rarity = "Event", CpsPrice = 2 },
 }
 local modules = {
+	SellShopZone = { CanSell = function() return true end },
 	FishInventoryData = fish,
 	MutationDataUtil = {
 		NormalizeMutationId = function(id) return id end,
@@ -110,6 +111,7 @@ local function loadService(name)
 	return assert(load(read("src/ServerScriptService/Services/" .. name .. ".lua"), name, "t", setmetatable({
 		game = { GetService = function(_, service) return assert(services[service], service) end },
 		require = function(value) return value end,
+		script = { Parent = { PaidItemPolicy = { CanTransfer = function() return true end } } },
 		task = { delay = function() end },
 	}, { __index = getfenv() })))()
 end

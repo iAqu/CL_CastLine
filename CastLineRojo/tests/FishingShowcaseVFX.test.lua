@@ -5,7 +5,8 @@ local function read(path)
 	return source
 end
 local prefix = "src/ReplicatedStorage/Modules/"
-local harness = require("./helpers/RarityHarness")({ RarityConfig = read(prefix .. "RarityConfig.lua") })
+local harness = require("./helpers/RarityHarness")({ RarityConfig = read(prefix .. "RarityConfig.lua"), RarityPresentation = read(prefix .. "RarityPresentation.lua") })
+harness.addRarityTemplates()
 local config = assert(loadstring(read(prefix .. "FishingConfig.lua")))()
 local mutations = assert(loadstring(read("src/ReplicatedFirst/Data/MutationsData.lua")))()
 local function loadModule(name, globals)
@@ -17,7 +18,7 @@ local mutationUtil = loadModule("MutationDataUtil", {
 	game = { GetService = function() return { Data = { MutationsData = mutations } } end },
 	require = function(value) return value end,
 })
-local modules = { FishingConfig = config, RarityConfig = harness.load("RarityConfig"), MutationDataUtil = mutationUtil }
+local modules = { FishingConfig = config, RarityConfig = harness.load("RarityConfig"), RarityPresentation = harness.load("RarityPresentation"), MutationDataUtil = mutationUtil }
 local created = {}
 local sequence = { new = function(value)
 	return value
@@ -82,7 +83,7 @@ local effect = vfx.new(common, 10)
 assert(not effect.part and effect:Update(11.199), "Repeat Common needs only a 1.2-second outline")
 common.highlight.OutlineColor = harness.colors.new(0, 0, 0)
 effect:Update(11)
-assert(common.highlight.OutlineColor == modules.RarityConfig.Get("Common").Color, "Frame update lost colored outline")
+assert(common.highlight.OutlineColor == modules.RarityPresentation.GetColor("Common"), "Frame update lost colored outline")
 assert(not effect:Update(11.2) and black(common.highlight.OutlineColor), "Outline must return to black at 1.2 seconds")
 assert(common.highlight.FillTransparency == 1 and common.highlight.DepthMode == "occluded", "Outline altered shadow rendering")
 local rare = round("Rare", true)
@@ -94,7 +95,7 @@ assert(emitter.count == 70 and emitter.Parent == part and not emitter.Enabled an
 	"Stars must emit once in world space")
 assert(emitter.Lifetime.Min == 0.6 and emitter.Lifetime.Max == 1.3 and emitter.Speed.Max == 18,
 	"Star lifetime and speed must match ThrowFood")
-assert(emitter.Size[2].Value == 1.2 and emitter.Color == modules.RarityConfig.Get("Rare").Color,
+assert(emitter.Size[2].Value == 1.2 and emitter.Color == modules.RarityPresentation.GetColor("Rare"),
 	"Stars must use fish bounds and rarity color")
 effect:Update(11.2)
 assert(black(rare.highlight.OutlineColor) and part.Parent, "Star tail must survive the colored outline")
@@ -106,6 +107,16 @@ effect = vfx.new(rare, 20)
 part = effect.part
 rare.fish.Parent = nil
 assert(not effect:Update(20.1) and part.destroyed, "Destroyed fish leaked the star anchor")
+
+local held = round("Common", true)
+effect = vfx.new(held, 30, true)
+part, emitter = effect.part, created.ParticleEmitter
+held.fish.GetBoundingBox = function()
+	return { Position = "overhead" }, { Magnitude = 10 }
+end
+assert(effect:Update(30.25) and part.Position == "overhead" and emitter.LockedToPart and emitter.emissions == 1,
+	"The opening showcase follows the raised fish without emitting a second burst")
+effect:Destroy()
 
 -- 验证揭晓排队、逐帧去重及销毁后不会重建。
 local confetti = 0

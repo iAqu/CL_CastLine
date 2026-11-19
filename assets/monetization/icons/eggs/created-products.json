@@ -1,0 +1,59 @@
+[
+  {
+    "purchaseId": "Egg_R_1",
+    "quantity": 1,
+    "sourceIconId": 131317608690788,
+    "productId": 3732759360,
+    "name": "COSMIC CHAOS EGG",
+    "description": "",
+    "iconImageAssetId": 81605708402080,
+    "universeId": 10777315397,
+    "isForSale": true,
+    "priceInformation": {
+      "defaultPriceInRobux": 79,
+      "enabledFeatures": []
+    },
+    "isImmutable": false,
+    "createdTimestamp": "2026-11-17T10:47:18.767Z",
+    "updatedTimestamp": "2026-11-17T10:47:18.767Z",
+    "isManagedPricingEnabled": false
+  },
+  {
+    "purchaseId": "Egg_R_1x3",
+    "quantity": 3,
+    "sourceIconId": 131317608690788,
+    "productId": 3732759375,
+    "name": "COSMIC CHAOS EGG x3",
+    "description": "",
+    "iconImageAssetId": 77557054442279,
+    "universeId": 10777315397,
+    "isForSale": true,
+    "priceInformation": {
+      "defaultPriceInRobux": 199,
+      "enabledFeatures": []
+    },
+    "isImmutable": false,
+    "createdTimestamp": "2026-11-17T10:47:21.546Z",
+    "updatedTimestamp": "2026-11-17T10:47:21.546Z",
+    "isManagedPricingEnabled": false
+  },
+  {
+    "purchaseId": "Egg_R_1x10",
+    "quantity": 10,
+    "sourceIconId": 131317608690788,
+    "productId": 3732759388,
+    "name": "COSMIC CHAOS EGG x10",
+    "description": "",
+    "iconImageAssetId": 101745587279977,
+    "universeId": 10777315397,
+    "isForSale": true,
+    "priceInformation": {
+      "defaultPriceInRobux": 649,
+      "enabledFeatures": []
+    },
+    "isImmutable": false,
+    "createdTimestamp": "2026-11-17T10:47:24.397Z",
+    "updatedTimestamp": "2026-11-17T10:47:24.397Z",
+    "isManagedPricingEnabled": false
+  }
+]

@@ -2,8 +2,10 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
+local FishAnimationController = require(ReplicatedStorage.Modules.FishAnimationController)
 local FishInventoryData = require(ReplicatedStorage.Modules.FishInventoryData)
 local FishTitleUtil = require(ReplicatedStorage.Modules.FishTitleUtil)
+local HeldFishPose = require(ReplicatedStorage.Modules.HeldFishPose)
 local Knit = require(ReplicatedStorage.Packages.Knit)
 local ItemTitlePositionUtil = require(ReplicatedStorage.Modules.ItemTitlePositionUtil)
 local ItemToolUtil = require(ReplicatedStorage.Modules.ItemToolUtil)
@@ -14,6 +16,7 @@ local VISUAL_NAME = "HeldItemVisual"
 local HELD_ITEM_TITLE_NAME = "HeldItemTitle"
 local HELD_ITEM_TITLE_ANCHOR_NAME = "HeldItemTitleAnchor"
 local LOCAL_TITLE_NAME = "LocalHeldItemTitle"
+local HELD_FISH_CLIP = "ShowcaseFlop"
 
 type HeldItemDescriptor = {
 	kind: "potion",
@@ -27,6 +30,8 @@ local HeldItemVisualController = Knit.CreateController({
 local lastDescriptorKey: string? = nil
 local localHeldItemTitle: BillboardGui? = nil
 local trackedItemTools: { [Tool]: boolean } = {}
+local heldFishPoses: { [Tool]: HeldFishPose.State } = {}
+local heldFishAnimations = {}
 local boundTitleCharacters: { [Model]: boolean } = {}
 
 local function descriptorForTool(tool: Instance): HeldItemDescriptor?
@@ -169,10 +174,37 @@ local function trackItemTool(instance: Instance)
 	end
 end
 
+local function clearFishAnimation(tool: Tool)
+	local state = heldFishAnimations[tool]
+	if state then
+		state.animation:Destroy()
+		for bone, transform in pairs(state.rest) do
+			if bone.Parent then
+				bone.Transform = transform
+			end
+		end
+		heldFishAnimations[tool] = nil
+	end
+end
+
+local function clearFishPresentation(tool: Tool)
+	clearFishAnimation(tool)
+	local pose = heldFishPoses[tool]
+	if pose then
+		pose:Destroy()
+		heldFishPoses[tool] = nil
+	end
+end
+
+local function untrackItemTool(tool: Tool)
+	trackedItemTools[tool] = nil
+	clearFishPresentation(tool)
+end
+
 local function clearCharacterItemTools(character: Model)
 	for tool in pairs(trackedItemTools) do
 		if tool.Parent == character or not tool.Parent then
-			trackedItemTools[tool] = nil
+			untrackItemTool(tool)
 		end
 	end
 end
@@ -189,7 +221,7 @@ local function bindTitleCharacter(character: Model)
 	character.ChildAdded:Connect(trackItemTool)
 	character.ChildRemoved:Connect(function(child)
 		if child:IsA("Tool") then
-			trackedItemTools[child] = nil
+			untrackItemTool(child)
 		end
 	end)
 	character.Destroying:Connect(function()
@@ -206,11 +238,71 @@ local function bindTitlePlayer(player: Player)
 	player.CharacterRemoving:Connect(clearCharacterItemTools)
 end
 
+local function restoreFishArmAnimations()
+	-- Give the Animator its previous result before evaluation, even if it skips a frame at distance.
+	for _, pose in pairs(heldFishPoses) do
+		pose:RestoreArms()
+	end
+end
+
+local function updateFishAnimation(tool: Tool, raised: boolean, now: number)
+	local root = tool.PrimaryPart
+	local state = heldFishAnimations[tool]
+	if state and state.root ~= root then
+		clearFishAnimation(tool)
+		state = nil
+	end
+	if not state then
+		if not root or not FishAnimationController.HasRig(tool) then
+			return
+		end
+		local rest = {}
+		for _, descendant in ipairs(tool:GetDescendants()) do
+			if descendant:IsA("Bone") then
+				rest[descendant] = descendant.Transform
+			end
+		end
+		state = {
+			root = root,
+			animation = FishAnimationController.new(tool, now, nil, HELD_FISH_CLIP),
+			rest = rest,
+		}
+		heldFishAnimations[tool] = state
+	end
+
+	local animation = state.animation
+	if raised and not animation.loading and animation.tracks[HELD_FISH_CLIP] then
+		-- Start the first full burst even if the clip loaded after the carry pose settled.
+		state.startedAt = state.startedAt or now
+		animation:Update("Held", state.startedAt, now)
+	end
+end
+
+local function updateTrackedFishPoses(deltaTime: number)
+	local now = os.clock()
+	for tool in pairs(trackedItemTools) do
+		local character = tool.Parent
+		if not character or not character:IsA("Model") then
+			untrackItemTool(tool)
+			continue
+		end
+		local pose = heldFishPoses[tool] or HeldFishPose.new(character, tool)
+		if pose then
+			heldFishPoses[tool] = pose
+			if pose:Step(deltaTime) then
+				updateFishAnimation(tool, pose.elapsed >= HeldFishPose.RaiseTime, now)
+			else
+				clearFishPresentation(tool)
+			end
+		end
+	end
+end
+
 local function updateTrackedItemTitles()
 	for tool in pairs(trackedItemTools) do
 		local character = tool.Parent
 		if not character or not character:IsA("Model") then
-			trackedItemTools[tool] = nil
+			untrackItemTool(tool)
 			continue
 		end
 
@@ -285,6 +377,8 @@ function HeldItemVisualController:KnitStart()
 		bindTitlePlayer(player)
 	end
 	Players.PlayerAdded:Connect(bindTitlePlayer)
+	RunService.PreAnimation:Connect(restoreFishArmAnimations)
+	RunService.PreSimulation:Connect(updateTrackedFishPoses)
 	RunService.RenderStepped:Connect(updateTrackedItemTitles)
 
 	if LOCAL_PLAYER.Character then

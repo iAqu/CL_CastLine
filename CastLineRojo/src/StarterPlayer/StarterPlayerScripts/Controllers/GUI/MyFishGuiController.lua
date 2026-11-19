@@ -13,7 +13,6 @@ local GuiUtil = require(Modules.GuiUtil)
 local MutationDataUtil = require(Modules.MutationDataUtil)
 local NotificationClient = require(Modules.NotificationClient)
 local NumberUtil = require(Modules.NumberUtil)
-local PlotPlacementUtil = require(Modules.PlotPlacementUtil)
 local RarityConfig = require(Modules.RarityConfig)
 local WeightFormat = require(Modules.WeightFormat)
 
@@ -259,7 +258,7 @@ function MyFishGuiController:KnitStart()
 			GuiService.SelectedObject = closeButton
 		end
 
-		local capacity = PlotPlacementUtil.CAPACITY
+		local capacity = roster and roster.capacity or 0
 		local suffix = if shown == capacity then " MAX" else ""
 		countLabel.Text = if roster then ` <font color="#75FF26">{shown}/{capacity}</font>{suffix}` else ""
 		empty.Text = if roster then "No fish equipped" elseif loadError then "Fish list unavailable" else "Loading..."

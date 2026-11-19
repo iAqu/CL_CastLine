@@ -1,15 +1,14 @@
 local Players = game:GetService("Players")
-local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
-local ConditionsData = require(ReplicatedFirst.Data.ConditionsData)
 local FishInventoryData = require(ReplicatedStorage.Modules.FishInventoryData)
 local ItemStatUtil = require(ReplicatedStorage.Modules.ItemStatUtil)
 local ItemToolUtil = require(ReplicatedStorage.Modules.ItemToolUtil)
 local Knit = require(ReplicatedStorage.Packages.Knit)
 local MutationDataUtil = require(ReplicatedStorage.Modules.MutationDataUtil)
 local PlayerDataService = require(ServerScriptService.Services.PlayerDataService)
+local PaidItemPolicy = require(script.Parent.PaidItemPolicy)
 
 local GIFT_DISTANCE = 12
 local REQUEST_TIMEOUT_SECONDS = 15
@@ -84,23 +83,19 @@ local function normalizeItemRecord(record): (any?, any?)
 		return nil, nil
 	end
 	local weight = tonumber(record.Weight)
-	local conditionId = record.ConditionId
-	local condition = typeof(conditionId) == "string" and ConditionsData[conditionId] or nil
-	if not weight or weight <= 0 or not condition then
+	if not weight or weight <= 0 then
 		return nil, nil
 	end
 	local mutationId = MutationDataUtil.NormalizeMutationId(record.MutationId)
 	local price = ItemStatUtil.CalculatePrice(
 		item,
 		weight,
-		condition.ValueMult,
 		MutationDataUtil.GetPriceRate(mutationId)
 	)
 	record.Weight = weight
-	record.ConditionId = conditionId
 	record.Price = price
 	record.MutationId = mutationId
-	return item, { Weight = weight, ConditionId = conditionId, Price = price, MutationId = mutationId }
+	return item, { Weight = weight, Price = price, MutationId = mutationId, PaidOrigin = record.PaidOrigin }
 end
 
 local function hasEquippedItemTool(player: Player, instanceId: string): boolean
@@ -269,10 +264,20 @@ local function transferItem(sender: Player, recipient: Player, instanceId: strin
 	if not item or not itemData then
 		return false, "Item unavailable."
 	end
+	if record.PaidOrigin and not PaidItemPolicy.CanTransfer(sender, recipient) then
+		return false, "Paid items cannot be transferred between these players."
+	end
 
 	local backpack = recipient:FindFirstChildOfClass("Backpack") or recipient:WaitForChild("Backpack", 5)
 	if not backpack or not backpack:IsA("Backpack") then
 		return false, "Gift failed."
+	end
+	if PlayerDataService:GetProfile(sender) ~= senderProfile
+		or PlayerDataService:GetProfile(recipient) ~= recipientProfile
+		or senderProfile.Data.Items[instanceId] ~= record
+		or isPlacedOnPlot(senderProfile.Data, instanceId)
+		or not hasEquippedItemTool(sender, instanceId) then
+		return false, "Item unavailable."
 	end
 
 	local transferredRecord = table.clone(record)

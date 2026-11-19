@@ -69,16 +69,16 @@ function EffectUtil.PlayOnceParticleWeld(particlePart: BasePart, targetPart: Bas
     game:GetService("Debris"):AddItem(cloneParticlePart, destroyTime)
 end
 
-function EffectUtil.PlayBodySizeChangeEffect(attachPart: BasePart, target: Model | number?, playSound: boolean?)
+function EffectUtil.PlayBodySizeChangeEffect(attachPart: BasePart, target: Model | number?, playSound: boolean?): Model?
 	if not attachPart or not attachPart:IsA("BasePart") then
-		return
+		return nil
 	end
 
 	local effectsFolder = ReplicatedStorage:FindFirstChild("VFX")
 	local characterEffects = effectsFolder and effectsFolder:FindFirstChild("Character")
 	local particleModel = characterEffects and characterEffects:FindFirstChild("BodySizeChange")
 	if not particleModel or not particleModel:IsA("Model") then
-		return
+		return nil
 	end
 
 	local cloneModel = particleModel:Clone()
@@ -106,7 +106,7 @@ function EffectUtil.PlayBodySizeChangeEffect(attachPart: BasePart, target: Model
 	local sourcePart = cloneModel.PrimaryPart
 	if not sourcePart then
 		cloneModel:Destroy()
-		return
+		return nil
 	end
 
 	for _, descendant in cloneModel:GetDescendants() do
@@ -126,6 +126,7 @@ function EffectUtil.PlayBodySizeChangeEffect(attachPart: BasePart, target: Model
 	if playSound ~= false then
 		SoundHelper.PlaySound(Constants.SoundRes.GUI_FUSE_SUCCESS)
 	end
+	return cloneModel
 end
 
 return EffectUtil

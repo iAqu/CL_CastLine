@@ -15,17 +15,8 @@ export type ItemConfig = {
 	ZoneLimited: string,
 }
 
-export type ConditionConfig = {
-	DisplayName: string,
-	LayoutOrder: number,
-	ChanceWeight: number,
-	ValueMult: number,
-}
-
 local ITEM_LUCK_MAX_INFLUENCE = 0.70
 local ITEM_LUCK_HALF_SATURATION = 0.5
-local CONDITION_LUCK_MAX_INFLUENCE = 0.70
-local CONDITION_LUCK_HALF_SATURATION = 0.05
 
 local function getWeight(value: unknown): number
 	return math.max(0, tonumber(value) or 0)
@@ -169,60 +160,6 @@ function ItemRollUtil.RollItemInRarity(
 		end
 	end
 	return chooseWeighted(itemEntries, random)
-end
-
-function ItemRollUtil.RollCondition(
-	conditionsData: { [string]: ConditionConfig },
-	luck: number?,
-	random: Random?
-): (string?, ConditionConfig?)
-	local conditionLuck = tonumber(luck) or 0
-	if conditionLuck ~= conditionLuck or conditionLuck <= 0 then
-		conditionLuck = 0
-	end
-	local influence = if conditionLuck == math.huge
-		then CONDITION_LUCK_MAX_INFLUENCE
-		else CONDITION_LUCK_MAX_INFLUENCE
-			* conditionLuck
-			/ (conditionLuck + CONDITION_LUCK_HALF_SATURATION)
-	local ordered = {}
-	for conditionId, condition in pairs(conditionsData) do
-		table.insert(ordered, { id = conditionId, config = condition })
-	end
-	table.sort(ordered, function(left, right)
-		if left.config.LayoutOrder ~= right.config.LayoutOrder then
-			return left.config.LayoutOrder < right.config.LayoutOrder
-		end
-		return left.id < right.id
-	end)
-
-	local totalBaseWeight = 0
-	local validConditionCount = 0
-	for _, condition in ipairs(ordered) do
-		local weight = getWeight(condition.config.ChanceWeight)
-		if weight > 0 then
-			totalBaseWeight += weight
-			validConditionCount += 1
-		end
-	end
-	if validConditionCount == 0 then
-		return nil, nil
-	end
-
-	local averageWeight = totalBaseWeight / validConditionCount
-	local entries = {}
-	for _, condition in ipairs(ordered) do
-		local baseWeight = getWeight(condition.config.ChanceWeight)
-		if baseWeight > 0 then
-			local weight = baseWeight + (averageWeight - baseWeight) * influence
-			table.insert(entries, { value = condition, weight = weight })
-		end
-	end
-	local selected = chooseWeighted(entries, random)
-	if not selected then
-		return nil, nil
-	end
-	return selected.id, selected.config
 end
 
 return ItemRollUtil

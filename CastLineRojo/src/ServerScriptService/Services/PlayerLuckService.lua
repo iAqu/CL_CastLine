@@ -1,9 +1,7 @@
 local Players = game:GetService("Players")
-local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
-local ConditionsData = require(ReplicatedFirst.Data.ConditionsData)
 local FishInventoryData = require(ReplicatedStorage.Modules.FishInventoryData)
 local GamePassEffectUtil = require(ReplicatedStorage.Modules.GamePassEffectUtil)
 local Knit = require(ReplicatedStorage.Packages.Knit)
@@ -22,7 +20,7 @@ function PlayerLuckService:GetPlayerRollLuck(player: Player): number?
 		return nil
 	end
 	return PlayerLuckUtil.CombineRollLuck(
-		PlayerLuckUtil.GetPlacedItemLuck(profile.Data, FishInventoryData, ConditionsData),
+		PlayerLuckUtil.GetPlacedItemLuck(profile.Data, FishInventoryData),
 		GamePassEffectUtil.GetItemLuckMultiplier(profile.Data)
 	)
 end

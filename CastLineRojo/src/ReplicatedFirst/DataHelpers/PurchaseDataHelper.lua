@@ -4,7 +4,7 @@ local PurchaseData = require(ReplicatedFirst.Data.PurchaseData)
 local PurchaseDataHelper = {}
 
 function PurchaseDataHelper.IsRetired(purchaseId: unknown): boolean
-    return purchaseId == "DoubleCarry" or purchaseId == "FastMove"
+    return purchaseId == "FastMove"
 end
 
 function PurchaseDataHelper.GetAllData(): {string: PurchaseData.PurchaseConfig}

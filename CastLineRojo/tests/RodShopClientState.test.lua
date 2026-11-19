@@ -1,0 +1,18 @@
+local State = require("../src/ReplicatedStorage/Modules/RodShopClientState")
+local Focus = require("../src/ReplicatedStorage/Modules/RodShopFocus")
+local function snapshot(id)
+	return { ok = true, ownedRods = { [id] = true }, equippedRodId = id }
+end
+local state = State.new()
+local first = state:BeginRequest()
+assert(state:ApplyEvent(snapshot("b")))
+assert(not state:ApplyResponse(first, snapshot("a")) and state.data.equippedRodId == "b", "Inventory events win over stale initial fetches")
+local older, newer = state:BeginRequest(), state:BeginRequest()
+assert(state:ApplyResponse(newer, snapshot("d")))
+assert(not state:ApplyResponse(older, snapshot("c")) and state.data.equippedRodId == "d", "Late older opens cannot replace newer state")
+assert(not state:ApplyEvent({ ok = false }) and state.data.equippedRodId == "d")
+assert(Focus.CanvasOffset(0, 450, 100, 0, 300, 1000) == 350)
+assert(Focus.CanvasOffset(100, 350, 100, 0, 300, 1000) == 350, "Focus is stable after the canvas shifts")
+assert(Focus.CanvasOffset(0, 0, 100, 0, 300, 1000) == 0)
+assert(Focus.CanvasOffset(0, 900, 100, 0, 300, 1000) == 700)
+assert(Focus.CanvasOffset(0, 0, 100, 0, 300, 100) == 0, "A short canvas never scrolls negative")

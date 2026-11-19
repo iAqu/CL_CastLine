@@ -48,8 +48,8 @@ assert(
 	"empty farm signs must be hidden entirely"
 )
 assert(
-	farmSignController:find("otherPlayersSign.Enabled = hasOwner", 1, true),
-	"empty other-player signs must be hidden entirely"
+	not farmSignController:find("OtherPlayersSign", 1, true),
+	"removed other-player signs must have no controller references"
 )
 assert(
 	not farmSignController:find('title.Text = "EMPTY"', 1, true),
@@ -95,7 +95,6 @@ local nonBlockingControllerModules = {
 	"src/StarterPlayer/StarterPlayerScripts/Controllers/GUI/LimitedSquidPackGuiController.lua",
 	"src/StarterPlayer/StarterPlayerScripts/Controllers/GUI/LimitedStarterPackGuiController.lua",
 	"src/StarterPlayer/StarterPlayerScripts/Controllers/GUI/RandomPotionGuiController.lua",
-	"src/StarterPlayer/StarterPlayerScripts/Controllers/GUI/RebirthUpgradeGuiController.lua",
 	"src/StarterPlayer/StarterPlayerScripts/Controllers/GUI/SeasonGuiController.lua",
 	"src/StarterPlayer/StarterPlayerScripts/Controllers/GUI/SpinningWheelController.lua",
 	"src/StarterPlayer/StarterPlayerScripts/Controllers/GUI/StoreGiftMenuGuiController.lua",

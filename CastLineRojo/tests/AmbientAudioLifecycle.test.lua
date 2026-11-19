@@ -85,6 +85,16 @@ assert(sounds.OceanSound.IsPlaying and sounds.OceanSound.playCount == oceanPlayC
 assert(sounds.OceanSound.Volume == 0.3 and sounds.OceanSound.PlaybackSpeed == 0.8, "Fishing and settings changes must preserve Studio audio properties")
 assert(warningCount == 0, "Valid audio must not produce missing-system warnings")
 
+local originalVolume = sounds.BGM_1.Volume
+local introSource, otherSource = {}, {}
+controller:SetCinematicDuck(introSource, 0.25)
+assert(sounds.BGM_1.Volume == originalVolume * 0.25)
+controller:SetCinematicDuck(otherSource, 0.1)
+controller:SetCinematicDuck(introSource, nil)
+assert(sounds.BGM_1.Volume == originalVolume * 0.1, "Releasing an intro must preserve other audio owners")
+controller:SetCinematicDuck(otherSource, nil)
+assert(sounds.BGM_1.Volume == originalVolume, "Cinematic completion must restore the original mix")
+
 playerData = nil
 controller:SetFishingActive(false)
 assert(not sounds.OceanSound.IsPlaying, "Leaving fishing must stop ocean audio even if player data is unavailable")

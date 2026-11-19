@@ -98,14 +98,18 @@ class StudioLockTests(unittest.TestCase):
         self.registry.remove(a["token"])
         self.assertEqual(self.registry.heartbeat(c["token"], promote=True)["phase"], "held")
 
-    def test_expired_holder_and_queue_head_are_never_automatically_skipped(self):
+    def test_expired_holder_and_queue_head_are_reported_without_skipping(self):
         a, b, c = [self.acquire(thread) for thread in ("a", "b", "c")]
         self.expire(a["ticket"])
         self.assertTrue(self.registry.status()["reservations"][0]["stale"])
-        self.assertEqual(self.registry.heartbeat(b["token"], promote=True)["phase"], "queued")
+        waiting = self.registry.heartbeat(b["token"], promote=True)
+        self.assertEqual(waiting["phase"], "queued")
+        self.assertEqual(waiting["stale_blocker"]["ticket"], a["ticket"])
         self.registry.remove(a["token"])
         self.expire(b["ticket"])
-        self.assertEqual(self.registry.heartbeat(c["token"], promote=True)["phase"], "queued")
+        waiting = self.registry.heartbeat(c["token"], promote=True)
+        self.assertEqual(waiting["phase"], "queued")
+        self.assertEqual(waiting["stale_blocker"]["ticket"], b["ticket"])
 
     def test_recovery_checks_identity_confirmation_and_latest_heartbeat(self):
         a = self.acquire("a")
@@ -127,9 +131,48 @@ class StudioLockTests(unittest.TestCase):
         a, b = self.acquire("a"), self.acquire("b")
         waiting = self.cli("wait", "--token", b["token"], "--timeout", "0")
         self.assertEqual(waiting.returncode, 2, waiting.stderr)
-        self.assertEqual(json.loads(waiting.stdout)["ticket"], b["ticket"])
+        result = json.loads(waiting.stdout)
+        self.assertEqual(result["ticket"], b["ticket"])
+        self.assertNotIn("stale_blocker", result)
         self.registry.remove(a["token"])
         held = self.cli("wait", "--token", b["token"], "--timeout", "0")
+        self.assertEqual(held.returncode, 0, held.stderr)
+        self.assertEqual(json.loads(held.stdout)["phase"], "held")
+
+    def test_cli_confirmed_recovery_of_stale_blockers_preserves_fifo(self):
+        holder, expired_waiter, next_waiter = [self.acquire(thread) for thread in ("a", "b", "c")]
+        self.registry.test_state(holder["token"], True)
+        self.expire(holder["ticket"])
+        self.expire(expired_waiter["ticket"])
+
+        acquire = self.cli("acquire", "--resource", RESOURCE, "--thread", "d", "--purpose", "recovery")
+        self.assertEqual(acquire.returncode, 2, acquire.stderr)
+        waiter = json.loads(acquire.stdout)
+        self.assertEqual(waiter["stale_blocker"]["ticket"], holder["ticket"])
+        self.assertTrue(waiter["stale_blocker"]["needs_stop"])
+
+        wait_args = ("wait", "--token", waiter["token"], "--timeout", "0")
+        for expected in (holder, expired_waiter):
+            wait = self.cli(*wait_args)
+            self.assertEqual(wait.returncode, 2, wait.stderr)
+            blocker = json.loads(wait.stdout)["stale_blocker"]
+            self.assertEqual(blocker["ticket"], expected["ticket"])
+            self.assertNotIn("token", blocker)
+            recovered = self.cli(
+                "recover", "--resource", blocker["resource"], "--ticket", str(blocker["ticket"]),
+                "--thread", blocker["thread"], "--confirmed-thread-inactive", "--confirmed-studio-edit",
+            )
+            self.assertEqual(recovered.returncode, 0, recovered.stderr)
+            self.assertEqual(json.loads(recovered.stdout)["recovered_ticket"], expected["ticket"])
+
+        waiting = self.cli(*wait_args)
+        self.assertEqual(waiting.returncode, 2, waiting.stderr)
+        result = json.loads(waiting.stdout)
+        self.assertEqual(result["ticket"], waiter["ticket"])
+        self.assertNotIn("stale_blocker", result)
+        self.assertEqual(self.registry.heartbeat(next_waiter["token"], promote=True)["phase"], "held")
+        self.registry.remove(next_waiter["token"])
+        held = self.cli(*wait_args)
         self.assertEqual(held.returncode, 0, held.stderr)
         self.assertEqual(json.loads(held.stdout)["phase"], "held")
 

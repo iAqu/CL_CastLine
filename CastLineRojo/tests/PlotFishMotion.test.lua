@@ -194,20 +194,26 @@ assert(heldScale == 2 * oldFish.scale, "Hold and place the old fish at the same 
 assert(motion.GetGeometry(axolotl, 64000, legacy).scale == oldFish.scale, "Plot size must not change model size")
 
 templates.Slender = fishTemplate(vector.new(1, 1, 10), nil, "Slender")
-local longFish = motion.GetGeometry({ Model = "Slender", DefaultWeight = 1 }, 1000, legacy)
-assert(math.abs(longFish.radius - 21.5) < 1e-5 and longFish.scale * 10 < 50,
-	"Long horizontal fish must still fit the shared footprint")
-
-templates.Tall = fishTemplate(vector.new(1, 10, 1))
-local tallFish = motion.GetGeometry({ Model = "Tall", DefaultWeight = 1, ModelDefaultScale = 1.5 }, 1000, legacy)
-assert(tallFish.scale * 10 == 50, "Limit the longest model side to 50 studs after combining base and weight")
-local cappedBase = motion.GetGeometry({ Model = "Tall", DefaultWeight = 1, ModelDefaultScale = 10 }, 1, legacy)
-assert(cappedBase.scale == 5, "Limit base size even before weight growth")
-
 templates.Wide = fishTemplate(vector.new(8, 2, 10), 9)
-local wideFish = motion.GetGeometry({ Model = "Wide", DefaultWeight = 1, ModelDefaultScale = 1.5 }, 1000, legacy)
-assert(math.abs(wideFish.radius - 21.5) < 1e-5, "Leave travel room for wide, animated fish")
-assert(wideFish.scale * 10 < 50, "Apply the shared footprint limit before the longest-side cap")
+local wide = { Model = "Wide", DefaultWeight = 1, ModelDefaultScale = 2 }
+for _, case in {
+	{ raw = 60, expected = 60 },
+	{ raw = 80, expected = 80 },
+	{ raw = 160, expected = 96.6355323334 },
+	{ raw = 320, expected = 113.2710646669 },
+} do
+	local weight = (case.raw / 20) ^ 3
+	local scale, rawScale = stats.GetScaleRatio(wide, weight, templates.Wide)
+	local placed = motion.GetGeometry(wide, weight, legacy)
+	stats.ScaleModel(toolModel, wide, weight, templates.Wide)
+	assert(math.abs(rawScale * 10 - case.raw) < 1e-5, "Return the raw weight and base scale")
+	assert(math.abs(scale * 10 - case.expected) < 1e-5, "Apply the logarithmic curve only above 80 studs")
+	assert(placed.scale == scale and heldScale == 2 * scale, "Held and placed fish must have the same size")
+	assert(placed.radius == 9 * scale and placed.radius > 21.5, "Keep the true radius of oversized fish")
+end
+local largeBase = { ModelDefaultScale = 16, DefaultWeight = 1 }
+assert(math.abs(stats.GetScaleRatio(largeBase, 1, templates.Wide) * 10 - 96.6355323334) < 1e-5,
+	"Apply the curve when the base model alone exceeds 80 studs")
 
 local function fixedRandom(edge)
 	return {

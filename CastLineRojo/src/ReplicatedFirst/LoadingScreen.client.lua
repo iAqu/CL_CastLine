@@ -45,6 +45,7 @@ local logoTween: Tween? = nil
 local originalFieldOfView: number? = nil
 local originalPromptEnabled = ProximityPromptService.Enabled
 local anchoringEnabled = true
+local runtimeRestored = false
 
 local function getCurrentCamera(): Camera
 	local camera = Workspace.CurrentCamera
@@ -85,6 +86,9 @@ local function setCoreGuiEnabled(coreGuiType: Enum.CoreGuiType, enabled: boolean
 end
 
 local function hideGui(gui: ScreenGui)
+	if gui.Name == "FishingIntroLoadingCover" then
+		return
+	end
 	if gui.Enabled then
 		hiddenGuis[gui] = true
 		gui.Enabled = false
@@ -371,26 +375,33 @@ local function playEntryCamera(): boolean
 	return true
 end
 
-local function restoreRuntimeState()
-	if characterConnection then
-		characterConnection:Disconnect()
-		characterConnection = nil
+local function restoreRuntimeState(deferCompletion: boolean?)
+	-- Loading releases its snapshots once, under cover, before the intro captures them.
+	if not runtimeRestored then
+		runtimeRestored = true
+		if characterConnection then
+			characterConnection:Disconnect()
+			characterConnection = nil
+		end
+		if logoTween then
+			logoTween:Cancel()
+			logoTween = nil
+		end
+		disconnectConnections()
+		restoreCharacterAnchoring()
+		restoreLighting()
+		restoreOtherGuis()
+		ProximityPromptService.Enabled = originalPromptEnabled
+		setCoreGuiEnabled(Enum.CoreGuiType.Health, true)
+		setCoreGuiEnabled(Enum.CoreGuiType.Chat, true)
+		local camera = getCurrentCamera()
+		camera.CameraType = Enum.CameraType.Custom
+		if originalFieldOfView then
+			camera.FieldOfView = originalFieldOfView
+		end
 	end
-	if logoTween then
-		logoTween:Cancel()
-		logoTween = nil
-	end
-	disconnectConnections()
-	restoreCharacterAnchoring()
-	restoreLighting()
-	restoreOtherGuis()
-	ProximityPromptService.Enabled = originalPromptEnabled
-	setCoreGuiEnabled(Enum.CoreGuiType.Health, true)
-	setCoreGuiEnabled(Enum.CoreGuiType.Chat, true)
-	local camera = getCurrentCamera()
-	camera.CameraType = Enum.CameraType.Custom
-	if originalFieldOfView then
-		camera.FieldOfView = originalFieldOfView
+	if deferCompletion then
+		return
 	end
 	if loadingGui then
 		loadingGui.Enabled = false
@@ -399,8 +410,66 @@ local function restoreRuntimeState()
 		loadingPart:Destroy()
 		loadingPart = nil
 	end
+	localPlayer:SetAttribute(LoadingAttributes.LOADING_BASE_READY, true)
 	localPlayer:SetAttribute(LoadingAttributes.LOADING_SCREEN_ACTIVE, false)
 	localPlayer:SetAttribute(LoadingAttributes.LOADING_SCREEN_DONE, true)
+end
+
+local function handoffToIntro(): boolean
+	local deadline = os.clock() + LoadingAttributes.INTRO_PREPARE_TIMEOUT
+	local function getState()
+		return localPlayer:GetAttribute(LoadingAttributes.INTRO_STARTUP_STATE)
+	end
+	local states = LoadingAttributes.INTRO_STATE
+	while localPlayer.Parent and (getState() == nil or getState() == states.Pending) and os.clock() < deadline do
+		RunService.RenderStepped:Wait()
+	end
+	if getState() ~= states.Preparing then
+		if getState() ~= states.Skipped then
+			localPlayer:SetAttribute(LoadingAttributes.INTRO_STARTUP_STATE, states.Skipped)
+		end
+		return false
+	end
+
+	local cover = Instance.new("ScreenGui")
+	cover.Name, cover.IgnoreGuiInset, cover.ResetOnSpawn, cover.DisplayOrder = "FishingIntroLoadingCover", true, false, 10000
+	local black = Instance.new("Frame")
+	black.Size, black.BackgroundColor3, black.BorderSizePixel = UDim2.fromScale(1, 1), Color3.new(), 0
+	black.Parent = cover
+	cover.Parent = playerGui
+	local ok, err = xpcall(function()
+		restoreRuntimeState(true)
+		-- Capture the normal home camera beneath cover for the intro's eventual return.
+		local character = localPlayer.Character
+		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+		local root = character and character:FindFirstChild("HumanoidRootPart")
+		assert(humanoid and root, "Opening handoff character unavailable")
+		local camera = getCurrentCamera()
+		local focus = root.Position + Vector3.yAxis * 2.5
+		camera.CameraSubject = humanoid
+		camera.CFrame = CFrame.lookAt(focus - root.CFrame.LookVector * ENTRY_CAMERA_DISTANCE + Vector3.yAxis * 4, focus)
+		camera.Focus = CFrame.new(focus)
+		RunService.RenderStepped:Wait()
+		RunService.RenderStepped:Wait()
+		localPlayer:SetAttribute(LoadingAttributes.INTRO_HANDOFF_READY, true)
+		while localPlayer.Parent and (getState() == states.Preparing or getState() == states.Pending) and os.clock() < deadline do
+			RunService.RenderStepped:Wait()
+		end
+		if getState() ~= states.Prepared then
+			if getState() ~= states.Skipped then
+				warn("LoadingScreen: opening preparation timed out")
+			end
+			localPlayer:SetAttribute(LoadingAttributes.INTRO_STARTUP_STATE, states.Skipped)
+		end
+	end, debug.traceback)
+	if not ok then
+		warn("LoadingScreen: " .. tostring(err))
+		localPlayer:SetAttribute(LoadingAttributes.INTRO_STARTUP_STATE, states.Skipped)
+	end
+	-- The intro has rendered frame zero before loading and the cover disappear.
+	restoreRuntimeState()
+	cover:Destroy()
+	return true
 end
 
 local function getLoadingTarget(): (number, string, boolean)
@@ -427,6 +496,8 @@ end
 
 localPlayer:SetAttribute(LoadingAttributes.LOADING_SCREEN_ACTIVE, true)
 localPlayer:SetAttribute(LoadingAttributes.LOADING_SCREEN_DONE, false)
+localPlayer:SetAttribute(LoadingAttributes.LOADING_BASE_READY, false)
+localPlayer:SetAttribute(LoadingAttributes.INTRO_HANDOFF_READY, false)
 
 local template = ReplicatedFirst:WaitForChild("LoadingScreenMenu", 15)
 if not template or not template:IsA("BasePart") then
@@ -533,7 +604,10 @@ while localPlayer.Parent do
 		activeBarTween:Cancel()
 		activeBarTween = nil
 		bar.Size = UDim2.fromScale(1, 1)
-		playEntryCamera()
+		localPlayer:SetAttribute(LoadingAttributes.LOADING_BASE_READY, true)
+		if not handoffToIntro() then
+			playEntryCamera()
+		end
 		break
 	end
 	task.wait(0.05)

@@ -1,0 +1,52 @@
+{
+  "name": "Restart Test",
+  "assetType": "Plugin",
+  "assetTypeId": 38,
+  "assetId": "133862099314475",
+  "creator": {
+    "type": "User",
+    "id": "4556553540",
+    "name": "heixiaogu"
+  },
+  "storeUrl": "https://create.roblox.com/store/asset/133862099314475/Restart-Test",
+  "configureUrl": "https://create.roblox.com/dashboard/creations/store/133862099314475/configure",
+  "assetVersion": 2,
+  "buildId": "dba1a86f00c8",
+  "artifactSha256": "b0b9b8bd09c542bbf1195f95289b09993b6fef1c641b2eec28f84f994260ab9b",
+  "publishedAt": "2026-11-16T16:51:02+08:00",
+  "published": false,
+  "purchasable": false,
+  "basePrice": {
+    "currencyCode": "USD",
+    "quantity": {
+      "significand": 0,
+      "exponent": 0
+    }
+  },
+  "restrictions": [],
+  "description": "Restart single-player Roblox Studio playtests with one click.",
+  "limitations": [
+    "Preview release: reported Studio shutdown hangs remain under investigation.",
+    "Cloud-installed plugin runtime was not re-tested in this publication task.",
+    "Do not run the local and Creator Store copies together."
+  ],
+  "delistedAt": "2026-11-16T16:57:16+08:00",
+  "publicationVerification": {
+    "downloadedEntryMatchesSource": true,
+    "downloadedControllerMatchesSource": true,
+    "downloadedBuildId": "dba1a86f00c8",
+    "downloadedRootChildren": 2,
+    "selene": "0 errors, 0 warnings",
+    "controllerTests": "passed",
+    "creatorDashboardDescriptionPersisted": true,
+    "creatorDashboardDistributionChecked": true,
+    "creatorDashboardPrice": "Free",
+    "publicStoreDescriptionVisible": true,
+    "publicStorePageAvailable": true
+  },
+  "delistingVerification": {
+    "creatorStorePublished": false,
+    "creatorStorePurchasable": false,
+    "creatorDashboardDistributionChecked": false
+  }
+}

@@ -1,0 +1,460 @@
+{
+  "version": "v2",
+  "universeId": 10777315397,
+  "placeId": 105988300474595,
+  "spreadsheetId": "1UlSnNuUBmQ1BQB43Jj3y8J9RYDzOF5g0Z5Js0PzHB8Y",
+  "sheet": "PurchaseData",
+  "updatedRange": "J4:J10",
+  "records": [
+    {
+      "purchaseId": "DoubleWins",
+      "kind": "gamepass",
+      "id": 2093792687,
+      "gift": false,
+      "iconId": 138623259278633,
+      "previousIconId": 126148300454717,
+      "platform": {
+        "gamePassId": 2093792687,
+        "name": "x2 Cash",
+        "description": "Double cash forom every animal",
+        "isForSale": true,
+        "iconAssetId": 138623259278633,
+        "createdTimestamp": "2026-11-17T09:54:13.672Z",
+        "updatedTimestamp": "2026-11-17T10:14:39.351Z",
+        "priceInformation": {
+          "defaultPriceInRobux": 99,
+          "enabledFeatures": []
+        },
+        "isManagedPricingEnabled": false
+      }
+    },
+    {
+      "purchaseId": "DoubleWins",
+      "kind": "product",
+      "id": 3732742706,
+      "gift": true,
+      "iconId": 75170221504310,
+      "previousIconId": 113403857289359,
+      "platform": {
+        "productId": 3732742706,
+        "name": "Gift x2 Cash",
+        "description": "Double cash forom every animal",
+        "iconImageAssetId": 75170221504310,
+        "universeId": 10777315397,
+        "isForSale": true,
+        "priceInformation": {
+          "defaultPriceInRobux": 99,
+          "enabledFeatures": []
+        },
+        "isImmutable": false,
+        "createdTimestamp": "2026-11-17T09:54:33.015Z",
+        "updatedTimestamp": "2026-11-17T10:14:42.418Z",
+        "isManagedPricingEnabled": false
+      }
+    },
+    {
+      "purchaseId": "DoubleTrain",
+      "kind": "gamepass",
+      "id": 2092694679,
+      "gift": false,
+      "iconId": 79384382232892,
+      "previousIconId": 88235559897835,
+      "platform": {
+        "gamePassId": 2092694679,
+        "name": "x2 Training Power",
+        "description": "Double XP on weightlifting",
+        "isForSale": true,
+        "iconAssetId": 79384382232892,
+        "createdTimestamp": "2026-11-17T09:54:34.769Z",
+        "updatedTimestamp": "2026-11-17T10:14:43.961Z",
+        "priceInformation": {
+          "defaultPriceInRobux": 149,
+          "enabledFeatures": []
+        },
+        "isManagedPricingEnabled": false
+      }
+    },
+    {
+      "purchaseId": "DoubleTrain",
+      "kind": "product",
+      "id": 3732742733,
+      "gift": true,
+      "iconId": 104229551668913,
+      "previousIconId": 127728956131828,
+      "platform": {
+        "productId": 3732742733,
+        "name": "Gift x2 Training Power",
+        "description": "Double XP on weightlifting",
+        "iconImageAssetId": 104229551668913,
+        "universeId": 10777315397,
+        "isForSale": true,
+        "priceInformation": {
+          "defaultPriceInRobux": 149,
+          "enabledFeatures": []
+        },
+        "isImmutable": false,
+        "createdTimestamp": "2026-11-17T09:54:37.953Z",
+        "updatedTimestamp": "2026-11-17T10:14:46.792Z",
+        "isManagedPricingEnabled": false
+      }
+    },
+    {
+      "purchaseId": "MegaLuck",
+      "kind": "gamepass",
+      "id": 2092652693,
+      "gift": false,
+      "iconId": 112313109810427,
+      "previousIconId": 126653733934648,
+      "platform": {
+        "gamePassId": 2092652693,
+        "name": "Ultra Luck",
+        "description": "Ultra luck for fishing",
+        "isForSale": true,
+        "iconAssetId": 112313109810427,
+        "createdTimestamp": "2026-11-17T09:54:39.392Z",
+        "updatedTimestamp": "2026-11-17T10:14:48.429Z",
+        "priceInformation": {
+          "defaultPriceInRobux": 219,
+          "enabledFeatures": []
+        },
+        "isManagedPricingEnabled": false
+      }
+    },
+    {
+      "purchaseId": "MegaLuck",
+      "kind": "product",
+      "id": 3732742767,
+      "gift": true,
+      "iconId": 109069136174247,
+      "previousIconId": 115358586010442,
+      "platform": {
+        "productId": 3732742767,
+        "name": "Gift Ultra Luck",
+        "description": "Ultra luck for fishing",
+        "iconImageAssetId": 109069136174247,
+        "universeId": 10777315397,
+        "isForSale": true,
+        "priceInformation": {
+          "defaultPriceInRobux": 219,
+          "enabledFeatures": []
+        },
+        "isImmutable": false,
+        "createdTimestamp": "2026-11-17T09:54:42.389Z",
+        "updatedTimestamp": "2026-11-17T10:14:51.32Z",
+        "isManagedPricingEnabled": false
+      }
+    },
+    {
+      "purchaseId": "WinsTier1",
+      "kind": "product",
+      "id": 3732742786,
+      "gift": false,
+      "iconId": 131898173375499,
+      "previousIconId": 122785842415419,
+      "platform": {
+        "productId": 3732742786,
+        "name": "Small Pack",
+        "description": "",
+        "iconImageAssetId": 131898173375499,
+        "universeId": 10777315397,
+        "isForSale": true,
+        "priceInformation": {
+          "defaultPriceInRobux": 19,
+          "enabledFeatures": []
+        },
+        "isImmutable": false,
+        "createdTimestamp": "2026-11-17T09:54:45.526Z",
+        "updatedTimestamp": "2026-11-17T10:14:54.022Z",
+        "isManagedPricingEnabled": false
+      }
+    },
+    {
+      "purchaseId": "WinsTier2",
+      "kind": "product",
+      "id": 3732742806,
+      "gift": false,
+      "iconId": 114996568546760,
+      "previousIconId": 82231269286791,
+      "platform": {
+        "productId": 3732742806,
+        "name": "Large Pack",
+        "description": "",
+        "iconImageAssetId": 114996568546760,
+        "universeId": 10777315397,
+        "isForSale": true,
+        "priceInformation": {
+          "defaultPriceInRobux": 79,
+          "enabledFeatures": []
+        },
+        "isImmutable": false,
+        "createdTimestamp": "2026-11-17T09:54:48.736Z",
+        "updatedTimestamp": "2026-11-17T10:14:57.234Z",
+        "isManagedPricingEnabled": false
+      }
+    },
+    {
+      "purchaseId": "WinsTier3",
+      "kind": "product",
+      "id": 3732742828,
+      "gift": false,
+      "iconId": 97713154008181,
+      "previousIconId": 131806921692920,
+      "platform": {
+        "productId": 3732742828,
+        "name": "Mega Pack",
+        "description": "",
+        "iconImageAssetId": 97713154008181,
+        "universeId": 10777315397,
+        "isForSale": true,
+        "priceInformation": {
+          "defaultPriceInRobux": 199,
+          "enabledFeatures": []
+        },
+        "isImmutable": false,
+        "createdTimestamp": "2026-11-17T09:54:52.056Z",
+        "updatedTimestamp": "2026-11-17T10:15:00.141Z",
+        "isManagedPricingEnabled": false
+      }
+    },
+    {
+      "purchaseId": "PremiumBait",
+      "kind": "product",
+      "id": 3732742846,
+      "gift": false,
+      "iconId": 132669232893917,
+      "previousIconId": 97716120013119,
+      "platform": {
+        "productId": 3732742846,
+        "name": "Premium Bait",
+        "description": "",
+        "iconImageAssetId": 132669232893917,
+        "universeId": 10777315397,
+        "isForSale": true,
+        "priceInformation": {
+          "defaultPriceInRobux": 9,
+          "enabledFeatures": []
+        },
+        "isImmutable": false,
+        "createdTimestamp": "2026-11-17T09:54:54.989Z",
+        "updatedTimestamp": "2026-11-17T10:15:02.792Z",
+        "isManagedPricingEnabled": false
+      }
+    }
+  ],
+  "mapping": [
+    {
+      "purchaseId": "DoubleWins",
+      "productId": 2093792687,
+      "giftProductId": 3732742706,
+      "iconId": "rbxassetid://138623259278633"
+    },
+    {
+      "purchaseId": "DoubleTrain",
+      "productId": 2092694679,
+      "giftProductId": 3732742733,
+      "iconId": "rbxassetid://79384382232892"
+    },
+    {
+      "purchaseId": "MegaLuck",
+      "productId": 2092652693,
+      "giftProductId": 3732742767,
+      "iconId": "rbxassetid://112313109810427"
+    },
+    {
+      "purchaseId": "WinsTier1",
+      "productId": 3732742786,
+      "giftProductId": 3732742786,
+      "iconId": "rbxassetid://131898173375499"
+    },
+    {
+      "purchaseId": "WinsTier2",
+      "productId": 3732742806,
+      "giftProductId": 3732742806,
+      "iconId": "rbxassetid://114996568546760"
+    },
+    {
+      "purchaseId": "WinsTier3",
+      "productId": 3732742828,
+      "giftProductId": 3732742828,
+      "iconId": "rbxassetid://97713154008181"
+    },
+    {
+      "purchaseId": "PremiumBait",
+      "productId": 3732742846,
+      "giftProductId": 3732742846,
+      "iconId": "rbxassetid://132669232893917"
+    }
+  ],
+  "verifiedPlatform": [
+    {
+      "gamePasses": [
+        {
+          "gamePassId": 2092652693,
+          "name": "Ultra Luck",
+          "description": "Ultra luck for fishing",
+          "isForSale": true,
+          "iconAssetId": 112313109810427,
+          "createdTimestamp": "2026-11-17T09:54:39.392Z",
+          "updatedTimestamp": "2026-11-17T10:14:48.429Z",
+          "priceInformation": {
+            "defaultPriceInRobux": 219,
+            "enabledFeatures": []
+          },
+          "isManagedPricingEnabled": false
+        },
+        {
+          "gamePassId": 2092694679,
+          "name": "x2 Training Power",
+          "description": "Double XP on weightlifting",
+          "isForSale": true,
+          "iconAssetId": 79384382232892,
+          "createdTimestamp": "2026-11-17T09:54:34.769Z",
+          "updatedTimestamp": "2026-11-17T10:14:43.961Z",
+          "priceInformation": {
+            "defaultPriceInRobux": 149,
+            "enabledFeatures": []
+          },
+          "isManagedPricingEnabled": false
+        },
+        {
+          "gamePassId": 2093792687,
+          "name": "x2 Cash",
+          "description": "Double cash forom every animal",
+          "isForSale": true,
+          "iconAssetId": 138623259278633,
+          "createdTimestamp": "2026-11-17T09:54:13.672Z",
+          "updatedTimestamp": "2026-11-17T10:14:39.351Z",
+          "priceInformation": {
+            "defaultPriceInRobux": 99,
+            "enabledFeatures": []
+          },
+          "isManagedPricingEnabled": false
+        }
+      ],
+      "nextPageToken": ""
+    },
+    {
+      "developerProducts": [
+        {
+          "productId": 3732742846,
+          "name": "Premium Bait",
+          "description": "",
+          "iconImageAssetId": 132669232893917,
+          "universeId": 10777315397,
+          "isForSale": true,
+          "priceInformation": {
+            "defaultPriceInRobux": 9,
+            "enabledFeatures": []
+          },
+          "isImmutable": false,
+          "createdTimestamp": "2026-11-17T09:54:54.989Z",
+          "updatedTimestamp": "2026-11-17T10:15:02.792Z",
+          "isManagedPricingEnabled": false
+        },
+        {
+          "productId": 3732742828,
+          "name": "Mega Pack",
+          "description": "",
+          "iconImageAssetId": 97713154008181,
+          "universeId": 10777315397,
+          "isForSale": true,
+          "priceInformation": {
+            "defaultPriceInRobux": 199,
+            "enabledFeatures": []
+          },
+          "isImmutable": false,
+          "createdTimestamp": "2026-11-17T09:54:52.056Z",
+          "updatedTimestamp": "2026-11-17T10:15:00.141Z",
+          "isManagedPricingEnabled": false
+        },
+        {
+          "productId": 3732742806,
+          "name": "Large Pack",
+          "description": "",
+          "iconImageAssetId": 114996568546760,
+          "universeId": 10777315397,
+          "isForSale": true,
+          "priceInformation": {
+            "defaultPriceInRobux": 79,
+            "enabledFeatures": []
+          },
+          "isImmutable": false,
+          "createdTimestamp": "2026-11-17T09:54:48.736Z",
+          "updatedTimestamp": "2026-11-17T10:14:57.234Z",
+          "isManagedPricingEnabled": false
+        },
+        {
+          "productId": 3732742786,
+          "name": "Small Pack",
+          "description": "",
+          "iconImageAssetId": 131898173375499,
+          "universeId": 10777315397,
+          "isForSale": true,
+          "priceInformation": {
+            "defaultPriceInRobux": 19,
+            "enabledFeatures": []
+          },
+          "isImmutable": false,
+          "createdTimestamp": "2026-11-17T09:54:45.526Z",
+          "updatedTimestamp": "2026-11-17T10:14:54.022Z",
+          "isManagedPricingEnabled": false
+        },
+        {
+          "productId": 3732742767,
+          "name": "Gift Ultra Luck",
+          "description": "Ultra luck for fishing",
+          "iconImageAssetId": 109069136174247,
+          "universeId": 10777315397,
+          "isForSale": true,
+          "priceInformation": {
+            "defaultPriceInRobux": 219,
+            "enabledFeatures": []
+          },
+          "isImmutable": false,
+          "createdTimestamp": "2026-11-17T09:54:42.389Z",
+          "updatedTimestamp": "2026-11-17T10:14:51.32Z",
+          "isManagedPricingEnabled": false
+        },
+        {
+          "productId": 3732742733,
+          "name": "Gift x2 Training Power",
+          "description": "Double XP on weightlifting",
+          "iconImageAssetId": 104229551668913,
+          "universeId": 10777315397,
+          "isForSale": true,
+          "priceInformation": {
+            "defaultPriceInRobux": 149,
+            "enabledFeatures": []
+          },
+          "isImmutable": false,
+          "createdTimestamp": "2026-11-17T09:54:37.953Z",
+          "updatedTimestamp": "2026-11-17T10:14:46.792Z",
+          "isManagedPricingEnabled": false
+        },
+        {
+          "productId": 3732742706,
+          "name": "Gift x2 Cash",
+          "description": "Double cash forom every animal",
+          "iconImageAssetId": 75170221504310,
+          "universeId": 10777315397,
+          "isForSale": true,
+          "priceInformation": {
+            "defaultPriceInRobux": 99,
+            "enabledFeatures": []
+          },
+          "isImmutable": false,
+          "createdTimestamp": "2026-11-17T09:54:33.015Z",
+          "updatedTimestamp": "2026-11-17T10:14:42.418Z",
+          "isManagedPricingEnabled": false
+        }
+      ],
+      "nextPageToken": null
+    }
+  ],
+  "verification": {
+    "onlyIconsChanged": true,
+    "sheetReadbackMatches": true,
+    "platformPreviewsCompleted": 10,
+    "localImageLongEdgeOccupancy": "95.7%–95.9%"
+  }
+}

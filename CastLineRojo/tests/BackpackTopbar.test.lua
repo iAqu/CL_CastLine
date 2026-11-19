@@ -13,6 +13,16 @@ local function signal()
 	}
 end
 local changed = signal()
+local trainingChanged = signal()
+local training = false
+local player = {
+	GetAttribute = function()
+		return training
+	end,
+	GetAttributeChangedSignal = function()
+		return trainingChanged
+	end,
+}
 local backpack = { IsOpen = false, StateChanged = { Event = changed } }
 local toggleCount = 0
 local function setOpen(open)
@@ -58,6 +68,9 @@ function icon:deselect(source)
 	self.selected = false
 	self.toggled:Fire(false, source)
 end
+function icon:setEnabled(value)
+	self.enabled = value
+end
 local iconModule = {
 	new = function()
 		return icon
@@ -67,8 +80,8 @@ local parent = {}
 local storage = { Packages = { TopbarPlus = iconModule } }
 local env = setmetatable({
 	game = {
-		GetService = function()
-			return storage
+		GetService = function(_, name)
+			return if name == "Players" then { LocalPlayer = player } else storage
 		end,
 	},
 	script = { Parent = parent },
@@ -95,3 +108,11 @@ for _ = 1, 4 do
 	assert(not backpack.IsOpen and not icon.selected)
 end
 assert(toggleCount == 0, "Topbar requests absolute open/close state instead of blindly toggling")
+training = true
+trainingChanged:Fire()
+assert(icon.enabled == false and not backpack.IsOpen, "Training hides the backpack entrance")
+icon.toggled:Fire(true, "User")
+assert(not backpack.IsOpen, "Queued toggles must not open the backpack while training")
+training = false
+trainingChanged:Fire()
+assert(icon.enabled == true and not backpack.IsOpen, "Stop restores the entrance without reopening inventory")

@@ -71,6 +71,7 @@ local ok, result = xpcall(function()
 				if phase == "Caught" then
 					assert(primary.CFrame.UpVector.Y > 0.99, "Caught egg must be upright")
 					assert(math.abs(active.fish:GetScale() - template:GetScale()) < 1e-5, "Authored egg size changed")
+					assert(not folder:FindFirstChild("FishingReelSmoke"), "Successful egg catch emitted reel smoke")
 				end
 				assert(
 					not active.animation.active and not active.drip and not active.fishTrail,

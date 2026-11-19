@@ -566,6 +566,9 @@ local function UnequipAllTools() --NOTE: HopperBin
 end
 
 local function EquipNewTool(tool) --NOTE: HopperBin
+	if GameplayInputGate.IsActive("Training") then
+		return
+	end
 	UnequipAllTools()
 	if tool:IsA("HopperBin") then
 		-- ROBLOX deviation START: remove HopperBin support (RobloxScriptSecurity)
@@ -828,7 +831,7 @@ local function MakeSlot(parent, index)
 
 	-- Slot select logic, activated by clicking or pressing hotkey
 	function slot:Select(isProcessed)
-		if isProcessed then
+		if isProcessed or GameplayInputGate.IsActive("Training") then
 			return
 		end
 		local tool = slot.Tool
@@ -1158,7 +1161,7 @@ local function OnCharacterAdded(character)
 end
 
 local function OnInputBegan(input, isProcessed)
-	if GameplayInputGate.IsActive("Fishing") then
+	if GameplayInputGate.IsActive("Fishing") or GameplayInputGate.IsActive("Training") then
 		return
 	end
 	-- Pass through keyboard hotkeys when not typing into a TextBox and not disabled (except for the Drop key)
@@ -1380,6 +1383,9 @@ function getGamepadSwapSlot()
 end
 
 function changeSlot(slot)
+	if GameplayInputGate.IsActive("Training") then
+		return
+	end
 	local gamepadCursorEnabled = GamepadService.GamepadCursorEnabled
 
 	if slot.Frame == GuiService.SelectedObject and not gamepadCursorEnabled then
@@ -2009,7 +2015,7 @@ do -- Make the Inventory expand/collapse arrow (unless TopBar)
 	end
 
 	local function setOpen(open)
-		if open and GameplayInputGate.IsActive("Fishing") then
+		if open and (GameplayInputGate.IsActive("Fishing") or GameplayInputGate.IsActive("Training")) then
 			return
 		end
 		if not open and DragController then
@@ -2142,6 +2148,7 @@ DragController = BackpackDragController.new({
 		return BackpackGui.Enabled
 			and MainFrame.Visible
 			and not GameplayInputGate.IsActive("Fishing")
+			and not GameplayInputGate.IsActive("Training")
 			and not GuiService.MenuIsOpen
 	end,
 	canDrag = function()

@@ -112,6 +112,7 @@ local ok, result = xpcall(function()
 		owner:_updateLine()
 	end
 	local function assertShowcaseLine(point)
+		assert(line.Enabled, "Showcase line was hidden")
 		assert((line.Attachment1.WorldPosition - point).Magnitude < 0.001, "Line detached from showcase anchor")
 		local delta = line.Attachment0.WorldPosition - point
 		assert(
@@ -345,7 +346,7 @@ local ok, result = xpcall(function()
 	update(2700 + trueBite + 0.02)
 	assert(owner.biteCues == previousCues + 1, "Bite cue missing or duplicated")
 
-	-- 空钩先下潜再出水回弹；平视镜头固定焦点，停稳后再次点击才返回。
+	-- 空钩先下潜再出水回弹；停稳时鱼饵化为烟雾，随后自动返回。
 	round(2800)
 	update(2800)
 	bait.CFrame *= CFrame.Angles(math.rad(8), math.rad(137), math.rad(-6))
@@ -368,6 +369,12 @@ local ok, result = xpcall(function()
 	local reelBottom = math.huge
 	local expectedBottom = initialBait.Position.Y - owner.baitBaseSize.Y * reelConfig.SinkDepth
 	local maxSway = 0
+	local smokeBursts = 0
+	folder.ChildAdded:Connect(function(child)
+		if child.Name == "FishingReelSmoke" then
+			smokeBursts += 1
+		end
+	end)
 	-- spr 由 PreSimulation 推进；此处必须逐帧等待，不能仅跳动测试时钟。
 	local reelFrames, reelEnd = {}, nil
 	local realStart, elapsed = os.clock(), 0
@@ -411,10 +418,13 @@ local ok, result = xpcall(function()
 				and owner.bite.highlight.OutlineTransparency == 1,
 			"Empty reel retained a fish shadow"
 		)
-		assert(
-			bait.Transparency == 0.25 and baitHighlight.Enabled and baitHighlight.FillTransparency == 1,
-			"Empty reel lost bait appearance"
-		)
+		if owner.phase == "Reeling" then
+			assert(
+				bait.Transparency == 0.25 and baitHighlight.Enabled and baitHighlight.FillTransparency == 1
+					and line.Enabled and not folder:FindFirstChild("FishingReelSmoke"),
+				"Empty reel hid the bait, hid the line, or emitted smoke before settling"
+			)
+		end
 		assertShowcaseLine(bait.Position)
 		if elapsed >= reelConfig.CameraTime then
 			assert(math.abs(owner.cameraFrame.LookVector.Y) < 0.0001, "Empty reel base camera did not stay level")
@@ -459,6 +469,16 @@ local ok, result = xpcall(function()
 	owner._waterFeedback = function() end
 	assert(owner.phase == "Reeled" and owner.folder:GetAttribute("Phase") == "Reeled", "Reel phase was not published")
 	assert(reelEnd, "Spring did not report physical settling")
+	assert(bait.Transparency == 1 and not baitHighlight.Enabled, "Settled reel left bait visible")
+	assertShowcaseLine(bait.Position)
+	local smoke = assert(folder:FindFirstChild("FishingReelSmoke"), "Settled reel did not emit smoke")
+	assert((smoke.Position - bait.Position).Magnitude < 0.001, "Smoke did not start at the settled bait position")
+	local puffs = smoke:GetChildren()
+	assert(#puffs == 7, "Reel smoke must have five main puffs and two small puffs")
+	for _, puff in ipairs(puffs) do
+		assert(puff:IsA("Part") and puff.Shape == Enum.PartType.Ball, "Reel smoke puff was not round")
+		assert(puff.Anchored and not puff.CanCollide and not puff.CanQuery, "Reel smoke interfered with gameplay")
+	end
 	update(reelEnd + reelConfig.HoldTime - 0.01)
 	assert(
 		not owner:CanReturn(reelEnd + reelConfig.HoldTime - 0.01) and not owner.continueLabel.Visible,
@@ -474,6 +494,7 @@ local ok, result = xpcall(function()
 	local sustainedSway = 0
 	for index = 0, 50 do
 		local at = reelEnd + reelConfig.HoldTime + index * 0.1
+		assert(not owner:TryHook(at), "Repeated input restarted the finished reel")
 		update(at)
 		owner:_updateCamera(at, 1 / 60)
 		local sway = owner.cameraFrame:ToObjectSpace(camera.CFrame)
@@ -541,6 +562,8 @@ local ok, result = xpcall(function()
 	local endedRound = owner.round
 	update(2900)
 	assert(owner.round == endedRound and not owner.bite:CanRetry(2900), "Reeled cast automatically retried")
+	task.wait(0.6)
+	assert(smoke.Parent == nil and smokeBursts == 1, "Reel smoke lingered or played more than once")
 
 	-- 连续随机变速缩圈；鱼线末端始终跟随鱼饵。
 	round(3000)
@@ -659,6 +682,7 @@ local ok, result = xpcall(function()
 		bait.Transparency == 1 and owner.continueLabel.Text == settings.Text.Return,
 		"Caught fish restored bait or lost return prompt"
 	)
+	assert(line.Enabled and not folder:FindFirstChild("FishingReelSmoke"), "Successful catch used empty reel presentation")
 
 	-- 横屏、竖屏的鱼身八角均入镜，最终镜头水平，吊线上端在画外。
 	for _, size in ipairs({ Vector2.new(390, 844), Vector2.new(844, 390), Vector2.new(1877, 1240) }) do
@@ -809,7 +833,7 @@ local ok, result = xpcall(function()
 	)
 	return {
 		passed = true,
-		checks = "three spawn sectors, Neon shadow and original material restoration, 30/60 fps body and outline easing, escape fade endpoints, keyframe animation, actual size/fade/rise, bait outline/red fill, side contact, timeout retry, spr reel with continuous retargeting and physical settling, struggle shake, synchronized exit and landing impulses, sky spin/fall/bounce, camera tracking, three idle bursts, fixed mouth/focus/line, centered bait anchor, fish anchor one world stud below scaled mouth, landscape/portrait animation framing, single-mesh and multipart surfaced black outline, hidden outline and cleanup",
+		checks = "three spawn sectors, Neon shadow and original material restoration, 30/60 fps body and outline easing, escape fade endpoints, keyframe animation, actual size/fade/rise, bait outline/red fill, side contact, timeout retry, spr reel with continuous retargeting and physical settling, persistent empty reel line and one-shot cartoon smoke, struggle shake, synchronized exit and landing impulses, sky spin/fall/bounce, camera tracking, three idle bursts, fixed mouth/focus/line, centered bait anchor, fish anchor one world stud below scaled mouth, landscape/portrait animation framing, single-mesh and multipart surfaced black outline, hidden outline and cleanup",
 	}
 end, debug.traceback)
 

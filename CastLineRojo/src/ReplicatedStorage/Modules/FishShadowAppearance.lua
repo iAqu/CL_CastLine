@@ -53,7 +53,8 @@ function FishShadowAppearance.Apply(state, visible: boolean, original: boolean, 
 	local highlight = state.highlight
 	highlight.FillTransparency = if shadow
 		then Settings.ShadowTransparency + (1 - Settings.ShadowTransparency) * highlightFade else 1
-	highlight.OutlineColor = if original then Color3.new(0, 0, 0) else Color3.fromRGB(254, 254, 254)
+	highlight.OutlineColor = if original then Color3.new(0, 0, 0)
+		else state.shadowOutlineColor or Color3.fromRGB(254, 254, 254)
 	highlight.OutlineTransparency = if original then fade
 		elseif shadow then Settings.ShadowOutlineTransparency + (1 - Settings.ShadowOutlineTransparency) * highlightFade ^ 3
 		else 1

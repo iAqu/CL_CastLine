@@ -9,7 +9,7 @@ local SoundHelper = {}
 
 local MAX_SAME_SOUND = 20
 
-function SoundHelper.PlaySound(sound: Sound, parentPart: Part?, delay: number?, maxSameSound: number?, randomPitch: boolean?, pitchOctave: number?)
+function SoundHelper.PlaySound(sound: Sound, parentPart: Instance?, delay: number?, maxSameSound: number?, randomPitch: boolean?, pitchOctave: number?)
     if not sound then warn ("Sound", sound, "was not found.") return end
 
     local playerData = PlayerDataController:GetData()
@@ -68,11 +68,13 @@ function SoundHelper.PlaySound(sound: Sound, parentPart: Part?, delay: number?, 
 
     -- task.wait(delay or 0)
     task.delay(delay or 0, function()
-        soundClone:Play()
-        soundClone.Ended:Connect(function()
+        if not soundClone.Parent then return end
+        soundClone.Ended:Once(function()
             soundClone:Destroy()
         end)
+        soundClone:Play()
     end)
+    return soundClone
 end
 
 function SoundHelper.PlayRandomSoundInFolder(folder: Folder, parentPart: Part?, delay: number?, maxSameSound: number?)

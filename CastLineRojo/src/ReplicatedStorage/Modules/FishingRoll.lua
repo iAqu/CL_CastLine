@@ -1,6 +1,5 @@
 local Config = require(script.Parent.FishingConfig)
 local PetFeatureConfig = require(script.Parent.PetFeatureConfig)
-local RarityConfig = require(script.Parent.RarityConfig)
 
 local FishingRoll = {}
 
@@ -15,50 +14,13 @@ function FishingRoll.GetLuck(rod, bait, distance: number, castLuckMultiplier: nu
 		* (castLuckMultiplier or 1)
 end
 
-function FishingRoll.GetLuckRollCount(luck: number): number
-	if luck ~= luck or luck == math.huge or luck <= 1 then
-		return 1
-	end
-	return math.max(1, math.floor(1 + math.log(luck, 2)))
+-- Compatibility helpers deliberately ignore display-only luck.
+function FishingRoll.GetLuckRollCount(_luck: number): number
+	return 1
 end
 
 local function getMaxWeight(maxWeight: number): number
 	return if Config.RodWeightLimitEnabled then maxWeight else math.huge
-end
-
-function FishingRoll.GetPool(fishes, maxWeight: number, bait, hasModel)
-	maxWeight = getMaxWeight(maxWeight)
-	local filter = bait and bait.FilterRarity
-	local target
-	if filter and filter ~= "" and filter ~= "nil" then
-		target = RarityConfig.ByName[RarityConfig.Normalize(filter)]
-		if not target then
-			return {}
-		end
-	end
-
-	local candidates = {}
-	for _, fish in pairs(fishes) do
-		local rarity = RarityConfig.ByName[RarityConfig.Normalize(fish.Rarity)]
-		if fish.Rarity == "Event" or fish.DefaultWeight > maxWeight or not rarity or fish.RollWeight <= 0 then
-			continue
-		end
-		local multiplier = 1
-		if target then
-			if rarity.Index < target.Index then
-				multiplier = 0
-			elseif rarity.Index == target.Index then
-				multiplier = 1 - math.clamp(bait.FilterRatio, 0, 1)
-			end
-		end
-		if multiplier > 0 and hasModel(fish.Model) then
-			table.insert(candidates, { fish = fish, weight = fish.RollWeight * multiplier })
-		end
-	end
-	table.sort(candidates, function(a, b)
-		return a.fish.FishID < b.fish.FishID
-	end)
-	return candidates
 end
 
 function FishingRoll.RollWeight(defaultWeight: number, maxWeight: number, random: Random): number
@@ -75,32 +37,23 @@ function FishingRoll.RollWeight(defaultWeight: number, maxWeight: number, random
 	return defaultWeight * size ^ 3
 end
 
-function FishingRoll.RollWeightLucky(defaultWeight: number, maxWeight: number, luck: number, random: Random): number
-	local best = defaultWeight
-	for _ = 1, FishingRoll.GetLuckRollCount(luck) do
-		best = math.max(best, FishingRoll.RollWeight(defaultWeight, maxWeight, random))
-	end
-	return best
+function FishingRoll.RollWeightLucky(defaultWeight: number, maxWeight: number, _luck: number, random: Random): number
+	return FishingRoll.RollWeight(defaultWeight, maxWeight, random)
 end
 
-function FishingRoll.Choose(pool, luck: number, random: Random)
+function FishingRoll.Choose(pool, _luck: number, random: Random)
 	local total = 0
-	local cumulative = {}
-	for index, entry in ipairs(pool) do
-		local exponent = entry.fish.LuckExponent
-		if exponent == nil then
-			exponent = math.max((entry.fish.LayoutOrder or 1) - 1, 0) * 0.05
-		end
-		total += entry.weight * luck ^ exponent
-		cumulative[index] = total
+	for _, entry in ipairs(pool) do
+		total += entry.weight
 	end
 	if total <= 0 then
 		return nil
 	end
-	local roll = random:NextNumber() * total
-	for index, threshold in ipairs(cumulative) do
-		if roll < threshold then
-			return pool[index].fish
+	local sample = random:NextNumber() * total
+	for _, entry in ipairs(pool) do
+		sample -= entry.weight
+		if sample < 0 then
+			return entry.fish
 		end
 	end
 	return pool[#pool].fish
@@ -121,7 +74,7 @@ function FishingRoll.GetEggPool(eggs, maxWeight, hasModel)
 end
 
 function FishingRoll.ChooseCatch(fishPool, eggPool, baseLuck, petMultiplier, random)
-	-- Category selection consumes one independent roll. Luck only affects the chosen pool.
+	-- Category selection is independent of display-only luck.
 	local categoryRoll = random:NextNumber()
 	if PetFeatureConfig.Enabled and categoryRoll < Config.EggCatchChance then
 		return "Egg", FishingRoll.Choose(eggPool, baseLuck, random)
@@ -155,7 +108,10 @@ function FishingRoll.BuildMutationRanges(mutations)
 			warn("FishingRoll: total mutation Chance exceeds 1")
 			return {}
 		end
-		table.insert(ranges, { mutationId = mutation.MutationId, upperBound = upperBound, priceRate = mutation.PriceRate })
+		table.insert(
+			ranges,
+			{ mutationId = mutation.MutationId, upperBound = upperBound, priceRate = mutation.PriceRate }
+		)
 	end
 	return ranges
 end
@@ -170,30 +126,8 @@ function FishingRoll.RollMutation(ranges, random: Random): string?
 	return nil
 end
 
-function FishingRoll.RollMutationLucky(ranges, luck: number, random: Random): string?
-	local singleChance = if #ranges > 0 then ranges[#ranges].upperBound else 0
-	if singleChance <= 0 then
-		return nil
-	end
-	local rates = {}
-	for _, range in ipairs(ranges) do
-		rates[range.mutationId] = range.priceRate
-	end
-	local count = FishingRoll.GetLuckRollCount(luck)
-	local best, bestRate = nil, 0
-	for _ = 1, count do
-		local mutationId = FishingRoll.RollMutation(ranges, random)
-		local rate = mutationId and rates[mutationId] or 0
-		if mutationId and (not best or rate > bestRate) then
-			best, bestRate = mutationId, rate
-		end
-	end
-	local chance = 1 - (1 - singleChance) ^ count
-	-- Thin every selected mutation equally to preserve their relative probabilities.
-	if best and chance > Config.MutationMaxChance and random:NextNumber() >= Config.MutationMaxChance / chance then
-		return nil
-	end
-	return best
+function FishingRoll.RollMutationLucky(ranges, _luck: number, random: Random): string?
+	return FishingRoll.RollMutation(ranges, random)
 end
 
 return FishingRoll

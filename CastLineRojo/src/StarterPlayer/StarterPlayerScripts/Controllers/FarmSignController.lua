@@ -15,7 +15,6 @@ local FarmSignController = Knit.CreateController({
 local EMPTY_OWNER_USER_ID = 0
 local FARM_SIGN_NAME = "FarmSign"
 local FARM_SIGN_ATTACHMENT_NAME = "FarmSignAttachment"
-local OTHER_PLAYERS_SIGN_NAME = "OtherPlayersSign"
 
 local TEXT_GRADIENT = ColorSequence.new({
 	ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 253, 255)),
@@ -205,73 +204,12 @@ local function updateFarmSign(farm: Instance, ownerUserId: number, ownerName: st
 	end
 end
 
-local function updateOtherPlayersSign(farm: Instance, ownerUserId: number, ownerName: string, isOwnFarm: boolean)
-	local sign = farm:FindFirstChild("Sign")
-	local otherPlayersSign = sign and sign:FindFirstChild(OTHER_PLAYERS_SIGN_NAME)
-	if not otherPlayersSign or not otherPlayersSign:IsA("SurfaceGui") then
-		return
-	end
-
-	local hasOwner = ownerUserId ~= EMPTY_OWNER_USER_ID
-	otherPlayersSign.Enabled = hasOwner
-	if not hasOwner then
-		return
-	end
-
-	local holder = otherPlayersSign:FindFirstChild("Holder")
-	local playerHolder = holder and holder:FindFirstChild("PlayerHolder")
-	local imageHolder = playerHolder and playerHolder:FindFirstChild("PlayerImageHolder")
-	local ownerImage = findImageButton(imageHolder, "OwnerImage")
-	local playerName = playerHolder and playerHolder:FindFirstChild("PlayerName")
-	local emptyText = findTextLabel(playerName, "EmptyText")
-	local nameText = findTextLabel(playerName, "NameText")
-
-	if ownerImage then
-		ownerImage.Visible = true
-		ownerImage.Image = getAvatarImage(ownerUserId)
-		ownerImage.ImageColor3 = WHITE
-		if isOwnFarm then
-			useOriginalBackground(ownerImage)
-		else
-			useWhiteBackground(ownerImage)
-		end
-		setGradientEnabled(ownerImage, false)
-	end
-
-	if imageHolder and imageHolder:IsA("GuiObject") then
-		imageHolder.Visible = true
-		if isOwnFarm then
-			useOriginalBackground(imageHolder)
-		else
-			captureOriginalStyle(imageHolder)
-			imageHolder.BackgroundTransparency = 1
-		end
-		setGradientEnabled(imageHolder, false)
-	end
-
-	if emptyText then
-		emptyText.Visible = false
-	end
-
-	if nameText then
-		nameText.Visible = true
-		nameText.Text = if isOwnFarm then "Your Base" else ("%s's Base"):format(ownerName)
-		if isOwnFarm then
-			useOriginalBackground(nameText)
-		else
-			captureOriginalStyle(nameText)
-			nameText.BackgroundTransparency = 1
-		end
-	end
-end
-
 local function updateFarm(farm: Instance)
 	local ownerUserId = getOwnerUserId(farm)
 	local ownerName = getOwnerName(farm)
 	local isOwnFarm = ownerUserId == localPlayer.UserId
 
 	updateFarmSign(farm, ownerUserId, ownerName, isOwnFarm)
-	updateOtherPlayersSign(farm, ownerUserId, ownerName, isOwnFarm)
 end
 
 function FarmSignController:BeginEarlyUi()

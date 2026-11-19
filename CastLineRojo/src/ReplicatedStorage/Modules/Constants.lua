@@ -1,6 +1,6 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
-local RarityConfig = require(script.Parent.RarityConfig)
+local RarityPresentation = require(script.Parent.RarityPresentation)
 local Constants = {}
 
 -- 发布设置
@@ -211,20 +211,12 @@ Constants.COLOR = {
     COMMON_OUTLINE = Color3.fromRGB(0, 59, 86),
 }
 
--- Regular rarity colors share the code-defined gradient midpoint; special categories keep their palette.
-Constants.RARITY_COLOR = {
-    Limited = Color3.fromRGB(204, 0, 2),
-
-    Crimson = Color3.fromRGB(210, 0, 120),
-    Abyssal = Color3.fromRGB(0, 220, 200),
-    Transcendent= Color3.fromRGB(150, 80, 255), 
-
-    Exclusive = Color3.fromRGB(1, 193, 255),
-}
-for _, entry in ipairs(RarityConfig.List) do
-    Constants.RARITY_COLOR[entry.Name] = entry.Color
-end
-Constants.RARITY_COLOR.Mythical = Constants.RARITY_COLOR.Mythic
+-- Legacy indexed access stays live without storing another palette or stale colors.
+Constants.RARITY_COLOR = setmetatable({}, {
+    __index = function(_, rarity: string)
+        return RarityPresentation.GetColor(rarity)
+    end,
+})
 
 Constants.SUPER_REBIRTH_UPGRADE_ID = {
     DIAMONDS = "Diamonds",
@@ -245,7 +237,6 @@ Constants.GAMEPASS = {
     AUTO_OPEN_CRATE = "AutoOpenCrate",
     DOUBLE_SPEED = "DoubleSpeed",
     FAST_MOVE = "FastMove",
-    DOUBLE_CARRY = "DoubleCarry",
     SUPER_LUCK = "SuperLuck",
     DOUBLE_WINS_SPEED = "DoubleWinsSpeed",
     DOUBLE_EXP = "DoubleExp",

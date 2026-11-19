@@ -4,6 +4,7 @@
 -- require rerouted to ReplicatedStorage.Packages.TopbarPlus). See LICENSE.md.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local player = game:GetService("Players").LocalPlayer
 
 local BackpackScript = require(script.Parent)
 local Icon = require(ReplicatedStorage.Packages.TopbarPlus)
@@ -44,6 +45,11 @@ BackpackScript.StateChanged.Event:Connect(syncIconState)
 
 icon.toggled:Connect(function(isSelected, fromSource)
 	if fromSource == "User" then
+		if player:GetAttribute("IsTraining") == true then
+			BackpackScript.Close()
+			syncIconState()
+			return
+		end
 		-- A queued deselect must not toggle a window that is already closed.
 		if isSelected then
 			BackpackScript.Open()
@@ -55,4 +61,14 @@ icon.toggled:Connect(function(isSelected, fromSource)
 	end
 end)
 
+local function syncTrainingVisibility()
+	local training = player:GetAttribute("IsTraining") == true
+	if training then
+		BackpackScript.Close()
+	end
+	icon:setEnabled(not training)
+	syncIconState()
+end
+player:GetAttributeChangedSignal("IsTraining"):Connect(syncTrainingVisibility)
+syncTrainingVisibility()
 syncIconState()

@@ -15,7 +15,7 @@ local NotificationClient = require(ReplicatedStorage.Modules.NotificationClient)
 local HoverGuiClient = require(ReplicatedStorage.Modules.HoverGuiClient)
 local ButtonAnimation = require(ReplicatedStorage.Modules.ButtonAnimation)
 local GuiUtil = require(ReplicatedStorage.Modules.GuiUtil)
-local RarityConfig = require(ReplicatedStorage.Modules.RarityConfig)
+local RarityPresentation = require(ReplicatedStorage.Modules.RarityPresentation)
 
 local player = Players.LocalPlayer
 local Controller = Knit.CreateController({ Name = "PetGuiController" })
@@ -310,9 +310,9 @@ function Controller:_renderDetail()
 	visible(detail, "Equip", not pet.Equipped)
 	visible(detail, "Unequip", pet.Equipped)
 	image(detail, config, pet)
-	local rarity = RarityConfig.Get(config.Rarity)
-	detail.RarityLabel.BackgroundColor3 = rarity.Color
-	detail.PetViewFrame.BackgroundColor3 = rarity.Color
+	local color = RarityPresentation.GetColor(config.Rarity)
+	detail.RarityLabel.BackgroundColor3 = color
+	detail.PetViewFrame.BackgroundColor3 = color
 	detail.EquipButton.Interactable = self._pending == nil
 	sizeIcon(detail, pet)
 	local size = PetInventory.GetSize(pet)
@@ -347,7 +347,7 @@ function Controller:_renderHover(frame, uuid)
 	local config = PetsData[pet.PetID]
 	text(frame, "NameLabel", SIZE_NAMES[PetInventory.GetSize(pet)] .. " " .. config.Name)
 	text(frame, "RarityLabel", config.Rarity)
-	frame.Container.RarityLabel.TextColor3 = RarityConfig.Get(config.Rarity).Color
+	frame.Container.RarityLabel.TextColor3 = RarityPresentation.GetColor(config.Rarity)
 	GuiUtil.SetRarityGradient(frame, config.Rarity)
 	text(frame, "BoostLabel", boost(pet))
 	visible(frame, "RevolutionLabel", false)

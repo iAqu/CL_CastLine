@@ -9,6 +9,7 @@ local GuiAnimation = require(ReplicatedStorage.Modules.GuiAnimation)
 local GuiUtil = require(ReplicatedStorage.Modules.GuiUtil)
 local NumberUtil = require(ReplicatedStorage.Modules.NumberUtil)
 local RarityConfig = require(ReplicatedStorage.Modules.RarityConfig)
+local RarityPresentation = require(ReplicatedStorage.Modules.RarityPresentation)
 local NotificationClient = require(ReplicatedStorage.Modules.NotificationClient)
 
 local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
@@ -153,7 +154,7 @@ local function updateDetail()
 	end
 	detailFrame.NameLabel.Text = if discoveryLog[itemId] then item.DisplayName else "???"
 	detailFrame.RarityLabel.Text = RarityConfig.Normalize(item.Rarity)
-	detailFrame.RarityLabel.TextColor3 = RarityConfig.Get(item.Rarity).Color
+	detailFrame.RarityLabel.TextColor3 = RarityPresentation.GetColor(item.Rarity)
 	local reward = math.round((tonumber(item.DefaultPrice) or 0) * 0.5)
 	detailFrame.PriceLabel.Text = "$" .. NumberUtil.FormatItemPriceCompact(reward)
 	setIcon(detailIcon, itemId)

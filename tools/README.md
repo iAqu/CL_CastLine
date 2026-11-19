@@ -36,7 +36,7 @@ python3 tools/studio_lock.py wait --token <token> --timeout 45
 python3 tools/studio_lock.py heartbeat --token <token>
 ```
 
-`wait` 单次最多 50 秒，超时退出码为 2，保留队列位置；后续继续 wait。持有或排队期间每 60 秒以内至少执行一次 heartbeat 或 wait。较长的 MCP 操作必须保持可续心跳；如果操作本身阻塞，过期记录仍保留，不会被自动抢占。`status` 是只读快照，不续心跳。
+`wait` 单次最多 50 秒，超时退出码为 2，保留队列位置。每次 `acquire` 或 `wait` 返回 `queued` 时检查 `stale_blocker`，发现过期队首就执行下文的恢复流程，否则继续 `wait`。持有或排队期间每 60 秒以内至少执行一次 heartbeat 或 wait。较长的 MCP 操作必须保持可续心跳。`status` 是只读快照，不续心跳。
 
 每次实际操作前确认自己的票据仍为 `held`，并通过连接列表获取最新 Studio ID；不得通过更换数据库或工程标识绕过占用。不要停止其他会话或用户启动的测试；归属不明时先等待或澄清。
 
@@ -69,13 +69,19 @@ python3 tools/studio_lock.py cancel --token <token>
 
 ## 异常恢复
 
-超过 180 秒没有心跳会显示 `stale=true`，**不会自动失效、跳过队首或夺锁**。排队者可用自己的 token 取消排队；其他会话只有在重新检查原会话确已空闲或结束、目标 Studio 为 Edit 后才能清除过期票据：
+心跳间隔达到 180 秒时，票据标记为 `stale=true`。当同一工程的过期队首挡住排队者时，`acquire` 和 `wait` 会在排队结果中返回 `stale_blocker`。在等待中的 Codex 会话负责执行下面的检查和恢复，CLI 负责记录占用和复核票据。
 
-```sh
-python3 tools/studio_lock.py recover --resource place:84106335829275 --ticket <票据号> --thread <原会话ID> --confirmed-thread-inactive --confirmed-studio-edit
-```
+1. 用 Codex `read_thread` 查询 `stale_blocker.thread` 的当前状态和最近一轮。确认原会话已停止执行，例如会话处于空闲或系统错误状态，且最近一轮已结束或失败。会话仍在执行、等待输入、找不到或状态未知时，保留票据并继续等待。心跳过期本身不足以证明会话已停止。
+2. 重新调用 Roblox Studio MCP 的 `list_roblox_studios`，用 `stale_blocker.resource` 匹配 Place ID 或已确认的本地文件完整路径。确认目标窗口都处于 Edit。窗口缺失、身份不明、模式未知或处于 Play／Run 时保留票据，不调用 Stop。
+3. 两项都确认后直接调用 `recover`，无需等待用户确认。用同一条 `stale_blocker` 的 `resource`、`ticket` 和 `thread` 填写参数：
 
-恢复会在同一事务中核对工程、票据、会话和最新心跳，拒绝删除已续期的记录。原会话仍 active、状态未知、Studio 仍在运行或连接丢失时，都不得恢复；继续等待或向用户说明。排队者异常退出也按同样规则处理，保守保留队首。
+   ```sh
+   python3 tools/studio_lock.py recover --resource <工程标识> --ticket <票据号> --thread <原会话ID> --confirmed-thread-inactive --confirmed-studio-edit
+   ```
+
+4. 用自己的原 token 继续 `wait`。如果原会话已续期，或另一排队会话已清除该票据，`recover` 会在事务内拒绝操作，此时也继续 `wait` 并根据新结果处理。只有返回 `held` 才能使用 Studio。仍有过期队首时，逐张重新确认。
+
+过期持锁票据和过期排队队首适用同一流程。没有排队会话时，过期记录会保留，直到有会话等待并完成检查。
 
 ## 验证
 
@@ -83,4 +89,4 @@ python3 tools/studio_lock.py recover --resource place:84106335829275 --ticket <�
 python3 -m unittest discover -s tools/tests -v
 ```
 
-测试仅使用临时数据库，覆盖独占、FIFO、多进程竞争、测试清理限制与过期恢复，不连接真实 Studio。
+测试仅使用临时数据库，覆盖独占、FIFO、多进程竞争、测试清理限制、过期队首提示与确认后的恢复，不连接真实 Studio。

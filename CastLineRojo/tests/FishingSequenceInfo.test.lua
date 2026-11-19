@@ -8,8 +8,10 @@ end
 local prefix = "src/ReplicatedStorage/Modules/"
 local harness = require("./helpers/RarityHarness")({
 	RarityConfig = read(prefix .. "RarityConfig.lua"),
+	RarityPresentation = read(prefix .. "RarityPresentation.lua"),
 	ItemStatUtil = read(prefix .. "ItemStatUtil.lua"),
 })
+harness.addRarityTemplates()
 local stats = harness.load("ItemStatUtil")
 local titles = { "Big", "Large", "Huge", "Colossal", "Gigantic", "Titanic", "Monstrous", "Cosmic", "Infinite" }
 local item = { DefaultWeight = 10, DisplayName = "TestFish", Rarity = "Rare", CpsPrice = 100 }
@@ -47,7 +49,7 @@ local modules = {
 	MutationDataUtil = mutationUtil,
 	NumberUtil = { FormatItemPriceCompact = tostring },
 	PlotFishIncome = income,
-	RarityConfig = harness.load("RarityConfig"),
+	RarityPresentation = harness.load("RarityPresentation"),
 }
 local dimensions = {}
 dimensions.__index = dimensions
@@ -56,6 +58,9 @@ local function size(x, y)
 end
 function dimensions:Lerp(other, alpha)
 	return size(self.X + (other.X - self.X) * alpha, self.Y + (other.Y - self.Y) * alpha)
+end
+function dimensions.__add(left, right)
+	return size(left.X + right.X, left.Y + right.Y)
 end
 local Info = assert(load(read(prefix .. "FishingSequenceInfo.lua"), "FishingSequenceInfo", "t", setmetatable({
 	game = { GetService = function(_, name)
@@ -115,9 +120,10 @@ local function assertMutation(info, expected)
 	assert(not legacy.Visible and legacy.Text == "original text" and legacy.TextColor3 == "original color",
 		"Keep the unused legacy label hidden and unchanged")
 end
-local function fixture(reuseScale, rarityVisible)
+local function fixture(reuseScale, rarityVisible, tutorial)
 	local name = row("Name")
 	name.children.New = node("New", "Frame")
+	name.children.New.Position = size(0.9, 0.02)
 	local mutation = row("Mutation")
 	mutation.children.Label.Visible = false
 	for _, id in mutationIds do
@@ -139,6 +145,7 @@ local function fixture(reuseScale, rarityVisible)
 		}),
 	})
 	local owner = { originals = {}, createdScales = {}, sounds = {}, attempts = {}, enabled = true, phase = "Preparing" }
+	owner.options = { tutorial = tutorial }
 	owner.celebrations = {}
 	function owner:_celebrateCatch(bite)
 		assert(not gui.children.LuckMeter.Visible and gui.children.RevealInfo.Visible,
@@ -175,6 +182,29 @@ local function fixture(reuseScale, rarityVisible)
 		end
 	end
 	return Info.new(gui, owner, 3.25, 10), owner
+end
+
+do
+	local info, owner = fixture(false, false, true)
+	assert(not info.luck.Visible and not info.reveal.Visible, "Keep luck hidden on the first tutorial frame")
+	info:Update(10)
+	owner.phase = "Waiting"
+	info:SetLuck(5.5, 11, true)
+	local bite = { fishConfig = item, catchWeight = 10, timeline = { phase = "Nibbling", startedAt = 11 } }
+	for index, phase in { "Nibbling", "Escaped", "Bite", "Lifting", "Caught" } do
+		bite.timeline.phase = phase
+		bite.timeline.startedAt = 11 + index
+		info:Update(11 + index, bite)
+		assert(not info.luck.Visible, "Tutorial luck must stay hidden during " .. phase)
+	end
+	assert(info.reveal.Visible, "The tutorial must still show the catch")
+	assert(#owner.attempts == 0, "Hidden tutorial luck must not trigger sounds")
+	info:Destroy()
+	for _, original in owner.originals do
+		original.instance[original.property] = original.value
+	end
+	assert(info.luck.Visible, "Restore the authored luck visibility when leaving the tutorial")
+	assert(info.newBadge.Position.X == 0.9, "Restore the placement of the catch badge")
 end
 
 for _, reuseScale in { false, true } do
@@ -232,7 +262,7 @@ for _, reuseScale in { false, true } do
 	assert(not info.rarityRow.Visible, "Keep rarity hidden when revealing a fish")
 	assert(info.rarityRow.children.Label.Text == "original text"
 		and info.rarityRow.children.Label.TextColor3 == "original color", "Leave the unused rarity label untouched")
-	assert(info.name.TextColor3 == modules.RarityConfig.Get("Rare").Color, "Use rarity color for the whole fish name")
+	assert(info.name.TextColor3 == modules.RarityPresentation.GetColor("Rare"), "Use rarity color for the whole fish name")
 	assertMutation(info, "Golden")
 	assert(info.income.Text == "$311/s", "Use both actual weight and mutation for passive income")
 	bite.timeline.phase = "Caught"
@@ -313,6 +343,9 @@ do
 	info:Update(30, { fishConfig = { DisplayName = "Event", Rarity = "Event", CpsPrice = 1.2, DefaultWeight = 10 },
 		catchWeight = 10, timeline = { phase = "Caught", startedAt = 30 } })
 	assert(info.income.Text == "$120/s", "Event reveal uses the player's baseline, not the starter fallback")
+	Info.FillReveal(info.reveal, { DisplayName = "Exclusive", Rarity = "Exclusive", CpsPrice = 0.8, DefaultWeight = 10 },
+		10, "Golden", false)
+	assert(info.income.Text == "$120/s", "Paid egg reveal uses the player's baseline and the mutation multiplier")
 	info:Destroy()
 end
 

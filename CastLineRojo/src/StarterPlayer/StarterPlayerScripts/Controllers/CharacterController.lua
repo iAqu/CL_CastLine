@@ -11,7 +11,6 @@ local LogHelper = require(ReplicatedStorage.Modules.LogHelper)
 local Constants = require(ReplicatedStorage.Modules.Constants)
 local CharacterUtil = require(ReplicatedStorage.Modules.CharacterUtil)
 local EffectUtil = require(ReplicatedStorage.Modules.EffectUtil)
-local MovementSpeedUtil = require(ReplicatedStorage.Modules.MovementSpeedUtil)
 
 local localPlayer = PlayerService.LocalPlayer
 -- local localCharacter = localPlayer.Character or localPlayer.CharacterAdded:Wait()
@@ -309,20 +308,6 @@ function CharacterController:GetTagText(userId: number): string
     return tagText
 end
 
-local function updateMovementSpeed()
-    local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
-    local humanoid = character:WaitForChild("Humanoid")
-
-    local zoneWalkSpeedPercent = localPlayer:GetAttribute(MovementSpeedUtil.ZONE_WALK_SPEED_PERCENT_ATTRIBUTE)
-    local walkSpeed = MovementSpeedUtil.CalculateWalkSpeed(zoneWalkSpeedPercent)
-
-    humanoid.WalkSpeed = walkSpeed
-end
-
-function CharacterController:UpdateMoveSpeed()
-    updateMovementSpeed()
-end
-
 local function updateJumpPower()
     local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
     local humanoid = character:WaitForChild("Humanoid")
@@ -349,10 +334,6 @@ function CharacterController:KnitStart()
 	end
 
     PlayerDataController:GetData()      -- just to make sure it's loaded
-
-    localPlayer:GetAttributeChangedSignal(MovementSpeedUtil.ZONE_WALK_SPEED_PERCENT_ATTRIBUTE):Connect(function()
-        task.defer(updateMovementSpeed)
-    end)
 
     -- Initialize all players that are already in the game
     for _, player in pairs(game.Players:GetPlayers()) do
@@ -432,7 +413,6 @@ function CharacterController:KnitStart()
 
     updatePlayerDisplaySize(localPlayer)
 
-    task.delay(2, updateMovementSpeed)
     
 end
 

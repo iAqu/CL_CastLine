@@ -1,4 +1,8 @@
-local PlotPlacementUtil = { CAPACITY = 10 }
+local PlotPlacementUtil = {}
+
+function PlotPlacementUtil.GetCapacity(data): number
+	return require(script.Parent.PlotUpgradeData).GetCapacity(data)
+end
 
 local function toSlot(slot)
 	local numericSlot = tonumber(slot)

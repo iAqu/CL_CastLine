@@ -10,8 +10,6 @@ local config = read("src/ReplicatedStorage/Modules/EventConfig.lua")
 local stateUtil = read("src/ReplicatedStorage/Modules/EventStateUtil.lua")
 local service = read("src/ServerScriptService/Services/EventService.lua")
 local controller = read("src/StarterPlayer/StarterPlayerScripts/Controllers/EventController.lua")
-local movementUtil = read("src/ReplicatedStorage/Modules/MovementSpeedUtil.lua")
-local movementService = read("src/ServerScriptService/Services/MovementSpeedService.lua")
 local debugServer = read("src/ServerScriptService/EventDebug.server.lua")
 local debugPanel = read("src/StarterPlayer/StarterPlayerScripts/TestDebugPanel.client.lua")
 
@@ -42,22 +40,21 @@ assert(debugServer:find("if not RunService:IsStudio() then", 1, true), "Event de
 assert(debugServer:find('typeof(eventId) ~= "string"', 1, true), "Event debug requests must validate the event id type")
 assert(debugServer:find("EventService:StartDebugEvent(eventId)", 1, true), "Event debug requests must delegate to EventService")
 
-for index = 1, 4 do
+for index = 1, 3 do
 	local eventId = string.format("Event_%02d", index)
 	local buttonName = "Start" .. eventId .. "Button"
 	assert(debugPanel:find(buttonName, 1, true), "TestGui must bind " .. buttonName)
 	assert(debugPanel:find('eventId = "' .. eventId .. '"', 1, true), "TestGui must map " .. buttonName .. " to " .. eventId)
 end
 assert(debugPanel:find("eventDebugRemote:FireServer(eventButton.eventId)", 1, true), "Event buttons must request their mapped event id")
+assert(not eventsData:find("Event_04", 1, true), "Wind Weather must be removed from event data")
+assert(not debugPanel:find("Event_04", 1, true), "Wind Weather must not have a debug binding")
 assert(not eventsData:find("Event_05", 1, true), "The low-tide event must be removed from the event data")
 assert(not debugPanel:find("Event_05", 1, true), "The low-tide event must not have a debug binding")
 
 assert(stateUtil:find('normalized == "mutation"', 1, true), "Mutation event types must be normalized")
-assert(stateUtil:find('normalized == "movespeed"', 1, true), "MoveSpeed event types must be normalized")
+assert(not stateUtil:find('normalized == "movespeed"', 1, true), "MoveSpeed event types must be retired")
 assert(stateUtil:find('normalized == "moreitem"', 1, true), "MoreItem event types must be normalized")
-assert(stateUtil:find("return 1 + effectValue", 1, true), "MoveSpeed EffectValue must be additive over the base multiplier")
-assert(movementUtil:find("eventMultiplier", 1, true), "Movement speed calculation must include the active event")
-assert(movementService:find("StateChangedServerEvent:Connect", 1, true), "Server character speed must refresh at activity transitions")
 
 
 assert(controller:find('eventNameLabel.Text = "Next Event In"', 1, true), "Inactive UI must show Next Event In")

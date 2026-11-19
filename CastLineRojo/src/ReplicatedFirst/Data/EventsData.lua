@@ -44,17 +44,6 @@ local data: {[string]: EventConfig} = {
 		MutationId = "Rainbow",
 		Info = "nil",
 	},
-	Event_04 = {
-		EventID = "Event_04",
-		Index = 4,
-		DisplayName = "Wind Weather",
-		Description = "Walk  Speed +100%",
-		EventType = "MoveSpeed",
-		Duration = 300,
-		EffectValue = 1,
-		MutationId = "nil",
-		Info = "nil",
-	},
 }
 
 return data

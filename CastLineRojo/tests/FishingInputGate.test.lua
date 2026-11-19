@@ -49,3 +49,10 @@ focusedTextBox = {}
 assert(gate.IsUiBlockingWorld() and not gate.IsWorldActionAllowed())
 focusedTextBox = nil
 assert(gate.IsWorldActionAllowed() and gate.IsPlacementActionAllowed())
+
+local training = {}
+gate.SetActive("Training", training, true)
+assert(not gate.IsPlacementActionAllowed(), "Training must block fish placement while holding a barbell")
+assert(gate.IsWorldActionAllowed(), "Training must not block movement or its own upgrade prompt")
+gate.SetActive("Training", training, false)
+assert(gate.IsPlacementActionAllowed())

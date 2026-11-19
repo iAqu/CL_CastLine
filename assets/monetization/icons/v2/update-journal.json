@@ -1,0 +1,82 @@
+[
+  {
+    "purchaseId": "DoubleWins",
+    "kind": "gamepass",
+    "id": 2093792687,
+    "gift": false,
+    "response": "PATCH https://apis.roblox.com/game-passes/v1/universes/10777315397/game-passes/2093792687 -> 204 No Content",
+    "success": true
+  },
+  {
+    "purchaseId": "DoubleWins",
+    "kind": "product",
+    "id": 3732742706,
+    "gift": true,
+    "response": "PATCH https://apis.roblox.com/developer-products/v2/universes/10777315397/developer-products/3732742706 -> 204 No Content",
+    "success": true
+  },
+  {
+    "purchaseId": "DoubleTrain",
+    "kind": "gamepass",
+    "id": 2092694679,
+    "gift": false,
+    "response": "PATCH https://apis.roblox.com/game-passes/v1/universes/10777315397/game-passes/2092694679 -> 204 No Content",
+    "success": true
+  },
+  {
+    "purchaseId": "DoubleTrain",
+    "kind": "product",
+    "id": 3732742733,
+    "gift": true,
+    "response": "PATCH https://apis.roblox.com/developer-products/v2/universes/10777315397/developer-products/3732742733 -> 204 No Content",
+    "success": true
+  },
+  {
+    "purchaseId": "MegaLuck",
+    "kind": "gamepass",
+    "id": 2092652693,
+    "gift": false,
+    "response": "PATCH https://apis.roblox.com/game-passes/v1/universes/10777315397/game-passes/2092652693 -> 204 No Content",
+    "success": true
+  },
+  {
+    "purchaseId": "MegaLuck",
+    "kind": "product",
+    "id": 3732742767,
+    "gift": true,
+    "response": "PATCH https://apis.roblox.com/developer-products/v2/universes/10777315397/developer-products/3732742767 -> 204 No Content",
+    "success": true
+  },
+  {
+    "purchaseId": "WinsTier1",
+    "kind": "product",
+    "id": 3732742786,
+    "gift": false,
+    "response": "PATCH https://apis.roblox.com/developer-products/v2/universes/10777315397/developer-products/3732742786 -> 204 No Content",
+    "success": true
+  },
+  {
+    "purchaseId": "WinsTier2",
+    "kind": "product",
+    "id": 3732742806,
+    "gift": false,
+    "response": "PATCH https://apis.roblox.com/developer-products/v2/universes/10777315397/developer-products/3732742806 -> 204 No Content",
+    "success": true
+  },
+  {
+    "purchaseId": "WinsTier3",
+    "kind": "product",
+    "id": 3732742828,
+    "gift": false,
+    "response": "PATCH https://apis.roblox.com/developer-products/v2/universes/10777315397/developer-products/3732742828 -> 204 No Content",
+    "success": true
+  },
+  {
+    "purchaseId": "PremiumBait",
+    "kind": "product",
+    "id": 3732742846,
+    "gift": false,
+    "response": "PATCH https://apis.roblox.com/developer-products/v2/universes/10777315397/developer-products/3732742846 -> 204 No Content",
+    "success": true
+  }
+]

@@ -13,6 +13,7 @@ local MutationVisualUtil = require(ReplicatedStorage.Modules.MutationVisualUtil)
 local Knit = require(ReplicatedStorage.Packages.Knit)
 local PromptUtil = require(ReplicatedStorage.Modules.PromptUtil)
 local PlayerDataService = require(ServerScriptService.Services.PlayerDataService)
+local PaidItemPolicy = require(script.Parent.PaidItemPolicy)
 
 local DROP_FOLDER_NAME = "DrownedItemDrops"
 local FLOAT_CLEARANCE = 0.15
@@ -32,7 +33,7 @@ local DROP_POSITION_UPDATE_INTERVAL = 0.1
 type ItemRecord = {
 	ItemId: string,
 	Weight: number,
-	ConditionId: string,
+	PaidOrigin: string?,
 	Price: number,
 	MutationId: string?,
 }
@@ -45,6 +46,7 @@ type DropCandidate = {
 }
 
 type DropState = {
+	ownerUserId: number?,
 	model: Model,
 	prompt: ProximityPrompt,
 	instanceId: string,
@@ -115,12 +117,10 @@ local function normalizeRecord(record: unknown): ItemRecord?
 	end
 	local itemId = record.ItemId
 	local weight = tonumber(record.Weight)
-	local conditionId = record.ConditionId
 	local price = tonumber(record.Price)
 	if typeof(itemId) ~= "string"
 		or not weight
 		or weight <= 0
-		or typeof(conditionId) ~= "string"
 		or not price
 	then
 		return nil
@@ -128,7 +128,7 @@ local function normalizeRecord(record: unknown): ItemRecord?
 	return {
 		ItemId = itemId,
 		Weight = weight,
-		ConditionId = conditionId,
+		PaidOrigin = record.PaidOrigin,
 		Price = price,
 		MutationId = MutationDataUtil.NormalizeMutationId(record.MutationId),
 	}
@@ -378,6 +378,11 @@ function DrownDropService:_claimDrop(player: Player, state: DropState)
 	if self._Drops[state.model] ~= state or state.claimed then
 		return
 	end
+	if state.record.PaidOrigin and player.UserId ~= state.ownerUserId then
+		local owner = state.ownerUserId and Players:GetPlayerByUserId(state.ownerUserId)
+		if not PaidItemPolicy.CanTransfer(owner, player) then return end
+		if self._Drops[state.model] ~= state or state.claimed then return end
+	end
 	state.claimed = true
 	state.prompt.Enabled = false
 
@@ -414,7 +419,8 @@ end
 function DrownDropService:_createDrop(
 	candidate: DropCandidate,
 	dropOrigin: Vector3,
-	placements: { ScatterPlacement }
+	placements: { ScatterPlacement },
+	owner: Player?
 ): DropState?
 	local template = FishingAssets.GetFish(candidate.item.Model)
 	if not template then
@@ -444,7 +450,7 @@ function DrownDropService:_createDrop(
 	model:SetAttribute("ItemInstanceId", candidate.instanceId)
 	model:SetAttribute("ItemId", candidate.record.ItemId)
 	model:SetAttribute("Weight", candidate.record.Weight)
-	model:SetAttribute("ConditionId", candidate.record.ConditionId)
+	model:SetAttribute("PaidOrigin", candidate.record.PaidOrigin)
 	model:SetAttribute("Price", candidate.record.Price)
 	model:SetAttribute("MutationId", candidate.record.MutationId)
 	MutationVisualUtil.Apply(model, candidate.record.MutationId, template.Name)
@@ -503,6 +509,7 @@ function DrownDropService:_createDrop(
 	end
 	model.Parent = dropFolder
 	local state: DropState = {
+		ownerUserId = owner and owner.UserId,
 		model = model,
 		prompt = prompt,
 		instanceId = candidate.instanceId,
@@ -562,7 +569,7 @@ function DrownDropService:DropCarriedItems(player: Player, deathPosition: Vector
 	local droppedIds = {}
 	local placements: { ScatterPlacement } = {}
 	for _, candidate in ipairs(candidates) do
-		local state = self:_createDrop(candidate, deathPosition, placements)
+		local state = self:_createDrop(candidate, deathPosition, placements, player)
 		if state then
 			profile.Data.Items[candidate.instanceId] = nil
 			for _, tool in ipairs(candidate.tools) do

@@ -18,7 +18,7 @@ local function getPositiveMultiplier(value: unknown): number
 	return multiplier
 end
 
-function PlayerLuckUtil.GetPlacedItemLuck(playerData, itemsData, conditionsData): number
+function PlayerLuckUtil.GetPlacedItemLuck(playerData, itemsData): number
 	if typeof(playerData) ~= "table"
 		or typeof(playerData.PlotPlacements) ~= "table"
 		or typeof(playerData.Items) ~= "table"
@@ -36,11 +36,9 @@ function PlayerLuckUtil.GetPlacedItemLuck(playerData, itemsData, conditionsData)
 		local record = playerData.Items[itemUid]
 		local itemId = typeof(record) == "table" and record.ItemId or nil
 		local weight = typeof(record) == "table" and tonumber(record.Weight) or nil
-		local conditionId = typeof(record) == "table" and record.ConditionId or nil
 		local item = typeof(itemId) == "string" and itemsData[itemId] or nil
-		local condition = typeof(conditionId) == "string" and conditionsData[conditionId] or nil
-		if item and weight and weight > 0 and condition then
-			totalLuck += ItemStatUtil.CalculateLuck(item, weight, condition.LuckMult)
+		if item and weight and weight > 0 then
+			totalLuck += ItemStatUtil.CalculateLuck(item, weight)
 		end
 	end
 	return totalLuck

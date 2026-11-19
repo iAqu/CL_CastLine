@@ -7,6 +7,32 @@ local function smooth(alpha)
 	return alpha * alpha * (3 - 2 * alpha)
 end
 
+-- 与弹性变形独立；按飞行进度采样，不随帧率累积。
+function BaitElasticMotion.SampleFlightGrowth(progress)
+	return 1 + (Config.BaitFlightScale - 1) * smooth(progress)
+end
+
+-- 落水时将均匀放大提交为逻辑尺寸，后续咬饵、收竿和取景共用。
+function BaitElasticMotion.CommitFlightGrowth(owner)
+	if owner.baitGrowthCommitted then
+		return
+	end
+	local factor = Config.BaitFlightScale
+	owner.baitBaseSize = BaitElasticMotion.BaseSize(owner) * factor
+	if owner.baitParts then
+		for _, original in pairs(owner.baitParts) do
+			original.size *= factor
+			original.offset = CFrame.new(original.offset.Position * factor) * original.offset.Rotation
+		end
+	end
+	if owner.baitTop then
+		owner.baitTopOffset *= factor
+	end
+	owner.baitGrowthCommitted = true
+	-- 新基础尺寸已包含倍率；只保留当前的弹性变形，保持落水帧连续。
+	BaitElasticMotion.Apply(owner, owner.bait.CFrame, owner.baitVisualScale / factor)
+end
+
 -- 独立的均匀出现缩放，与各阶段的保体积弹性缩放相乘。
 function BaitElasticMotion.SampleAppear(elapsed)
 	local settings = Config.BaitAppear

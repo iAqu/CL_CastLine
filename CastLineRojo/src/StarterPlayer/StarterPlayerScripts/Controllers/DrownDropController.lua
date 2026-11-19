@@ -1,12 +1,9 @@
 local Players = game:GetService("Players")
-local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 
-local ConditionsData = require(ReplicatedFirst.Data.ConditionsData)
 local FishInventoryData = require(ReplicatedStorage.Modules.FishInventoryData)
-local ConditionLabelUtil = require(ReplicatedStorage.Modules.ConditionLabelUtil)
 local GuiUtil = require(ReplicatedStorage.Modules.GuiUtil)
 local RarityConfig = require(ReplicatedStorage.Modules.RarityConfig)
 local ItemStatUtil = require(ReplicatedStorage.Modules.ItemStatUtil)
@@ -55,11 +52,9 @@ end
 local function createTitle(model: Model, promptPart: BasePart): (BillboardGui?, Attachment?)
 	local itemId = model:GetAttribute("ItemId")
 	local weight = model:GetAttribute("Weight")
-	local conditionId = model:GetAttribute("ConditionId")
 	local price = model:GetAttribute("Price")
 	if typeof(itemId) ~= "string"
 		or typeof(weight) ~= "number"
-		or typeof(conditionId) ~= "string"
 		or typeof(price) ~= "number"
 	then
 		return nil, nil
@@ -96,15 +91,13 @@ local function createTitle(model: Model, promptPart: BasePart): (BillboardGui?, 
 	if priceLabel then
 		priceLabel.Text = "$" .. NumberUtil.FormatItemPriceCompact(price)
 	end
-	local condition = ConditionsData[conditionId]
 	local frame = title:FindFirstChild("Frame")
 	if frame then
-		ConditionLabelUtil.Show(frame, conditionId)
 		MutationTitleUtil.Show(frame, model:GetAttribute("MutationId"))
 	end
 	local luckLabel = findLabel(title, "LuckLabel")
 	if luckLabel then
-		local luck = ItemStatUtil.CalculateLuck(item, weight, condition and condition.LuckMult or 1)
+		local luck = ItemStatUtil.CalculateLuck(item, weight)
 		luckLabel.Text = "Luck: " .. ItemStatUtil.FormatLuckPercent(luck)
 	end
 

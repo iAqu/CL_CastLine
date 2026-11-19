@@ -12,7 +12,7 @@ function EventStateUtil.NormalizeEventType(value: unknown): string?
 		return nil
 	end
 	local normalized = string.lower(value)
-	if normalized == "mutation" or normalized == "movespeed" or normalized == "moreitem" then
+	if normalized == "mutation" or normalized == "moreitem" then
 		return normalized
 	end
 	return nil
@@ -41,18 +41,6 @@ function EventStateUtil.GetActiveEvent(stateFolder: Folder?, timestamp: number?)
 		return nil
 	end
 	return EventsData[eventId]
-end
-
-function EventStateUtil.GetMoveSpeedMultiplier(stateFolder: Folder?, timestamp: number?): number
-	local event = EventStateUtil.GetActiveEvent(stateFolder, timestamp)
-	if not event or EventStateUtil.NormalizeEventType(event.EventType) ~= "movespeed" then
-		return 1
-	end
-	local effectValue = tonumber(event.EffectValue)
-	if not effectValue or effectValue ~= effectValue or effectValue < 0 or effectValue == math.huge then
-		return 1
-	end
-	return 1 + effectValue
 end
 
 return EventStateUtil

@@ -95,7 +95,8 @@ function PlotSlotService:_spawnPlayerAtPlot(player: Player, request)
 		end
 		local root = character:FindFirstChild("HumanoidRootPart")
 		if character:IsDescendantOf(workspace) and root and root:IsA("BasePart") then
-			character:PivotTo(spawnPoint.CFrame)
+			local resume = Knit.GetService("TrainingService"):ConsumeResumeSpawn(player, plot, character)
+			character:PivotTo(resume or spawnPoint.CFrame)
 			root.AssemblyLinearVelocity = Vector3.zero
 			root.AssemblyAngularVelocity = Vector3.zero
 			return
@@ -148,6 +149,7 @@ function PlotSlotService:AssignPlayerSlot(player: Player): number?
 				profile.Data.LastPlotSlotId = slotId
 			end
 
+			Knit.GetService("PlotUpgradeService"):ApplyForPlayer(player, self._PlotSlots[slotId])
 			self.SlotAssigned:Fire(player, slotId)
 			self.Client.PlotSlotAssigned:Fire(player, slotId)
 			self:_queuePlayerSpawn(player, player.Character)
@@ -184,6 +186,8 @@ function PlotSlotService:ReleasePlayerSlot(player: Player)
 	end
 	self:_setPlotOwner(slotId, nil)
 	player:SetAttribute("PlotSlotId", nil)
+	player:SetAttribute("PlotUpgradeLevel", nil)
+	player:SetAttribute("PlotCapacity", nil)
 
 	if plot then
 		self.SlotReleased:Fire(plot)

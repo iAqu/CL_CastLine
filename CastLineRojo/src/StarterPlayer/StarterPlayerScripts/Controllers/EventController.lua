@@ -4,6 +4,7 @@ local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 
 local EventConfig = require(ReplicatedStorage.Modules.EventConfig)
+local EventPresentationGate = require(ReplicatedStorage.Modules.EventPresentationGate)
 local EventStateUtil = require(ReplicatedStorage.Modules.EventStateUtil)
 local Knit = require(ReplicatedStorage.Packages.Knit)
 local MutationDataUtil = require(ReplicatedStorage.Modules.MutationDataUtil)
@@ -25,6 +26,7 @@ local originalWaterColors: { [Instance]: Color3 } = {}
 local updateElapsed = UI_UPDATE_INTERVAL
 local earlyStateStarted = false
 local eventFishActive = false
+local appliedWaterStyle: string? = nil
 
 local function formatCountdown(seconds: number): string
 	local wholeSeconds = math.max(0, math.ceil(seconds))
@@ -85,31 +87,25 @@ local function applyWaterColor(color: Color3)
 	end
 end
 
-local function setActiveMutation(mutationId: string?)
-	if activeMutationId == mutationId then
-		return
+local function updateWater(now: number)
+	local style = if EventPresentationGate.IsSuppressed(LOCAL_PLAYER) then nil
+		elseif eventFishActive then "Rainbow" else activeMutationId
+	if style == "Rainbow" then
+		applyWaterColor(Color3.fromHSV((now * RAINBOW_HUE_SPEED) % 1, 1, 1))
+	elseif style ~= appliedWaterStyle then
+		if style then
+			applyWaterColor(MutationDataUtil.GetLabelColor(style))
+		else
+			restoreWaterColors()
+		end
 	end
-	if not mutationId and not eventFishActive then
-		restoreWaterColors()
-	end
-	activeMutationId = mutationId
-	if mutationId and mutationId ~= "Rainbow" and not eventFishActive then
-		applyWaterColor(MutationDataUtil.GetLabelColor(mutationId))
-	end
+	appliedWaterStyle = style
 end
 
 function EventController:SetEventFishActive(active: boolean)
-	if eventFishActive == active then
-		return
-	end
-	eventFishActive = active
-	if active then
-		applyWaterColor(Color3.fromHSV((Workspace:GetServerTimeNow() * RAINBOW_HUE_SPEED) % 1, 1, 1))
-	else
-		restoreWaterColors()
-		if activeMutationId and activeMutationId ~= "Rainbow" then
-			applyWaterColor(MutationDataUtil.GetLabelColor(activeMutationId))
-		end
+	if eventFishActive ~= active then
+		eventFishActive = active
+		updateWater(Workspace:GetServerTimeNow())
 	end
 end
 
@@ -117,6 +113,15 @@ local function updatePresentation()
 	resolveUi()
 	local now = Workspace:GetServerTimeNow()
 	local event = EventStateUtil.GetActiveEvent(stateFolder, now)
+	local eventType = event and EventStateUtil.NormalizeEventType(event.EventType)
+	activeMutationId = if eventType == "mutation" then MutationDataUtil.NormalizeMutationId(event.MutationId) else nil
+	updateWater(now)
+	if EventPresentationGate.IsSuppressed(LOCAL_PLAYER) then
+		if eventFrame then
+			eventFrame.Visible = false
+		end
+		return
+	end
 	if event then
 		if eventFrame then
 			eventFrame.Visible = true
@@ -128,12 +133,9 @@ local function updatePresentation()
 		if eventTimeLabel then
 			eventTimeLabel.Text = formatCountdown(if typeof(endsAt) == "number" then endsAt - now else 0)
 		end
-		local eventType = EventStateUtil.NormalizeEventType(event.EventType)
-		setActiveMutation(if eventType == "mutation" then MutationDataUtil.NormalizeMutationId(event.MutationId) else nil)
 		return
 	end
 
-	setActiveMutation(nil)
 	if not EventConfig.AUTO_SCHEDULE_ENABLED then
 		if eventFrame then
 			eventFrame.Visible = false
@@ -163,6 +165,9 @@ function EventController:BeginEarlyState()
 		return
 	end
 	earlyStateStarted = true
+	for _, attribute in EventPresentationGate.Attributes do
+		LOCAL_PLAYER:GetAttributeChangedSignal(attribute):Connect(updatePresentation)
+	end
 	task.spawn(function()
 		resolveUi()
 		local folder = ReplicatedStorage:FindFirstChild(EventConfig.STATE_FOLDER_NAME)
@@ -175,13 +180,12 @@ function EventController:BeginEarlyState()
 	end)
 
 	RunService.RenderStepped:Connect(function(deltaTime)
-		if eventFishActive or activeMutationId == "Rainbow" then
-			applyWaterColor(Color3.fromHSV((Workspace:GetServerTimeNow() * RAINBOW_HUE_SPEED) % 1, 1, 1))
-		end
 		updateElapsed += deltaTime
 		if updateElapsed >= UI_UPDATE_INTERVAL then
 			updateElapsed = 0
 			updatePresentation()
+		elseif appliedWaterStyle == "Rainbow" then
+			updateWater(Workspace:GetServerTimeNow())
 		end
 	end)
 end

@@ -36,13 +36,15 @@ function FishTitleUtil.Create(titleGui: Instance?, item: FishTitleItem, mutation
 	local normalizedId = MutationDataUtil.NormalizeMutationId(mutationId)
 	local cpsLabel = findLabel(frame, "CpsLabel")
 	if cpsLabel then
+		local usesPercentageCps = PlotFishIncome.UsesPercentageCps(item.Rarity)
+		local ratioText = if usesPercentageCps then string.format(" (%g%%)", item.CpsPrice * 100) else ""
 		local function refreshIncome()
 			local base = owner and owner:GetAttribute(PlotFishIncome.BEST_CPS_ATTRIBUTE)
 			local cpsPrice = PlotFishIncome.GetCpsPrice(item, MutationDataUtil.GetEarnCashRate(normalizedId), base, actualWeight)
-			cpsLabel.Text = "$" .. NumberUtil.FormatItemPriceCompact(cpsPrice) .. "/s"
+			cpsLabel.Text = "$" .. NumberUtil.FormatItemPriceCompact(cpsPrice) .. "/s" .. ratioText
 		end
 		refreshIncome()
-		if item.Rarity == "Event" and owner then
+		if usesPercentageCps and owner then
 			local changed = owner:GetAttributeChangedSignal(PlotFishIncome.BEST_CPS_ATTRIBUTE):Connect(refreshIncome)
 			title.Destroying:Once(function()
 				changed:Disconnect()

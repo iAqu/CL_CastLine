@@ -1,6 +1,5 @@
 -- Studio Client：Rojo 同步后在新的 Play 会话运行；只创建并清理临时测试实例。
 local storage = game:GetService("ReplicatedStorage")
-assert(storage.Modules.ItemStatUtil.Source:find("MAX_FISH_LENGTH = 50", 1, true), "Reconnect Rojo before running size QA")
 local Stats = require(storage.Modules.ItemStatUtil)
 local Bite = require(storage.Modules.FishingBiteSequence)
 local Cast = require(storage.Modules.FishingCastSequence)
@@ -93,14 +92,16 @@ local ok, result = xpcall(function()
 				close(path.last:PointToWorldSpace(active.mouthOffset * baseline),
 					active:_restMouth(Vector3.zero, entry.gap, entry.yaw), "Scaled return route endpoint")
 			end
-			for _, multiple in { 1, 8 } do
+			local metrics = Stats.GetModelBounds(template)
+			local oversizedMultiple = (160 / (metrics.longest * base)) ^ 3
+			for _, multiple in { 1, 8, oversizedMultiple } do
 				local weight = item.DefaultWeight * multiple
-				local ratio, cap = Stats.GetScaleRatio(item, weight, template)
+				local ratio = Stats.GetScaleRatio(item, weight, template)
 				active:SetCaughtWeight(weight)
 				near(active:_scaleAt("Lifting", 0), baseline, "Lift must start continuously")
-				for index = 0, 50 do
-					assert(active:_scaleAt("Lifting", settings.LiftTime * index / 50) <= cap + 1e-5,
-						"Lift exceeded the shared size cap")
+				near(active:_scaleAt("Lifting", active:GetLiftTiming().duration), ratio, "Lift must settle at caught size")
+				if multiple == oversizedMultiple then
+					near(ratio * metrics.longest, 96.6355323334, "Compressed size at 160 raw studs")
 				end
 				show("Caught", 0.1)
 				near(active.fish:GetScale(), authoredScale * ratio, "Caught fish size")
@@ -113,8 +114,7 @@ local ok, result = xpcall(function()
 				tool:Destroy()
 				local geometry = assert(Plot.GetGeometry(item, weight, boundary))
 				near(geometry.scale, ratio, "Plot size must match caught fish")
-				local metrics = Stats.GetModelBounds(template)
-				assert(metrics.longest * ratio <= 50.001 and geometry.radius <= 21.501, "Final size exceeds limits")
+				near(geometry.radius, metrics.radius * ratio, "Plot keeps the full scaled footprint")
 				local move = Plot.Start(boundary, Vector3.zero, 0, Random.new(11), 0)
 				for index = 0, 20 do
 					local frame = Plot.Sample(boundary, geometry.height, move, move.duration * index / 20)

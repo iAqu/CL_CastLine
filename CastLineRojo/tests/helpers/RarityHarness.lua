@@ -8,6 +8,9 @@ return function(sources)
 		return rgb(self.R + (other.R - self.R) * alpha, self.G + (other.G - self.G) * alpha,
 			self.B + (other.B - self.B) * alpha)
 	end
+	function color.__eq(a, b)
+		return math.abs(a.R - b.R) < 1e-6 and math.abs(a.G - b.G) < 1e-6 and math.abs(a.B - b.B) < 1e-6
+	end
 	local colors = {
 		new = rgb,
 		fromRGB = function(r, g, b) return rgb(r / 255, g / 255, b / 255) end,
@@ -67,7 +70,7 @@ return function(sources)
 		Players = {},
 		Workspace = {},
 	}
-	local modules, cache = {}, {}
+	local modules, cache, warnings = {}, {}, {}
 	for name in pairs(sources) do modules[name] = name end
 	local env = setmetatable({
 		Color3 = colors,
@@ -76,7 +79,7 @@ return function(sources)
 		Instance = { new = newInstance },
 		game = { GetService = function(_, name) return assert(services[name]) end },
 		script = { Parent = modules },
-		warn = function(message) error("Unexpected warning: " .. tostring(message)) end,
+		warn = function(message) table.insert(warnings, tostring(message)) end,
 	}, { __index = getfenv() })
 	local function loadModule(name)
 		if cache[name] then return cache[name] end
@@ -86,5 +89,23 @@ return function(sources)
 		return cache[name]
 	end
 	env.require = loadModule
-	return { load = loadModule, storage = storage, newInstance = newInstance, colors = colors, sequence = sequence }
+	local function addRarityTemplates()
+		local folder = newInstance("Folder")
+		folder.Name, folder.Parent = "Gui", storage
+		local gradients = newInstance("Folder")
+		gradients.Name, gradients.Parent = "UIGradient", folder
+		for index, entry in ipairs(loadModule("RarityConfig").List) do
+			local gradient = newInstance("UIGradient")
+			gradient.Name = "UIGradient_" .. (if entry.Name == "Mythic" then "Mythical" else entry.Name)
+			gradient.Enabled, gradient.Rotation = false, 20
+			-- Deliberately unrelated to the production palette: consumers must read these templates.
+			gradient.Color = sequence({ { Time = 0, Value = rgb(index / 20, 0.1, 0.2) },
+				{ Time = 0.5, Value = rgb(0.3, index / 20, 0.4) },
+				{ Time = 1, Value = rgb(0.5, 0.6, index / 20) } })
+			gradient.Parent = gradients
+		end
+		return gradients
+	end
+	return { load = loadModule, storage = storage, newInstance = newInstance, colors = colors,
+		sequence = sequence, warnings = warnings, addRarityTemplates = addRarityTemplates }
 end

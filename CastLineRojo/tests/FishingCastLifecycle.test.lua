@@ -5,6 +5,7 @@ local function read(path)
 	return source
 end
 
+local feedbackHarness = require("./helpers/FishingCastFeedbackHarness")
 local modules = {
 	petFeature = { Enabled = true },
 	config = assert(loadstring(read("src/ReplicatedStorage/Modules/FishingConfig.lua")))(),
@@ -21,6 +22,7 @@ local modules = {
 	confetti = { play = function() end, clear = function() end },
 }
 local workspace = {}
+modules.feedback = feedbackHarness.feedback
 local tweenService = {}
 local function vector(x, y, z)
 	return setmetatable({ X = x, Y = y, Z = z }, {
@@ -34,6 +36,8 @@ local environment = setmetatable({
 		Parent = {
 			PetFeatureConfig = "petFeature",
 			FishingConfig = "config",
+			FishingCastPresentation = "presentation",
+			FishingCastFeedback = "feedback",
 			FishingProjectileMath = "math",
 			FishingRigUtil = "rig",
 			WaterSurfaceUtil = "water",
@@ -85,6 +89,9 @@ modules.rarity = {}
 modules.roll = assert(
 	load(read("src/ReplicatedStorage/Modules/FishingRoll.lua"), "FishingRoll", "t", environment)
 )()
+environment.script.Parent.FishingWaterEffects = "waterEffects"
+modules.waterEffects = assert(load(read("src/ReplicatedStorage/Modules/FishingWaterEffects.lua"), "FishingWaterEffects", "t", environment))()
+modules.presentation = assert(load(read("src/ReplicatedStorage/Modules/FishingCastPresentation.lua"), "FishingCastPresentation", "t", environment))()
 local Sequence = assert(
 	load(read("src/ReplicatedStorage/Modules/FishingCastSequence.lua"), "FishingCastSequence", "t", environment)
 )()
@@ -366,8 +373,9 @@ local fixed = setmetatable({
 		end
 	end,
 	_impulse = function() end,
-	_castFeedback = function() error("Fixed casts must not play meter feedback") end,
+
 }, Sequence)
+feedbackHarness.attach(fixed)
 fixed:_bindCastMeter(fixed.meter)
 assert(fixed.meter.gui.Enabled and fixed.meter.holder.Visible and fixed.meter.bar.Visible)
 assert(fixed.meter.marker.Visible and fixed.meter.prompt.Visible and not fixed.meter.label.Visible)
@@ -398,7 +406,7 @@ assert(fixed.meter.marker.Position.Y == 0.5, "The indicator must stop once the c
 fixed.folder = nil
 fixed:Destroy()
 assert(not fixed.meter.bar.Visible and not fixed.meter.marker.Visible and fixed.meter.label.Visible)
-assert(fixed.meter.marker.Position.Y == 0.5, "Cleanup must restore the authored marker position")
+assert(fixed.meter.marker.Position.Y == 1, "Cleanup must restore the authored marker position")
 
 for _, ceiling in { 1.3, 10, 100 } do
 	for _, fps in { 30, 60, 144 } do
@@ -458,9 +466,11 @@ for _, ceiling in { 1.3, 10, 100 } do
 		assert(#cues == 12 and probe.lastMeterStep == 1, "Muted steps must be consumed without replay")
 		probe:_updatePresentation(105.5, 0.5)
 		assert(#cues == 13 and cues[13].name == "MeterTick", "A multi-step jump must play a single fresh tick")
+		feedbackHarness.attach(probe)
 		probe:LockCastMeter()
 		assert(#cues == 14 and cues[14].name == "ButtonClick", "Locking must play the separate click sound")
 		probe:_updatePresentation(106.5, 1)
+		feedbackHarness.attach(probe)
 		probe:LockCastMeter()
 		assert(#cues == 14, "A locked meter must stop ticks and ignore repeated clicks")
 	end
@@ -486,7 +496,7 @@ do
 		"Discard overshoot and reverse at the bottom on the next long frame")
 end
 
-for _, progress in { 0, 0.5, 0.919999, 0.92, 1 } do
+for _, progress in { 0, 0.5, 0.799999, 0.8, 0.95, 0.950001, 1 } do
 	local cues = {}
 	local probe = setmetatable({
 		phase = "Preparing", fixedCast = true, meterProgress = progress,
@@ -496,8 +506,9 @@ for _, progress in { 0, 0.5, 0.919999, 0.92, 1 } do
 			table.insert(cues, { name = name, volume = volume, pitch = pitch })
 		end,
 	}, Sequence)
+	feedbackHarness.attach(probe)
 	assert(probe:LockCastMeter() == progress, "Lock the visible progress before confirmation audio")
-	local expected = if progress >= 0.92 then 2 else 1
+	local expected = if progress >= 0.8 then 2 else 1
 	assert(#probe.impulses == expected and probe.phase == "Preparing",
 		"Camera feedback must begin while server confirmation is still pending")
 	local tap = probe.impulses[1]
@@ -507,9 +518,9 @@ for _, progress in { 0, 0.5, 0.919999, 0.92, 1 } do
 	assert(#cues == expected and cues[1].name == "ButtonClick" and cues[1].volume == 0.8
 		and math.abs(cues[1].pitch - (0.9 + progress * 0.5)) < 1e-10,
 		"Confirm immediately with the locked progress pitch")
-	if progress >= 0.92 then
+	if progress >= 0.8 then
 		assert(cues[2].name == "Perfect" and cues[2].volume == 0.5 and cues[2].pitch == 1.3,
-			"At 92% and above, layer Throw Food's perfect confirmation")
+			"At 80% and above, layer Throw Food's perfect confirmation")
 		assert(probe.flash.Visible and probe.flash.BackgroundTransparency == 0.65
 			and probe.flash.BackgroundColor3[2] == 255, "Perfect must immediately show the green flash")
 		assert(math.abs(select(6, probe:_sampleImpulses(tap.started + 0.05)) - 6) < 1e-6,
@@ -524,70 +535,59 @@ for _, progress in { 0, 0.5, 0.919999, 0.92, 1 } do
 			"Perfect FOV must recover without server confirmation")
 	else
 		assert(not probe.flash.Visible and probe.perfectAt == nil,
-			"Below 92%, clicks must not flash or punch the FOV")
+			"Below 80%, clicks must not flash or punch the FOV")
 	end
 	local pendingImpulses = #probe.impulses
-	probe:LockCastMeter()
+	feedbackHarness.attach(probe)
+		probe:LockCastMeter()
 	probe:Cast(progress, 30)
 	probe:Cast(progress, 30)
 	assert(#cues == expected, "Repeated locks and server confirmation must not replay either confirmation cue")
 	assert(#probe.impulses == pendingImpulses,
 		"Repeated locks and server confirmation must not add another camera impulse")
+	local clickTime=probe.meterLockedAt
+	probe:_updatePresentation(clickTime+.5,0)
+	assert(probe.meter.gui.Enabled and probe.popup.Visible,"Server confirmation must not hide or restart immediate feedback")
+	probe:_updatePresentation(clickTime+1.21,0)
+	assert(not probe.meter.gui.Enabled and probe.popup.Visible,"The popup must outlive the meter")
+	probe:_updatePresentation(clickTime+1.51,0)
+	assert(not probe.popup.Visible and probe.meterLockedAt==clickTime,"Feedback finishes on the original click time")
 end
 
 do
 	local clicks = 0
 	local direct = setmetatable({
-		phase = "Preparing", fixedCast = true, meterProgress = 0.8,
+		phase = "Preparing", fixedCast = true, meterProgress = 0.8, flash = {},
 		folder = sequence.folder, meter = { gui = {} },
 		_sound = function(_, name, volume, pitch)
+			if name == "Perfect" then return end
 			assert(name == "ButtonClick" and volume == 0.8 and math.abs(pitch - 1.3) < 1e-6,
 				"Direct casts must use the same click sound and meter pitch")
 			clicks += 1
 		end,
 		_impulse = function() end,
 	}, Sequence)
+	feedbackHarness.attach(direct)
 	direct:Cast(0.8, 30)
+	feedbackHarness.attach(direct)
 	direct:Cast(0.8, 30)
 	assert(clicks == 1 and direct.lockedMeterProgress == 0.8, "Direct callers must lock and click exactly once")
 end
 
-for _, case in ipairs({
-	{ 0, "BAD" },
-	{ 0.4499, "BAD" },
-	{ 0.45, "GOOD" },
-	{ 0.7199, "GOOD" },
-	{ 0.72, "GREAT!" },
-	{ 0.9199, "GREAT!" },
-	{ 0.92, "PERFECT!" },
-	{ 1, "PERFECT!" },
-}) do
-	assert(Sequence.GetRating(case[1]).Text == case[2], "Rating boundary must match the locked meter value")
+for _, case in ipairs({{0,"BAD"},{0.499999,"BAD"},{0.5,"GOOD"},{0.799999,"GOOD"},{0.8,"PERFECT"},{0.95,"PERFECT"},{0.950001,"GODLIKE!"},{1,"GODLIKE!"}}) do
+ assert(Sequence.GetRating(case[1]).Text==case[2],"Shared rating boundary")
 end
-
--- 飘字按实际视口约束位置，包括竖屏和横屏手机比例。
-for _, size in ipairs({ { 390, 844 }, { 844, 390 }, { 1877, 1240 } }) do
-	local width, height = size[1], size[2]
-	workspace.CurrentCamera = { ViewportSize = { X = width, Y = height } }
-	for _, markerY in ipairs({ 0, height / 2, height }) do
-		local feedback = setmetatable({
-			distance = 71,
-			meter = {
-				prompt = {},
-				marker = { AbsolutePosition = { Y = markerY } },
-				glow = {},
-				label = { AbsolutePosition = { X = width * 0.9 }, AbsoluteSize = { X = 100 } },
-			},
-			popup = { AbsoluteSize = { X = width * 0.2 } },
-			_sound = function() end,
-			_impulse = function() end,
-		}, Sequence)
-		feedback:_castFeedback(0.8, 0)
-		local origin = feedback.popupOrigin
-		assert(origin.X - width * 0.1 >= 0 and origin.X + width * 0.1 <= width, "Popup must fit narrow viewports")
-		assert(origin.Y - height * modules.config.Meter.PopupRise >= 0, "Popup rise must stay on screen")
-		assert(feedback.popup.Text == "+16 POWER" and feedback.meter.prompt.Text == "GREAT!")
-	end
+-- Validate actual feedback placement in portrait, landscape and desktop viewports.
+for _, size in ipairs({{390,844},{844,390},{1877,1240}}) do
+ for _,markerY in ipairs({0,size[2]/2,size[2]}) do
+  local owner=setmetatable({flash={},_sound=function()end,_impulse=function()end},Sequence)
+  feedbackHarness.attach(owner,size[1],size[2],markerY)
+  owner:_castFeedback(.8,0)
+  owner.castFeedback.Update(owner,.3)
+  assert(owner.popup.Text=="PERFECT" and not owner.meter.prompt.Visible)
+  assert(owner.popup.Position.X-size[1]*.1>=0 and owner.popup.Position.X+size[1]*.1<=size[1])
+  assert(owner.popup.Position.Y-size[2]*.035>=0)
+ end
 end
 
 local impulses = setmetatable({ impulses = {} }, Sequence)
@@ -930,6 +930,30 @@ do
 	session.bite = nil
 	session:Update(11, 1 / 60)
 	assert(table.concat(order, ",") == "base,characterVFX,camera,line", "Update character VFX before the bite sequence exists")
+
+	table.clear(order)
+	local heldFishBody = {}
+	local heldCameraPosition = {}
+	session.phase = "Caught"
+	session.bite = {
+		Present = function(_, actualCamera, actualBody)
+			assert(actualCamera == heldCameraPosition and actualBody == heldFishBody,
+				"The fish and its effects must use the current hold pose and camera")
+			table.insert(order, "held fish")
+		end,
+	}
+	session.options = {
+		presentCaught = function(bite, _, camera)
+			assert(bite == session.bite, "The custom shot receives the existing fish")
+			camera.CFrame = { Position = heldCameraPosition }
+			table.insert(order, "held pose")
+			return heldFishBody
+		end,
+	}
+	session.line = { Parent = true, Enabled = true }
+	session:Update(12, 1 / 60)
+	assert(table.concat(order, ",") == "base,characterVFX,held pose,held fish" and not session.line.Enabled,
+		"The first held-fish frame applies the custom shot and hides the fishing line")
 end
 
 -- 鱼的拉远在上升期间完成，追随从破水后的滞后窗口开始。
@@ -951,4 +975,31 @@ do
 	timeline.phase, timeline.startedAt = "Caught", 100 + plan.timing.duration
 	local after, afterPull = sequence:_showcaseProgress(timeline.startedAt)
 	assert(before == after and beforePull == afterPull, "Caught reset the camera clock")
+end
+
+-- A stalled frame can cross every special-cast node; each event still fires exactly once.
+do
+ local calls = {}
+ local function hit(name) calls[name] = (calls[name] or 0) + 1 end
+ local probe = setmetatable({phase="Casting",castClickedAt=0,rig={},castProfile=modules.config.CastProfiles.Godlike,
+  track={Length=2.5166667,Play=function(_,_,_,speed) assert(speed==1); hit("Play") end},
+  characterVFX={Start=function()hit("Start")end,BeginTrail=function()hit("Trail")end,
+   Land=function()hit("Land")end,Charge=function()hit("Charge")end,BeginSwing=function()hit("Impact")end},
+  _shot=function(_,name)assert(name=="Special");hit("Shot")end,
+  _impulse=function(_,settings)hit(settings==modules.config.CastProfiles.Godlike.ImpactImpulse and "Shake" or "LandingShake")end,
+  _sound=function(_,name)assert(name=="SpinWhoosh");hit("Whoosh")end,
+  fishAudio={Play=function(_,name)hit(name)end},
+  _release=function(self)if not self.flightStarted then self.flightStarted=true;hit("Release")end end,
+ },Sequence)
+ probe:_updateAction(.35)
+ probe:_updateAction(.35+.199)
+ assert(not calls.Trail and not calls.Impact and not calls.Release)
+ probe:_updateAction(.35+2.40)
+ assert(calls.Trail==1 and calls.Land==1 and calls.Charge==1 and not calls.Impact and not calls.Release)
+ probe:_updateAction(.35+2.431)
+ assert(calls.Impact==1 and calls.FishingCastImpact==1 and not calls.Release)
+ probe:_updateAction(.35+2.491)
+ probe:_updateAction(.35+3)
+ for _,count in pairs(calls) do assert(count==1,"Special event replayed") end
+ assert(calls.Play==1 and calls.Shake==1 and calls.Release==1 and calls.Whoosh==1)
 end

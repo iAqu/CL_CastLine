@@ -1,0 +1,121 @@
+{
+  "DoubleWins": {
+    "size": [
+      1024,
+      1024
+    ],
+    "alphaRange": [
+      0,
+      255
+    ],
+    "subjectBounds": [
+      155,
+      189,
+      869,
+      837
+    ],
+    "margins": [
+      155,
+      189,
+      155,
+      187
+    ],
+    "transparentRatio": 0.7184
+  },
+  "DoubleTrain": {
+    "size": [
+      1024,
+      1024
+    ],
+    "alphaRange": [
+      0,
+      255
+    ],
+    "subjectBounds": [
+      154,
+      213,
+      853,
+      870
+    ],
+    "margins": [
+      154,
+      213,
+      171,
+      154
+    ],
+    "transparentRatio": 0.8038
+  },
+  "MegaLuck": {
+    "size": [
+      1024,
+      1024
+    ],
+    "alphaRange": [
+      0,
+      255
+    ],
+    "subjectBounds": [
+      155,
+      177,
+      869,
+      847
+    ],
+    "margins": [
+      155,
+      177,
+      155,
+      177
+    ],
+    "transparentRatio": 0.8231
+  },
+  "PremiumBait": {
+    "size": [
+      1024,
+      1024
+    ],
+    "alphaRange": [
+      0,
+      255
+    ],
+    "subjectBounds": [
+      192,
+      155,
+      859,
+      870
+    ],
+    "margins": [
+      192,
+      155,
+      165,
+      154
+    ],
+    "transparentRatio": 0.8393
+  },
+  "WinsTier1": {
+    "size": [
+      1024,
+      1024
+    ],
+    "colorType": "RGBA",
+    "transparentCorner": true,
+    "visualReview": "cash theme; no text, numerals or currency symbols"
+  },
+  "WinsTier2": {
+    "size": [
+      1024,
+      1024
+    ],
+    "colorType": "RGBA",
+    "transparentCorner": true,
+    "visualReview": "cash theme; no text, numerals or currency symbols"
+  },
+  "WinsTier3": {
+    "size": [
+      1024,
+      1024
+    ],
+    "colorType": "RGBA",
+    "transparentCorner": true,
+    "visualReview": "cash theme; no text, numerals or currency symbols"
+  }
+}

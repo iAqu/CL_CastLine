@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Local FIFO Studio reservations. No Studio calls and no automatic lock stealing."""
+"""Local FIFO Studio reservations with explicit confirmation for stale-ticket recovery."""
 
 import argparse
 import contextlib
@@ -72,26 +72,34 @@ class Registry:
             raise LockError("Unknown or released token; acquire a new reservation.")
         return row
 
+    def queue_head(self, resource):
+        return self.db.execute(
+            "SELECT * FROM reservations WHERE resource = ? ORDER BY ticket LIMIT 1",
+            (resource,),
+        ).fetchone()
+
     def describe(self, row, include_token=False):
         result = dict(row)
         if not include_token:
             result.pop("token")
         result["needs_stop"] = bool(result["needs_stop"])
-        result["heartbeat_age_seconds"] = max(0, round(time.time() - row["heartbeat"], 1))
-        result["stale"] = result["heartbeat_age_seconds"] >= STALE_SECONDS
+        heartbeat_age = max(0, time.time() - row["heartbeat"])
+        result["heartbeat_age_seconds"] = round(heartbeat_age, 1)
+        result["stale"] = heartbeat_age >= STALE_SECONDS
         result["position"] = 0 if row["phase"] == "held" else self.db.execute(
             "SELECT COUNT(*) FROM reservations WHERE resource = ? AND ticket <= ?",
             (row["resource"], row["ticket"]),
         ).fetchone()[0]
+        if include_token and result["position"] > 1:
+            blocker = self.describe(self.queue_head(row["resource"]))
+            if blocker["stale"]:
+                result["stale_blocker"] = blocker
         return result
 
     def promote(self, token):
         row = self.row(token)
         if row["phase"] == "queued":
-            first = self.db.execute(
-                "SELECT token FROM reservations WHERE resource = ? ORDER BY ticket LIMIT 1",
-                (row["resource"],),
-            ).fetchone()
+            first = self.queue_head(row["resource"])
             if first["token"] == token:
                 self.db.execute(
                     "UPDATE reservations SET phase = 'held' WHERE token = ?", (token,)

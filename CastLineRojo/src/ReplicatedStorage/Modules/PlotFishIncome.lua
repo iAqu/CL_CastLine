@@ -19,11 +19,15 @@ function PlotFishIncome.GetDefaultBaseCps(): number
 	return finiteNonnegative(FishInventoryData.Fish_101 and FishInventoryData.Fish_101.CpsPrice) or 1
 end
 
+function PlotFishIncome.UsesPercentageCps(rarity: string?): boolean
+	return rarity == "Event" or rarity == "Exclusive"
+end
+
 function PlotFishIncome.GetBestOwnedBaseCps(data): number
 	local best
 	for _, record in pairs(data.Items or {}) do
 		local item = if typeof(record) == "table" then FishInventoryData[record.ItemId] else nil
-		local cps = item and item.Rarity ~= "Event" and finiteNonnegative(item.CpsPrice)
+		local cps = item and not PlotFishIncome.UsesPercentageCps(item.Rarity) and finiteNonnegative(item.CpsPrice)
 		if cps and (not best or cps > best) then
 			best = cps
 		end
@@ -41,7 +45,7 @@ function PlotFishIncome.GetCpsPrice(itemData, mutationEarnCashRate: number?, bes
 		mutationRate = 1
 	end
 	local weightRate = if itemData then ItemStatUtil.GetWeightValueMultiplier(itemData, actualWeight) else 1
-	if itemData and itemData.Rarity == "Event" then
+	if itemData and PlotFishIncome.UsesPercentageCps(itemData.Rarity) then
 		local base = finiteNonnegative(bestBaseCps) or PlotFishIncome.GetDefaultBaseCps()
 		return math.max(1, math.floor(base * math.max(0, cpsPrice) * mutationRate * weightRate))
 	end
@@ -66,7 +70,7 @@ function PlotFishIncome.GetRate(data): number
 	local rate = 0
 	local bestBaseCps = PlotFishIncome.GetBestOwnedBaseCps(data)
 	local counted = {}
-	for slot = 1, PlotPlacementUtil.CAPACITY do
+	for slot = 1, PlotPlacementUtil.GetCapacity(data) do
 		local uid = PlotPlacementUtil.GetItemUid(data.PlotPlacements, slot)
 		local record = uid and data.Items and data.Items[uid]
 		if typeof(record) == "table" and not counted[uid] then

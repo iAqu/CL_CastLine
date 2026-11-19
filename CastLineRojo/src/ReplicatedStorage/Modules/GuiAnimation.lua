@@ -249,6 +249,11 @@ function GuiAnimation.SetNavigationOptions(
     end
 end
 
+function GuiAnimation.ResetNavigationFocus(gui: ScreenGui, initialFocus: GuiObject)
+    rememberedSelections[gui] = nil
+    initialFocuses[gui] = initialFocus
+end
+
 function GuiAnimation.PushModal(gui: ScreenGui, initialFocus: GuiObject?, backHandler: (() -> ())?)
     pushNavigation(gui, initialFocus, backHandler)
 end
@@ -337,8 +342,8 @@ local POPUP_GUI_NAMES = {
     "RebirthGui",
     "StoreGui",
     "SettingsGui",
-    "UpgradeGui",
     "RodShopGui",
+    "SellGui",
     "MyFishGui",
     "UpdateLogGui",
     "OnlineRewardGui",
@@ -355,7 +360,6 @@ local POPUP_GUI_NAMES = {
     "DiamondBuyGui",
     "StoreGiftMenuGui",
     "SuperRebirthGui",
-    "RebirthUpgradeGui",
     "LongDailyRewardGui",
     "LimitedPackListGui",
     "LimitedPackDetailGui",

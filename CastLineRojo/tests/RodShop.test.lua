@@ -33,8 +33,10 @@ local environment = setmetatable({
 local inventory = loadSource(modulesPath .. "RodInventory.lua", environment)
 local zone = loadSource(modulesPath .. "RodShopZone.lua", environment)
 modules.RodInventory = inventory
+modules.RodShopZone = zone
+modules.FishingOnboarding = loadSource(modulesPath .. "FishingOnboarding.lua")
 
-local data = { Wins = 101, EquippedRodId = "Rod_103", OwnedRods = "invalid" }
+local data = { Wins = rods.Rod_102.Price + 1, EquippedRodId = "Rod_103", OwnedRods = "invalid" }
 inventory.Reconcile(data)
 assert(data.EquippedRodId == "Rod_101" and data.OwnedRods.Rod_101)
 data.OwnedRods.Rod_104 = true
@@ -62,12 +64,20 @@ local attribute
 local player = {
 	UserId = 42,
 	SetAttribute = function(_, name, value)
-		assert(name == "EquippedRodId")
-		attribute = value
+		if name == "EquippedRodId" then
+			attribute = value
+		end
 	end,
 }
+local inventoryEvents = {}
 services.ReplicatedStorage.Packages.Knit = {
 	CreateService = function(service) return service end,
+	CreateSignal = function()
+		return { Fire = function(_, eventPlayer, snapshot)
+			assert(eventPlayer == player and snapshot.ok)
+			table.insert(inventoryEvents, snapshot)
+		end }
+	end,
 }
 local client
 local charges, ready, allowCharge = 0, true, true
@@ -88,7 +98,7 @@ assert(client:GetState(player).equippedRodId == "Rod_101")
 assert(not client:BuyRod(player, {}).ok and not client:BuyRod(player, "Rod_104").ok)
 assert(client:EquipRod(player, "Rod_102").message == "You do not own this fishing rod")
 assert(client:BuyRod(player, "Rod_103").message == modules.Constants.NOTIFICATION_NO_ENOUGH_WIN)
-assert(charges == 0 and data.Wins == 101 and data.EquippedRodId == "Rod_101")
+assert(charges == 0 and data.Wins == rods.Rod_102.Price + 1 and data.EquippedRodId == "Rod_101")
 
 ready = false
 assert(not client:GetState(player).ok and not client:BuyRod(player, "Rod_102").ok)
@@ -99,10 +109,32 @@ assert(not client:BuyRod(player, "Rod_102").ok and not data.OwnedRods.Rod_102)
 allowCharge = true
 local purchase = client:BuyRod(player, "Rod_102")
 assert(purchase.ok and purchase.ownedRods.Rod_102 and purchase.equippedRodId == "Rod_102")
+assert(#inventoryEvents == 1 and inventoryEvents[1] == purchase, "Successful purchase must publish its authoritative snapshot")
 assert(data.OwnedRods.Rod_102 and data.EquippedRodId == "Rod_102" and attribute == "Rod_102")
 assert(data.Wins == 1 and charges == 1)
 assert(not client:BuyRod(player, "Rod_102").ok and charges == 1)
 assert(client:EquipRod(player, "Rod_101").ok and attribute == "Rod_101" and charges == 1)
 assert(client:EquipRod(player, "Rod_102").ok and attribute == "Rod_102" and charges == 1)
+assert(#inventoryEvents == 3, "Only successful purchase/equip operations publish inventory events")
+data.OwnedRods.Rod_103 = true
+assert(not inventoryEvents[1].ownedRods.Rod_103, "Published snapshots must not alias the stored inventory")
 inventory.Reconcile(data)
 assert(data.EquippedRodId == "Rod_102", "A valid saved equipment choice must survive load")
+
+data.OwnedRods.Rod_102 = nil
+data.EquippedRodId = "Rod_101"
+assert(not client:ClaimTrainingRod(player).ok, "Only the completed training step unlocks the free rod")
+data.FishingOnboarding = { Stage = "RodReward" }
+services.ReplicatedStorage.Packages.Knit.GetService = function()
+	return {
+		GetPlayerPlot = function()
+			return { FindFirstChild = function() return circle end }
+		end,
+	}
+end
+assert(not client:ClaimTrainingRod(player).ok, "An absent character cannot claim from the shop")
+player.Character = character
+foot.Z = 0
+assert(client:ClaimTrainingRod(player).ok and data.OwnedRods.Rod_102 and attribute == "Rod_102")
+assert(data.FishingOnboarding.Stage == "FinalCatch" and data.Wins == 1 and charges == 1)
+assert(not client:ClaimTrainingRod(player).ok, "The free claim is consumed by the successful equip")

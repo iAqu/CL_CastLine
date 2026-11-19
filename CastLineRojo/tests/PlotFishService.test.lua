@@ -70,7 +70,7 @@ local function position(x)
 end
 
 local modules = "src/ReplicatedStorage/Modules/"
-local placements = loadSource(modules .. "PlotPlacementUtil.lua")
+local placements = loadSource(modules .. "PlotPlacementUtil.lua", require("./helpers/PlotUpgrades").environment)
 local stats = require("./helpers/ItemStats")
 local inventory = {
 	Small = { ItemID = "Small", CpsPrice = 4 },
@@ -139,6 +139,7 @@ local benefits = { luck = 0 }
 local signals = {}
 local createCount, failOnCreate = 0, nil
 local services = {
+	PlotUpgradeService = { ApplyForPlayer = function() end, ResetPlot = function() end },
 	PlotSlotService = {
 		GetPlayerPlot = function()
 			return plot
@@ -172,6 +173,7 @@ local services = {
 			end,
 		} },
 		Modules = {
+			FishingOnboarding = loadSource(modules .. "FishingOnboarding.lua"),
 			FishInventoryData = inventory,
 			MutationDataUtil = mutations,
 			PlotPlacementUtil = placements,
@@ -201,8 +203,8 @@ local services = {
 				GetEntry = function(_, characterRoot)
 					return if math.abs(characterRoot.Position.X) <= 22.5 then position(5) else nil
 				end,
-				GetGeometry = function()
-					return {}
+				GetGeometry = function(item)
+					return if item.ModelUnavailable then nil else {}
 				end,
 				Start = function(_, entry, startedAt, _, ...)
 					assert(select("#", ...) == 0, "New and restored fish use the same center boundary")
@@ -404,4 +406,48 @@ assert(plotService:RequestEquipBest(player).ok)
 local eventRoster = client:GetEquippedFish(player).fish
 assert(eventRoster[1].uid == "event" and eventRoster[1].income == 30 and eventRoster[2].income == 20)
 
+-- Upgraded capacity must reach placement, best-equip, snapshots and income.
+data.PlotUpgradeLevel = 5
+for index = 1, 20 do hold("upgraded-" .. index, backpack, "Large", "Normal") end
+assert(plotService:RequestEquipBest(player).ok)
+local upgradedRoster = client:GetEquippedFish(player)
+assert(upgradedRoster.capacity == 20 and #upgradedRoster.fish == 20)
+local expectedRate = 0
+for _, fish in upgradedRoster.fish do expectedRate += fish.income end
+assert(income.GetRate(data) == expectedRate)
+data.LastOnlineTime, data.PendingPlotOfflineCash = 100, 0
+income.PrepareOffline(data, 110)
+assert(data.PendingPlotOfflineCash == expectedRate * 5)
+assert(plotService:RequestUnequip(player, upgradedRoster.fish[20].uid).ok)
+assert(#client:GetEquippedFish(player).fish == 19)
+
+-- A paid fish can have a backpack tool before its pond model is available.
+assert(plotService:RequestEquipBest(player).ok, "Refill the pond before testing upgrades")
+local fullRoster = client:GetEquippedFish(player)
+assert(#fullRoster.fish == fullRoster.capacity, "The regression requires a full pond")
+local weakestUid = fullRoster.fish[fullRoster.capacity].uid
+local weakestSlot = plot:FindFirstChild("PlacedFish"):FindFirstChild(weakestUid):GetAttribute("Slot")
+inventory.MissingModel = { ItemID = "MissingModel", Rarity = "Exclusive", CpsPrice = 5, ModelUnavailable = true }
+local unavailable = hold("missing-model", backpack, "MissingModel", "Normal")
+data.Items["missing-model"].PaidOrigin = "test-order"
+local upgrade = hold("valid-upgrade", backpack, "Large", "Golden")
+assert(plotService:RequestEquipBest(player).ok, "An unavailable fish must not block a placeable upgrade")
+local updated = client:GetEquippedFish(player)
+assert(updated.fish[1].uid == "valid-upgrade" and updated.fish[1].income == 40, "Equip the best placeable fish")
+assert(#updated.fish == fullRoster.capacity and updated.revision == fullRoster.revision + 1, "Commit one full roster")
+assert(placements.GetItemUid(data.PlotPlacements, weakestSlot) == "valid-upgrade", "Replace the weakest slot")
+assert(not upgrade.Parent and unavailable.Parent == backpack and backpack:FindFirstChild(weakestUid),
+	"Consume the selected tool and keep the returned and unavailable fish in the backpack")
+
+assert(plotService:RequestEquipBest(player).ok, "Succeed when no further upgrade is available")
+assert(client:GetEquippedFish(player).revision == updated.revision and unavailable.Parent == backpack,
+	"Leave the roster and backpack alone when only an unavailable upgrade remains")
+
+inventory.MissingModel.ModelUnavailable = false
+assert(plotService:RequestEquipBest(player).ok, "Recheck model availability on the next request")
+local restored = client:GetEquippedFish(player)
+assert(restored.fish[1].uid == "missing-model" and restored.revision == updated.revision + 1,
+	"Equip the previously skipped fish once its model is available")
+assert(not unavailable.Parent and data.Items["missing-model"].PaidOrigin == "test-order",
+	"Consume the tool and preserve the equipped fish's paid origin")
 print("PlotFishService.test.lua passed")

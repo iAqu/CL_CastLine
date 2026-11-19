@@ -44,7 +44,6 @@ local ProgressLabel = ProgressFrame:WaitForChild("Frame"):WaitForChild("Progress
 local RebirthButton = ButtonsFrame:WaitForChild("RebirthButton")
 local SkipButton_Robux = ButtonsFrame:WaitForChild("SkipButton_Robux")
 local AutoRebirthButton = ButtonsFrame.AutoRebirthButton
-local RebirthUpgradeButton = RebirthFrame.RebirthUpgradeButton
 
 local Knit = require(ReplicatedStorage.Packages.Knit)
 
@@ -314,10 +313,6 @@ function RebirthGuiController:KnitStart()
     --         NotificationClient.RedNotify("You need " .. rebirthRequired .. " rebirths to Super Rebirth!")
     --     end
     -- end)
-
-    RebirthUpgradeButton.Activated:Connect(function()
-        Knit.GetController("RebirthUpgradeGuiController"):OpenGui()
-    end)
 
     AutoRebirthButton.Activated:Connect(function()
         local playerData = PlayerDataController:GetData()

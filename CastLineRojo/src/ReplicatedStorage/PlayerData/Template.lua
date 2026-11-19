@@ -103,15 +103,18 @@ end
 local Template = {
 
     FirstJoinTime = os.time(),
+    FishingIntroVersion = 0,
+    FishingProgress = false, -- Initialized once, after legacy-play detection on profile load.
     LastOnlineTime = 0,
     UpdateReadLog = {},
     Strength = 10,
-    Wins = 0,
+    Wins = 200,
     OwnedRods = { [FishingConfig.DefaultRodId] = true },
     EquippedRodId = FishingConfig.DefaultRodId,
     Rebirths = 0,
     Diamonds = 0,
     RobuxSpent = 0,
+    PaidEgg = { Intent = false, Receipts = {}, Results = {}, Purchases = {}, Revision = 0 },
     Trophy = 0,
 
     RandomPotionBuyLog = {},
@@ -192,6 +195,8 @@ local Template = {
     -- Existing profiles intentionally begin with this empty, so the feature
     -- starts counting from its release rather than their prior inventory.
     NewItemTagSeenLog = {},
+    Training = { Level = 1, Xp = 0, TrainingID = "Training_101", ResumeActive = false, LastActiveAt = 0 },
+    PlotUpgradeLevel = 0,
     PlotPlacements = {},
     PendingPlotOfflineCash = 0,
 

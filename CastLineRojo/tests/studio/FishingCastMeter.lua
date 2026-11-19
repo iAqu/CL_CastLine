@@ -15,6 +15,7 @@ local report = { played = {}, loaded = {}, frames = 0, sweeps = {}, readyTicks =
 local enabled = true
 local owner = setmetatable({
 	phase = "Preparing", fixedCast = true, fullLuck = 10,
+	_castFeedback = function(self,value,now) self:_castClickFeedback(value,now) end,
 	meterProgress = 0, meterDirection = 1, lastMeterStep = 0,
 	impulses = {}, flash = {},
 	meter = { marker = {} }, folder = folder, sounds = {},
@@ -110,12 +111,12 @@ local ok, err = xpcall(function()
 	enabled = true
 	owner:_updatePresentation(os.clock(), 0)
 	assert(#report.played == report.sweepTicks, "Unmuting must not replay consumed steps")
-	for _, progress in { 0.919999, 0.92 } do
+	for _, progress in { 0.799999, 0.8, 0.95, 0.950001 } do
 		owner.lockedMeterProgress, owner.meterProgress = nil, progress
 		local before = #report.played
 		owner:LockCastMeter()
-		local count = if progress >= 0.92 then 2 else 1
-		assert(#report.played == before + count, "Confirm once, with a perfect cue at 92%")
+		local count = if progress >= 0.8 then 2 else 1
+		assert(#report.played == before + count, "Confirm once, with a perfect cue at 80%")
 		local cue = report.played[before + 1]
 		assert(cue.name == "ButtonClick" and math.abs(cue.volume - 0.8) < 1e-6
 			and math.abs(cue.pitch - (0.9 + progress * 0.5)) < 1e-6, "Incorrect confirmation mix")

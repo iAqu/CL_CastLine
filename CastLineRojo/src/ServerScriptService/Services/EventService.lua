@@ -294,14 +294,6 @@ function EventService:GetActiveItemEffect()
 	return if eventType == "mutation" or eventType == "moreitem" then event else nil
 end
 
-function EventService:GetMoveSpeedMultiplier(): number
-	local event = self:GetActiveEvent()
-	if not event or EventStateUtil.NormalizeEventType(event.EventType) ~= "movespeed" then
-		return 1
-	end
-	return 1 + math.max(0, tonumber(event.EffectValue) or 0)
-end
-
 function EventService:KnitInit()
 	self:BeginEarlyState()
 end

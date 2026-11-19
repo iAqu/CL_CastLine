@@ -147,6 +147,7 @@ local function harness()
 		Get = function(r) return { Color = "color-" .. r } end }
 	local services = { Players = { LocalPlayer = player }, ReplicatedStorage = { Packages = { Knit = knit }, Modules = {
 		FishInventoryData = fish, GuiAnimation = animation, RarityConfig = rarity, NumberUtil = NumberUtil,
+		RarityPresentation = { GetColor = function(r) return "color-" .. r end },
 		GuiUtil = { SetRarityGradient = function(background, value) background.Rarity = value end },
 		SoundHelper = { PlaySound = function() end }, Constants = { SoundRes = { GUI_BUTTON_CLICK = "click" } },
 		NotificationClient = { GreenNotify = function(t) table.insert(greens, t) end, RedNotify = function(t) table.insert(reds, t) end },

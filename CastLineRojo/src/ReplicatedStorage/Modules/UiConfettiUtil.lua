@@ -4,6 +4,7 @@ local UiConfettiUtil = {}
 
 local CELEBRATION_GRAVITY = Vector2.new(0, 0.28)
 local SIDE_CANNONS_GRAVITY = Vector2.new(0, 1.128)
+local SIDE_CANNONS_INTERVAL = 0.18
 local DEFAULT_ZINDEX = 1000
 
 local CONFETTI_COLORS = {
@@ -211,12 +212,25 @@ local function emitSideConfetti(layer, count, minX, maxX, minY, maxY, minVelX, m
 	end
 end
 
+local function emitSideCannonsStream(layer)
+	emitSideConfetti(layer, 4, 0, 0.05, 0.76, 0.9, 0.18, 0.3, -1.11, -0.84)
+	emitSideConfetti(layer, 4, 0.95, 1, 0.76, 0.9, -0.3, -0.18, -1.11, -0.84)
+end
+
 local function ensureHeartbeat(layer)
 	if layer.heartbeatConn then
 		return
 	end
 
 	layer.heartbeatConn = RunService.Heartbeat:Connect(function(dt)
+		if layer.sideCannonsElapsed then
+			local elapsed = layer.sideCannonsElapsed + dt
+			layer.sideCannonsElapsed = elapsed % SIDE_CANNONS_INTERVAL
+			if elapsed >= SIDE_CANNONS_INTERVAL then
+				emitSideCannonsStream(layer)
+			end
+		end
+
 		local activeParticles = layer.activeParticles
 		if #activeParticles == 0 then
 			if layer.heartbeatConn then
@@ -309,6 +323,17 @@ local function playSideCannonsSequence(layer, sequenceToken)
 			step.apply(emitSide)
 		end
 	end)
+end
+
+function UiConfettiUtil.startSideCannons(parentGui)
+	local layer = getOrCreateLayer(parentGui)
+	if layer.sideCannonsElapsed then
+		return
+	end
+	layer.sideCannonsElapsed = 0
+	layer.gravity = SIDE_CANNONS_GRAVITY
+	emitSideCannonsStream(layer)
+	ensureHeartbeat(layer)
 end
 
 function UiConfettiUtil.clear(parentGui)
