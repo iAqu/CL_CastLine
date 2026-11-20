@@ -1,0 +1,7835 @@
+[
+  {
+    "name": "Attacking Whale",
+    "key": "New001",
+    "family": "dolphin",
+    "variant": "new_dolphin",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            -1.744925000000011,
+            1.190900000000001,
+            -7.117387499999998
+          ],
+          "beforeSize": [
+            0.76325000000001,
+            0.6932999999999971,
+            0.7219250000000024
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 389
+        },
+        {
+          "center": [
+            1.7419499999999886,
+            1.190900000000001,
+            -7.117387499999998
+          ],
+          "beforeSize": [
+            0.769999999999996,
+            0.6932999999999971,
+            0.7219250000000024
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 389
+        }
+      ],
+      "mode": "patch"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -5.222623999999998
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.8539393999999945
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          3.9173878750000046
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          8.335283500000003
+        ]
+      }
+    ],
+    "mouth": [
+      -0.0016771186440783096,
+      0.7926500000000001,
+      -11.765925423728806
+    ],
+    "bodySize": [
+      10.241100000000003,
+      5.8589000000000055,
+      23.7392
+    ],
+    "presentationRadius": 15.411027372118095,
+    "sourceOrigin": [
+      -104.18244999999999,
+      46.44885,
+      -31.532200000000003
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25559485997843245,
+      0.42680804218339297,
+      0.6277974299892162,
+      0.8138987149946081,
+      0.985
+    ],
+    "headEnd": 0.25559485997843245,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 1,
+      "vertices": 9334,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "Axolotl",
+    "key": "New002",
+    "family": "axolotl",
+    "variant": "new_axolotl",
+    "eye": {
+      "scale": 1.5,
+      "eyes": [
+        {
+          "center": [
+            0.1244999999999834,
+            0.20805000000000362,
+            -2.8359999999999843
+          ],
+          "beforeSize": [
+            0.20699999999999363,
+            0.19669999999999987,
+            0.15800000000001546
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 116
+        },
+        {
+          "center": [
+            -0.6905000000000143,
+            0.1498000000000026,
+            -2.6604999999999848
+          ],
+          "beforeSize": [
+            0.17300000000000182,
+            0.20219999999999771,
+            0.18500000000000227
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 113
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -1.3279200000000002
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.24143999999999988
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          0.9808500000000007
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          2.1126000000000014
+        ]
+      },
+      {
+        "name": "LegsLeft",
+        "parent": 2,
+        "position": [
+          -0.38591999999999754,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "LegsRight",
+        "parent": 2,
+        "position": [
+          0.38591999999999754,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "GillGroup",
+        "parent": 2,
+        "position": [
+          0,
+          0.20343999999999982,
+          -1.3279200000000002
+        ]
+      }
+    ],
+    "mouth": [
+      -0.08807191175508183,
+      -0.06366683796556984,
+      -2.989304653160989
+    ],
+    "bodySize": [
+      3.2159999999999798,
+      2.034399999999998,
+      6.036000000000001
+    ],
+    "presentationRadius": 3.604882430265537,
+    "sourceOrigin": [
+      -139.95499999999998,
+      60.2011,
+      -160.514
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 8,
+      "parts": 1,
+      "vertices": 8062,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "Black Whale",
+    "key": "New003",
+    "family": "dolphin",
+    "variant": "new_dolphin",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            -1.1305000000000014,
+            0.40313749999999526,
+            -4.008524999999996
+          ],
+          "beforeSize": [
+            0.10600000000000165,
+            0.36752499999999877,
+            0.35625000000000107
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 144
+        },
+        {
+          "center": [
+            1.1302500000000002,
+            0.40313749999999526,
+            -4.008524999999996
+          ],
+          "beforeSize": [
+            0.10549999999999926,
+            0.36752499999999877,
+            0.35625000000000107
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 144
+        }
+      ],
+      "mode": "patch"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -2.9373519999999957
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.5200851999999951
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          2.1783717500000037
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          4.676943000000003
+        ]
+      }
+    ],
+    "mouth": [
+      -0.00042307692307839664,
+      0.5136230769230727,
+      -6.603399999999993
+    ],
+    "bodySize": [
+      6.152999999999992,
+      3.2685999999999993,
+      13.351599999999998
+    ],
+    "presentationRadius": 8.76853754050612,
+    "sourceOrigin": [
+      -122.2445,
+      52.240300000000005,
+      -44.3113
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.251454132838012,
+      0.42361968228526925,
+      0.625727066419006,
+      0.812863533209503,
+      0.985
+    ],
+    "headEnd": 0.251454132838012,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 1,
+      "vertices": 6096,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "Blue Dragon",
+    "key": "New004",
+    "family": "fins",
+    "variant": "new_fins",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            -0.4334999999999969,
+            0.18898750000000142,
+            -3.963374999999992
+          ],
+          "beforeSize": [
+            0.17400000000000304,
+            0.15007499999999752,
+            0.1592500000000001
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 40
+        },
+        {
+          "center": [
+            0.18812500000000654,
+            0.18816250000000245,
+            -3.9699999999999918
+          ],
+          "beforeSize": [
+            0.1802500000000009,
+            0.14797499999999886,
+            0.16400000000000148
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 40
+        }
+      ],
+      "mode": "patch"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -2.0061799999999854
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.3647599999999853
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          1.4818375000000152
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          3.191650000000015
+        ]
+      },
+      {
+        "name": "FinLeft",
+        "parent": 2,
+        "position": [
+          -0.8450999999999994,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "FinRight",
+        "parent": 2,
+        "position": [
+          0.8450999999999994,
+          0,
+          0
+        ]
+      }
+    ],
+    "mouth": [
+      -0.10563402061855227,
+      -0.15759639175257703,
+      -4.517252577319584
+    ],
+    "bodySize": [
+      8.450999999999993,
+      1.1931000000000012,
+      9.119
+    ],
+    "presentationRadius": 5.959678866271296,
+    "sourceOrigin": [
+      -109.3635,
+      46.89595,
+      -151.9325
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 7,
+      "parts": 1,
+      "vertices": 20117,
+      "shellRigidVertices": 0,
+      "publishedParts": 2,
+      "losslessTriangleSplit": true
+    }
+  },
+  {
+    "name": "Blue Whale",
+    "key": "New005",
+    "family": "dolphin",
+    "variant": "new_dolphin",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            1.2600000000000193,
+            0.6508999999999965,
+            -3.544150000000009
+          ],
+          "beforeSize": [
+            0.09399999999999409,
+            0.10419999999999874,
+            0.2881
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 26
+        },
+        {
+          "center": [
+            -1.2609999999999957,
+            0.6508999999999965,
+            -3.544150000000009
+          ],
+          "beforeSize": [
+            0.09399999999999409,
+            0.10419999999999874,
+            0.2881
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 26
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -2.722778000000009
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.23793160000000757
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          2.351005249999993
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          4.748168999999994
+        ]
+      }
+    ],
+    "mouth": [
+      -0.00012499999999704414,
+      0.6121624999999975,
+      -6.593275000000011
+    ],
+    "bodySize": [
+      6.121999999999986,
+      2.9709999999999965,
+      13.331800000000001
+    ],
+    "presentationRadius": 8.595779944782802,
+    "sourceOrigin": [
+      -140.61,
+      47.8537,
+      -94.21709999999999
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.28076816333878385,
+      0.44619148577086354,
+      0.640384081669392,
+      0.820192040834696,
+      0.985
+    ],
+    "headEnd": 0.28076816333878385,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 1,
+      "vertices": 1424,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "Candy Jellyfish",
+    "key": "New006",
+    "family": "jellyfish",
+    "variant": "new_jellyfish",
+    "eye": {
+      "scale": 1.5,
+      "eyes": [
+        {
+          "center": [
+            0.6865000000000236,
+            1.1716000000000015,
+            -4.046399999999998
+          ],
+          "beforeSize": [
+            0.5850000000000364,
+            0.6552999999999969,
+            0.37699999999999534
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 49
+        },
+        {
+          "center": [
+            -0.9884999999999877,
+            1.1716000000000015,
+            -4.055899999999994
+          ],
+          "beforeSize": [
+            0.5869999999999891,
+            0.6552999999999969,
+            0.3739999999999952
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 49
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -0.47331899999999294
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          0.7710796800000077
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          2.095512300000008
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          3.321838800000009
+        ]
+      },
+      {
+        "name": "TentacleLeft",
+        "parent": 2,
+        "position": [
+          -0.5418000000000006,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "TentacleMid",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "TentacleRight",
+        "parent": 2,
+        "position": [
+          0.5418000000000006,
+          0,
+          0
+        ]
+      }
+    ],
+    "mouth": [
+      -0.1499423076922798,
+      1.117196153846154,
+      -4.305015384615379
+    ],
+    "bodySize": [
+      5.418000000000006,
+      5.483899999999998,
+      8.605800000000002
+    ],
+    "presentationRadius": 7.82790355060771,
+    "sourceOrigin": [
+      -348.516,
+      31.73405,
+      -97.2501
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.43,
+      0.5611,
+      0.7150000000000001,
+      0.8575,
+      0.985
+    ],
+    "headEnd": 0.43,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 8,
+      "parts": 28,
+      "vertices": 9584,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "Dragonfish",
+    "key": "New007",
+    "family": "longbody",
+    "variant": "new_longbody",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            0.8489999999999895,
+            -0.11884999999999835,
+            -12.823099999999997
+          ],
+          "beforeSize": [
+            0.6630000000000109,
+            0.6875999999999962,
+            0.5656999999999925
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 43
+        },
+        {
+          "center": [
+            -0.849000000000018,
+            -0.11884999999999835,
+            -12.823099999999997
+          ],
+          "beforeSize": [
+            0.6629999999999541,
+            0.6875999999999962,
+            0.5656999999999925
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 45
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -6.5197589285714255
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -2.963526785714283
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          0.592705357142858
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          4.148937500000002
+        ]
+      },
+      {
+        "name": "TailExtra1",
+        "parent": 4,
+        "position": [
+          0,
+          0,
+          7.705169642857147
+        ]
+      },
+      {
+        "name": "TailExtra2",
+        "parent": 5,
+        "position": [
+          0,
+          0,
+          11.261401785714288
+        ]
+      },
+      {
+        "name": "TailExtra3",
+        "parent": 6,
+        "position": [
+          0,
+          0,
+          14.817633928571428
+        ]
+      }
+    ],
+    "mouth": [
+      0.0020999999999719962,
+      -2.031198571428571,
+      -16.371253809523804
+    ],
+    "bodySize": [
+      5.477000000000032,
+      7.727900000000002,
+      33.1915
+    ],
+    "presentationRadius": 20.987985370140056,
+    "sourceOrigin": [
+      -391.1355,
+      34.63995,
+      -66.59165
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.35714285714285715,
+      0.4642857142857143,
+      0.5714285714285714,
+      0.6785714285714286,
+      0.7857142857142857,
+      0.8928571428571429,
+      0.99
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 8,
+      "parts": 1,
+      "vertices": 13995,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "Flamingo",
+    "key": "New008",
+    "family": "standard",
+    "variant": "new_standard",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            0.9079999999999586,
+            0.3608999999999938,
+            -5.402650000000001
+          ],
+          "beforeSize": [
+            0.1069999999999709,
+            0.285499999999999,
+            0.29229999999999734
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 61
+        },
+        {
+          "center": [
+            -0.9080000000000439,
+            0.3608999999999938,
+            -5.402650000000001
+          ],
+          "beforeSize": [
+            0.10700000000002774,
+            0.285499999999999,
+            0.29229999999999734
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 61
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -3.1056960000000045
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.5646720000000034
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          2.2939799999999977
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          4.94088
+        ]
+      }
+    ],
+    "mouth": [
+      0.0004374999999328111,
+      -0.015687500000002963,
+      -6.991875
+    ],
+    "bodySize": [
+      11.492999999999995,
+      8.093899999999998,
+      14.116800000000005
+    ],
+    "presentationRadius": 9.764955479460093,
+    "sourceOrigin": [
+      -368.71349999999995,
+      33.018950000000004,
+      -66.515
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 4,
+      "vertices": 6522,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "Galaxy Megalodon",
+    "key": "New009",
+    "family": "standard",
+    "variant": "new_standard",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            -0.8835000000000264,
+            -0.49799999999999756,
+            -5.9388000000000005
+          ],
+          "beforeSize": [
+            0.13400000000001455,
+            0.3669000000000011,
+            0.3620999999999981
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 71
+        },
+        {
+          "center": [
+            0.9244999999999948,
+            -0.49799999999999756,
+            -5.9388000000000005
+          ],
+          "beforeSize": [
+            0.1339999999999577,
+            0.3669000000000011,
+            0.3620999999999981
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 82
+        }
+      ],
+      "mode": "components"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -3.5722499999999915
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.6494999999999926
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          2.638593750000009
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          5.6831250000000075
+        ]
+      }
+    ],
+    "mouth": [
+      0.020499999999969987,
+      -0.439549999999997,
+      -8.118749999999991
+    ],
+    "bodySize": [
+      13.812999999999988,
+      6.1480999999999995,
+      16.237499999999997
+    ],
+    "presentationRadius": 11.241548462069666,
+    "sourceOrigin": [
+      -357.6205,
+      36.02905,
+      -67.30705
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 3,
+      "vertices": 8229,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "Hell Shark",
+    "key": "New010",
+    "family": "standard",
+    "variant": "new_standard",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            -1.0981250000000173,
+            -0.6663499999999987,
+            -5.962600000000009
+          ],
+          "beforeSize": [
+            0.7027500000000231,
+            0.5577000000000023,
+            0.5810999999999993
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 4275
+        },
+        {
+          "center": [
+            1.0971249999999841,
+            -0.6663499999999987,
+            -5.962600000000009
+          ],
+          "beforeSize": [
+            0.7027500000000231,
+            0.5577000000000023,
+            0.5810999999999993
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 4275
+        }
+      ],
+      "mode": "patch"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -3.7059660000000054
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.673812000000007
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          2.737361249999994
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          5.895854999999992
+        ]
+      }
+    ],
+    "mouth": [
+      -1.8947806286936004e-14,
+      -1.3535999999999977,
+      -7.558350000000014
+    ],
+    "bodySize": [
+      14.372000000000014,
+      6.158799999999999,
+      16.845299999999995
+    ],
+    "presentationRadius": 11.345337035107034,
+    "sourceOrigin": [
+      -384.182,
+      36.196,
+      -102.20535000000001
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": true,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 9,
+      "vertices": 25219,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "Killer Whale",
+    "key": "New011",
+    "family": "dolphin",
+    "variant": "new_dolphin",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            -1.1308750000000032,
+            0.7361625000000025,
+            -4.2947250000000015
+          ],
+          "beforeSize": [
+            0.3542499999999791,
+            0.4314249999999973,
+            0.43989999999999796
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 751
+        },
+        {
+          "center": [
+            1.1312499999999943,
+            0.7361625000000025,
+            -4.2947250000000015
+          ],
+          "beforeSize": [
+            0.3534999999999968,
+            0.4314249999999973,
+            0.43989999999999796
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 751
+        }
+      ],
+      "mode": "patch"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -3.259827999999998
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.4343248000000042
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          2.5068094999999957
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          5.230081999999998
+        ]
+      }
+    ],
+    "mouth": [
+      6.557377048675819e-05,
+      0.4532483606557403,
+      -7.344475409836062
+    ],
+    "bodySize": [
+      6.274000000000001,
+      3.5805000000000007,
+      14.817399999999992
+    ],
+    "presentationRadius": 9.099298007973958,
+    "sourceOrigin": [
+      -155.969,
+      49.33105,
+      -70.976
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.26484470959817474,
+      0.43393042639059454,
+      0.6324223547990874,
+      0.8162111773995437,
+      0.985
+    ],
+    "headEnd": 0.26484470959817474,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 1,
+      "vertices": 11854,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "Magma Fury",
+    "key": "New012",
+    "family": "standard",
+    "variant": "new_standard",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            1.0444999999999993,
+            -0.8688999999999965,
+            -7.3482999999999965
+          ],
+          "beforeSize": [
+            0.20300000000000296,
+            0.7104999999999961,
+            0.6889000000000003
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 300
+        },
+        {
+          "center": [
+            -1.043999999999997,
+            -0.8688999999999965,
+            -7.3482999999999965
+          ],
+          "beforeSize": [
+            0.20400000000000773,
+            0.7104999999999961,
+            0.6889000000000003
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 300
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -4.457441999999999
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.8104439999999986
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          3.2924287500000045
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          7.091385000000006
+        ]
+      }
+    ],
+    "mouth": [
+      0.0,
+      -0.9570499999999953,
+      -10.13055
+    ],
+    "bodySize": [
+      14.304000000000002,
+      9.550699999999999,
+      20.261100000000003
+    ],
+    "presentationRadius": 13.657426099174028,
+    "sourceOrigin": [
+      -108.777,
+      40.948949999999996,
+      -22.929450000000003
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 1,
+      "vertices": 11403,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "Mecha Whale",
+    "key": "New013",
+    "family": "dolphin",
+    "variant": "new_dolphin",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            -1.8182500000000061,
+            -1.9549874999999997,
+            -3.2594499999999975
+          ],
+          "beforeSize": [
+            0.2855000000000132,
+            0.46982500000000016,
+            0.4881999999999991
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 207
+        },
+        {
+          "center": [
+            1.8188750000000198,
+            -1.9549874999999997,
+            -3.2594499999999975
+          ],
+          "beforeSize": [
+            0.2847500000000025,
+            0.46982500000000016,
+            0.4881999999999991
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 207
+        }
+      ],
+      "mode": "patch"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -1.9325179999999982
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          1.317691400000001
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          4.755113375000002
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          7.9379114999999985
+        ]
+      }
+    ],
+    "mouth": [
+      0.0005000000000071244,
+      1.1983500000000002,
+      -10.342016666666666
+    ],
+    "bodySize": [
+      7.024999999999977,
+      6.821899999999999,
+      20.9683
+    ],
+    "presentationRadius": 13.320286629928571,
+    "sourceOrigin": [
+      -408.2425,
+      33.82465,
+      -70.34155
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.3928362098977982,
+      0.5324838816213047,
+      0.6964181049488991,
+      0.8482090524744496,
+      0.985
+    ],
+    "headEnd": 0.3928362098977982,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 4,
+      "vertices": 4252,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "Moby Whale",
+    "key": "New014",
+    "family": "dolphin",
+    "variant": "new_dolphin",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            1.3160000000000025,
+            -0.9740500000000019,
+            -2.637750000000004
+          ],
+          "beforeSize": [
+            0.16100000000000136,
+            0.21640000000000015,
+            0.27190000000000225
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 20
+        },
+        {
+          "center": [
+            -1.3160000000000025,
+            -0.9740500000000019,
+            -2.637750000000004
+          ],
+          "beforeSize": [
+            0.16100000000000136,
+            0.21640000000000015,
+            0.27190000000000225
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 20
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -1.7526980000000014
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          0.7185383999999999
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          3.3232365
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          5.734994000000002
+        ]
+      }
+    ],
+    "mouth": [
+      0.00021428571430094832,
+      0.6483642857142878,
+      -7.611885714285713
+    ],
+    "bodySize": [
+      5.2690000000000055,
+      4.147300000000001,
+      15.328800000000001
+    ],
+    "presentationRadius": 9.830440399873611,
+    "sourceOrigin": [
+      -141.1005,
+      50.27565,
+      -70.976
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.37065980376807045,
+      0.5154080489014142,
+      0.6853299018840353,
+      0.8426649509420177,
+      0.985
+    ],
+    "headEnd": 0.37065980376807045,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 1,
+      "vertices": 3906,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "Neon Cyber",
+    "key": "New015",
+    "family": "standard",
+    "variant": "new_standard",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            1.4799999999999898,
+            0.2331000000000003,
+            -3.68215
+          ],
+          "beforeSize": [
+            0.5840000000000032,
+            0.5835000000000008,
+            0.267399999999995
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 37
+        },
+        {
+          "center": [
+            -1.480499999999978,
+            0.2331000000000003,
+            -3.68215
+          ],
+          "beforeSize": [
+            0.5830000000000268,
+            0.5835000000000008,
+            0.267399999999995
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 37
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -2.725858000000005
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          0.2625033999999946
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          3.3932458749999945
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          6.292081499999995
+        ]
+      }
+    ],
+    "mouth": [
+      1.8947806286936004e-14,
+      -0.013016666666665344,
+      -8.534816666666668
+    ],
+    "bodySize": [
+      6.562000000000012,
+      4.590299999999999,
+      17.22229999999999
+    ],
+    "presentationRadius": 10.528469783428546,
+    "sourceOrigin": [
+      -368.538,
+      33.27035,
+      -94.43285
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.3267250889834687,
+      0.4815783185172709,
+      0.6633625444917344,
+      0.8316812722458671,
+      0.985
+    ],
+    "headEnd": 0.3267250889834687,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 1,
+      "vertices": 15662,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "Obsidian Fang",
+    "key": "New016",
+    "family": "standard",
+    "variant": "new_standard",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            -1.6530000000000058,
+            0.04397500000000143,
+            -6.025650000000006
+          ],
+          "beforeSize": [
+            0.5300000000000011,
+            0.3428500000000021,
+            0.3289999999999935
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 154
+        },
+        {
+          "center": [
+            1.6539999999999822,
+            0.04397500000000143,
+            -6.025650000000006
+          ],
+          "beforeSize": [
+            0.5300000000000011,
+            0.3428500000000021,
+            0.3289999999999935
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 154
+        }
+      ],
+      "mode": "patch"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -4.099106000000007
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.7452920000000063
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          3.0277487499999953
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          6.521304999999995
+        ]
+      }
+    ],
+    "mouth": [
+      0.0002115384615334593,
+      -0.8629769230769208,
+      -9.315919230769232
+    ],
+    "bodySize": [
+      9.879999999999995,
+      7.041000000000004,
+      18.6323
+    ],
+    "presentationRadius": 12.776921396345262,
+    "sourceOrigin": [
+      -358.736,
+      34.1369,
+      -97.30685
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 1,
+      "vertices": 11751,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "Omanadzu",
+    "key": "New017",
+    "family": "standard",
+    "variant": "new_standard",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            0.8910000000000053,
+            0.08755000000000024,
+            -5.615250000000003
+          ],
+          "beforeSize": [
+            0.41499999999999204,
+            0.4188000000000045,
+            0.4140999999999906
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 312
+        },
+        {
+          "center": [
+            -0.8814999999999884,
+            0.08755000000000024,
+            -5.620250000000006
+          ],
+          "beforeSize": [
+            0.4200000000000159,
+            0.4188000000000045,
+            0.41570000000000107
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 307
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -3.195896000000004
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.5810720000000034
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          2.360604999999998
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          5.084379999999998
+        ]
+      }
+    ],
+    "mouth": [
+      -9.649122805841983e-05,
+      -0.5245447368421056,
+      -7.201349122807022
+    ],
+    "bodySize": [
+      6.859000000000009,
+      6.1447,
+      14.526800000000001
+    ],
+    "presentationRadius": 9.67644211472316,
+    "sourceOrigin": [
+      -132.0115,
+      53.60295,
+      -70.9763
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 1,
+      "vertices": 10876,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "Saberfish",
+    "key": "New018",
+    "family": "standard",
+    "variant": "new_standard",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            -0.723399999999998,
+            -1.0238875000000025,
+            -2.083250000000014
+          ],
+          "beforeSize": [
+            0.10960000000000036,
+            0.15572500000000034,
+            0.20350000000000534
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 544
+        },
+        {
+          "center": [
+            0.723399999999998,
+            -1.0238875000000025,
+            -2.083250000000014
+          ],
+          "beforeSize": [
+            0.10960000000000036,
+            0.15572500000000034,
+            0.20350000000000534
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 544
+        }
+      ],
+      "mode": "patch"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -1.4059500000000078
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          0.5180899999999902
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          2.544743749999988
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          4.421274999999987
+        ]
+      }
+    ],
+    "mouth": [
+      0.00033367174281259763,
+      -0.2635749294980282,
+      -3.1079890016920606
+    ],
+    "bodySize": [
+      3.6474000000000046,
+      3.4829000000000008,
+      11.844999999999999
+    ],
+    "presentationRadius": 8.058092846630208,
+    "sourceOrigin": [
+      -95.0378,
+      54.63855,
+      -142.89249999999998
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.36630434782608745,
+      0.5120543478260873,
+      0.6831521739130437,
+      0.8415760869565219,
+      0.985
+    ],
+    "headEnd": 0.36630434782608745,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 2,
+      "vertices": 29754,
+      "shellRigidVertices": 0,
+      "publishedParts": 3,
+      "losslessTriangleSplit": true
+    }
+  },
+  {
+    "name": "Shatichoko",
+    "key": "New019",
+    "family": "standard",
+    "variant": "new_standard",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            2.9490000000000123,
+            -0.2572499999999991,
+            -2.6747499999999995
+          ],
+          "beforeSize": [
+            0.4259999999999877,
+            0.46349999999999625,
+            0.36250000000000426
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 32
+        },
+        {
+          "center": [
+            -3.056999999999988,
+            -0.9054499999999983,
+            -2.9025999999999996
+          ],
+          "beforeSize": [
+            0.4019999999999868,
+            0.8497000000000057,
+            0.45940000000000225
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 84
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -1.873857999999995
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          0.0668284000000039
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          2.096730250000003
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          3.976269000000002
+        ]
+      }
+    ],
+    "mouth": [
+      -0.06919999999998935,
+      -0.22584999999999766,
+      -5.44559
+    ],
+    "bodySize": [
+      6.515999999999991,
+      5.848799999999997,
+      10.959800000000001
+    ],
+    "presentationRadius": 6.803155685748986,
+    "sourceOrigin": [
+      -174.074,
+      47.775,
+      -30.5383
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.31402443475245945,
+      0.4717988147593938,
+      0.6570122173762297,
+      0.8285061086881149,
+      0.985
+    ],
+    "headEnd": 0.31402443475245945,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 1,
+      "vertices": 26853,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "Summertime Elk",
+    "key": "New020",
+    "family": "longbody",
+    "variant": "new_longbody",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            0.7905000000000086,
+            -3.5565500000000014,
+            -13.1464
+          ],
+          "beforeSize": [
+            0.10000000000002274,
+            0.4802999999999997,
+            0.5560000000000116
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 17
+        },
+        {
+          "center": [
+            -0.623500000000007,
+            -3.5565500000000014,
+            -13.1464
+          ],
+          "beforeSize": [
+            0.0999999999999659,
+            0.4802999999999997,
+            0.5560000000000116
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 17
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -5.612907142857146
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -2.5513214285714305
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          0.5102642857142836
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          3.5718500000000013
+        ]
+      },
+      {
+        "name": "TailExtra1",
+        "parent": 4,
+        "position": [
+          0,
+          0,
+          6.633435714285717
+        ]
+      },
+      {
+        "name": "TailExtra2",
+        "parent": 5,
+        "position": [
+          0,
+          0,
+          9.695021428571433
+        ]
+      },
+      {
+        "name": "TailExtra3",
+        "parent": 6,
+        "position": [
+          0,
+          0,
+          12.756607142857145
+        ]
+      }
+    ],
+    "mouth": [
+      0.08354999999999961,
+      -4.16655,
+      -14.131100000000004
+    ],
+    "bodySize": [
+      3.384999999999991,
+      10.658599999999996,
+      28.57480000000001
+    ],
+    "presentationRadius": 18.35194652274122,
+    "sourceOrigin": [
+      -406.0795,
+      37.1111,
+      -93.9846
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.35714285714285715,
+      0.4642857142857143,
+      0.5714285714285714,
+      0.6785714285714286,
+      0.7857142857142857,
+      0.8928571428571429,
+      0.99
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 8,
+      "parts": 2,
+      "vertices": 5699,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "Swordfish Skeleton",
+    "key": "New021",
+    "family": "standard",
+    "variant": "new_standard",
+    "eye": {
+      "scale": 1,
+      "eyes": [],
+      "reason": "Source is a hollow skeleton with empty eye sockets; preserve original design."
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -4.445496000000005
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.8082720000000041
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          3.2836049999999997
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          7.0723800000000026
+        ]
+      }
+    ],
+    "mouth": [
+      0,
+      -0.6521000000000043,
+      -3.6402999999999963
+    ],
+    "bodySize": [
+      6.951999999999998,
+      4.612400000000001,
+      20.20680000000001
+    ],
+    "presentationRadius": 13.396920974697942,
+    "sourceOrigin": [
+      -107.003,
+      45.714200000000005,
+      -69.0774
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 1,
+      "vertices": 13450,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "Tralalero Tralala",
+    "key": "New022",
+    "family": "standard",
+    "variant": "new_standard",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            0.585000000000008,
+            -0.1180000000000021,
+            -8.596550000000008
+          ],
+          "beforeSize": [
+            0.11200000000002319,
+            0.26309999999999434,
+            0.25
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 61
+        },
+        {
+          "center": [
+            -0.5844999999999914,
+            -0.1180000000000021,
+            -8.596550000000008
+          ],
+          "beforeSize": [
+            0.11099999999999,
+            0.26309999999999434,
+            0.25
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 61
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -4.3531620000000055
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.7914840000000058
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          3.215403749999993
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          6.925484999999991
+        ]
+      }
+    ],
+    "mouth": [
+      6.249999999852207e-05,
+      0.0492999999999979,
+      -9.800050000000002
+    ],
+    "bodySize": [
+      7.298000000000002,
+      8.728700000000003,
+      19.787099999999995
+    ],
+    "presentationRadius": 13.95140230097753,
+    "sourceOrigin": [
+      -417.875,
+      33.41615,
+      -95.86245
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 2,
+      "vertices": 6066,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "Turtle Walker",
+    "key": "New023",
+    "family": "turtle",
+    "variant": "new_turtle",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            -0.8965875000000079,
+            0.1883374999999976,
+            -5.337924999999991
+          ],
+          "beforeSize": [
+            0.3081750000000021,
+            0.2410749999999986,
+            0.22860000000000014
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 100
+        },
+        {
+          "center": [
+            0.8965874999999937,
+            0.1883374999999976,
+            -5.337924999999991
+          ],
+          "beforeSize": [
+            0.3081750000000021,
+            0.2410749999999986,
+            0.22860000000000014
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 100
+        }
+      ],
+      "mode": "patch"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -3.318282
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.6033239999999997
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          2.4510037500000017
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          5.279085000000002
+        ]
+      },
+      {
+        "name": "FinLeft",
+        "parent": 2,
+        "position": [
+          -1.9900080000000004,
+          -0.7257120000000004,
+          -1.8099720000000001
+        ]
+      },
+      {
+        "name": "FinRight",
+        "parent": 2,
+        "position": [
+          1.9900080000000004,
+          -0.7257120000000004,
+          -1.8099720000000001
+        ]
+      },
+      {
+        "name": "RearFins",
+        "parent": 2,
+        "position": [
+          0,
+          -0.7257120000000004,
+          3.0166200000000005
+        ]
+      }
+    ],
+    "mouth": [
+      -3.383536836952858e-16,
+      0.5665999999999991,
+      -6.4964404761904735
+    ],
+    "bodySize": [
+      16.583400000000005,
+      6.047600000000003,
+      15.083100000000002
+    ],
+    "presentationRadius": 9.909857541801223,
+    "sourceOrigin": [
+      -71.91,
+      42.4795,
+      -89.48045
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 8,
+      "parts": 3,
+      "vertices": 19472,
+      "shellRigidVertices": 2736
+    }
+  },
+  {
+    "name": "Twinhead Megalodon",
+    "key": "New024",
+    "family": "standard",
+    "variant": "new_standard",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            -0.6432500000000019,
+            0.16309999999999913,
+            -4.240412499999989
+          ],
+          "beforeSize": [
+            0.6844999999999999,
+            0.4875999999999987,
+            0.4827249999999985
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 76
+        },
+        {
+          "center": [
+            2.3203750000000003,
+            0.17086250000000103,
+            -4.224162499999993
+          ],
+          "beforeSize": [
+            0.4192500000000017,
+            0.49117500000000014,
+            0.517324999999996
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 189
+        }
+      ],
+      "mode": "patch"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -2.6561259999999933
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.4829319999999928
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          1.9619112500000089
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          4.225655000000009
+        ]
+      }
+    ],
+    "mouth": [
+      0.00012499999999793232,
+      -0.23452187499999955,
+      -5.985706249999987
+    ],
+    "bodySize": [
+      7.5120000000000005,
+      4.981899999999996,
+      12.073300000000003
+    ],
+    "presentationRadius": 8.211465941360023,
+    "sourceOrigin": [
+      -128.547,
+      44.69155,
+      -92.34145000000001
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 4,
+      "vertices": 8565,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "Undead Megalodon",
+    "key": "New025",
+    "family": "standard",
+    "variant": "new_standard",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            0.845499999999987,
+            -0.1539000000000037,
+            -5.104749999999989
+          ],
+          "beforeSize": [
+            0.7629999999999768,
+            0.6686999999999941,
+            0.7682999999999964
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 288
+        },
+        {
+          "center": [
+            -0.9525000000000148,
+            -0.1539000000000037,
+            -5.104749999999989
+          ],
+          "beforeSize": [
+            0.7629999999999768,
+            0.6686999999999941,
+            0.7682999999999964
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 275
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -3.633201999999992
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.3444143999999927
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          3.0812160000000066
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          6.253096000000005
+        ]
+      }
+    ],
+    "mouth": [
+      -0.05299999999999727,
+      0.001799999999995805,
+      -8.781449999999992
+    ],
+    "bodySize": [
+      12.009999999999991,
+      5.241700000000002,
+      17.581200000000003
+    ],
+    "presentationRadius": 11.545567278955449,
+    "sourceOrigin": [
+      -382.452,
+      35.651650000000004,
+      -68.2609
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.2783473255522948,
+      0.44432744067526697,
+      0.6391736627761474,
+      0.8195868313880736,
+      0.985
+    ],
+    "headEnd": 0.2783473255522948,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 2,
+      "vertices": 12731,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "AzureDamsel_New",
+    "key": "New026",
+    "family": "standard",
+    "variant": "new_standard",
+    "eye": {
+      "scale": 1.5,
+      "eyes": [
+        {
+          "center": [
+            0.3984999999999843,
+            0.024149999999998784,
+            -1.8959000000000117
+          ],
+          "beforeSize": [
+            0.1220000000000141,
+            0.44140000000000157,
+            0.1980000000000075
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 4
+        },
+        {
+          "center": [
+            -0.39900000000002933,
+            0.024149999999998784,
+            -1.8959000000000117
+          ],
+          "beforeSize": [
+            0.12299999999999045,
+            0.44140000000000157,
+            0.1980000000000075
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 4
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -1.160236000000009
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.21095200000000736
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          0.8569924999999947
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          1.8458299999999968
+        ]
+      }
+    ],
+    "mouth": [
+      -0.0004999999999881766,
+      -0.2837499999999977,
+      -2.6369000000000113
+    ],
+    "bodySize": [
+      1.728999999999985,
+      2.8256999999999977,
+      5.2738000000000085
+    ],
+    "presentationRadius": 3.503565170390939,
+    "sourceOrigin": [
+      -285.5005,
+      46.08625,
+      -98.93809999999999
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 1,
+      "vertices": 242,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "BallinaAngelfish_New",
+    "key": "New027",
+    "family": "standard",
+    "variant": "new_standard",
+    "eye": {
+      "scale": 1.5,
+      "eyes": [
+        {
+          "center": [
+            0.31900000000004525,
+            0.030599999999996186,
+            -1.4265000000000043
+          ],
+          "beforeSize": [
+            0.09399999999999409,
+            0.34440000000000026,
+            0.16599999999999682
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 4
+        },
+        {
+          "center": [
+            -0.3189999999999884,
+            0.030599999999996186,
+            -1.4265000000000043
+          ],
+          "beforeSize": [
+            0.09399999999999409,
+            0.34440000000000026,
+            0.16599999999999682
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 4
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -0.9523800000000016
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.1731600000000002
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          0.7034625000000014
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          1.5151500000000029
+        ]
+      }
+    ],
+    "mouth": [
+      0.0,
+      -0.3595000000000006,
+      -2.147500000000001
+    ],
+    "bodySize": [
+      1.3700000000000045,
+      2.686399999999999,
+      4.329000000000008
+    ],
+    "presentationRadius": 2.8580253462891316,
+    "sourceOrigin": [
+      -273.797,
+      46.0566,
+      -124.5175
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 1,
+      "vertices": 306,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "BleekersDamsel",
+    "key": "New028",
+    "family": "standard",
+    "variant": "new_standard",
+    "eye": {
+      "scale": 1.5,
+      "eyes": [
+        {
+          "center": [
+            0.23150000000002535,
+            0.10415000000000063,
+            -1.1910000000000167
+          ],
+          "beforeSize": [
+            0.0730000000000075,
+            0.2792999999999992,
+            0.12600000000000477
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 4
+        },
+        {
+          "center": [
+            -0.2319999999999851,
+            0.10415000000000063,
+            -1.1910000000000167
+          ],
+          "beforeSize": [
+            0.07399999999998386,
+            0.2792999999999992,
+            0.12600000000000477
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 4
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -0.7268800000000146
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.13216000000001427
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          0.5368999999999864
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          1.1563999999999868
+        ]
+      }
+    ],
+    "mouth": [
+      2.842170943040401e-14,
+      -0.10499999999999687,
+      -1.6520000000000152
+    ],
+    "bodySize": [
+      0.9960000000000093,
+      1.7549999999999955,
+      3.304000000000002
+    ],
+    "presentationRadius": 2.213092504385047,
+    "sourceOrigin": [
+      -254.80200000000002,
+      45.9807,
+      -150.24099999999999
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 1,
+      "vertices": 212,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "BluefinTuna",
+    "key": "New029",
+    "family": "standard",
+    "variant": "new_standard",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            0.3090000000000259,
+            -0.09999999999999787,
+            -1.9924999999999997
+          ],
+          "beforeSize": [
+            0.08199999999999363,
+            0.27180000000000604,
+            0.11800000000000921
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 4
+        },
+        {
+          "center": [
+            -0.3089999999999975,
+            -0.09999999999999787,
+            -1.9924999999999997
+          ],
+          "beforeSize": [
+            0.08200000000005048,
+            0.27180000000000604,
+            0.11800000000000921
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 4
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -1.0865799999999983
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.19755999999999974
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          0.8025874999999991
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          1.7286499999999982
+        ]
+      }
+    ],
+    "mouth": [
+      0.0,
+      -0.21377999999999986,
+      -2.453899999999996
+    ],
+    "bodySize": [
+      1.6480000000000246,
+      2.7612000000000023,
+      4.938999999999993
+    ],
+    "presentationRadius": 3.410308972049008,
+    "sourceOrigin": [
+      -261.322,
+      46.0419,
+      -124.5175
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 1,
+      "vertices": 290,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "BumblebeeGrouper",
+    "key": "New030",
+    "family": "standard",
+    "variant": "new_standard",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            0.3450000000000273,
+            0.007099999999997664,
+            -1.9238999999999962
+          ],
+          "beforeSize": [
+            0.09500000000002728,
+            0.30340000000000344,
+            0.18939999999999202
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 4
+        },
+        {
+          "center": [
+            -0.34499999999997044,
+            0.007099999999997664,
+            -1.9238999999999962
+          ],
+          "beforeSize": [
+            0.09500000000002728,
+            0.30340000000000344,
+            0.18939999999999202
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 4
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -1.0487840000000004
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.1906880000000002
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          0.7746700000000009
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          1.668520000000001
+        ]
+      }
+    ],
+    "mouth": [
+      0.00050000000004502,
+      -0.19090000000000273,
+      -2.3770999999999987
+    ],
+    "bodySize": [
+      1.7489999999999668,
+      3.0463999999999984,
+      4.7672000000000025
+    ],
+    "presentationRadius": 3.1725773925945266,
+    "sourceOrigin": [
+      -283.5615,
+      45.8545,
+      -76.5771
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 1,
+      "vertices": 469,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "FireGoby",
+    "key": "New031",
+    "family": "standard",
+    "variant": "new_standard",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            0.23850000000001614,
+            -0.5255499999999991,
+            -1.364500000000021
+          ],
+          "beforeSize": [
+            0.09800000000001319,
+            0.21069999999999567,
+            0.08699999999998909
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 4
+        },
+        {
+          "center": [
+            -0.23849999999998772,
+            -0.5255499999999991,
+            -1.364500000000021
+          ],
+          "beforeSize": [
+            0.09800000000001319,
+            0.21069999999999567,
+            0.08699999999998909
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 4
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -0.7528400000000135
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.1368800000000141
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          0.5560749999999857
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          1.197699999999985
+        ]
+      }
+    ],
+    "mouth": [
+      0.0005000000000165983,
+      -0.5755000000000029,
+      -1.7016666666666822
+    ],
+    "bodySize": [
+      1.100999999999999,
+      2.0427999999999997,
+      3.421999999999997
+    ],
+    "presentationRadius": 2.3770573857871047,
+    "sourceOrigin": [
+      -238.9395,
+      46.6096,
+      -149.96699999999998
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 1,
+      "vertices": 256,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "FlameAngelfish",
+    "key": "New032",
+    "family": "standard",
+    "variant": "new_standard",
+    "eye": {
+      "scale": 1.5,
+      "eyes": [
+        {
+          "center": [
+            0.2709999999999866,
+            -0.02039999999999509,
+            -1.7410500000000084
+          ],
+          "beforeSize": [
+            0.10300000000000864,
+            0.4076000000000022,
+            0.1869999999999976
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 4
+        },
+        {
+          "center": [
+            -0.2709999999999866,
+            -0.02039999999999509,
+            -1.7410500000000084
+          ],
+          "beforeSize": [
+            0.10300000000000864,
+            0.4076000000000022,
+            0.1869999999999976
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 4
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -1.059322
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.19260399999999978
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          0.7824537500000006
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          1.6852850000000004
+        ]
+      }
+    ],
+    "mouth": [
+      -0.0004999999999881766,
+      -0.4297999999999931,
+      -2.387050000000002
+    ],
+    "bodySize": [
+      1.530999999999949,
+      3.144200000000005,
+      4.815100000000001
+    ],
+    "presentationRadius": 3.187684270269223,
+    "sourceOrigin": [
+      -260.3245,
+      46.187799999999996,
+      -100.45745
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 1,
+      "vertices": 468,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "FoureyeButterflyfish",
+    "key": "New033",
+    "family": "standard",
+    "variant": "new_standard",
+    "eye": {
+      "scale": 1.5,
+      "eyes": [
+        {
+          "center": [
+            0.3185000000000002,
+            -0.2173000000000016,
+            -1.3034999999999997
+          ],
+          "beforeSize": [
+            0.09300000000001774,
+            0.37460000000000093,
+            0.2220000000000084
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 4
+        },
+        {
+          "center": [
+            -0.31800000000001205,
+            -0.2173000000000016,
+            -1.3034999999999997
+          ],
+          "beforeSize": [
+            0.09399999999999409,
+            0.37460000000000093,
+            0.2220000000000084
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 4
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -0.8692199999999985
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.15803999999999974
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          0.6420374999999994
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          1.3828499999999981
+        ]
+      }
+    ],
+    "mouth": [
+      0.0,
+      -0.5167000000000002,
+      -1.9754999999999967
+    ],
+    "bodySize": [
+      1.367999999999995,
+      2.9165999999999954,
+      3.9509999999999934
+    ],
+    "presentationRadius": 2.6190937464100923,
+    "sourceOrigin": [
+      -285.697,
+      46.1726,
+      -124.5175
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 1,
+      "vertices": 518,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "GreateWhiteShark",
+    "key": "New034",
+    "family": "standard",
+    "variant": "new_standard",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            1.0624999999999716,
+            -0.3520000000000003,
+            -6.501149999999999
+          ],
+          "beforeSize": [
+            0.20400000000000773,
+            0.48089999999999833,
+            0.18130000000000024
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 4
+        },
+        {
+          "center": [
+            -1.0630000000000166,
+            -0.3520000000000003,
+            -6.501149999999999
+          ],
+          "beforeSize": [
+            0.20499999999998408,
+            0.48089999999999833,
+            0.18130000000000024
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 4
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -3.765475999999997
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.6846319999999979
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          2.781317500000002
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          5.9905300000000015
+        ]
+      }
+    ],
+    "mouth": [
+      -0.0004999999999881766,
+      -0.3926500000000033,
+      -8.557899999999997
+    ],
+    "bodySize": [
+      8.028999999999996,
+      5.626099999999994,
+      17.115799999999997
+    ],
+    "presentationRadius": 11.593074110950697,
+    "sourceOrigin": [
+      -269.6305,
+      44.26585,
+      -29.2404
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 1,
+      "vertices": 517,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "GreenSeahorse",
+    "key": "New035",
+    "family": "seahorse",
+    "variant": "new_seahorse",
+    "eye": {
+      "scale": 1.5,
+      "eyes": [
+        {
+          "center": [
+            0.1595000000000084,
+            1.1346000000000025,
+            -0.10700000000001353
+          ],
+          "beforeSize": [
+            0.03100000000000591,
+            0.11630000000000251,
+            0.04999999999998295
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 4
+        },
+        {
+          "center": [
+            -0.1595000000000084,
+            1.1346000000000025,
+            -0.10700000000001353
+          ],
+          "beforeSize": [
+            0.03100000000000591,
+            0.11630000000000251,
+            0.04999999999998295
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 4
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          -0.0002646484375077307,
+          1.0946899536132833,
+          0.07915002441404795
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          -0.0002646484375077307,
+          0.3833137634277364,
+          0.20305139160154795
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          -0.0002646484375077307,
+          -0.5577644226074199,
+          0.46756249999998545
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          -0.0002646484375077307,
+          -1.1549857971191386,
+          0.5441311035156104
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          -0.0002646484375077307,
+          -1.345747363281248,
+          0.39073449707029795
+        ]
+      },
+      {
+        "name": "TailExtra1",
+        "parent": 4,
+        "position": [
+          -0.0002646484375077307,
+          -1.3518737670898417,
+          0.18942529296873545
+        ]
+      },
+      {
+        "name": "TailExtra2",
+        "parent": 5,
+        "position": [
+          -0.0002646484375077307,
+          -1.1155456420898417,
+          0.07039147949217295
+        ]
+      },
+      {
+        "name": "TailExtra3",
+        "parent": 6,
+        "position": [
+          -0.0002646484375077307,
+          -1.0140136596679667,
+          0.32245141601561045
+        ]
+      }
+    ],
+    "mouth": [
+      -0.00013888888888876258,
+      1.0323500000000014,
+      -0.7452222222222341
+    ],
+    "bodySize": [
+      0.4660000000000082,
+      2.8427000000000007,
+      1.4960000000000093
+    ],
+    "presentationRadius": 1.7386480841679541,
+    "sourceOrigin": [
+      -273.796,
+      45.67845,
+      -150.24099999999999
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.28,
+      0.4456,
+      0.64,
+      0.8200000000000001,
+      0.985
+    ],
+    "headEnd": 0.28,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 8,
+      "parts": 1,
+      "vertices": 768,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "GreenTurtle",
+    "key": "New036",
+    "family": "turtle",
+    "variant": "new_turtle",
+    "eye": {
+      "scale": 1.5,
+      "eyes": [
+        {
+          "center": [
+            0.4239999999999924,
+            -0.05300000000000438,
+            -2.3815000000000026
+          ],
+          "beforeSize": [
+            0.04400000000001114,
+            0.17709999999999582,
+            0.0730000000000075
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 4
+        },
+        {
+          "center": [
+            -0.4245000000000232,
+            -0.05300000000000438,
+            -2.3815000000000026
+          ],
+          "beforeSize": [
+            0.043000000000006366,
+            0.17709999999999582,
+            0.0730000000000075
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 4
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -1.2179200000000001
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.22143999999999986
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          0.8996000000000008
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          1.9376000000000007
+        ]
+      },
+      {
+        "name": "FinLeft",
+        "parent": 2,
+        "position": [
+          -0.7559999999999979,
+          -0.21380400000000008,
+          -0.6643200000000001
+        ]
+      },
+      {
+        "name": "FinRight",
+        "parent": 2,
+        "position": [
+          0.7559999999999979,
+          -0.21380400000000008,
+          -0.6643200000000001
+        ]
+      },
+      {
+        "name": "RearFins",
+        "parent": 2,
+        "position": [
+          0,
+          -0.21380400000000008,
+          1.1072000000000004
+        ]
+      }
+    ],
+    "mouth": [
+      -2.842170943040401e-14,
+      -0.2227166666666681,
+      -2.7399999999999998
+    ],
+    "bodySize": [
+      6.299999999999983,
+      1.7817000000000007,
+      5.536000000000001
+    ],
+    "presentationRadius": 3.639918012776424,
+    "sourceOrigin": [
+      -198.24099999999999,
+      46.22655,
+      -124.881
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 8,
+      "parts": 1,
+      "vertices": 996,
+      "shellRigidVertices": 290
+    }
+  },
+  {
+    "name": "Lobster",
+    "key": "New037",
+    "family": "lobster",
+    "variant": "new_lobster",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            0.5815000000000055,
+            0.2784499999999994,
+            -0.8054500000000004
+          ],
+          "beforeSize": [
+            0.11299999999999955,
+            0.2575999999999965,
+            0.1115999999999957
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 4
+        },
+        {
+          "center": [
+            -0.5815000000000055,
+            0.2784499999999994,
+            -0.8054500000000004
+          ],
+          "beforeSize": [
+            0.11299999999999955,
+            0.2575999999999965,
+            0.1115999999999957
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 4
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -1.5975445000000001
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.14338936000000002
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          1.3715504000000012
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          2.774272400000001
+        ]
+      },
+      {
+        "name": "ClawLeft",
+        "parent": 2,
+        "position": [
+          -0.5711999999999989,
+          0,
+          -1.4027220000000005
+        ]
+      },
+      {
+        "name": "ClawRight",
+        "parent": 2,
+        "position": [
+          0.5711999999999989,
+          0,
+          -1.4027220000000005
+        ]
+      },
+      {
+        "name": "TailExtra1",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          3.1171600000000015
+        ]
+      }
+    ],
+    "mouth": [
+      0.00019444444443432,
+      0.9407166666666689,
+      -3.8771499999999994
+    ],
+    "bodySize": [
+      4.759999999999991,
+      2.096900000000005,
+      7.792900000000003
+    ],
+    "presentationRadius": 4.471902480589657,
+    "sourceOrigin": [
+      -224.666,
+      45.97815,
+      -70.03475
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.28,
+      0.4456,
+      0.64,
+      0.8200000000000001,
+      0.985
+    ],
+    "headEnd": 0.28,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 8,
+      "parts": 1,
+      "vertices": 1224,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "NurseShark",
+    "key": "New038",
+    "family": "standard",
+    "variant": "new_standard",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            2.4810000000000088,
+            -1.182650000000006,
+            -6.560999999999993
+          ],
+          "beforeSize": [
+            0.10200000000000387,
+            0.7248999999999981,
+            0.8619999999999948
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 15
+        },
+        {
+          "center": [
+            -2.4809999999999803,
+            -1.182650000000006,
+            -6.560999999999993
+          ],
+          "beforeSize": [
+            0.10200000000000387,
+            0.7248999999999981,
+            0.8619999999999948
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 15
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -3.150399999999994
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.5727999999999929
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          2.327000000000009
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          5.012000000000011
+        ]
+      }
+    ],
+    "mouth": [
+      1.4166445794216997e-14,
+      -1.1513861140529165,
+      -7.419646183446579
+    ],
+    "bodySize": [
+      6.073999999999984,
+      5.5760000000000005,
+      14.320000000000007
+    ],
+    "presentationRadius": 9.700807117588344,
+    "sourceOrigin": [
+      -187.538,
+      47.156400000000005,
+      -96.23400000000001
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 1,
+      "vertices": 631,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "PinkDolphin",
+    "key": "New039",
+    "family": "dolphin",
+    "variant": "new_dolphin",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            1.203499999999977,
+            -0.18195000000000405,
+            -6.52375
+          ],
+          "beforeSize": [
+            0.10400000000001342,
+            0.43900000000000006,
+            0.28300000000000125
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 4
+        },
+        {
+          "center": [
+            -1.2035000000000196,
+            -0.18195000000000405,
+            -6.52375
+          ],
+          "beforeSize": [
+            0.103999999999985,
+            0.43900000000000006,
+            0.28300000000000125
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 4
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -3.817549999999998
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.6940999999999997
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          2.81978125
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          6.073374999999999
+        ]
+      }
+    ],
+    "mouth": [
+      -0.0005000000000165983,
+      -0.6241500000000061,
+      -8.62525
+    ],
+    "bodySize": [
+      7.200999999999993,
+      5.183100000000003,
+      17.352499999999992
+    ],
+    "presentationRadius": 11.443257603398678,
+    "sourceOrigin": [
+      -197.61149999999998,
+      46.486850000000004,
+      -96.23375
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 1,
+      "vertices": 398,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "PinkSkunkClownfish",
+    "key": "New040",
+    "family": "standard",
+    "variant": "new_standard",
+    "eye": {
+      "scale": 1.5,
+      "eyes": [
+        {
+          "center": [
+            0.3490000000000464,
+            5.000000000521254e-05,
+            -1.9239499999999978
+          ],
+          "beforeSize": [
+            0.15399999999999636,
+            0.37750000000000483,
+            0.14399999999999125
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 4
+        },
+        {
+          "center": [
+            -0.3499999999999659,
+            5.000000000521254e-05,
+            -1.9239499999999978
+          ],
+          "beforeSize": [
+            0.15399999999999636,
+            0.37750000000000483,
+            0.14399999999999125
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 4
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -1.0929379999999929
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.198715999999993
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          0.8072837500000074
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          1.7387650000000079
+        ]
+      }
+    ],
+    "mouth": [
+      5.684341886080802e-14,
+      -0.24106666666666143,
+      -2.4756166666666624
+    ],
+    "bodySize": [
+      1.9399999999999977,
+      2.8943999999999974,
+      4.9679
+    ],
+    "presentationRadius": 3.277901264813659,
+    "sourceOrigin": [
+      -279.87300000000005,
+      46.224999999999994,
+      -98.93805
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 1,
+      "vertices": 465,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "PinkSmithDamsel",
+    "key": "New041",
+    "family": "standard",
+    "variant": "new_standard",
+    "eye": {
+      "scale": 1.5,
+      "eyes": [
+        {
+          "center": [
+            0.4490000000000123,
+            0.16860000000000497,
+            -2.07589999999999
+          ],
+          "beforeSize": [
+            0.1330000000000382,
+            0.5100000000000051,
+            0.2219000000000051
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 4
+        },
+        {
+          "center": [
+            -0.44949999999997203,
+            0.16860000000000497,
+            -2.07589999999999
+          ],
+          "beforeSize": [
+            0.132000000000005,
+            0.5100000000000051,
+            0.2219000000000051
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 4
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -1.3073059999999934
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.2376919999999929
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          0.9656237500000082
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          2.0798050000000083
+        ]
+      }
+    ],
+    "mouth": [
+      -0.0004999999999881766,
+      -0.1967999999999961,
+      -2.9711499999999944
+    ],
+    "bodySize": [
+      1.9309999999999832,
+      3.2941999999999965,
+      5.942300000000003
+    ],
+    "presentationRadius": 4.00477065257897,
+    "sourceOrigin": [
+      -263.0955,
+      45.989999999999995,
+      -73.36115000000001
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 1,
+      "vertices": 188,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "QueenAngelfish_New",
+    "key": "New042",
+    "family": "standard",
+    "variant": "new_standard",
+    "eye": {
+      "scale": 1.5,
+      "eyes": [
+        {
+          "center": [
+            0.3850000000000193,
+            0.037800000000004275,
+            -1.9580500000000072
+          ],
+          "beforeSize": [
+            0.11700000000001864,
+            0.44310000000000116,
+            0.2049999999999983
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 4
+        },
+        {
+          "center": [
+            -0.3849999999999909,
+            0.037800000000004275,
+            -1.9580500000000072
+          ],
+          "beforeSize": [
+            0.1169999999999618,
+            0.44310000000000116,
+            0.2049999999999983
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 4
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -1.2392820000000067
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.22532400000000674
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          0.9153787499999932
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          1.971584999999993
+        ]
+      }
+    ],
+    "mouth": [
+      0.0004999999999881766,
+      -0.4267499999999984,
+      -2.797550000000008
+    ],
+    "bodySize": [
+      1.6549999999999727,
+      3.238500000000002,
+      5.633099999999999
+    ],
+    "presentationRadius": 4.086638747582406,
+    "sourceOrigin": [
+      -271.8745,
+      46.06735,
+      -98.93844999999999
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 1,
+      "vertices": 316,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "RedSeahorse",
+    "key": "New043",
+    "family": "seahorse",
+    "variant": "new_seahorse",
+    "eye": {
+      "scale": 1.5,
+      "eyes": [
+        {
+          "center": [
+            0.2259999999999991,
+            1.606500000000004,
+            -0.17049999999998988
+          ],
+          "beforeSize": [
+            0.04599999999999227,
+            0.17300000000000182,
+            0.0660000000000025
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 4
+        },
+        {
+          "center": [
+            -0.2259999999999991,
+            1.606500000000004,
+            -0.17049999999998988
+          ],
+          "beforeSize": [
+            0.04599999999999227,
+            0.17300000000000182,
+            0.0660000000000025
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 4
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          5.908203124249667e-05,
+          1.5475240234375036,
+          0.10277416992187227
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          5.908203124249667e-05,
+          0.5399022583007849,
+          0.27826550292968477
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          5.908203124249667e-05,
+          -0.7930826660156214,
+          0.6529145507812473
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          5.908203124249667e-05,
+          -1.6390108581542933,
+          0.7613740234374973
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          5.908203124249667e-05,
+          -1.9092211242675745,
+          0.5441193847656223
+        ]
+      },
+      {
+        "name": "TailExtra1",
+        "parent": 4,
+        "position": [
+          5.908203124249667e-05,
+          -1.9178995605468714,
+          0.25894787597655977
+        ]
+      },
+      {
+        "name": "TailExtra2",
+        "parent": 5,
+        "position": [
+          5.908203124249667e-05,
+          -1.5831522460937464,
+          0.09035351562499727
+        ]
+      },
+      {
+        "name": "TailExtra3",
+        "parent": 6,
+        "position": [
+          5.908203124249667e-05,
+          -1.4393381591796839,
+          0.44740917968749727
+        ]
+      }
+    ],
+    "mouth": [
+      8.333333333136277e-05,
+      1.461661111111115,
+      -1.0830555555555605
+    ],
+    "bodySize": [
+      0.73599999999999,
+      4.025399999999998,
+      2.173000000000002
+    ],
+    "presentationRadius": 2.454854833680866,
+    "sourceOrigin": [
+      -247.302,
+      45.442099999999996,
+      -150.2405
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.28,
+      0.4456,
+      0.64,
+      0.8200000000000001,
+      0.985
+    ],
+    "headEnd": 0.28,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 8,
+      "parts": 1,
+      "vertices": 870,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "SaddleButterflyfish_New",
+    "key": "New044",
+    "family": "standard",
+    "variant": "new_standard",
+    "eye": {
+      "scale": 1.5,
+      "eyes": [
+        {
+          "center": [
+            0.40749999999997044,
+            -0.18414999999999537,
+            -1.7400500000000036
+          ],
+          "beforeSize": [
+            0.1209999999999809,
+            0.468599999999995,
+            0.1892999999999887
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 5
+        },
+        {
+          "center": [
+            -0.40800000000001546,
+            -0.18414999999999537,
+            -1.7400500000000036
+          ],
+          "beforeSize": [
+            0.12000000000000455,
+            0.468599999999995,
+            0.1892999999999887
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 5
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -1.1819720000000011
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.2149040000000002
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          0.8730475000000015
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          1.8804100000000021
+        ]
+      }
+    ],
+    "mouth": [
+      0.0,
+      -0.5148999999999937,
+      -2.6681500000000042
+    ],
+    "bodySize": [
+      1.7539999999999623,
+      3.7849000000000004,
+      5.372600000000006
+    ],
+    "presentationRadius": 3.8430902787428867,
+    "sourceOrigin": [
+      -268.424,
+      46.192949999999996,
+      -73.3612
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 1,
+      "vertices": 362,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "SkipjackTuna",
+    "key": "New045",
+    "family": "standard",
+    "variant": "new_standard",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            0.43250000000003297,
+            -0.0680499999999995,
+            -2.902699999999996
+          ],
+          "beforeSize": [
+            0.1139999999999759,
+            0.39509999999999934,
+            0.169399999999996
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 4
+        },
+        {
+          "center": [
+            -0.4324999999999761,
+            -0.0680499999999995,
+            -2.902699999999996
+          ],
+          "beforeSize": [
+            0.1139999999999759,
+            0.39509999999999934,
+            0.169399999999996
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 4
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -1.597771999999996
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.2905039999999963
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          1.1801725000000038
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          2.541910000000004
+        ]
+      }
+    ],
+    "mouth": [
+      -0.0004999999999881766,
+      -0.20656000000000177,
+      -3.6109399999999967
+    ],
+    "bodySize": [
+      2.305000000000007,
+      3.5611999999999995,
+      7.262599999999999
+    ],
+    "presentationRadius": 4.980830539742263,
+    "sourceOrigin": [
+      -301.62850000000003,
+      46.1417,
+      -37.9149
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 1,
+      "vertices": 554,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "SkunkTilefish",
+    "key": "New046",
+    "family": "standard",
+    "variant": "new_standard",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            0.35799999999997567,
+            0.0039000000000051216,
+            -2.046500000000009
+          ],
+          "beforeSize": [
+            0.13700000000000045,
+            0.29169999999999874,
+            0.15000000000000568
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 5
+        },
+        {
+          "center": [
+            -0.3575000000000159,
+            0.0039000000000051216,
+            -2.046500000000009
+          ],
+          "beforeSize": [
+            0.1360000000000241,
+            0.29169999999999874,
+            0.15000000000000568
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 5
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -1.1349800000000083
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.2063600000000072
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          0.8383374999999944
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          1.8056499999999955
+        ]
+      }
+    ],
+    "mouth": [
+      0.0004999999999881766,
+      -0.09694999999999965,
+      -2.57950000000001
+    ],
+    "bodySize": [
+      1.6529999999999916,
+      1.818099999999994,
+      5.159000000000006
+    ],
+    "presentationRadius": 3.468422766572436,
+    "sourceOrigin": [
+      -243.6905,
+      46.04015,
+      -123.64949999999999
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 1,
+      "vertices": 268,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "SpottedEagleRay",
+    "key": "New047",
+    "family": "fins",
+    "variant": "new_fins",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            0.5534999999999997,
+            -0.015399999999999636,
+            -5.5715
+          ],
+          "beforeSize": [
+            0.09499999999999886,
+            0.1834999999999951,
+            0.09499999999999886
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 4
+        },
+        {
+          "center": [
+            -0.5534999999999997,
+            -0.015399999999999636,
+            -5.5715
+          ],
+          "beforeSize": [
+            0.09499999999999886,
+            0.1834999999999951,
+            0.09499999999999886
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 4
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -2.7922400000000014
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.5076799999999997
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          2.062450000000002
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          4.442200000000003
+        ]
+      },
+      {
+        "name": "FinLeft",
+        "parent": 2,
+        "position": [
+          -0.9610000000000014,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "FinRight",
+        "parent": 2,
+        "position": [
+          0.9610000000000014,
+          0,
+          0
+        ]
+      }
+    ],
+    "mouth": [
+      0.0,
+      -0.13448333333333196,
+      -6.289666666666662
+    ],
+    "bodySize": [
+      9.610000000000014,
+      1.1658999999999935,
+      12.692000000000007
+    ],
+    "presentationRadius": 7.074491832393022,
+    "sourceOrigin": [
+      -176.174,
+      46.02675,
+      -150.853
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 7,
+      "parts": 1,
+      "vertices": 789,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "WheelersShrimpGoby",
+    "key": "New048",
+    "family": "standard",
+    "variant": "new_standard",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            0.20000000000004547,
+            -0.059899999999998954,
+            -1.1920000000000073
+          ],
+          "beforeSize": [
+            0.08199999999999363,
+            0.18030000000000257,
+            0.08199999999999363
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 4
+        },
+        {
+          "center": [
+            -0.2004999999999484,
+            -0.059899999999998954,
+            -1.1920000000000073
+          ],
+          "beforeSize": [
+            0.08300000000002683,
+            0.18030000000000257,
+            0.08199999999999363
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 4
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -0.6498800000000096
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.11816000000001337
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          0.4800249999999826
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          1.0338999999999787
+        ]
+      }
+    ],
+    "mouth": [
+      5.684341886080802e-14,
+      -0.11901666666666462,
+      -1.4770000000000039
+    ],
+    "bodySize": [
+      0.9259999999999877,
+      1.0634999999999977,
+      2.9539999999999793
+    ],
+    "presentationRadius": 1.9600987856428813,
+    "sourceOrigin": [
+      -262.80100000000004,
+      46.17245,
+      -150.24099999999999
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 1,
+      "vertices": 330,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "WyomingWhiteClownfish",
+    "key": "New049",
+    "family": "standard",
+    "variant": "new_standard",
+    "eye": {
+      "scale": 1.5,
+      "eyes": [
+        {
+          "center": [
+            0.4625000000000057,
+            -0.017900000000000915,
+            -2.344050000000003
+          ],
+          "beforeSize": [
+            0.19900000000001228,
+            0.49799999999999756,
+            0.24099999999999966
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 4
+        },
+        {
+          "center": [
+            -0.4620000000000033,
+            -0.017900000000000915,
+            -2.344050000000003
+          ],
+          "beforeSize": [
+            0.1980000000000075,
+            0.49799999999999756,
+            0.24099999999999966
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 4
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -1.388881999999998
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.25252399999999975
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          1.0258787499999995
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          2.209584999999998
+        ]
+      }
+    ],
+    "mouth": [
+      0.0,
+      -0.4288000000000025,
+      -3.1565499999999957
+    ],
+    "bodySize": [
+      2.4979999999999905,
+      3.823599999999999,
+      6.3130999999999915
+    ],
+    "presentationRadius": 4.159137183673306,
+    "sourceOrigin": [
+      -245.858,
+      46.3112,
+      -96.55175
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 1,
+      "vertices": 484,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "Yu_GenXin_01",
+    "key": "New050",
+    "family": "standard",
+    "variant": "new_standard",
+    "eye": {
+      "scale": 1.5,
+      "eyes": [
+        {
+          "center": [
+            0.39850000000001273,
+            -0.0940000000000012,
+            -2.280850000000001
+          ],
+          "beforeSize": [
+            0.16399999999998727,
+            0.357600000000005,
+            0.42379999999999995
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 24
+        },
+        {
+          "center": [
+            -0.39850000000001273,
+            -0.09395000000000309,
+            -2.2808000000000064
+          ],
+          "beforeSize": [
+            0.16399999999998727,
+            0.35770000000000124,
+            0.42389999999998906
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 24
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -1.3957460000000008
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.2537720000000001
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          1.0309487500000012
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          2.220505000000002
+        ]
+      }
+    ],
+    "mouth": [
+      -0.0004999999999881766,
+      -0.4018000000000015,
+      -3.172150000000002
+    ],
+    "bodySize": [
+      1.7290000000000418,
+      3.061799999999998,
+      6.344300000000004
+    ],
+    "presentationRadius": 4.21843362048409,
+    "sourceOrigin": [
+      -274.9015,
+      46.0009,
+      -73.36115
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 1,
+      "vertices": 720,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "Yu_GenXin_02",
+    "key": "New051",
+    "family": "standard",
+    "variant": "new_standard",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            0.880999999999986,
+            0.19029999999999703,
+            -3.779500000000013
+          ],
+          "beforeSize": [
+            0.13599999999999568,
+            0.30409999999999826,
+            0.3059999999999832
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 54
+        },
+        {
+          "center": [
+            -0.8815000000000168,
+            0.19029999999999703,
+            -3.779500000000013
+          ],
+          "beforeSize": [
+            0.13700000000000045,
+            0.30409999999999826,
+            0.3059999999999832
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 52
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -2.6292200000000125
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.47804000000001334
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          1.9420374999999854
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          4.182849999999984
+        ]
+      }
+    ],
+    "mouth": [
+      -2.842170943040401e-14,
+      0.7533499999999975,
+      -5.975500000000011
+    ],
+    "bodySize": [
+      4.111999999999995,
+      5.3393000000000015,
+      11.950999999999993
+    ],
+    "presentationRadius": 8.194460770664591,
+    "sourceOrigin": [
+      -142.10399999999998,
+      46.00095,
+      -152.7025
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 3,
+      "vertices": 2087,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "Yu_MoFaShiJie_01",
+    "key": "New052",
+    "family": "standard",
+    "variant": "new_standard",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            0.28299999999997283,
+            -0.10405000000000086,
+            -2.6385000000000076
+          ],
+          "beforeSize": [
+            0.06100000000000705,
+            0.2790999999999997,
+            0.2079999999999984
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 18
+        },
+        {
+          "center": [
+            -0.28300000000001546,
+            -0.10405000000000086,
+            -2.6385000000000076
+          ],
+          "beforeSize": [
+            0.06099999999997863,
+            0.2790999999999997,
+            0.2079999999999984
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 16
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -1.3901800000000035
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.25276000000000076
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          1.0268375000000036
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          2.2116500000000068
+        ]
+      }
+    ],
+    "mouth": [
+      -0.0005000000000165983,
+      -0.28930000000000433,
+      -3.1595000000000084
+    ],
+    "bodySize": [
+      1.306999999999988,
+      3.753399999999999,
+      6.319000000000017
+    ],
+    "presentationRadius": 4.1683752619719705,
+    "sourceOrigin": [
+      -208.96949999999998,
+      37.7122,
+      -146.5215
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 1,
+      "vertices": 1014,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "Yu_MoFaShiJie_02",
+    "key": "New053",
+    "family": "standard",
+    "variant": "new_standard",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            0.1775000000000091,
+            0.18759999999999621,
+            -1.9645000000000081
+          ],
+          "beforeSize": [
+            0.13299999999998136,
+            0.23080000000000211,
+            0.22799999999999443
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 16
+        },
+        {
+          "center": [
+            -0.18149999999998556,
+            0.18759999999999621,
+            -1.9645000000000081
+          ],
+          "beforeSize": [
+            0.13300000000000978,
+            0.23080000000000211,
+            0.22799999999999443
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 16
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -1.0786600000000082
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.19612000000000718
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          0.7967374999999941
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          1.7160499999999956
+        ]
+      }
+    ],
+    "mouth": [
+      -0.001999999999981128,
+      -0.2134000000000024,
+      -2.4395000000000095
+    ],
+    "bodySize": [
+      1.1479999999999961,
+      2.6433999999999997,
+      4.903000000000006
+    ],
+    "presentationRadius": 3.2299756915330344,
+    "sourceOrigin": [
+      -253.223,
+      46.0009,
+      -123.64949999999999
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 1,
+      "vertices": 1486,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "Yu_MoFaShiJie_03",
+    "key": "New054",
+    "family": "standard",
+    "variant": "new_standard",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            0.3930000000000149,
+            -0.03845000000000098,
+            -2.6974500000000035
+          ],
+          "beforeSize": [
+            0.11600000000001387,
+            0.3053999999999988,
+            0.28600000000000136
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 66
+        },
+        {
+          "center": [
+            -0.39349999999997465,
+            -0.03849999999999909,
+            -2.6974500000000035
+          ],
+          "beforeSize": [
+            0.10699999999999932,
+            0.3031000000000006,
+            0.2839999999999918
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 68
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -1.505877999999999
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.2737959999999995
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          1.11229625
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          2.395714999999999
+        ]
+      }
+    ],
+    "mouth": [
+      0.0,
+      -0.23082142857143037,
+      -3.420735714285716
+    ],
+    "bodySize": [
+      2.095999999999975,
+      3.313299999999998,
+      6.8448999999999955
+    ],
+    "presentationRadius": 4.725157254178173,
+    "sourceOrigin": [
+      -251.122,
+      46.00085,
+      -98.05855
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 1,
+      "vertices": 1456,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "Yu_MoFaShiJie_04",
+    "key": "New055",
+    "family": "standard",
+    "variant": "new_standard",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            0.35899999999998045,
+            0.10320000000000107,
+            -5.257999999999981
+          ],
+          "beforeSize": [
+            0.08600000000001273,
+            0.38750000000000284,
+            0.37999999999999545
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 45
+        },
+        {
+          "center": [
+            -0.35900000000000887,
+            0.10320000000000107,
+            -5.257499999999993
+          ],
+          "beforeSize": [
+            0.060000000000002274,
+            0.2716999999999956,
+            0.2669999999999959
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 17
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -3.064159999999999
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.5571199999999994
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          2.263300000000001
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          4.8748000000000005
+        ]
+      }
+    ],
+    "mouth": [
+      -2.842170943040401e-14,
+      0.06555000000000177,
+      -6.963999999999999
+    ],
+    "bodySize": [
+      1.9779999999999802,
+      4.765299999999996,
+      13.927999999999997
+    ],
+    "presentationRadius": 9.187843679531007,
+    "sourceOrigin": [
+      -152.43099999999998,
+      44.95245,
+      -150.853
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 2,
+      "vertices": 4919,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "Yu_MoFaShiJie_05",
+    "key": "New056",
+    "family": "standard",
+    "variant": "new_standard",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            0.7550000000000026,
+            -0.211749999999995,
+            -4.60499999999999
+          ],
+          "beforeSize": [
+            0.13400000000000034,
+            0.2896999999999963,
+            0.2839999999999918
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 9
+        },
+        {
+          "center": [
+            -0.7550000000000026,
+            -0.211749999999995,
+            -4.604500000000002
+          ],
+          "beforeSize": [
+            0.13400000000000034,
+            0.28889999999999816,
+            0.28300000000001546
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 15
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -2.516799999999999
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.45759999999999934
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          1.8590000000000009
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          4.004
+        ]
+      }
+    ],
+    "mouth": [
+      0.0,
+      -0.2184999999999917,
+      -5.719999999999999
+    ],
+    "bodySize": [
+      6.504000000000005,
+      4.665799999999997,
+      11.439999999999998
+    ],
+    "presentationRadius": 7.87433130992075,
+    "sourceOrigin": [
+      -125.178,
+      46.000699999999995,
+      -152.703
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 3,
+      "vertices": 2496,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "ZebraSeahorse",
+    "key": "New057",
+    "family": "seahorse",
+    "variant": "new_seahorse",
+    "eye": {
+      "scale": 1.5,
+      "eyes": [
+        {
+          "center": [
+            0.16749999999996135,
+            1.1689499999999988,
+            -0.1258499999999927
+          ],
+          "beforeSize": [
+            0.03300000000001546,
+            0.1133000000000024,
+            0.07119999999999038
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 4
+        },
+        {
+          "center": [
+            -0.16700000000003,
+            1.1689499999999988,
+            -0.1258499999999927
+          ],
+          "beforeSize": [
+            0.03200000000003911,
+            0.1133000000000024,
+            0.07119999999999038
+          ],
+          "diameterRatios": [
+            1.5,
+            1.5
+          ],
+          "vertices": 4
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0.00016699218747362465,
+          1.130998925781249,
+          0.07702513427734914
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0.00016699218747362465,
+          0.3866828247070302,
+          0.20666380615234914
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0.00016699218747362465,
+          -0.5979782775878917,
+          0.4834200927734429
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0.00016699218747362465,
+          -1.222852392578126,
+          0.5635211059570366
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0.00016699218747362465,
+          -1.422448797607423,
+          0.4030367919921929
+        ]
+      },
+      {
+        "name": "TailExtra1",
+        "parent": 4,
+        "position": [
+          0.00016699218747362465,
+          -1.4288651184082042,
+          0.19239683837891164
+        ]
+      },
+      {
+        "name": "TailExtra2",
+        "parent": 5,
+        "position": [
+          0.00016699218747362465,
+          -1.181592626953126,
+          0.06784697265625539
+        ]
+      },
+      {
+        "name": "TailExtra3",
+        "parent": 6,
+        "position": [
+          0.00016699218747362465,
+          -1.0753571228027354,
+          0.3316104003906304
+        ]
+      }
+    ],
+    "mouth": [
+      0.00013888888887297272,
+      1.067533333333332,
+      -0.7910499999999945
+    ],
+    "bodySize": [
+      0.48799999999999955,
+      3.007400000000004,
+      1.5880999999999972
+    ],
+    "presentationRadius": 1.831292786376537,
+    "sourceOrigin": [
+      -268.429,
+      45.6779,
+      -99.56095
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.28,
+      0.4456,
+      0.64,
+      0.8200000000000001,
+      0.985
+    ],
+    "headEnd": 0.28,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 8,
+      "parts": 1,
+      "vertices": 1196,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "yu018",
+    "key": "New058",
+    "family": "standard",
+    "variant": "new_standard",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            0.13299999999995293,
+            -0.09974999999999667,
+            -2.844999999999999
+          ],
+          "beforeSize": [
+            0.08899999999999864,
+            0.1541999999999959,
+            0.1599999999999966
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 10
+        },
+        {
+          "center": [
+            -0.13300000000000978,
+            -0.09974999999999667,
+            -2.844999999999999
+          ],
+          "beforeSize": [
+            0.08899999999999864,
+            0.1541999999999959,
+            0.1599999999999966
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 10
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -1.4093200000000012
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.25624
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          1.0409750000000013
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          2.2421000000000024
+        ]
+      }
+    ],
+    "mouth": [
+      0.0004999999999881766,
+      -0.2269214285714217,
+      -3.2001428571428545
+    ],
+    "bodySize": [
+      1.3249999999999886,
+      1.873899999999999,
+      6.406000000000006
+    ],
+    "presentationRadius": 4.244745944612573,
+    "sourceOrigin": [
+      -279.42449999999997,
+      46.086349999999996,
+      -124.518
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 1,
+      "vertices": 796,
+      "shellRigidVertices": 0
+    }
+  },
+  {
+    "name": "yu019",
+    "key": "New059",
+    "family": "standard",
+    "variant": "new_standard",
+    "eye": {
+      "scale": 2,
+      "eyes": [
+        {
+          "center": [
+            0.27899999999999636,
+            0.013200000000004763,
+            -2.442
+          ],
+          "beforeSize": [
+            0.09799999999995634,
+            0.34080000000000155,
+            0.33499999999999375
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 9
+        },
+        {
+          "center": [
+            -0.27899999999999636,
+            0.013200000000004763,
+            -2.442
+          ],
+          "beforeSize": [
+            0.09799999999995634,
+            0.34080000000000155,
+            0.33499999999999375
+          ],
+          "diameterRatios": [
+            2.0,
+            2.0
+          ],
+          "vertices": 9
+        }
+      ],
+      "mode": "charts"
+    },
+    "bones": [
+      {
+        "name": "FishBody",
+        "parent": -1,
+        "position": [
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "SpineFront",
+        "parent": 0,
+        "position": [
+          0,
+          0,
+          -1.2674199999999989
+        ]
+      },
+      {
+        "name": "SpineMid",
+        "parent": 1,
+        "position": [
+          0,
+          0,
+          -0.23043999999999976
+        ]
+      },
+      {
+        "name": "TailBase",
+        "parent": 2,
+        "position": [
+          0,
+          0,
+          0.9361625
+        ]
+      },
+      {
+        "name": "FishTail",
+        "parent": 3,
+        "position": [
+          0,
+          0,
+          2.016349999999999
+        ]
+      }
+    ],
+    "mouth": [
+      0.0,
+      -0.011966666666661277,
+      -2.862499999999997
+    ],
+    "bodySize": [
+      1.3859999999999673,
+      2.216799999999999,
+      5.760999999999996
+    ],
+    "presentationRadius": 3.89885209860357,
+    "sourceOrigin": [
+      -265.798,
+      45.987399999999994,
+      -124.5175
+    ],
+    "sourceRotateX": false,
+    "sourceFlipped": false,
+    "weightAnchors": [
+      0.25,
+      0.4225,
+      0.625,
+      0.8125,
+      0.985
+    ],
+    "headEnd": 0.25,
+    "validation": {
+      "uvUnchanged": true,
+      "weightsNormalized": true,
+      "rigidEyes": true,
+      "logicalBones": 5,
+      "parts": 1,
+      "vertices": 1125,
+      "shellRigidVertices": 0
+    }
+  }
+]

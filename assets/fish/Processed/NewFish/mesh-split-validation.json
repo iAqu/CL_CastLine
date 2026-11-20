@@ -1,0 +1,18 @@
+{
+  "passed": true,
+  "lossless": true,
+  "results": [
+    {
+      "name": "Blue Dragon",
+      "parts": 2,
+      "triangles": 21318,
+      "largestLayer": 18000
+    },
+    {
+      "name": "Saberfish",
+      "parts": 3,
+      "triangles": 30073,
+      "largestLayer": 18000
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "complete": true,
+  "sourceFish": 59,
+  "sourceMeshes": 116,
+  "publishedMeshes": 118,
+  "totalFish": 112,
+  "animations": 295,
+  "blendFiles": 59,
+  "fbxFiles": 354,
+  "gameplaySamples": 17920,
+  "maxFramingRatio": 0.8773395506737723,
+  "archives": [
+    {
+      "file": "studio/NewFish_Processed_59.rbxm",
+      "bytes": 980462,
+      "sha256": "3d169d031a822aa6e633e2c1896681a46ba2c707c27dc6ce1ba23a5d2924309f",
+      "roundTripPassed": true
+    },
+    {
+      "file": "studio/Fish_Processed_112.rbxm",
+      "bytes": 2064593,
+      "sha256": "6c78d1be600f554353739c30940dd23399b4317b63e16ddc093ddc864f270ff8",
+      "roundTripPassed": true
+    },
+    {
+      "file": "studio/Fish_GameTemplates_112.rbxm",
+      "bytes": 2051738,
+      "sha256": "d3682ca4b6846ef2815355d9151bc014cb844b91ddb88b9df8d905eae4e67b40",
+      "roundTripPassed": true
+    },
+    {
+      "file": "studio/NewFish_AnimationSources.rbxm",
+      "bytes": 170476,
+      "sha256": "425d6f4d4e45ee8e18e1be0417b0bf7095b6d4e36cc13222d8ecc3fbf1757f37",
+      "roundTripPassed": true
+    }
+  ],
+  "installation": {
+    "newFish": 59,
+    "templates": 112,
+    "backup": "ServerStorage.FishUpgradeBackups.BeforeNewFishMerge_20261108_095702",
+    "processed": 112,
+    "complete": true
+  },
+  "exceptions": [
+    {
+      "name": "Swordfish Skeleton",
+      "eyeScale": 1,
+      "reason": "原造型为空眼窝骨架，没有独立眼球，保留原设计。"
+    }
+  ]
+}

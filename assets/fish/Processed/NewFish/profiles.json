@@ -1,0 +1,916 @@
+{
+  "Attacking Whale": {
+    "name": "Attacking Whale",
+    "key": "New001",
+    "family": "dolphin",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "patch",
+    "eyeScale": 2,
+    "eyePatch": [
+      0.05,
+      -0.3,
+      0.022
+    ]
+  },
+  "Axolotl": {
+    "name": "Axolotl",
+    "key": "New002",
+    "family": "axolotl",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 1.5,
+    "chartIndex": 0,
+    "eyeTarget": [
+      0.0206,
+      0.0345,
+      -0.4698
+    ],
+    "eyePart": 0
+  },
+  "Black Whale": {
+    "name": "Black Whale",
+    "key": "New003",
+    "family": "dolphin",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "patch",
+    "eyeScale": 2,
+    "eyePatch": [
+      0.03,
+      -0.3,
+      0.02
+    ]
+  },
+  "Blue Dragon": {
+    "name": "Blue Dragon",
+    "key": "New004",
+    "family": "fins",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "patch",
+    "eyeScale": 2,
+    "eyePatch": [
+      0.02,
+      -0.435,
+      0.014
+    ]
+  },
+  "Blue Whale": {
+    "name": "Blue Whale",
+    "key": "New005",
+    "family": "dolphin",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 2,
+    "chartIndex": 2,
+    "eyeTarget": [
+      0.0945,
+      0.0488,
+      -0.2658
+    ],
+    "eyePart": 0
+  },
+  "Candy Jellyfish": {
+    "name": "Candy Jellyfish",
+    "key": "New006",
+    "family": "jellyfish",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 1.5,
+    "chartIndex": 1,
+    "eyeTarget": [
+      0.0798,
+      0.1361,
+      -0.4702
+    ],
+    "eyePart": 0
+  },
+  "Dragonfish": {
+    "name": "Dragonfish",
+    "key": "New007",
+    "family": "longbody",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 2,
+    "chartIndex": 87,
+    "eyeTarget": [
+      0.0256,
+      -0.0036,
+      -0.3863
+    ],
+    "eyePart": 0
+  },
+  "Flamingo": {
+    "name": "Flamingo",
+    "key": "New008",
+    "family": "standard",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 2,
+    "chartIndex": 22,
+    "eyeTarget": [
+      0.0643,
+      0.0256,
+      -0.3827
+    ],
+    "eyePart": 2
+  },
+  "Galaxy Megalodon": {
+    "name": "Galaxy Megalodon",
+    "key": "New009",
+    "family": "standard",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "components",
+    "eyeScale": null,
+    "eyePart": "teethEyes",
+    "eyeComponentMin": 60,
+    "eyeComponentMax": 100
+  },
+  "Hell Shark": {
+    "name": "Hell Shark",
+    "key": "New010",
+    "family": "standard",
+    "rotateX": false,
+    "flip": true,
+    "eyeMode": "patch",
+    "eyeScale": 2,
+    "eyePatch": [
+      -0.04,
+      0.354,
+      0.025
+    ]
+  },
+  "Killer Whale": {
+    "name": "Killer Whale",
+    "key": "New011",
+    "family": "dolphin",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "patch",
+    "eyeScale": 2,
+    "eyePatch": [
+      0.05,
+      -0.29,
+      0.022
+    ]
+  },
+  "Magma Fury": {
+    "name": "Magma Fury",
+    "key": "New012",
+    "family": "standard",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 2,
+    "chartIndex": 39,
+    "eyeTarget": [
+      0.0516,
+      -0.0429,
+      -0.3627
+    ],
+    "eyePart": 0
+  },
+  "Mecha Whale": {
+    "name": "Mecha Whale",
+    "key": "New013",
+    "family": "dolphin",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "patch",
+    "eyeScale": 2,
+    "eyePatch": [
+      -0.093,
+      -0.155,
+      0.018
+    ]
+  },
+  "Moby Whale": {
+    "name": "Moby Whale",
+    "key": "New014",
+    "family": "dolphin",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 2,
+    "chartIndex": 1,
+    "eyeTarget": [
+      0.0859,
+      -0.0635,
+      -0.1721
+    ],
+    "eyePart": 0
+  },
+  "Neon Cyber": {
+    "name": "Neon Cyber",
+    "key": "New015",
+    "family": "standard",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 2,
+    "chartIndex": 195,
+    "eyeTarget": [
+      0.0859,
+      0.0135,
+      -0.2138
+    ],
+    "eyePart": 0
+  },
+  "Obsidian Fang": {
+    "name": "Obsidian Fang",
+    "key": "New016",
+    "family": "standard",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "patch",
+    "eyeScale": 2,
+    "eyePatch": [
+      0.0035,
+      -0.3195,
+      0.02
+    ]
+  },
+  "Omanadzu": {
+    "name": "Omanadzu",
+    "key": "New017",
+    "family": "standard",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 2,
+    "chartIndex": 16,
+    "eyeTarget": [
+      0.0632,
+      0.0081,
+      -0.3867
+    ],
+    "eyePart": 0
+  },
+  "Saberfish": {
+    "name": "Saberfish",
+    "key": "New018",
+    "family": "standard",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "patch",
+    "eyeScale": 2,
+    "eyePatch": [
+      -0.087,
+      -0.175,
+      0.014
+    ]
+  },
+  "Shatichoko": {
+    "name": "Shatichoko",
+    "key": "New019",
+    "family": "standard",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 2,
+    "chartIndex": 27,
+    "eyeTarget": [
+      0.2691,
+      -0.0235,
+      -0.2441
+    ],
+    "eyePart": 0
+  },
+  "Summertime Elk": {
+    "name": "Summertime Elk",
+    "key": "New020",
+    "family": "longbody",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 2,
+    "chartIndex": 0,
+    "eyeTarget": [
+      0.0277,
+      -0.1245,
+      -0.4601
+    ],
+    "eyePart": 0
+  },
+  "Swordfish Skeleton": {
+    "name": "Swordfish Skeleton",
+    "key": "New021",
+    "family": "standard",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "none",
+    "eyeScale": null,
+    "eyeReason": "Source is a hollow skeleton with empty eye sockets; preserve original design."
+  },
+  "Tralalero Tralala": {
+    "name": "Tralalero Tralala",
+    "key": "New022",
+    "family": "standard",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 2,
+    "chartIndex": 0,
+    "eyeTarget": [
+      0.0296,
+      -0.006,
+      -0.4345
+    ],
+    "eyePart": 0
+  },
+  "Turtle Walker": {
+    "name": "Turtle Walker",
+    "key": "New023",
+    "family": "turtle",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "patch",
+    "eyeScale": 2,
+    "eyePatch": [
+      0.0125,
+      -0.354,
+      0.012
+    ]
+  },
+  "Twinhead Megalodon": {
+    "name": "Twinhead Megalodon",
+    "key": "New024",
+    "family": "standard",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "patch",
+    "eyeScale": 2,
+    "eyePatch": [
+      0.014,
+      -0.35,
+      0.032
+    ]
+  },
+  "Undead Megalodon": {
+    "name": "Undead Megalodon",
+    "key": "New025",
+    "family": "standard",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 2,
+    "chartIndex": 180,
+    "eyeTarget": [
+      0.0594,
+      -0.0088,
+      -0.2904
+    ],
+    "eyePart": 0
+  },
+  "AzureDamsel_New": {
+    "name": "AzureDamsel_New",
+    "key": "New026",
+    "family": "standard",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 1.5,
+    "chartIndex": 1,
+    "eyeTarget": [
+      0.0756,
+      0.0046,
+      -0.3595
+    ],
+    "eyePart": 0
+  },
+  "BallinaAngelfish_New": {
+    "name": "BallinaAngelfish_New",
+    "key": "New027",
+    "family": "standard",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 1.5,
+    "chartIndex": 3,
+    "eyeTarget": [
+      0.0737,
+      0.0071,
+      -0.3295
+    ],
+    "eyePart": 0
+  },
+  "BleekersDamsel": {
+    "name": "BleekersDamsel",
+    "key": "New028",
+    "family": "standard",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 1.5,
+    "chartIndex": 2,
+    "eyeTarget": [
+      0.0701,
+      0.0315,
+      -0.3605
+    ],
+    "eyePart": 0
+  },
+  "BluefinTuna": {
+    "name": "BluefinTuna",
+    "key": "New029",
+    "family": "standard",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 2,
+    "chartIndex": 2,
+    "eyeTarget": [
+      0.0626,
+      -0.0202,
+      -0.4034
+    ],
+    "eyePart": 0
+  },
+  "BumblebeeGrouper": {
+    "name": "BumblebeeGrouper",
+    "key": "New030",
+    "family": "standard",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 2,
+    "chartIndex": 2,
+    "eyeTarget": [
+      0.0724,
+      0.0015,
+      -0.4036
+    ],
+    "eyePart": 0
+  },
+  "FireGoby": {
+    "name": "FireGoby",
+    "key": "New031",
+    "family": "standard",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 2,
+    "chartIndex": 1,
+    "eyeTarget": [
+      0.0697,
+      -0.1536,
+      -0.3987
+    ],
+    "eyePart": 0
+  },
+  "FlameAngelfish": {
+    "name": "FlameAngelfish",
+    "key": "New032",
+    "family": "standard",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 1.5,
+    "chartIndex": 2,
+    "eyeTarget": [
+      0.0563,
+      -0.0042,
+      -0.3616
+    ],
+    "eyePart": 0
+  },
+  "FoureyeButterflyfish": {
+    "name": "FoureyeButterflyfish",
+    "key": "New033",
+    "family": "standard",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 1.5,
+    "chartIndex": 3,
+    "eyeTarget": [
+      0.0806,
+      -0.055,
+      -0.3299
+    ],
+    "eyePart": 0
+  },
+  "GreateWhiteShark": {
+    "name": "GreateWhiteShark",
+    "key": "New034",
+    "family": "standard",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 2,
+    "chartIndex": 4,
+    "eyeTarget": [
+      0.0621,
+      -0.0206,
+      -0.3798
+    ],
+    "eyePart": 0
+  },
+  "GreenSeahorse": {
+    "name": "GreenSeahorse",
+    "key": "New035",
+    "family": "seahorse",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 1.5,
+    "chartIndex": 2,
+    "eyeTarget": [
+      0.1066,
+      0.7584,
+      -0.0715
+    ],
+    "eyePart": 0
+  },
+  "GreenTurtle": {
+    "name": "GreenTurtle",
+    "key": "New036",
+    "family": "turtle",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 1.5,
+    "chartIndex": 2,
+    "eyeTarget": [
+      0.0673,
+      -0.0084,
+      -0.378
+    ],
+    "eyePart": 0
+  },
+  "Lobster": {
+    "name": "Lobster",
+    "key": "New037",
+    "family": "lobster",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 2,
+    "chartIndex": 1,
+    "eyeTarget": [
+      0.0746,
+      0.0357,
+      -0.1034
+    ],
+    "eyePart": 0
+  },
+  "NurseShark": {
+    "name": "NurseShark",
+    "key": "New038",
+    "family": "standard",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 2,
+    "chartIndex": 3,
+    "eyeTarget": [
+      0.1733,
+      -0.0826,
+      -0.4582
+    ],
+    "eyePart": 0
+  },
+  "PinkDolphin": {
+    "name": "PinkDolphin",
+    "key": "New039",
+    "family": "dolphin",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 2,
+    "chartIndex": 2,
+    "eyeTarget": [
+      0.0694,
+      -0.0105,
+      -0.376
+    ],
+    "eyePart": 0
+  },
+  "PinkSkunkClownfish": {
+    "name": "PinkSkunkClownfish",
+    "key": "New040",
+    "family": "standard",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 1.5,
+    "chartIndex": 2,
+    "eyeTarget": [
+      0.0703,
+      0.0,
+      -0.3873
+    ],
+    "eyePart": 0
+  },
+  "PinkSmithDamsel": {
+    "name": "PinkSmithDamsel",
+    "key": "New041",
+    "family": "standard",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 1.5,
+    "chartIndex": 2,
+    "eyeTarget": [
+      0.0756,
+      0.0284,
+      -0.3493
+    ],
+    "eyePart": 0
+  },
+  "QueenAngelfish_New": {
+    "name": "QueenAngelfish_New",
+    "key": "New042",
+    "family": "standard",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 1.5,
+    "chartIndex": 3,
+    "eyeTarget": [
+      0.0683,
+      0.0067,
+      -0.3476
+    ],
+    "eyePart": 0
+  },
+  "RedSeahorse": {
+    "name": "RedSeahorse",
+    "key": "New043",
+    "family": "seahorse",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 1.5,
+    "chartIndex": 2,
+    "eyeTarget": [
+      0.104,
+      0.7393,
+      -0.0785
+    ],
+    "eyePart": 0
+  },
+  "SaddleButterflyfish_New": {
+    "name": "SaddleButterflyfish_New",
+    "key": "New044",
+    "family": "standard",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 1.5,
+    "chartIndex": 2,
+    "eyeTarget": [
+      0.0758,
+      -0.0343,
+      -0.3239
+    ],
+    "eyePart": 0
+  },
+  "SkipjackTuna": {
+    "name": "SkipjackTuna",
+    "key": "New045",
+    "family": "standard",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 2,
+    "chartIndex": 1,
+    "eyeTarget": [
+      0.0596,
+      -0.0094,
+      -0.3997
+    ],
+    "eyePart": 0
+  },
+  "SkunkTilefish": {
+    "name": "SkunkTilefish",
+    "key": "New046",
+    "family": "standard",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 2,
+    "chartIndex": 3,
+    "eyeTarget": [
+      0.0694,
+      0.0008,
+      -0.3967
+    ],
+    "eyePart": 0
+  },
+  "SpottedEagleRay": {
+    "name": "SpottedEagleRay",
+    "key": "New047",
+    "family": "fins",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 2,
+    "chartIndex": 3,
+    "eyeTarget": [
+      0.0436,
+      -0.0012,
+      -0.439
+    ],
+    "eyePart": 0
+  },
+  "WheelersShrimpGoby": {
+    "name": "WheelersShrimpGoby",
+    "key": "New048",
+    "family": "standard",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 2,
+    "chartIndex": 2,
+    "eyeTarget": [
+      0.0677,
+      -0.0203,
+      -0.4035
+    ],
+    "eyePart": 0
+  },
+  "WyomingWhiteClownfish": {
+    "name": "WyomingWhiteClownfish",
+    "key": "New049",
+    "family": "standard",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 1.5,
+    "chartIndex": 6,
+    "eyeTarget": [
+      0.0733,
+      -0.0028,
+      -0.3713
+    ],
+    "eyePart": 0
+  },
+  "Yu_GenXin_01": {
+    "name": "Yu_GenXin_01",
+    "key": "New050",
+    "family": "standard",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 1.5,
+    "chartIndex": 1,
+    "eyeTarget": [
+      0.0628,
+      -0.0148,
+      -0.3595
+    ],
+    "eyePart": 0
+  },
+  "Yu_GenXin_02": {
+    "name": "Yu_GenXin_02",
+    "key": "New051",
+    "family": "standard",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 2,
+    "chartIndex": 6,
+    "eyeTarget": [
+      0.0737,
+      0.0159,
+      -0.3162
+    ],
+    "eyePart": 2
+  },
+  "Yu_MoFaShiJie_01": {
+    "name": "Yu_MoFaShiJie_01",
+    "key": "New052",
+    "family": "standard",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 2,
+    "chartIndex": 0,
+    "eyeTarget": [
+      0.0448,
+      -0.0165,
+      -0.4176
+    ],
+    "eyePart": 0
+  },
+  "Yu_MoFaShiJie_02": {
+    "name": "Yu_MoFaShiJie_02",
+    "key": "New053",
+    "family": "standard",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 2,
+    "chartIndex": 2,
+    "eyeTarget": [
+      0.0362,
+      0.0383,
+      -0.4007
+    ],
+    "eyePart": 0
+  },
+  "Yu_MoFaShiJie_03": {
+    "name": "Yu_MoFaShiJie_03",
+    "key": "New054",
+    "family": "standard",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 2,
+    "chartIndex": 2,
+    "eyeTarget": [
+      0.0574,
+      -0.0056,
+      -0.3941
+    ],
+    "eyePart": 0
+  },
+  "Yu_MoFaShiJie_04": {
+    "name": "Yu_MoFaShiJie_04",
+    "key": "New055",
+    "family": "standard",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 2,
+    "chartIndex": 3,
+    "eyeTarget": [
+      0.0258,
+      0.0074,
+      -0.3775
+    ],
+    "eyePart": 0
+  },
+  "Yu_MoFaShiJie_05": {
+    "name": "Yu_MoFaShiJie_05",
+    "key": "New056",
+    "family": "standard",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 2,
+    "chartIndex": 9,
+    "eyeTarget": [
+      0.066,
+      -0.0185,
+      -0.4025
+    ],
+    "eyePart": 2
+  },
+  "ZebraSeahorse": {
+    "name": "ZebraSeahorse",
+    "key": "New057",
+    "family": "seahorse",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 1.5,
+    "chartIndex": 7,
+    "eyeTarget": [
+      0.1055,
+      0.7361,
+      -0.0792
+    ],
+    "eyePart": 0
+  },
+  "yu018": {
+    "name": "yu018",
+    "key": "New058",
+    "family": "standard",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 2,
+    "chartIndex": 2,
+    "eyeTarget": [
+      0.0208,
+      -0.0156,
+      -0.4441
+    ],
+    "eyePart": 0
+  },
+  "yu019": {
+    "name": "yu019",
+    "key": "New059",
+    "family": "standard",
+    "rotateX": false,
+    "flip": false,
+    "eyeMode": "charts",
+    "eyeScale": 2,
+    "chartIndex": 2,
+    "eyeTarget": [
+      0.0484,
+      0.0023,
+      -0.4239
+    ],
+    "eyePart": 0
+  }
+}
