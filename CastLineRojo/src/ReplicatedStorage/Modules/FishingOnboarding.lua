@@ -32,6 +32,7 @@ function Onboarding.Advance(player, data, expected, nextStage, fishUid)
 	progress.Stage = nextStage
 	progress.FishUid = fishUid
 	Onboarding.Publish(player, data)
+	return true
 end
 
 return Onboarding

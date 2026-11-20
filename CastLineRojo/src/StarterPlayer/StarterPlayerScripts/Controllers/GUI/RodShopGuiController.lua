@@ -390,6 +390,9 @@ function RodShopGuiController:KnitStart()
 					)
 				GuiAnimation.SetNavigationOptions(gui, selected, close)
 				GuiAnimation.OpenGui(gui)
+				if localPlayer:GetAttribute(Onboarding.StageAttribute) == "RodReward" then
+					Knit.GetService("OnboardingAnalyticsService").GuidePresentation:Fire("RodShopOpened")
+				end
 				if not current() then
 					return false
 				end

@@ -8,7 +8,6 @@ local RobloxBadgeService = game:GetService("BadgeService")
 local PlayerDataService = require(ServerScriptService.Services.PlayerDataService)
 local LogHelper = require(ReplicatedStorage.Modules.LogHelper)
 local Knit = require(ReplicatedStorage.Packages.Knit)
-local GameAnalyticsHelper = require(ReplicatedStorage.Modules.GameAnalyticsHelper)
 local Constants = require(ReplicatedStorage.Modules.Constants)
 
 local BadgeService = Knit.CreateService {

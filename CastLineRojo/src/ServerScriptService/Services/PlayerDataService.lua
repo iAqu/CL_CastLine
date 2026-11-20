@@ -714,6 +714,7 @@ function PlayerDataService:LoadProfile(player: Player)
 
 	self._PendingProfiles[player] = nil
 	self._Profiles[player] = profile
+	Knit.GetService("OnboardingAnalyticsService"):Initialize(player, profile)
 	self:CreateLeaderstats(player)
 	player:SetAttribute("EquippedRodId", profile.Data.EquippedRodId)
 	FishingOnboarding.Publish(player, profile.Data)

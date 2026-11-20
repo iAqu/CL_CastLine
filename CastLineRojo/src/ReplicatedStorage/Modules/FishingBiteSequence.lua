@@ -397,7 +397,7 @@ function FishingBiteSequence.GetBiteWindow(
 	while timeline.phase ~= "Bite" do
 		timeline:Advance(timeline.endsAt)
 	end
-	return timeline.startedAt, timeline.endsAt
+	return timeline.startedAt, timeline.endsAt, timeline.struggleTime
 end
 
 function FishingBiteSequence.new(

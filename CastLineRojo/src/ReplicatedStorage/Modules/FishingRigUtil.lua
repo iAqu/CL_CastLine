@@ -11,6 +11,8 @@ local function prepareParts(model: Instance)
 			descendant.CanQuery = false
 			descendant.Massless = true
 			descendant.LocalTransparencyModifier = 0
+		elseif descendant:IsA("Decal") then
+			descendant.LocalTransparencyModifier = 0
 		end
 	end
 end
@@ -167,6 +169,17 @@ function FishingRigUtil.Create(template: Model, character: Model, rodTemplate: T
 		error(result, 0)
 	end
 	return rig
+end
+
+function FishingRigUtil.PlaceAtFishingSpot(rig: Model, part: BasePart)
+	local root = assert(rig.PrimaryPart, "FishingRig.PrimaryPart is missing")
+	local humanoid = assert(rig:FindFirstChildOfClass("Humanoid"), "FishingRig.Humanoid is missing")
+	local forward = part.CFrame.LookVector * Vector3.new(1, 0, 1)
+	assert(forward.Magnitude >= 0.001, "FishingStartPart must face horizontally")
+	local ground = part.Position + part.CFrame.UpVector * part.Size.Y / 2
+	local position = ground + Vector3.yAxis * (humanoid.HipHeight + root.Size.Y / 2)
+	rig:PivotTo(CFrame.lookAt(position, position + forward))
+	return position, forward.Unit, ground.Y
 end
 
 function FishingRigUtil.ApplyReadyPose(rig: Model)

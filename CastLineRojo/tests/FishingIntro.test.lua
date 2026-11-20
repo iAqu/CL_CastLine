@@ -129,6 +129,7 @@ local function fixture(preview, cancelDuringGrant, onboardingTest)
 				},
 			},
 			Packages = { Knit = {
+				CreateSignal = function() return {} end,
 				GetService = function()
 					return { Stop = function() end, GetMaxCatchWeight = function() error("Tutorial must not read training weight") end }
 				end,
@@ -156,6 +157,9 @@ local function fixture(preview, cancelDuringGrant, onboardingTest)
 			},
 			script = {
 				Parent = {
+					OnboardingAnalyticsService = {
+						Step = function() end, Detail = function() end, IsNewPlayer = function() return false end,
+					},
 					PlayerDataService = {
 						IsStudioOnboardingTest = function() return onboardingTest == true end,
 						GetProfile = function()

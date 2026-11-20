@@ -129,6 +129,14 @@ function Controller:KnitStart()
 	local fishing = Knit.GetController("FishingController")
 	local shop = Knit.GetController("RodShopGuiController")
 	local trainingController = Knit.GetController("TrainingController")
+	local analytics = Knit.GetService("OnboardingAnalyticsService").GuidePresentation
+	local observed = {}
+	local function report(detail)
+		if detail and not observed[detail] then
+			observed[detail] = true
+			analytics:Fire(detail)
+		end
+	end
 	local gui, label, finger, biteCue, mask
 	local from, target, beam, marker, waterRaceRoute
 	local lastStage, trainAt
@@ -199,13 +207,14 @@ function Controller:KnitStart()
 			return
 		end
 
-		local pointAt, destination, message
+		local pointAt, destination, message, detail
 		View.ShowBiteCue(biteCue, finger, cuePhase, now)
 		if inLesson then
 			pointAt, message = baitTarget, baitMessage
 			if hint then
 				View.ShowFishing(label, hint)
 			end
+			fishing:ReportOnboardingPrompt(hint, baitTarget and visible(baitTarget))
 		elseif not Gate.IsActive("Fishing") then
 			local plot = PlotWorkspaceUtil.getPlotBySlot(player:GetAttribute("PlotSlotId"))
 			if not plot or plot:GetAttribute("OwnerUserId") ~= player.UserId then
@@ -215,14 +224,19 @@ function Controller:KnitStart()
 			end
 			if stage == "RodReward" or stage == "FinalCatch" then
 				pointAt = shop.GetOnboardingTarget and shop:GetOnboardingTarget()
+				if pointAt and stage == "RodReward" then
+					detail = "RodRewardPrompt"
+				end
 			end
 			if player:GetAttribute("IsTraining") then
 				if stage == "StopTraining" then
 					local training = playerGui:FindFirstChild("TrainingGui")
 					message, pointAt = "LEVEL 2 REACHED", training and training:FindFirstChild("StopButton")
+					detail = "StopTrainingPrompt"
 				elseif stage == "Train" then
 					local snapshot = trainingController:GetSnapshot()
 					message = "TRAIN TO LEVEL 2"
+					detail = "TrainingPrompt"
 					if snapshot and snapshot.level < Onboarding.TrainingLevel then
 						message ..= string.format(" · %d/%d XP", snapshot.xp, snapshot.xpToNextLevel)
 					end
@@ -231,15 +245,20 @@ function Controller:KnitStart()
 				local held = character:FindFirstChildOfClass("Tool")
 				local boundary = PlotFishMotion.GetBoundary(plot)
 				local holdingFish = fishUid(held) ~= nil
+				if holdingFish then
+					report("FishHeld")
+				end
 				if holdingFish and boundary then
 					if not Gate.IsUiBlockingWorld() then
 						if PlotFishMotion.GetEntry(boundary, root) then
 							message = if UserInputService.PreferredInput == Enum.PreferredInput.Gamepad
 								then "PRESS R2 TO PLACE"
 								else "TAP TO PLACE"
+							detail = "PlacementPrompt"
 						else
 							destination = boundary
 							message = "PLACE YOUR FISH AT HOME"
+							detail = "PlacementRoute"
 						end
 					end
 				elseif now >= nextSlotCheck then
@@ -249,22 +268,28 @@ function Controller:KnitStart()
 				if not holdingFish then
 					if visible(slot) then
 						message, pointAt = "HOLD YOUR FISH", slot
+						detail = "HoldFishPrompt"
 					elseif hasFish(player:FindFirstChildOfClass("Backpack")) then
 						message = "OPEN YOUR BACKPACK"
+						detail = "BackpackPrompt"
 					elseif not Gate.IsUiBlockingWorld() then
 						message, destination = "CATCH A FISH TO PLACE", plot:FindFirstChild("FishingStartPart")
+						detail = "ReplacementFishRoute"
 					end
 				end
 			elseif not pointAt and not Gate.IsUiBlockingWorld() then
 				if stage == "FirstCatch" or stage == "FinalCatch" then
 					message = if stage == "FirstCatch" then "TRY AGAIN!" else "CAST WITH YOUR NEW ROD!"
 					destination = plot:FindFirstChild("FishingStartPart")
+					detail = if stage == "FirstCatch" then "FirstLessonRoute" else "FinalLessonRoute"
 				elseif stage == "RodReward" then
 					message, destination = "GET YOUR NEW ROD", plot:FindFirstChild("RodShopAnchor")
+					detail = "RodShopRoute"
 				elseif (stage == "Train" or stage == "StopTraining")
 					and not player:GetAttribute("IsTraining") and now >= (trainAt or 0)
 				then
 					message, destination = "TRAIN TO CATCH BIGGER FISH", plot:FindFirstChild("TrainingAnchor")
+					detail = if stage == "Train" then "TrainingRoute" else "ResumeTrainingRoute"
 				end
 			end
 		end
@@ -291,6 +316,9 @@ function Controller:KnitStart()
 			label.Text, label.TextColor3, label.Visible = message, yellow, true
 			label.Position = UDim2.fromScale(0.5, if pointAt then 0.70 else 0.78)
 			label:FindFirstChildOfClass("UITextSizeConstraint").MaxTextSize = 48
+		end
+		if message or (pointAt and visible(pointAt)) then
+			report(detail)
 		end
 		if pointAt then
 			local low, high = mask:Update(pointAt)

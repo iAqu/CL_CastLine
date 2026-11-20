@@ -163,6 +163,46 @@ function BaitElasticMotion.Sample(phase, elapsed, duration, nibbleSpeed, nibbleA
 	return offset, BaitElasticMotion.Scale(stretch)
 end
 
+function BaitElasticMotion.CloneVisual(owner, template)
+	local visual = template:Clone()
+	local bait = if visual:IsA("Model")
+		then assert(visual.PrimaryPart, "Bait model is missing its PrimaryPart")
+		else visual
+	owner.bait = bait
+	owner.baitBaseSize, owner.baitVisualScale = bait.Size, Vector3.one
+	owner.baitAppearance = { [bait] = bait.Transparency }
+	if visual:IsA("Model") then
+		owner.baitParts = {}
+		local top = bait:FindFirstChild("Top")
+		if top and top:IsA("Attachment") then
+			owner.baitTop, owner.baitTopOffset = top, top.Position
+		end
+	end
+	for _, descendant in ipairs(visual:GetDescendants()) do
+		if
+			descendant:IsA("BaseScript")
+			or descendant:IsA("JointInstance")
+			or descendant:IsA("Constraint")
+			or descendant:IsA("WeldConstraint")
+		then
+			descendant:Destroy()
+		elseif descendant:IsA("BasePart") or descendant:IsA("Decal") or descendant:IsA("Texture") then
+			owner.baitAppearance[descendant] = descendant.Transparency
+			if owner.baitParts and descendant:IsA("BasePart") and descendant ~= bait then
+				owner.baitParts[descendant] = {
+					size = descendant.Size,
+					offset = bait.CFrame:ToObjectSpace(descendant.CFrame),
+				}
+				descendant.Anchored, descendant.CanCollide, descendant.CanTouch, descendant.CanQuery =
+					true, false, false, false
+			end
+		end
+	end
+	visual.Name = "FishBait"
+	bait.Anchored, bait.CanCollide, bait.CanTouch, bait.CanQuery = true, false, false, false
+	return visual
+end
+
 -- 所有正式呈现共用此入口；相同帧重复呈现也不会累乘尺寸。
 function BaitElasticMotion.Apply(owner, frame, scale)
 	owner.baitBaseSize = BaitElasticMotion.BaseSize(owner)

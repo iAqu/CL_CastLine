@@ -9,6 +9,7 @@ local RodInventory = require(Modules.RodInventory)
 local Onboarding = require(Modules.FishingOnboarding)
 local RodShopZone = require(Modules.RodShopZone)
 local PlayerDataService = require(script.Parent.PlayerDataService)
+local Analytics = require(script.Parent.OnboardingAnalyticsService)
 local RodsData = require(ReplicatedFirst:WaitForChild("Data"):WaitForChild("RodsData"))
 
 local RodShopService = Knit.CreateService({
@@ -87,12 +88,22 @@ local function changeRod(player: Player, rodId: unknown, buy: boolean, claim: bo
 	elseif not owned then
 		return failure("You do not own this fishing rod")
 	end
+	local previouslyEquipped = RodInventory.GetEquippedId(data)
 	data.EquippedRodId = id
 	local upgraded = rod.LayoutOrder >= RodsData[Onboarding.RewardRodId].LayoutOrder
 	if upgraded then
-		Onboarding.Advance(player, data, "RodReward", "FinalCatch")
+		if Onboarding.Advance(player, data, "RodReward", "FinalCatch") then
+			Analytics:Step(player, "RodReady")
+			if claim then
+				Analytics:Detail(player, "Guide", "RodRewardClaimed")
+			end
+		end
 	else
 		Onboarding.Advance(player, data, "FinalCatch", "RodReward")
+	end
+	if claim or buy or previouslyEquipped ~= id then
+		Analytics:Growth(player, "CL_RodChange_v1", if buy then rod.Price else 0, id,
+			if claim then "TrainingReward" elseif buy then "Purchase" else "Equip")
 	end
 	player:SetAttribute("EquippedRodId", id)
 	local result = state(data, if claim then `Claimed and equipped {rod.DisplayName}`

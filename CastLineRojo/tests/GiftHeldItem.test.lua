@@ -41,4 +41,27 @@ assert(controller:find("equipReceivedTool", 1, true), "Recipients should auto-eq
 assert(not controller:find("PotionToolUtil", 1, true), "Potions must not be giftable from the client")
 assert(not controller:find("ShovelToolUtil", 1, true), "Shovels must not be giftable from the client")
 
+local disabledConfig = assert(loadstring(read("src/ReplicatedStorage/Modules/HeldGiftFeatureConfig.lua")))()
+local giftController = assert(load(controller, "GiftController", "t", setmetatable({
+	game = {
+		GetService = function(_, name)
+			if name == "Players" then
+				return { LocalPlayer = {} }
+			end
+			assert(name == "ReplicatedStorage")
+			return {
+				Modules = { HeldGiftFeatureConfig = disabledConfig },
+				Packages = {
+					Knit = {
+						CreateController = function(value) return value end,
+						GetService = function() error("Disabled gifting must not bind its service") end,
+					},
+				},
+			}
+		end,
+	},
+	require = function(value) return value end,
+}, { __index = getfenv() })))()
+giftController:KnitStart()
+
 print("GiftHeldItem.test.lua passed")

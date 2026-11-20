@@ -199,7 +199,10 @@ service = loadSource("src/ServerScriptService/Services/PlotUpgradeService.lua", 
 			end
 		end,
 	},
-	script = { Parent = { PlayerDataService = dataService } },
+	script = { Parent = {
+		PlayerDataService = dataService,
+		OnboardingAnalyticsService = { Growth = function() end },
+	} },
 	require = function(value)
 		return value
 	end,

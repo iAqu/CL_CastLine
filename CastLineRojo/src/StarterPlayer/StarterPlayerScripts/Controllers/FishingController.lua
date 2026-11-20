@@ -11,9 +11,11 @@ local Workspace = game:GetService("Workspace")
 
 local Knit = require(ReplicatedStorage.Packages.Knit)
 local FishingRigUtil = require(ReplicatedStorage.Modules.FishingRigUtil)
+local FishingVisibility = require(ReplicatedStorage.Modules.FishingVisibility)
 local FishingCastSequence = require(ReplicatedStorage.Modules.FishingCastSequence)
 local FishingAudio = require(ReplicatedStorage.Modules.FishingAudio)
 local FishingOnboarding = require(ReplicatedStorage.Modules.FishingOnboarding)
+local Analytics = require(ReplicatedStorage.Modules.FishingAnalyticsPresentation)
 local Config = require(ReplicatedStorage.Modules.FishingConfig)
 local FishingAssets = require(ReplicatedStorage.Modules.FishingAssets)
 local FishingBaitSelect = require(ReplicatedStorage.Modules.FishingBaitSelect)
@@ -86,7 +88,7 @@ local function hideSceneBillboards(state, playerGui: PlayerGui)
 			and instance:IsA("BillboardGui")
 			and instance:GetAttribute("FishingBillboardExempt") ~= true
 		then
-			hold(state, instance, "Enabled", false)
+			state.visibility:Hide(instance, "Enabled", false)
 		end
 	end
 	for _, container in ipairs({ Workspace, playerGui }) do
@@ -125,46 +127,16 @@ local function bindBaitCash(state, playerGui: PlayerGui, baitGui: ScreenGui): Sc
 	return homeGui
 end
 
-local function hideDescendant(state, instance: Instance)
-	if instance:IsA("BasePart") then
-		hold(state, instance, "LocalTransparencyModifier", 1)
-	elseif instance:IsA("Decal") then
-		hold(state, instance, "Transparency", 1)
-	elseif
-		instance:IsA("BillboardGui")
-		or instance:IsA("SurfaceGui")
-		or instance:IsA("ParticleEmitter")
-		or instance:IsA("Trail")
-		or instance:IsA("Beam")
-	then
-		hold(state, instance, "Enabled", false)
-	end
-end
-
-local function hideCharacter(state, character: Model)
-	for _, descendant in ipairs(character:GetDescendants()) do
-		hideDescendant(state, descendant)
-	end
-	table.insert(
-		state.connections,
-		character.DescendantAdded:Connect(function(descendant)
-			if session == state then
-				hideDescendant(state, descendant)
-			end
-		end)
-	)
-end
-
 local function hidePlayer(state, player: Player)
 	if player.Character then
-		hideCharacter(state, player.Character)
+		state.visibility:HideCharacter(player.Character)
 	end
 	if player ~= localPlayer then
 		table.insert(
 			state.connections,
 			player.CharacterAdded:Connect(function(character)
 				if session == state then
-					hideCharacter(state, character)
+					state.visibility:HideCharacter(character)
 				end
 			end)
 		)
@@ -194,11 +166,11 @@ local function getCastPrompt()
 	return { gui = gui, holder = meter, bar = bar, marker = marker, label = label, prompt = prompt }
 end
 
-local function cancelServerSession(state, finished)
+local function cancelServerSession(state, finished, emptyReelRound)
 	if state.token then
 		local token = state.token
 		state.token = nil
-		return state.service:Cancel(token, finished == true):catch(function() end)
+		return state.service:Cancel(token, finished == true, emptyReelRound):catch(function() end)
 	end
 end
 
@@ -215,6 +187,7 @@ local function restore(state, returnToSpawn: boolean)
 	for _, connection in ipairs(state.connections) do
 		connection:Disconnect()
 	end
+	state.visibility:Destroy()
 	if state.sequence then
 		state.sequence:Destroy(returnToSpawn)
 	elseif state.audio then
@@ -384,6 +357,21 @@ function FishingController:GetOnboardingHint()
 	return true
 end
 
+function FishingController:ReportOnboardingPrompt(hint, baitTarget)
+	if not session or not session.lesson then
+		return
+	end
+	if baitTarget then
+		Analytics.Report(session, "BaitPrompt")
+	elseif hint == "Cast" or hint == "FinalCast" then
+		Analytics.Report(session, "CastPrompt")
+	elseif hint == "Hook" then
+		Analytics.Report(session, "HookPrompt")
+	elseif hint == "Continue" then
+		Analytics.Report(session, "ContinuePrompt")
+	end
+end
+
 function FishingController:ReturnToSpawn()
 	if session and not session.transition then
 		session.caughtOnReturn = session.sequence ~= nil and session.sequence.phase == "Caught"
@@ -437,6 +425,7 @@ local function begin(entry)
 		footHeight = FishingSpotUtil.GetFootHeight(root, humanoid),
 		saved = {},
 		connections = {},
+		visibility = FishingVisibility.new(),
 		meter = meter,
 		service = entry.service,
 		token = entry.token,
@@ -483,10 +472,7 @@ local function begin(entry)
 			state.rig = FishingRigUtil.Create(template, character, rod)
 			local rig = state.rig
 			local rigRoot = rig.PrimaryPart
-			local rigHumanoid = rig:FindFirstChildOfClass("Humanoid")
-			local ground = part.Position + part.CFrame.UpVector * part.Size.Y / 2
-			local position = ground + Vector3.new(0, rigHumanoid.HipHeight + rigRoot.Size.Y / 2, 0)
-			rig:PivotTo(CFrame.lookAt(position, position + forward))
+			local position = FishingRigUtil.PlaceAtFishingSpot(rig, part)
 			rig.Parent = Workspace
 			local dataController = Knit.GetController("PlayerDataController")
 			local function isSoundEnabled()
@@ -613,6 +599,9 @@ local function begin(entry)
 							tutorial = state.lesson ~= nil,
 							onEarlyHook = function()
 								state.earlyUntil = os.clock() + 1.3
+								if state.lesson then
+									Analytics.Report(state, "EarlyHook")
+								end
 							end,
 							playBaitAppear = baitData ~= nil,
 							isSoundEnabled = isSoundEnabled,
@@ -638,8 +627,8 @@ local function begin(entry)
 							hook = function(round, pressedAt)
 								return state.service:Hook(state.token, round, pressedAt)
 							end,
-							cancel = function()
-								cancelServerSession(state)
+							cancel = function(emptyReelRound)
+								cancelServerSession(state, false, emptyReelRound)
 							end,
 							onFailure = fail,
 						})
@@ -742,6 +731,7 @@ local function begin(entry)
 				if state.lesson then
 					meter.prompt.Visible = false
 					state.sequence.continueLabel.Visible = false
+					Analytics.ObserveSequence(state)
 				end
 				if not state.transition and state.sequence.phase == "Reeled" and state.sequence:CanReturn(now) then
 					FishingController:ReturnToSpawn()

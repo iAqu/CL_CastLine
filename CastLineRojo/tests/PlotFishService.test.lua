@@ -157,7 +157,10 @@ local services = {
 	},
 	Players = {},
 	ReplicatedFirst = { Data = { ConditionsData = { Codition_1 = {} } } },
-	ServerScriptService = { Services = { PlayerDataService = dataService } },
+	ServerScriptService = { Services = {
+		PlayerDataService = dataService,
+		OnboardingAnalyticsService = { Step = function() end },
+	} },
 	ReplicatedStorage = {
 		Packages = { Knit = {
 			CreateService = function(value)

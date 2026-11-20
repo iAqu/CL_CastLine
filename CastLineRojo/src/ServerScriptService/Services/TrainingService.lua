@@ -13,6 +13,7 @@ local Display = require(ReplicatedStorage.Modules.TrainingDisplay)
 local Items = require(ReplicatedFirst.Data.TrainingData)
 local Levels = require(ReplicatedFirst.Data.TrainingLevelsData)
 local PlayerDataService = require(script.Parent.PlayerDataService)
+local Analytics = require(script.Parent.OnboardingAnalyticsService)
 
 local Service = Knit.CreateService({ Name = "TrainingService", Client = { Changed = Knit.CreateSignal() } })
 local states = {}
@@ -203,6 +204,11 @@ function Service:Stop(player, mustLeave, moveOutside)
 			local rods = require(ReplicatedFirst.Data.RodsData)
 			local upgraded = rods[rod].LayoutOrder >= rods[Onboarding.RewardRodId].LayoutOrder
 			Onboarding.Advance(player, state.data, "StopTraining", if upgraded then "FinalCatch" else "RodReward")
+			Analytics:Step(player, "TrainingEnded")
+			if upgraded then
+				Analytics:Step(player, "RodReady")
+				Analytics:Detail(player, "Guide", "RodAlreadyReady")
+			end
 		end
 	end
 end
@@ -290,13 +296,27 @@ function Service:_step(player, dt)
 		return
 	end
 	state.elapsed += dt
+	if not state.onboardingTrainingObserved and state.data.FishingOnboarding
+		and state.data.FishingOnboarding.Stage == "Train"
+	then
+		-- The roster can begin this step while the player is already training.
+		state.onboardingTrainingObserved = true
+		Analytics:Step(player, "TrainingStarted")
+	end
 	local reps = math.floor(state.elapsed / Config.RepInterval)
 	if reps > 0 then
 		state.elapsed -= reps * Config.RepInterval
-		local xp = Items[state.training.TrainingID].XpPerRep * Progress.GetMultiplier(state.data) * reps
-		Progress.Advance(state.training, xp, Levels)
-		if state.training.Level >= Onboarding.TrainingLevel then
-			Onboarding.Advance(player, state.data, "Train", "StopTraining")
+		local multiplier = Progress.GetMultiplier(state.data)
+		local xp = Items[state.training.TrainingID].XpPerRep * multiplier * reps
+		local gained = Progress.Advance(state.training, xp, Levels)
+		if gained > 0 then
+			Analytics:Growth(player, "CL_TrainingLevelUp_v1", gained, state.training.TrainingID,
+				state.training.Level, multiplier)
+		end
+		if state.training.Level >= Onboarding.TrainingLevel
+			and Onboarding.Advance(player, state.data, "Train", "StopTraining")
+		then
+			Analytics:Step(player, "TrainingLevel2")
 		end
 		state.training.LastActiveAt = os.time()
 		self:_publish(player)
@@ -355,8 +375,11 @@ function Service.Client:Upgrade(player, expectedId)
 		return { ok = false, message = "Not enough cash." }
 	end
 	-- No yield between the stale-state check, cash debit and equipment update.
-	PlayerDataService:AdjustWins(player, -nextItem.Price)
+	if not PlayerDataService:AdjustWins(player, -nextItem.Price) then
+		return { ok = false, message = "Could not purchase training equipment." }
+	end
 	state.training.TrainingID = nextItem.TrainingID
+	Analytics:Growth(player, "CL_TrainingEquipmentUpgrade_v1", nextItem.Price, nextItem.TrainingID, expectedId)
 	if state.active then
 		equip(player, state)
 	end

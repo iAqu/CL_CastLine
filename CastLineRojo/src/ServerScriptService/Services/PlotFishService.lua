@@ -13,6 +13,7 @@ local PlotFishIncome = require(ReplicatedStorage.Modules.PlotFishIncome)
 local PlotFishMotion = require(ReplicatedStorage.Modules.PlotFishMotion)
 local PlotPlacementUtil = require(ReplicatedStorage.Modules.PlotPlacementUtil)
 local PlayerDataService = require(ServerScriptService.Services.PlayerDataService)
+local Analytics = require(ServerScriptService.Services.OnboardingAnalyticsService)
 
 local PlotFishService = Knit.CreateService({
 	Name = "PlotFishService",
@@ -264,7 +265,9 @@ function PlotFishService:RequestPlace(player: Player, uid: unknown)
 	local position = PlotFishMotion.GetSurfacePoint(boundary, entry)
 	local previousRate = state.rate
 	PlotPlacementUtil.SetItemUid(placements, emptySlot, uid)
-	Onboarding.Advance(player, profile.Data, "PlaceFish", "Train")
+	if Onboarding.Advance(player, profile.Data, "PlaceFish", "Train") then
+		Analytics:Step(player, "FishPlaced")
+	end
 	createFish(uid, item, data, emptySlot, boundary, entry, now).Parent = getFishFolder(plot, player)
 	heldTool:Destroy()
 	rosterChanged(player, profile.Data, state)
@@ -378,7 +381,9 @@ local function commitMenuRoster(player: Player, context, desired)
 		tool.Parent = context.backpack
 	end
 	if next(incoming) then
-		Onboarding.Advance(player, data, "PlaceFish", "Train")
+		if Onboarding.Advance(player, data, "PlaceFish", "Train") then
+			Analytics:Step(player, "FishPlaced")
+		end
 	end
 	rosterChanged(player, data, state)
 	return { ok = true }

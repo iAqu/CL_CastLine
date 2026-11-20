@@ -81,7 +81,9 @@ services.ReplicatedStorage.Packages.Knit = {
 }
 local client
 local charges, ready, allowCharge = 0, true, true
-environment.script = { Parent = { PlayerDataService = {
+environment.script = { Parent = {
+	OnboardingAnalyticsService = { Step = function() end, Detail = function() end, Growth = function() end },
+	PlayerDataService = {
 	GetProfile = function() return if ready then { Data = data } else nil end,
 	AdjustWins = function(_, _, amount)
 		if not allowCharge then

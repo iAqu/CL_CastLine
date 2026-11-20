@@ -285,42 +285,8 @@ function FishingCastSequence:_init(rig, playerGui, meter, animation, baitTemplat
 	self.folder.Parent = Workspace
 	self:_setPhase("Preparing")
 
-	local visual = baitTemplate:Clone()
-	local bait = if visual:IsA("Model")
-		then assert(visual.PrimaryPart, "Bait model is missing its PrimaryPart")
-		else visual
-	self.bait = bait
-	self.baitBaseSize, self.baitVisualScale = bait.Size, Vector3.one
-	self.baitAppearance = { [bait] = bait.Transparency }
-	if visual:IsA("Model") then
-		self.baitParts = {}
-		local top = bait:FindFirstChild("Top")
-		if top and top:IsA("Attachment") then
-			self.baitTop, self.baitTopOffset = top, top.Position
-		end
-	end
-	for _, descendant in ipairs(visual:GetDescendants()) do
-		if
-			descendant:IsA("BaseScript")
-			or descendant:IsA("JointInstance")
-			or descendant:IsA("Constraint")
-			or descendant:IsA("WeldConstraint")
-		then
-			descendant:Destroy()
-		elseif descendant:IsA("BasePart") or descendant:IsA("Decal") or descendant:IsA("Texture") then
-			self.baitAppearance[descendant] = descendant.Transparency
-			if self.baitParts and descendant:IsA("BasePart") and descendant ~= bait then
-				self.baitParts[descendant] = {
-					size = descendant.Size,
-					offset = bait.CFrame:ToObjectSpace(descendant.CFrame),
-				}
-				descendant.Anchored, descendant.CanCollide, descendant.CanTouch, descendant.CanQuery =
-					true, false, false, false
-			end
-		end
-	end
-	visual.Name = "FishBait"
-	bait.Anchored, bait.CanCollide, bait.CanTouch, bait.CanQuery = true, false, false, false
+	local visual = BaitElasticMotion.CloneVisual(self, baitTemplate)
+	local bait = self.bait
 	BaitElasticMotion.Apply(
 		self,
 		CFrame.new(tip.WorldPosition - Vector3.new(0, 1.5, 0)) * CFrame.Angles(0, self.initialYaw, 0),
@@ -700,7 +666,7 @@ function FishingCastSequence:TryHook(now)
 	if not self.options.hook or bite.timeline:Advance(now) ~= "Bite" then
 		local hooked = bite:TryHook(now)
 		if self.phase == "Reeling" and self.options.cancel then
-			self.options.cancel()
+			self.options.cancel(self.round)
 		end
 		return hooked
 	end

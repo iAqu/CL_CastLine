@@ -19,10 +19,23 @@ local function new()
 		footZ = 0,
 	}
 	local function signal()
-		return { Connect = function() end }
+		local callbacks = {}
+		return {
+			Connect = function(_, callback)
+				callbacks[callback] = true
+				return { Disconnect = function() callbacks[callback] = nil end }
+			end,
+			Fire = function(_, ...)
+				for callback in pairs(callbacks) do
+					callback(...)
+				end
+			end,
+		}
 	end
 	local function instance(class, children)
 		return {
+			GetAttribute = function(self, name) return self[name] end,
+			SetAttribute = function(self, name, value) self[name] = value end,
 			IsA = function(_, name)
 				return name == class
 			end,
@@ -54,7 +67,7 @@ local function new()
 	local rootPart = instance("BasePart")
 	rootPart.Position = vector()
 	rootPart.Size = { Y = 2 }
-	h.humanoid = { Health = 100, HipHeight = 2, RigType = "R15" }
+	h.humanoid = { Health = 100, HipHeight = 2, RigType = "R15", Died = signal() }
 	h.player = {
 		UserId = 12,
 		Character = instance("Model", { HumanoidRootPart = rootPart, Humanoid = h.humanoid }),
@@ -64,6 +77,8 @@ local function new()
 		end,
 	}
 	h.plot = instance("Model", { FishingStartPart = start })
+	h.plot.Name, h.plot.OwnerUserId = "Plot_1", h.player.UserId
+	h.slotReleased, h.playerRemoving = signal(), signal()
 	h.profile =
 		{ Data = { Wins = 100000, OwnedRods = { Rod_101 = true, Rod_102 = true, Rod_103 = true }, EquippedRodId = "Rod_101" } }
 	h.rods = loadSource("src/ReplicatedFirst/Data/RodsData.lua")
@@ -129,7 +144,7 @@ local function new()
 			GetBiteWindow = function(_, size, _, ready, _, _, _, fish)
 				h.biteSize = size
 				h.biteFish = fish
-				return ready + 1, ready + 2
+				return ready + 1, ready + 2, 3
 			end,
 		},
 		FishingProjectileMath = {
@@ -167,14 +182,26 @@ local function new()
 			return true
 		end,
 	}
+	h.analytics = {}
+	local function recordAnalytics(kind, ...)
+		table.insert(h.analytics, { kind, ... })
+	end
+	local delayed, encoded = {}, {}
 	local services = {
 		HttpService = {
+			JSONEncode = function(_, value)
+				table.insert(encoded, table.clone(value))
+				return tostring(#encoded)
+			end,
+			JSONDecode = function(_, value)
+				return encoded[tonumber(value)]
+			end,
 			GenerateGUID = function()
 				h.guid += 1
 				return "guid" .. h.guid
 			end,
 		},
-		Players = {},
+		Players = { PlayerAdded = signal(), PlayerRemoving = h.playerRemoving, GetPlayers = function() return { h.player } end },
 		Workspace = {
 			GetServerTimeNow = function()
 				return h.now
@@ -193,6 +220,7 @@ local function new()
 			Modules = modules,
 			Packages = {
 				Knit = {
+					CreateSignal = signal,
 					CreateService = function(v)
 						return v
 					end,
@@ -202,6 +230,7 @@ local function new()
 						end
 						if name == "PlotSlotService" then
 							return {
+								SlotReleased = h.slotReleased,
 								GetPlayerPlot = function()
 									return h.plot
 								end,
@@ -238,10 +267,22 @@ local function new()
 				return h.rng
 			end,
 		},
+		task = {
+			delay = function(seconds, callback)
+				table.insert(delayed, { at = h.now + seconds, callback = callback })
+			end,
+		},
 		warn = function() end,
 		script = {
 			Parent = {
 				PlayerDataService = h.playerData,
+				OnboardingAnalyticsService = {
+					Step = function(_, _, ...) recordAnalytics("Step", ...) end,
+					Detail = function(_, _, ...) recordAnalytics("Detail", ...) end,
+					Growth = function(_, _, ...) recordAnalytics("Growth", ...) end,
+					IsNewPlayer = function() return h.newAnalyticsPlayer == true end,
+					SampleFishingCast = function() return h.sampleAnalyticsCast == true end,
+				},
 				ItemGrantUtil = {
 					EquipCaughtFish = function(player, character, uid)
 						assert(player == h.player and character == h.player.Character)
@@ -274,8 +315,21 @@ local function new()
 			},
 		},
 	}, { __index = getfenv() })
+	modules.FishingObserverState = loadSource(root .. "FishingObserverState.lua", h.env)
 	function h.reload()
-		h.client = loadSource("src/ServerScriptService/Services/FishingService.lua", h.env).Client
+		h.service = loadSource("src/ServerScriptService/Services/FishingService.lua", h.env)
+		h.client = h.service.Client
+	end
+	function h.presentation()
+		return modules.FishingObserverState.Decode(h.player.Character:GetAttribute(modules.FishingObserverState.Attribute))
+	end
+	function h.advance(seconds)
+		h.now += seconds
+		for index = #delayed, 1, -1 do
+			if delayed[index].at <= h.now then
+				table.remove(delayed, index).callback()
+			end
+		end
 	end
 	h.reload()
 	function h.begin(bait)
@@ -292,7 +346,10 @@ local function new()
 	function h.cast()
 		assert(h.client:Cast(h.player, h.token, 1).ok)
 		h.now += 5
+		local timerCount = #delayed
 		local r = h.client:NextRound(h.player, h.token, 0)
+		local biteTimer = delayed[timerCount + 1]
+		h.fireBiteTimer = biteTimer and biteTimer.callback
 		assert(r.ok, r.message)
 		h.round = r
 		return r

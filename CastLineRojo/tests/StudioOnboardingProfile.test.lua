@@ -44,7 +44,17 @@ local function loadProfile(isStudio, placeId, testArgs, forceMock, loadCount, in
 		ServerScriptService = { Libs = { ProfileService = { GetProfileStore = function() return profileStore end } } },
 		ReplicatedFirst = { Data = {} },
 		ReplicatedStorage = {
-			Packages = { Knit = { CreateService = function(service) return service end, CreateSignal = newSignal }, Signal = { new = newSignal } },
+			Packages = {
+				Knit = {
+					CreateService = function(service) return service end,
+					CreateSignal = newSignal,
+					GetService = function(name)
+						assert(name == "OnboardingAnalyticsService")
+						return { Initialize = noop }
+					end,
+				},
+				Signal = { new = newSignal },
+			},
 			PlayerData = { Template = {} },
 			Modules = {
 				FishingOnboarding = onboarding,

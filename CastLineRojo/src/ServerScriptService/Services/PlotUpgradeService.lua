@@ -6,6 +6,7 @@ local PlotUpgradeData = require(ReplicatedStorage.Modules.PlotUpgradeData)
 local PlotAppearance = require(ReplicatedStorage.Modules.PlotAppearance)
 local TransitionConfig = require(ReplicatedStorage.Modules.PlotUpgradeTransitionConfig)
 local PlayerDataService = require(script.Parent.PlayerDataService)
+local Analytics = require(script.Parent.OnboardingAnalyticsService)
 
 local PlotUpgradeService = Knit.CreateService({
 	Name = "PlotUpgradeService",
@@ -118,6 +119,7 @@ function PlotUpgradeService:_commitUpgrade(player, context)
 		return failure("Could not charge for the upgrade.")
 	end
 	data.PlotUpgradeLevel = config.Level
+	Analytics:Growth(player, "CL_PlotUpgrade_v1", config.Price, config.Level, config.Capacity)
 	player:SetAttribute("PlotUpgradeLevel", config.Level)
 	player:SetAttribute("PlotCapacity", config.Capacity)
 	local refreshed, refreshError = pcall(function()

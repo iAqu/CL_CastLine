@@ -3,6 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Knit = require(ReplicatedStorage.Packages.Knit)
 local ConfirmGuiClient = require(ReplicatedStorage.Modules.ConfirmGuiClient)
+local HeldGiftFeatureConfig = require(ReplicatedStorage.Modules.HeldGiftFeatureConfig)
 local ItemToolUtil = require(ReplicatedStorage.Modules.ItemToolUtil)
 local NotificationClient = require(ReplicatedStorage.Modules.NotificationClient)
 local PromptUtil = require(ReplicatedStorage.Modules.PromptUtil)
@@ -230,6 +231,10 @@ local function bindLocalCharacter(character: Model)
 end
 
 function GiftController:KnitStart()
+	if not HeldGiftFeatureConfig.Enabled then
+		return
+	end
+
 	GiftService = Knit.GetService("GiftService")
 	GiftService.GiftResult:Connect(function(success: boolean, message: string)
 		requestPending = false

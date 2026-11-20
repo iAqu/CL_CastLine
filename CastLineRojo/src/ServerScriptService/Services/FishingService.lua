@@ -16,10 +16,12 @@ local TrainingProgress = require(Modules.TrainingProgress)
 local Progression = require(Modules.FishingProgression)
 local BaitConfig = require(Modules.FishingBaitConfig)
 local FishingSpotUtil = require(Modules.FishingSpotUtil)
+local ObserverState = require(Modules.FishingObserverState)
 local Onboarding = require(Modules.FishingOnboarding)
 local Knit = require(ReplicatedStorage.Packages.Knit)
 local ItemGrantUtil = require(script.Parent.ItemGrantUtil)
 local PlayerDataService = require(script.Parent.PlayerDataService)
+local Analytics = require(script.Parent.OnboardingAnalyticsService)
 
 local data = ReplicatedFirst:WaitForChild("Data")
 local FishesData = require(data:WaitForChild("FishesData"))
@@ -27,9 +29,14 @@ local EggsData = if PetFeatureConfig.Enabled then require(data:WaitForChild("Egg
 local BaitsData = require(data:WaitForChild("BaitsData"))
 local RodsData = require(data:WaitForChild("RodsData"))
 local mutationRanges = FishingRoll.BuildMutationRanges(require(data:WaitForChild("MutationsData")))
-local FishingService = Knit.CreateService({ Name = "FishingService", Client = {} })
+local FishingService = Knit.CreateService({
+	Name = "FishingService",
+	Client = { AnalyticsPresentation = Knit.CreateSignal() },
+})
 
 local sessions = {}
+local presentations = {}
+local nextPresentationId = 0
 local random = Random.new()
 local ROUND_LEAD_SECONDS = 0.35
 local MAX_HOOK_LATENCY = 0.45
@@ -56,6 +63,40 @@ local function getSession(player: Player, token)
 		return state
 	end
 	return nil
+end
+
+local function clearPresentation(player: Player, state)
+	if presentations[player] ~= state then
+		return
+	end
+	presentations[player] = nil
+	state.deathConnection:Disconnect()
+	state.character:SetAttribute(ObserverState.Attribute, nil)
+end
+
+local function publishPresentation(state, phase, now)
+	state.presentation.phase = phase
+	state.presentation.startedAt = now
+	state.character:SetAttribute(ObserverState.Attribute, ObserverState.Encode(state.presentation))
+end
+
+local function scheduleCatchPresentation(player, state, pending, pressedAt, isNewDiscovery)
+	local now = Workspace:GetServerTimeNow()
+	local liftAt = math.max(now, pressedAt + state.struggleTime)
+	task.delay(liftAt - now, function()
+		if presentations[player] ~= state or getSession(player, state.token) ~= state then
+			return
+		end
+		state.presentation.catchKind = pending.Kind
+		state.presentation.catchId = pending.FishId
+		state.presentation.weight = pending.Weight
+		state.presentation.mutationId = pending.MutationId
+		state.presentation.isNewDiscovery = isNewDiscovery
+		publishPresentation(state, "Catch", liftAt)
+	end)
+	task.delay(START_TIMEOUT, function()
+		clearPresentation(player, state)
+	end)
 end
 
 function FishingService.Client:Begin(player: Player)
@@ -98,8 +139,14 @@ function FishingService.Client:Begin(player: Player)
 	if lesson == "FinalCatch" and not quotes[guideBaitId] then
 		return failure("Your rod has no first-tier bait")
 	end
-	sessions[player] = {
+	local previousPresentation = presentations[player]
+	if previousPresentation then
+		clearPresentation(player, previousPresentation)
+	end
+	nextPresentationId += 1
+	local state = {
 		token = token,
+		plot = plot,
 		rod = rod,
 		rodId = rodId,
 		lesson = lesson,
@@ -108,7 +155,23 @@ function FishingService.Client:Begin(player: Player)
 		phase = "Selecting",
 		expiresAt = math.huge,
 		round = 0,
+		presentation = {
+			id = nextPresentationId,
+			plot = plot.Name,
+			rodId = rodId,
+		},
 	}
+	sessions[player], presentations[player] = state, state
+	state.deathConnection = humanoid.Died:Connect(function()
+		if sessions[player] == state then
+			sessions[player] = nil
+		end
+		clearPresentation(player, state)
+	end)
+	publishPresentation(state, "Selecting", now)
+	if lesson then
+		Analytics:Step(player, lesson .. "Started")
+	end
 	return {
 		ok = true,
 		token = token,
@@ -175,13 +238,18 @@ function FishingService.Client:SelectBait(player: Player, token, baitId)
 		return failure("Not enough cash")
 	end
 	if practiceWithoutBait then
+		Analytics:Detail(player, "FinalCatch", "FreePracticeSelected")
 		state.lesson = nil
+	elseif state.lesson == "FinalCatch" then
+		Analytics:Step(player, "FinalBaitSelected")
 	end
 	state.quote, state.pity = quote, pity
 	state.phase = "Preparing"
 	state.bait, state.baitSize, state.pool = bait, template.Size * Config.BaitFlightScale, pool
 	state.eggPool = eggPool
 	state.initialYaw = random:NextNumber(0, 2 * math.pi)
+	state.presentation.baitId, state.presentation.initialYaw = baitId, state.initialYaw
+	publishPresentation(state, "Preparing", Workspace:GetServerTimeNow())
 	-- Meter preparation can stay open until the player casts or leaves.
 	state.expiresAt = math.huge
 	return {
@@ -217,6 +285,14 @@ function FishingService.Client:Cast(player: Player, token, progress)
 	state.earliestLanding = now + presentation.LeadTime + presentation.ReleaseTime + flightTime
 	state.spin = state.initialYaw + flightTime * 7
 	state.expiresAt = math.huge
+	state.presentation.distance, state.presentation.castRating = distance, state.castRating
+	publishPresentation(state, "Cast", now)
+	if state.lesson then
+		Analytics:Step(player, state.lesson .. "Cast")
+	elseif Analytics:SampleFishingCast() then
+		state.sampledCast = true
+		Analytics:Growth(player, "CL_FishingCast_v1", 1, state.rodId, state.quote.tier, state.castRating)
+	end
 	return {
 		ok = true,
 		distance = distance,
@@ -306,7 +382,7 @@ function FishingService.Client:NextRound(player: Player, token, previousRound)
 	local landing = Config.Landing
 	local settleTime = math.max(Config.ReturnInputDelay, landing.SinkTime + landing.ReboundTime + landing.SettleTime)
 	local readyAt = if state.round == 0 then startedAt + settleTime else startedAt
-	local biteAt, biteEndsAt = BiteSequence.GetBiteWindow(
+	local biteAt, biteEndsAt, struggleTime = BiteSequence.GetBiteWindow(
 		template,
 		state.baitSize,
 		startedAt,
@@ -323,8 +399,18 @@ function FishingService.Client:NextRound(player: Player, token, previousRound)
 	state.roundLuck = luck * petMultiplier
 	state.fishId = pending.FishId
 	state.catchKind, state.catchId = catchKind, if catchKind == "Egg" then fish.EggId else fish.FishID
-	state.biteAt, state.biteEndsAt = biteAt, biteEndsAt
+	state.biteAt, state.biteEndsAt, state.struggleTime = biteAt, biteEndsAt, struggleTime
 	state.retryAt = if state.lesson then now + 0.2 else biteEndsAt + Config.Bite.EscapeTime
+	local lesson = state.lesson
+	if lesson and Analytics:IsNewPlayer(player) then
+		Analytics:Step(player, lesson .. "Landed")
+		local round = state.round
+		task.delay(math.max(0, biteAt - Workspace:GetServerTimeNow()), function()
+			if getSession(player, token) == state and state.phase == "Waiting" and state.round == round then
+				Analytics:Step(player, lesson .. "Bite")
+			end
+		end)
+	end
 	return {
 		ok = true,
 		round = state.round,
@@ -365,6 +451,9 @@ function FishingService.Client:Hook(player: Player, token, round, pressedAt)
 	end
 	-- Claim before Grant, which may yield waiting for a Backpack.
 	state.phase = "Claiming"
+	if state.lesson then
+		Analytics:Step(player, state.lesson .. "Bite")
+	end
 	local profile = PlayerDataService:GetProfile(player)
 	if not profile then
 		state.phase = "Waiting"
@@ -383,6 +472,7 @@ function FishingService.Client:Hook(player: Player, token, round, pressedAt)
 		end
 		state.pending = nil
 		state.phase, state.expiresAt = "Claimed", now + START_TIMEOUT
+		scheduleCatchPresentation(player, state, pending, pressedAt, false)
 		return { ok = true, catchKind = "Egg", catchId = pending.FishId, eggUid = uuid }
 	end
 	local progress = Progression.Ensure(profile.Data)
@@ -430,6 +520,13 @@ function FishingService.Client:Hook(player: Player, token, round, pressedAt)
 			state.caughtUid = pending.Id
 			state.pending = nil
 			committed = true
+			if state.lesson then
+				Analytics:Step(player, state.lesson .. "Caught")
+			elseif state.sampledCast then
+				Analytics:Growth(player, "CL_FishingCatch_v1", pending.Weight, state.rodId, tier, state.castRating)
+				Analytics:Growth(player, "CL_FishWeight_v1", pending.Weight, pending.FishId, state.rodId,
+					pending.MutationId or "None")
+			end
 		end,
 	})
 	if not committed then
@@ -440,6 +537,8 @@ function FishingService.Client:Hook(player: Player, token, round, pressedAt)
 		)
 	end
 	state.phase, state.expiresAt = "Claimed", now + START_TIMEOUT
+	local isNewDiscovery = succeeded and granted and granted.IsNewDiscovery == true or false
+	scheduleCatchPresentation(player, state, pending, pressedAt, isNewDiscovery)
 	if tier ~= 4 and price > 0 then
 		local refreshed, refreshError = pcall(PlayerDataService.AdjustWins, PlayerDataService, player, 0)
 		if not refreshed then
@@ -455,15 +554,34 @@ function FishingService.Client:Hook(player: Player, token, round, pressedAt)
 		catchKind = "Fish",
 		catchId = pending.FishId,
 		mutationId = pending.MutationId,
-		isNewDiscovery = succeeded and granted and granted.IsNewDiscovery == true,
+		isNewDiscovery = isNewDiscovery,
 	}
 end
 
-function FishingService.Client:Cancel(player: Player, token, finished)
+function FishingService.Client:Cancel(player: Player, token, finished, emptyReelRound)
 	local state = sessions[player]
 	if state and state.token == token then
 		sessions[player] = nil
+		if
+			finished ~= true
+			and state.phase == "Waiting"
+			and state.round > 0
+			and state.round == emptyReelRound
+			and getLiveCharacter(player) == state.character
+		then
+			local now = Workspace:GetServerTimeNow()
+			state.presentation.expiresAt = now + ObserverState.EmptyReelDuration
+			publishPresentation(state, "EmptyReel", now)
+			task.delay(ObserverState.EmptyReelDuration, function()
+				clearPresentation(player, state)
+			end)
+		else
+			clearPresentation(player, state)
+		end
 		if finished == true and state.phase == "Claimed" and state.caughtUid then
+			if state.lesson then
+				Analytics:Detail(player, state.lesson, "ContinueConfirmed")
+			end
 			ItemGrantUtil.EquipCaughtFish(player, state.character, state.caughtUid)
 		end
 	end
@@ -475,17 +593,42 @@ function FishingService:IsActive(player)
 end
 
 function FishingService:KnitStart()
+	self.Client.AnalyticsPresentation:Connect(function(player, token, detail)
+		local state = getSession(player, token)
+		if state and state.lesson then
+			Analytics:FishingPresentation(player, state.lesson, state.phase, state.round, detail)
+		end
+	end)
+	local slotService = Knit.GetService("PlotSlotService")
+	slotService.SlotReleased:Connect(function(plot)
+		for player, state in pairs(presentations) do
+			if state.plot == plot and plot:GetAttribute("OwnerUserId") ~= player.UserId then
+				if sessions[player] == state then
+					sessions[player] = nil
+				end
+				clearPresentation(player, state)
+			end
+		end
+	end)
 	local function bind(player: Player)
 		player.CharacterRemoving:Connect(function(character)
 			local state = sessions[player]
 			if state and state.character == character then
 				sessions[player] = nil
 			end
+			local presentation = presentations[player]
+			if presentation and presentation.character == character then
+				clearPresentation(player, presentation)
+			end
 		end)
 	end
 	Players.PlayerAdded:Connect(bind)
 	Players.PlayerRemoving:Connect(function(player)
 		sessions[player] = nil
+		local presentation = presentations[player]
+		if presentation then
+			clearPresentation(player, presentation)
+		end
 	end)
 	for _, player in ipairs(Players:GetPlayers()) do
 		bind(player)

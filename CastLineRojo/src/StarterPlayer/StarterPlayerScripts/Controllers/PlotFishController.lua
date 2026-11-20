@@ -26,6 +26,7 @@ local PlotWorkspaceUtil = require(ReplicatedStorage.Modules.PlotWorkspaceUtil)
 local LOCAL_PLAYER = Players.LocalPlayer
 local TITLE_HOME_HEIGHT_OFFSET = 2
 local RENDER_DISTANCE = 160
+local DISPLAY_RECHECK_SECONDS = 0.25
 local GAMEPAD_PLACE_ACTION = "PlacePlotFish"
 
 local PlotFishController = Knit.CreateController({ Name = "PlotFishController" })
@@ -97,8 +98,9 @@ end
 
 function PlotFishController:KnitStart()
 	local service = Knit.GetService("PlotFishService")
-	local plotRoot = Workspace:WaitForChild("Areas"):WaitForChild("Plot")
+	local plotRoot
 	local displays = {}
+	local nextDisplayCheck = 0
 	local preview = createPreview()
 	local requestInFlight = false
 
@@ -127,7 +129,7 @@ function PlotFishController:KnitStart()
 
 	local function getLocalPlot(): Instance?
 		local slot = LOCAL_PLAYER:GetAttribute("PlotSlotId")
-		local plot = typeof(slot) == "number" and plotRoot:FindFirstChild("Plot_" .. tostring(slot))
+		local plot = plotRoot and typeof(slot) == "number" and plotRoot:FindFirstChild("Plot_" .. tostring(slot))
 		return if plot and plot:GetAttribute("OwnerUserId") == LOCAL_PLAYER.UserId then plot else nil
 	end
 
@@ -184,14 +186,8 @@ function PlotFishController:KnitStart()
 		return true
 	end
 
-	local function addDisplay(fish: Instance)
-		if displays[fish] or not fish:IsA("Configuration") then
-			return
-		end
-		local folder = fish.Parent
-		local plot = folder and folder.Name == PlotFishMotion.FOLDER_NAME and folder.Parent
-		local boundary = plot and PlotFishMotion.GetBoundary(plot)
-		if not plot or not boundary or plot.Parent ~= plotRoot then
+	local function addDisplay(fish, folder, plot, boundary, ownerId, now)
+		if not fish:IsA("Configuration") then
 			return
 		end
 		local weight, itemId = fish:GetAttribute("Weight"), fish:GetAttribute("ItemId")
@@ -201,6 +197,7 @@ function PlotFishController:KnitStart()
 		if not item or typeof(weight) ~= "number" or typeof(started) ~= "number" or not move then
 			return
 		end
+		local mutationId = MutationDataUtil.NormalizeMutationId(fish:GetAttribute("MutationId"))
 		local geometry = PlotFishMotion.GetGeometry(item, weight, boundary)
 		if not geometry then
 			return
@@ -211,11 +208,10 @@ function PlotFishController:KnitStart()
 		setDisplayPartProperties(model)
 		local bodyToPivot = model.PrimaryPart.CFrame:ToObjectSpace(model:GetPivot())
 		local floatPhase = PlotFishMotion.GetFloatPhase(fish.Name)
-		local pose = PlotFishMotion.Sample(boundary, geometry.height, move, Workspace:GetServerTimeNow(), floatPhase)
+		local pose = PlotFishMotion.Sample(boundary, geometry.height, move, now, floatPhase)
 		model:PivotTo(pose * bodyToPivot)
 		model.Parent = plot
 
-		local mutationId = MutationDataUtil.NormalizeMutationId(fish:GetAttribute("MutationId"))
 		MutationVisualUtil.Apply(model, mutationId, geometry.template.Name)
 		if item.IsRareReward == 1 then
 			DropVFXUtil.AttachRarityPointLight(model, item.Rarity)
@@ -225,7 +221,7 @@ function PlotFishController:KnitStart()
 		titleAnchor.Position = pose.Position
 		titleAnchor.Parent = model
 		local titleGui = StarterGui:FindFirstChild("TitleGui")
-		local owner = Players:GetPlayerByUserId(folder:GetAttribute("OwnerUserId"))
+		local owner = Players:GetPlayerByUserId(ownerId)
 		local title = FishTitleUtil.Create(titleGui, item, mutationId, owner, weight)
 		if title then
 			title.Enabled = true
@@ -240,6 +236,8 @@ function PlotFishController:KnitStart()
 			model = model,
 			plot = plot,
 			folder = folder,
+			ownerId = ownerId,
+			mutationId = mutationId,
 			height = geometry.height,
 			floatPhase = floatPhase,
 			move = move,
@@ -266,36 +264,35 @@ function PlotFishController:KnitStart()
 		end
 	end
 
-	local function onDescendantAdded(instance: Instance)
-		if instance:IsA("Configuration") then
-			task.defer(addDisplay, instance)
-		elseif instance:IsA("BasePart") and (instance.Name == "Ground" or instance.Name == "3") then
-			local folder = instance.Parent and instance.Parent:FindFirstChild(PlotFishMotion.FOLDER_NAME)
-			if folder then
-				for _, fish in folder:GetChildren() do
-					task.defer(addDisplay, fish)
-				end
-			end
+	local function reconcileDisplays(now)
+		local areas = Workspace:FindFirstChild("Areas")
+		plotRoot = areas and areas:FindFirstChild("Plot")
+		if not plotRoot then
+			return
 		end
-	end
-
-	plotRoot.DescendantAdded:Connect(onDescendantAdded)
-	plotRoot.DescendantRemoving:Connect(function(instance)
-		if displays[instance] then
-			removeDisplay(instance)
-		elseif instance:IsA("BasePart") and (instance.Name == "Ground" or instance.Name == "3") then
-			for fish, display in pairs(displays) do
-				if display.boundary == instance then
+		for _, plot in ipairs(plotRoot:GetChildren()) do
+			if not PlotWorkspaceUtil.isValidPlot(plot) then
+				continue
+			end
+			local folder = plot:FindFirstChild(PlotFishMotion.FOLDER_NAME)
+			local ownerId = plot:GetAttribute("OwnerUserId")
+			local boundary = PlotFishMotion.GetBoundary(plot)
+			if not boundary or not folder or typeof(ownerId) ~= "number"
+				or ownerId == 0 or folder:GetAttribute("OwnerUserId") ~= ownerId
+			then
+				continue
+			end
+			for _, fish in ipairs(folder:GetChildren()) do
+				local display = displays[fish]
+				if display and (display.boundary ~= boundary
+					or display.mutationId ~= MutationDataUtil.NormalizeMutationId(fish:GetAttribute("MutationId")))
+				then
 					removeDisplay(fish)
+					display = nil
 				end
-			end
-		end
-	end)
-	for _, plot in PlotWorkspaceUtil.getSortedPlots() do
-		local folder = plot:FindFirstChild(PlotFishMotion.FOLDER_NAME)
-		if folder then
-			for _, fish in folder:GetChildren() do
-				addDisplay(fish)
+				if not display then
+					addDisplay(fish, folder, plot, boundary, ownerId, now)
+				end
 			end
 		end
 	end
@@ -325,15 +322,26 @@ function PlotFishController:KnitStart()
 		local held = getHeldTool()
 		local root = getRoot()
 		local now = Workspace:GetServerTimeNow()
+		if now >= nextDisplayCheck then
+			nextDisplayCheck = now + DISPLAY_RECHECK_SECONDS
+			reconcileDisplays(now)
+		end
+		local camera = Workspace.CurrentCamera
 		for fish, display in pairs(displays) do
-			if not fish.Parent or not display.boundary.Parent then
+			local plot, folder, boundary = display.plot, display.folder, display.boundary
+			if plotRoot == nil or plot.Parent ~= plotRoot or not plotRoot:IsDescendantOf(Workspace)
+				or folder.Parent ~= plot or fish.Parent ~= folder or boundary.Parent ~= plot
+				or plot:GetAttribute("OwnerUserId") ~= display.ownerId
+				or folder:GetAttribute("OwnerUserId") ~= display.ownerId
+				or display.model.Parent ~= plot
+			then
 				removeDisplay(fish)
 				continue
 			end
-			local owner = display.plot:GetAttribute("OwnerUserId")
-			local current = owner == display.folder:GetAttribute("OwnerUserId")
-			local nearby = root and (root.Position - display.boundary.Position).Magnitude <= RENDER_DISTANCE
-			if current and nearby then
+			local position = boundary.Position
+			local nearby = (root and (root.Position - position).Magnitude <= RENDER_DISTANCE)
+				or (camera and (camera.CFrame.Position - position).Magnitude <= RENDER_DISTANCE)
+			if nearby then
 				local pose, swimWeight = PlotFishMotion.Sample(display.boundary, display.height, display.move, now, display.floatPhase)
 				display.model:PivotTo(pose * display.bodyToPivot)
 				if not display.animation then

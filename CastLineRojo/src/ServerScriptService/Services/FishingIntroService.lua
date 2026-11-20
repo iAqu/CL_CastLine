@@ -16,10 +16,14 @@ local Fishes = require(ReplicatedFirst.Data.FishesData)
 local Knit = require(ReplicatedStorage.Packages.Knit)
 local PlayerDataService = require(script.Parent.PlayerDataService)
 local ItemGrantUtil = require(script.Parent.ItemGrantUtil)
+local Analytics = require(script.Parent.OnboardingAnalyticsService)
 local Progression = require(Modules.FishingProgression)
 local Rods = require(ReplicatedFirst.Data.RodsData)
 
-local Service = Knit.CreateService({ Name = "FishingIntroService", Client = {} })
+local Service = Knit.CreateService({
+	Name = "FishingIntroService",
+	Client = { AnalyticsPresentation = Knit.CreateSignal() },
+})
 local sessions = {}
 local claiming = {}
 local autoClaims = {}
@@ -51,6 +55,7 @@ function Service.Client:ClaimAutoPlay(player)
 	end
 	-- Claim and consume without yielding. Cancel/death never restores this first-session claim.
 	autoClaims[player] = "Claimed"
+	Analytics:Step(player, "IntroClaimed")
 	return true
 end
 
@@ -86,6 +91,9 @@ function Service.Client:Begin(player, mode)
 		round = 0,
 		preview = preview,
 	}
+	if not preview then
+		Analytics:Step(player, "IntroCreated")
+	end
 	return { ok = true, token = token, preview = preview }
 end
 
@@ -95,6 +103,9 @@ function Service.Client:StartPlayback(player, token)
 		return failure("Opening playback unavailable")
 	end
 	state.phase = "ReadyToCast"
+	if not state.preview then
+		Analytics:Step(player, "IntroStarted")
+	end
 	return { ok = true }
 end
 
@@ -117,6 +128,9 @@ function Service.Client:Cast(player, token, progress)
 		+ FishingConfig.CastLeadTime
 		+ FishingConfig.ReleaseTime
 		+ ProjectileMath.FlightTime(FishingConfig.FixedCastDistance)
+	if not state.preview then
+		Analytics:Step(player, "IntroCast")
+	end
 	return { ok = true, distance = FishingConfig.FixedCastDistance, luck = 1 }
 end
 
@@ -158,6 +172,15 @@ function Service.Client:NextRound(player, token, previousRound)
 	)
 	state.round += 1
 	state.biteAt = biteAt
+	if not state.preview and Analytics:IsNewPlayer(player) then
+		Analytics:Step(player, "IntroLanded")
+		local round = state.round
+		task.delay(math.max(0, biteAt - Workspace:GetServerTimeNow()), function()
+			if current(player, token) == state and state.phase == "Waiting" and state.round == round then
+				Analytics:Step(player, "IntroBite")
+			end
+		end)
+	end
 	return {
 		ok = true,
 		round = state.round,
@@ -191,6 +214,9 @@ function Service.Client:Hook(player, token, round, pressedAt)
 		return failure("Missed the bite")
 	end
 	state.phase = "Claiming" -- Claim before ItemGrantUtil, which may yield.
+	if not state.preview then
+		Analytics:Step(player, "IntroBite")
+	end
 	local fish = Fishes[Config.StarterFishId]
 	local profile = PlayerDataService:GetProfile(player)
 	if not profile then
@@ -221,6 +247,7 @@ function Service.Client:Hook(player, token, round, pressedAt)
 			OnCommitted = function()
 				profile.Data.FishingIntroVersion = Config.Version
 				Onboarding.Advance(player, profile.Data, nil, "FirstCatch")
+				Analytics:Step(player, "IntroCaught")
 				if starter then
 					Progression.Record(progress, "Rod_101", fish.FishID, starter.band, starter.isMax)
 				end
@@ -237,9 +264,13 @@ function Service.Client:Hook(player, token, round, pressedAt)
 	return { ok = true, weight = state.weight, catchId = fish.FishID, catchKind = "Fish", isNewDiscovery = true }
 end
 
-function Service.Client:Cancel(player, token)
+function Service.Client:Cancel(player, token, continued)
 	local state = sessions[player]
 	if state and state.token == token then
+		if continued == true and state.phase == "Caught" and not state.preview then
+			Analytics:Detail(player, "Intro", "ContinueConfirmed")
+			Analytics:Detail(player, "Intro", "ControlsRestored")
+		end
 		sessions[player] = nil
 	end
 end
@@ -249,6 +280,12 @@ function Service:IsActive(player)
 end
 
 function Service:KnitStart()
+	self.Client.AnalyticsPresentation:Connect(function(player, token, detail)
+		local state = current(player, token)
+		if state and not state.preview then
+			Analytics:FishingPresentation(player, "Intro", state.phase, state.round, detail)
+		end
+	end)
 	Players.PlayerRemoving:Connect(function(player)
 		sessions[player] = nil
 		autoClaims[player] = nil

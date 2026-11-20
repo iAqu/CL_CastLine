@@ -5,17 +5,14 @@ local MarketplaceService = game:GetService("MarketplaceService")
 local ServerScriptService = game:GetService("ServerScriptService")
 local DataStoreService = game:GetService("DataStoreService")
 local PolicyService = game:GetService("PolicyService")
-local AnalyticsService = game:GetService("AnalyticsService")
 
 local Knit = require(ReplicatedStorage.Packages.Knit)
 local PurchaseDataHelper = require(ReplicatedFirst.DataHelpers.PurchaseDataHelper)
 local PlayerDataService = require(ServerScriptService.Services.PlayerDataService)
 local Signal = require(ReplicatedStorage.Packages.Signal)
-local GameAnalyticsHelper = require(ReplicatedStorage.Modules.GameAnalyticsHelper)
 local LogHelper = require(ReplicatedStorage.Modules.LogHelper)
 local Constants = require(ReplicatedStorage.Modules.Constants)
 local PotionFeatureHelper = require(ReplicatedStorage.Modules.PotionFeatureHelper)
-local HGAnalyticsService = require(ServerScriptService.Services.HGAnalyticsService)
 local FishingBaitPurchases = require(script.Parent.FishingBaitPurchases)
 
 type Receipt = {PlayerId: number, PlaceIdWherePurchased: number, ProductId: number,
@@ -64,7 +61,7 @@ function PurchaseService:SelectGiftedPlayer(player: Player, giftedPlayer: Player
     return true, "Success!"
 end
 
-function PurchaseService:HandlePurchase(player: Player, productId: number, sentToGa: boolean?, allowDisabledPotionGrant: boolean?): boolean
+function PurchaseService:HandlePurchase(player: Player, productId: number, allowDisabledPotionGrant: boolean?): boolean
     -- local profile = PlayerDataService:GetProfile(player)
     -- if not profile then warn "No Profile found!" return end
     local playerData = PlayerDataService:GetAllData(player)
@@ -75,11 +72,6 @@ function PurchaseService:HandlePurchase(player: Player, productId: number, sentT
     if PurchaseDataHelper.IsRetired(purchaseId) then return false end
     local purchaseType = PurchaseDataHelper.GetTypeByPurchaseId(purchaseId)
     
-    sentToGa = sentToGa or true
-    if sentToGa then
-        GameAnalyticsHelper.AddBusinessEvent(player, productId)
-    end
-
     local receivePlayer = nil
     if self._PlayerGifted[player.UserId] then
         receivePlayer = Players:GetPlayerByUserId(self._PlayerGifted[player.UserId])
@@ -102,7 +94,6 @@ function PurchaseService:HandlePurchase(player: Player, productId: number, sentT
 
     elseif purchaseType == "Diamond" then
         local count = PurchaseDataHelper.GetBuyNum(purchaseId)
-        -- GameAnalyticsHelper.AddSourceWinsEvent(player, voidGearCount, "Purchase", purchaseId)
         -- if not receivePlayerData.LimitedPurchaseHistory[purchaseId] then
         --     count = count * 2
             -- receivePlayerData.LimitedPurchaseHistory[purchaseId] = true
@@ -314,7 +305,7 @@ function PurchaseService:processReceipt(receiptInfo: Receipt)
             end
 
             local success, result = pcall(function()
-                return self:HandlePurchase(player, receiptInfo.ProductId, nil, true)
+                return self:HandlePurchase(player, receiptInfo.ProductId, true)
             end)
             -- If granting the product failed, do NOT record the purchase in datastores.
             -- if not success or not result then
@@ -367,8 +358,6 @@ function PurchaseService:processReceipt(receiptInfo: Receipt)
             LogHelper.Print("RobuxSpent: " .. playerData.RobuxSpent)
         end
 
-        HGAnalyticsService:LogPurchase(player, purchaseId)
-         
         -- IMPORTANT: Tell Roblox that the game successfully handled the purchase
         return Enum.ProductPurchaseDecision.PurchaseGranted
     end
@@ -456,7 +445,6 @@ function PurchaseService:KnitStart()
 
     -- handle developer product purchase
     MarketplaceService.ProcessReceipt = function(...)
-        -- GameAnalytics:ProcessReceiptCallback(...)
         return self:processReceipt(...)
     end
 
@@ -484,7 +472,7 @@ function PurchaseService:KnitStart()
             return
         end
 
-        local purchaseResult = self:HandlePurchase(player, PurchaseDataHelper.GetProductId(purchaseId), false)
+        local purchaseResult = self:HandlePurchase(player, PurchaseDataHelper.GetProductId(purchaseId))
         if purchaseResult == true then
             PlayerDataService:AdjustTokens(player, -PurchaseDataHelper.GetPrice(purchaseId))
             self.Client.PurchaseSuccess:Fire(player, PurchaseDataHelper.GetProductId(purchaseId), true)

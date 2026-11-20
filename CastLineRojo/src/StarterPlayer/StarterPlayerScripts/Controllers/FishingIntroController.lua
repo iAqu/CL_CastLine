@@ -14,7 +14,9 @@ local FishingInstructionView = require(ReplicatedStorage.Modules.FishingInstruct
 local Config = require(Modules.FishingIntroConfig)
 local FishingConfig = require(Modules.FishingConfig)
 local Scene = require(Modules.FishingIntroScene)
+local FishingVisibility = require(Modules.FishingVisibility)
 local Sequence = require(Modules.FishingCastSequence)
+local Analytics = require(Modules.FishingAnalyticsPresentation)
 local Audio = require(Modules.FishingAudio)
 local UiConfettiUtil = require(Modules.UiConfettiUtil)
 local Assets = require(Modules.FishingAssets)
@@ -76,28 +78,6 @@ local function getMeter(playerGui)
 	return { gui = gui, holder = holder, bar = bar, marker = marker, label = marker.MultLabel, prompt = holder.Prompt }
 end
 
-local function hideCharacter(state, character)
-	local function hide(d)
-		if d:IsA("BasePart") then
-			hold(state, d, "LocalTransparencyModifier", 1)
-		elseif d:IsA("Decal") then
-			hold(state, d, "Transparency", 1)
-		elseif
-			d:IsA("ParticleEmitter")
-			or d:IsA("Trail")
-			or d:IsA("Beam")
-			or d:IsA("BillboardGui")
-			or d:IsA("SurfaceGui")
-		then
-			hold(state, d, "Enabled", false)
-		end
-	end
-	for _, d in character:GetDescendants() do
-		hide(d)
-	end
-	table.insert(state.connections, character.DescendantAdded:Connect(hide))
-end
-
 function Controller:IsPlaying()
 	return session ~= nil
 end
@@ -116,6 +96,7 @@ function Controller:Cancel()
 	for _, c in state.connections do
 		c:Disconnect()
 	end
+	state.visibility:Destroy()
 	if state.sequence then
 		state.sequence:Destroy()
 	end
@@ -163,7 +144,7 @@ function Controller:Cancel()
 	player:SetAttribute("FishingIntroActive", false)
 	player:SetAttribute("FishingIntroPhase", nil)
 	if state.token then
-		state.service:Cancel(state.token):catch(function() end)
+		state.service:Cancel(state.token, state.exitRequested == true):catch(function() end)
 	end
 end
 
@@ -211,6 +192,7 @@ local function prepareTeaching(state)
 		onEarlyHook = function()
 			state.earlyUntil = os.clock() + 1.3
 			instruction(state, "Retry")
+			Analytics.Report(state, "EarlyHook")
 		end,
 	})
 	state.preparedAt = os.clock()
@@ -262,6 +244,7 @@ local function update(state, now, dt)
 		state.sequence.continueLabel.Visible = false
 		instruction(state, "Cast")
 		if state.phase == "Prepared" then
+			Analytics.Report(state, "FirstFrame")
 			player:SetAttribute(Loading.INTRO_STARTUP_STATE, Loading.INTRO_STATE.Prepared)
 			if player:GetAttribute(Loading.LOADING_SCREEN_DONE) == true then
 				beginPlayback(state)
@@ -279,6 +262,9 @@ local function update(state, now, dt)
 			seq.gui.RevealInfo.Visible = true
 			seq.vignette.gui.Enabled = false
 			seq.continueLabel.Visible = state.caughtAt ~= nil and now >= state.caughtAt + Config.SuccessHold
+			if seq.continueLabel.Visible then
+				Analytics.Report(state, "ContinuePrompt")
+			end
 			if seq.continueLabel.Visible and UserInputService.PreferredInput == Enum.PreferredInput.Gamepad then
 				seq.continueLabel.Text = "press A to continue"
 			end
@@ -288,10 +274,12 @@ local function update(state, now, dt)
 			instruction(state, "Hook")
 			if not seq.hookPendingAt then
 				cuePhase, cueElapsed = phase, now - timeline.startedAt
+				Analytics.Report(state, "HookPrompt")
 			end
 		else
 			if phase == "Preparing" then
 				instruction(state, "Cast")
+				Analytics.Report(state, "CastPrompt")
 			elseif phase == "Waiting" or phase == "Approaching" or phase == "Holding" or phase == "Nibbling" then
 				instruction(state, "Waiting")
 				if phase == "Nibbling" then
@@ -299,6 +287,7 @@ local function update(state, now, dt)
 				end
 			end
 		end
+		Analytics.ObserveSequence(state)
 		state.lastPhase = phase
 	end
 	FishingInstructionView.ShowBiteCue(state.biteCue, state.tapIcon, cuePhase, cueElapsed)
@@ -370,6 +359,7 @@ function Controller:Play(mode)
 		playerGui = playerGui,
 		connections = {},
 		saved = {},
+		visibility = FishingVisibility.new(),
 		service = Knit.GetService("FishingIntroService"),
 		phase = "Starting",
 	}
@@ -441,7 +431,7 @@ function Controller:Play(mode)
 						(d:IsA("BillboardGui") or d:IsA("SurfaceGui"))
 						and d:GetAttribute("FishingBillboardExempt") ~= true
 					then
-						hold(state, d, "Enabled", false)
+						state.visibility:Hide(d, "Enabled", false)
 					end
 				end
 				for _, d in playerGui:GetDescendants() do
@@ -450,13 +440,13 @@ function Controller:Play(mode)
 				table.insert(state.connections, playerGui.DescendantAdded:Connect(hideUiBillboard))
 				local function hidePlayer(p)
 					if p.Character then
-						hideCharacter(state, p.Character)
+						state.visibility:HideCharacter(p.Character)
 					end
 					if p ~= player then
 						table.insert(
 							state.connections,
 							p.CharacterAdded:Connect(function(c)
-								hideCharacter(state, c)
+								state.visibility:HideCharacter(c)
 							end)
 						)
 					end
@@ -468,26 +458,26 @@ function Controller:Play(mode)
 				for _, livePlot in PlotWorkspaceUtil.getSortedPlots() do
 					for _, child in livePlot:GetChildren() do
 						if child:IsA("Model") and child.Name:match("^PlotFish_") then
-							hideCharacter(state, child)
+							state.visibility:HideCharacter(child)
 						end
 					end
 					table.insert(
 						state.connections,
 						livePlot.ChildAdded:Connect(function(child)
 							if child:IsA("Model") and child.Name:match("^PlotFish_") then
-								hideCharacter(state, child)
+								state.visibility:HideCharacter(child)
 							end
 						end)
 					)
 				end
 				local localProps = Workspace:FindFirstChild("LocalPlotProps")
 				if localProps then
-					hideCharacter(state, localProps)
+					state.visibility:HideCharacter(localProps)
 				end
 				table.insert(state.connections, Players.PlayerAdded:Connect(hidePlayer))
 				for _, d in Workspace:GetDescendants() do
 					if (d:IsA("BillboardGui") or d:IsA("SurfaceGui")) and not d:IsDescendantOf(state.scene.folder) then
-						hold(state, d, "Enabled", false)
+						state.visibility:Hide(d, "Enabled", false)
 					end
 				end
 				table.insert(
@@ -497,7 +487,7 @@ function Controller:Play(mode)
 							(d:IsA("BillboardGui") or d:IsA("SurfaceGui"))
 							and d:GetAttribute("FishingBillboardExempt") ~= true
 						then
-							hold(state, d, "Enabled", false)
+							state.visibility:Hide(d, "Enabled", false)
 						end
 					end)
 				)

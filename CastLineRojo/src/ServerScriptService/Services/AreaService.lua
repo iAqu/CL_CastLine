@@ -4,9 +4,7 @@ local ServerScriptService = game:GetService("ServerScriptService")
 
 local PlayerDataService = require(ServerScriptService.Services.PlayerDataService)
 local Knit = require(ReplicatedStorage.Packages.Knit)
-local Constants = require(ReplicatedStorage.Modules.Constants)
 local Template = require(ReplicatedStorage.PlayerData.Template)
-local HGAnalyticsService = require(ServerScriptService.Services.HGAnalyticsService)
 local Signal = require(ReplicatedStorage.Packages.Signal)
 
 local AreaService = Knit.CreateService {
@@ -89,8 +87,6 @@ function AreaService:KnitStart()
         if slotId then
             playerData.LastPlotSlotId = slotId
         end
-
-        HGAnalyticsService:LogWorldProgress(player, Constants.AREA_NAME.Area_1)
     end
 
     PlayerDataService.ProfileLoaded:Connect(handleProfileLoaded)

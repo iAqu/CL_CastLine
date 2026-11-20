@@ -59,6 +59,7 @@ local fish = {
 	Event = { ItemID = "Event", DisplayName = "Event", Rarity = "Event", CpsPrice = 2 },
 }
 local modules = {
+	HeldGiftFeatureConfig = assert(loadstring(read("src/ReplicatedStorage/Modules/HeldGiftFeatureConfig.lua")))(),
 	SellShopZone = { CanSell = function() return true end },
 	FishInventoryData = fish,
 	MutationDataUtil = {
@@ -87,12 +88,17 @@ modules.ItemToolUtil = {
 	end,
 }
 local refreshes = 0
+local hotbarRemovals = 0
 local otherServices = {
 	PlotFishService = { RefreshInventoryIncome = function(_, who)
 		refreshes += 1
 		published[who] = income.GetBestOwnedBaseCps(profiles[who].Data)
 	end },
-	HotbarLayoutService = { RemoveItemDescriptors = function() end },
+	HotbarLayoutService = {
+		RemoveItemDescriptors = function()
+			hotbarRemovals += 1
+		end,
+	},
 	IndexService = { GetDiscoveryLuck = function() return 0 end, DiscoverItem = function() return false end },
 }
 local knit = { CreateService = function(service) return service end, CreateSignal = signal,
@@ -121,6 +127,26 @@ assert(published[sender] == 100, "Successful grants must immediately publish the
 local tool = sender:FindFirstChildOfClass("Backpack"):GetChildren()[1]
 tool.Parent = sender.Character
 
+assert(modules.HeldGiftFeatureConfig.Enabled == false, "Held fish gifts must start disabled")
+local disabledGifts = loadService("GiftService")
+disabledGifts:KnitInit()
+local originalRecord = profiles[sender].Data.Items[granted.InstanceId]
+local senderBackpack = sender:FindFirstChildOfClass("Backpack")
+local recipientBackpack = recipient:FindFirstChildOfClass("Backpack")
+
+disabledGifts.Client.SetHeldItem:Emit(sender, "item", granted.InstanceId)
+disabledGifts.Client.RequestGift:Emit(sender, recipient.UserId)
+disabledGifts.Client.RespondGift:Emit(recipient, 1, true)
+
+local refusal = assert(disabledGifts.Client.GiftResult.last)
+assert(refusal[1] == sender and refusal[2] == false and refusal[3] == "Fish gifting is temporarily disabled.")
+assert(#disabledGifts.Client:GetHeldItems(sender) == 0)
+assert(not disabledGifts.Client.GiftRequestReceived.last and not disabledGifts.Client.GiftReceived.last)
+assert(profiles[sender].Data.Items[granted.InstanceId] == originalRecord and not next(profiles[recipient].Data.Items))
+assert(tool.Parent == sender.Character and #senderBackpack:GetChildren() == 0 and #recipientBackpack:GetChildren() == 0)
+assert(hotbarRemovals == 0 and refreshes == 1)
+
+modules.HeldGiftFeatureConfig = { Enabled = true }
 local gifts = loadService("GiftService")
 gifts:KnitInit()
 local function gift()

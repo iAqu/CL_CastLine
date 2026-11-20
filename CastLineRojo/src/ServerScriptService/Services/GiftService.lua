@@ -3,6 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
 local FishInventoryData = require(ReplicatedStorage.Modules.FishInventoryData)
+local HeldGiftFeatureConfig = require(ReplicatedStorage.Modules.HeldGiftFeatureConfig)
 local ItemStatUtil = require(ReplicatedStorage.Modules.ItemStatUtil)
 local ItemToolUtil = require(ReplicatedStorage.Modules.ItemToolUtil)
 local Knit = require(ReplicatedStorage.Packages.Knit)
@@ -433,6 +434,13 @@ function GiftService.Client:GetHeldItems(_player: Player): { { player: Player, d
 end
 
 function GiftService:KnitInit()
+	if not HeldGiftFeatureConfig.Enabled then
+		self.Client.RequestGift:Connect(function(sender: Player)
+			self.Client.GiftResult:Fire(sender, false, HeldGiftFeatureConfig.DisabledMessage)
+		end)
+		return
+	end
+
 	self.Client.SetHeldItem:Connect(updateHeldItem)
 	self.Client.RequestGift:Connect(requestGift)
 	self.Client.RespondGift:Connect(respondGift)

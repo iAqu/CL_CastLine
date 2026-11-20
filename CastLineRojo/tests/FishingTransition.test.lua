@@ -77,7 +77,7 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 		end,
 	}
 	local function object(class, children)
-		local obj = { Parent = true, ClassName = class, children = children or {}, DescendantAdded = signal() }
+		local obj = { Parent = true, ClassName = class, children = children or {}, DescendantAdded = signal(), DescendantRemoving = signal() }
 		local attributes = {}
 		local properties, propertySignals = {}, {}
 		setmetatable(obj, {
@@ -236,6 +236,7 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 		}
 	end
 	local fishingService = {
+		AnalyticsPresentation = { Fire = function() end },
 		Begin = function()
 			if not deferBegin then
 				return resolved({
@@ -301,6 +302,8 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 	}
 	local modules = {
 		FishingOnboarding = dofile("src/ReplicatedStorage/Modules/FishingOnboarding.lua"),
+		FishingAnalyticsPresentation = dofile("src/ReplicatedStorage/Modules/FishingAnalyticsPresentation.lua"),
+		FishingVisibility = dofile("src/ReplicatedStorage/Modules/FishingVisibility.lua"),
 		PetFeatureConfig = { Enabled = false },
 		Knit = {
 			CreateController = function(value)
@@ -357,6 +360,9 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 			end,
 		},
 		FishingRigUtil = {
+			PlaceAtFishingSpot = function(_, part)
+				return part.Position
+			end,
 			Create = function()
 				if failCreate then
 					error("Missing rig resource")
@@ -431,8 +437,10 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 	storage.Packages = { Knit = "Knit" }
 	storage.Modules = {
 		FishingOnboarding = "FishingOnboarding",
+		FishingAnalyticsPresentation = "FishingAnalyticsPresentation",
 		PetFeatureConfig = "PetFeatureConfig",
 		FishingRigUtil = "FishingRigUtil",
+		FishingVisibility = "FishingVisibility",
 		FishingCastSequence = "FishingCastSequence",
 		FishingAudio = "FishingAudio",
 		FishingConfig = "Config",
@@ -987,3 +995,17 @@ assert(#timedOut.requests == 1 and #timedOut.notices == 1 and not timedOut.root.
 timedOut.requests[1]({ ok = true, token = "late" })
 timedOut.advance(0.5)
 assert(timedOut.cancellations[1] == "late" and #timedOut.notices == 1)
+
+do
+	local Visibility = dofile("src/ReplicatedStorage/Modules/FishingVisibility.lua")
+	local part = { LocalTransparencyModifier = 0.25, GetPropertyChangedSignal = function()
+		return { Connect = function() return { Disconnect = function() end } end }
+	end }
+	local owner, observer = Visibility.new(), Visibility.new()
+	owner:Hide(part, "LocalTransparencyModifier", 1)
+	observer:Hide(part, "LocalTransparencyModifier", 1)
+	owner:Destroy()
+	assert(part.LocalTransparencyModifier == 1, "The observer's replacement rig still hides the original")
+	observer:Destroy()
+	assert(part.LocalTransparencyModifier == 0.25, "Restore the original transparency after both uses end")
+end
