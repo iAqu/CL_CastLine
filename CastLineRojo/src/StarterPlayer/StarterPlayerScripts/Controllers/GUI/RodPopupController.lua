@@ -7,6 +7,7 @@ local Modules = ReplicatedStorage.Modules
 local Knit = require(ReplicatedStorage.Packages.Knit)
 local ButtonAnimation = require(Modules.ButtonAnimation)
 local CharacterUtil = require(Modules.CharacterUtil)
+local EventPresentationGate = require(Modules.EventPresentationGate)
 local FishingAssets = require(Modules.FishingAssets)
 local FishingSpotUtil = require(Modules.FishingSpotUtil)
 local GameplayInputGate = require(Modules.GameplayInputGate)
@@ -103,6 +104,8 @@ function Controller:KnitStart()
 	local playerDataService = Knit.GetService("PlayerDataService")
 	local shop = Knit.GetController("RodShopGuiController")
 	local training = Knit.GetController("TrainingController")
+	local eventFish = Knit.GetController("EventFishController")
+	local fishing = Knit.GetController("FishingController")
 	local lastTrainingId, nextBarbell
 	local cash
 	local cashVersion = 0
@@ -190,6 +193,54 @@ function Controller:KnitStart()
 	local barbellView = bindPopup("Barbell")
 	local activeView
 
+	local eventView, eventSlotId, lastEventSlotId
+	local eventJoinPending = false
+	local eventPopup = gui:FindFirstChild("SecretFishPopup")
+	if eventPopup and eventPopup:IsA("Frame") then
+		eventView = RodPopupView.new(gui, eventPopup, "Event")
+	end
+
+	local function closeEvent(immediate)
+		eventSlotId = nil
+		eventView:Hide(immediate)
+	end
+
+	if eventView then
+		local button, closeButton = eventView.button, eventPopup.CloseButton
+		ButtonAnimation.SetUp(button)
+		ButtonAnimation.SetUp(closeButton)
+		closeButton.Activated:Connect(function()
+			if eventSlotId ~= nil and not eventJoinPending then
+				closeEvent()
+			end
+		end)
+		button.Activated:Connect(function()
+			if eventSlotId == nil or eventJoinPending then
+				return
+			end
+			local event = eventFish:GetLiveEvent(Workspace:GetServerTimeNow())
+			if not event or event.SlotId ~= eventSlotId then
+				closeEvent()
+				Notification.RedNotify("This Secret Fish event has ended.")
+				return
+			end
+			eventJoinPending = true
+			button.Interactable, closeButton.Interactable = false, false
+			local function complete(joined)
+				eventJoinPending = false
+				button.Interactable, closeButton.Interactable = true, true
+				if joined and eventSlotId == event.SlotId then
+					closeEvent()
+				end
+			end
+			local requested, message = fishing:JoinEvent(event.SlotId, complete)
+			if not requested then
+				complete(false)
+				Notification.RedNotify(message or "Finish what you're doing before joining Secret Fish.")
+			end
+		end)
+	end
+
 	RunService.Heartbeat:Connect(function()
 		local now = os.clock()
 		local loaded = player:GetAttribute(LoadingAttributes.LOADING_SCREEN_DONE) == true
@@ -219,12 +270,42 @@ function Controller:KnitStart()
 			or Onboarding.IsActiveStage(player:GetAttribute(Onboarding.StageAttribute))
 		local rodGui = playerGui:FindFirstChild("RodShopGui")
 		local offlineGui = playerGui:FindFirstChild("OfflineResultGui")
-		local blocked = actionPending
-			or (activeView ~= nil and activeView.closing)
-			or longBusy
+		local worldBlocked = longBusy
 			or not GameplayInputGate.IsWorldActionAllowed()
 			or not GuiAnimation.IsAllPopupGuisClosed()
 			or (offlineGui ~= nil and offlineGui.Enabled)
+
+		if eventView then
+			local serverNow = Workspace:GetServerTimeNow()
+			local event = eventFish:GetLiveEvent(serverNow)
+			local eventBlocked = worldBlocked or actionPending or not loaded or EventPresentationGate.IsSuppressed(player)
+			if eventSlotId ~= nil then
+				if eventBlocked or not event or event.SlotId ~= eventSlotId then
+					closeEvent(eventBlocked)
+				end
+			end
+			if event and not eventBlocked and not eventJoinPending and event.SlotId ~= lastEventSlotId
+				and getLiveCharacter() ~= nil
+			then
+				if activeView and (policy.active or activeView.closing) then
+					policy:Close(now, "Interrupted")
+					activeView:Hide(true)
+					activeView = nil
+				end
+				lastEventSlotId, eventSlotId = event.SlotId, event.SlotId
+				eventView:Show()
+			end
+			if eventSlotId ~= nil then
+				eventView:Step(event.EndsAt - serverNow, event.EndsAt - event.StartsAt)
+			end
+		end
+
+		local blocked = worldBlocked
+			or actionPending
+			or eventJoinPending
+			or eventSlotId ~= nil
+			or (eventView ~= nil and eventView.closing)
+			or (activeView ~= nil and activeView.closing)
 		local ready = loaded and typeof(cash) == "number"
 		local snapshot = training:GetSnapshot()
 		local trainingId = snapshot and snapshot.trainingId

@@ -408,6 +408,16 @@ fixed:Destroy()
 assert(not fixed.meter.bar.Visible and not fixed.meter.marker.Visible and fixed.meter.label.Visible)
 assert(fixed.meter.marker.Position.Y == 1, "Cleanup must restore the authored marker position")
 
+local pending = setmetatable({
+	phase = "Preparing", fixedCast = true, options = {meterStartsAt = 100},
+	meterProgress = 0.5, _sound = function() end, _impulse = function() end,
+}, Sequence)
+feedbackHarness.attach(pending)
+assert(pending:LockCastMeter() == 0.5)
+assert(pending.meterLockedAt == nil and pending.popupOrigin == nil,
+	"Wait for the confirmed grade before enabling the feedback animation")
+feedbackHarness.feedback.Update(pending, 101)
+
 for _, ceiling in { 1.3, 10, 100 } do
 	for _, fps in { 30, 60, 144 } do
 		local cues = {}

@@ -8,8 +8,8 @@ local updateRow = assert(load(source:sub(start, finish - 1) .. "\nreturn updateR
 	missingIcons = {},
 	Enum = { ScaleType = { Fit = "Fit" } },
 	RarityConfig = { Normalize = function(value) return value end },
-	GuiUtil = { SetRarityGradient = function() end },
-	WeightFormat = { FormatKgCompact = function(value) return value .. "kg" end },
+	GuiUtil = { SetRarityGradient = function(target, rarity) target.gradientRarity = rarity end },
+	WeightFormat = require("../src/ReplicatedStorage/Modules/WeightFormat"),
 	NumberUtil = { FormatItemPriceCompact = tostring },
 	MutationDataUtil = { GetConfig = function(id)
 		return if id == "Golden" or id == "Diamond" or id == "Rainbow" then { DisplayName = id } else nil
@@ -28,7 +28,9 @@ local entry = { itemId = "Fish_101", weight = 2, income = 100 }
 local icon = row.Preview.AnimalPreview
 updateRow(row, entry, item)
 assert(icon.Image == item.Icon and icon.Visible and icon.ScaleType == "Fit")
-assert(row.Preview.Weight.Text == "2KG" and row.Info.Income.Text == "$100/s")
+assert(row.Preview.Weight.Text == "2.0 kg" and row.Info.Income.Text == "$100/s")
+assert(row.Preview.gradientRarity == "Rare" and row.Info.AnimalName.gradientRarity == "Rare")
+assert(icon.gradientRarity == nil and row.Preview.Weight.gradientRarity == nil)
 assert(not row.Info.Mutation.Visible and applied[#applied].mutationId == nil)
 for _, id in ipairs({ "Golden", "Diamond", "Rainbow" }) do
 	entry.mutationId = id
@@ -38,11 +40,13 @@ for _, id in ipairs({ "Golden", "Diamond", "Rainbow" }) do
 	assert(row.Info.Mutation.Visible and row.Info.Mutation.Text == id)
 end
 -- An existing row must update its image, labels and effect without being recreated.
-entry.mutationId, entry.weight, entry.income = nil, 4, 250
+entry.mutationId, entry.weight, entry.income = nil, 1234567, 250
 item.Icon = "rbxassetid://456"
+item.Rarity = "Legendary"
 updateRow(row, entry, item)
 assert(row.Preview.AnimalPreview == icon and icon.Image == item.Icon)
-assert(row.Preview.Weight.Text == "4KG" and row.Info.Income.Text == "$250/s")
+assert(row.Preview.gradientRarity == "Legendary" and row.Info.AnimalName.gradientRarity == "Legendary")
+assert(row.Preview.Weight.Text == "1234567 kg" and row.Info.Income.Text == "$250/s")
 assert(not row.Info.Mutation.Visible and applied[#applied].mutationId == nil)
 entry.mutationId = "Rainbow"
 for _, invalid in ipairs({ "", "nil", "rbxassetid://", "rbxassetid://0", false }) do

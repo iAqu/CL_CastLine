@@ -169,20 +169,19 @@ function Progression.Record(progress, rodId, fishId, band, isMax)
 	end
 end
 
-function Progression.Quote(rod, baitId, config, progress)
+function Progression.Quote(rod, baitId, config, productId, credits)
 	local tier = if baitId == "NONE" then 0 else table.find(rod.BaitsSelect, baitId)
-	if not tier or tier > 4 then
+	if not tier or tier > config.PaidTier then
 		return nil
 	end
-	local productId = if tier == 4 then config.GetProductId(rod.RodID) else nil
-	local credits = progress.Credits[rod.RodID] or 0
+	local isPaid = tier == config.PaidTier
 	return {
 		baitId = baitId,
 		tier = tier,
-		price = if tier > 0 and tier < 4 then math.round(rod.Price * config.CashMultipliers[tier]) else 0,
-		productId = productId,
-		credits = if tier == 4 then credits else 0,
-		available = tier ~= 4 or credits > 0 or productId ~= nil,
+		price = if tier > 0 and not isPaid then math.round(rod.Price * config.CashMultipliers[tier]) else 0,
+		productId = if isPaid then productId else nil,
+		credits = if isPaid then credits or 0 else 0,
+		available = not isPaid or (credits or 0) > 0 or productId ~= nil,
 	}
 end
 

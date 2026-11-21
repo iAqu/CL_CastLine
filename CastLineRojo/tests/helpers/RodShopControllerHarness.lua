@@ -117,7 +117,8 @@ return function(initialCash)
 	function template:Clone()
 		local card = node("Frame", "RodTemplate")
 		card.NameLabel, card.RarityLabel = {}, {}
-		card.Information = { GetChildren = function() return {} end, Luck = { Counter = {} } }
+		local weight = { Name = "Weight", Visible = true, Counter = {} }
+		card.Information = { GetChildren = function() return { weight } end, Luck = { Counter = {} }, Weight = weight }
 		for _, name in ipairs({ "BuyButton", "EquipButton", "EquipedButton" }) do
 			local button = node("TextButton", name, card)
 			button.TextLabel = {}
@@ -186,6 +187,7 @@ return function(initialCash)
 		IndexItemViewport = {},
 		NotificationClient = { RedNotify = function(message) h.error = message end, GreenNotify = function() end },
 		NumberUtil = { FormatNumberStartKWithDecimal = tostring },
+		WeightFormat = require("../src/ReplicatedStorage/Modules/WeightFormat"),
 		PlotWorkspaceUtil = { getPlotBySlot = function() return plot end },
 		RodShopZone = {
 			ExitMargin = 2,
@@ -199,7 +201,10 @@ return function(initialCash)
 	local knit = { CreateController = function(controller) return controller end, GetService = function() return service end, Util = { Promise = { resolve = resolved } } }
 	local rods = {
 		a = { RodID = "a", DisplayName = "Rod", LayoutOrder = 1, Price = 0, Rarity = "Common", LuckBoost = 1, Icon = "a" },
-		b = { RodID = "b", DisplayName = "Park Rod", LayoutOrder = 2, Price = 100, Rarity = "Uncommon", LuckBoost = 2, Icon = "b" },
+		b = {
+			RodID = "b", DisplayName = "Park Rod", LayoutOrder = 2, Price = 100,
+			Rarity = "Uncommon", LuckBoost = 2, Icon = "b", MaxWeight = 1234567.125,
+		},
 		[onboarding.RewardRodId] = { RodID = onboarding.RewardRodId, DisplayName = "Reward Rod", LayoutOrder = 3, Price = 100, Rarity = "Common", LuckBoost = 1, Icon = "reward" },
 	}
 	local data = { WaitForChild = function() return rods end }

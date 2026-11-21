@@ -7,25 +7,38 @@ end
 
 local prefix = "src/ReplicatedStorage/Modules/"
 local harness = require("./helpers/RarityHarness")({
+	GuiUtil = read(prefix .. "GuiUtil.lua"),
 	RarityConfig = read(prefix .. "RarityConfig.lua"),
 	RarityPresentation = read(prefix .. "RarityPresentation.lua"),
 	ItemStatUtil = read(prefix .. "ItemStatUtil.lua"),
+	TrainingProgress = read(prefix .. "TrainingProgress.lua"),
+	WeightFormat = read(prefix .. "WeightFormat.lua"),
 })
 harness.addRarityTemplates()
 local stats = harness.load("ItemStatUtil")
+local training = harness.load("TrainingProgress")
 local titles = { "Big", "Large", "Huge", "Colossal", "Gigantic", "Titanic", "Monstrous", "Cosmic", "Infinite" }
-local item = { DefaultWeight = 10, DisplayName = "TestFish", Rarity = "Rare", CpsPrice = 100 }
-assert(stats.GetSizeTitle(item, 10) == nil and stats.GetSizeTitle(item, 5) == nil, "Default and smaller fish have no title")
-for level, title in titles do
-	assert(stats.GetSizeTitle(item, 10 * 1.5 ^ (level * 3)) == title, "Incorrect size title at level " .. level)
+local minScales = { 3.6, 5.2, 6.6, 7.7, 8.7, 9.5, 10.4, 11.2, 12 }
+local item = { DefaultWeight = 10, ModelDefaultScale = 3, DisplayName = "TestFish", Rarity = "Rare", CpsPrice = 100 }
+for index, minScale in minScales do
+	local fish = { DefaultWeight = 100, ModelDefaultScale = minScale }
+	assert(stats.GetSizeTitle(fish, 100) == titles[index], "Include the exact total scale threshold")
+	assert(stats.GetSizeTitle(fish, 99.999) == titles[index - 1], "Use the full total scale before rounding")
 end
-assert(stats.GetSizeTitle(item, 10 * 1.5 ^ 120) == "Infinite", "Cap the title at the last named tier")
-assert(stats.GetSizeTitle(item, 10 * 1.5 ^ (1.49 * 3)) == "Big", "Round historical weights to the nearest tier")
-assert(stats.GetSizeTitle(item, 10 * 1.5 ^ (1.51 * 3)) == "Large", "Historical weights must reach the next nearest tier")
-item.ModelDefaultScale = 1000
-assert(stats.GetSizeTitle(item, 33.75) == "Big", "Authored model scaling must not alter weight-based titles")
+local seahorse = { DefaultWeight = 0.8, ModelDefaultScale = 1 }
+local smallCatch = training.CalculateFishWeight(seahorse.DefaultWeight, 120)
+assert(stats.GetSizeTitle(seahorse, smallCatch) == "Big", "Multiple growth steps on a small fish must use the total scale")
+assert(stats.GetSizeTitle({ DefaultWeight = 80.6, ModelDefaultScale = 4.65 }, 80.6) == "Big",
+	"A large species can have a title at its default weight")
+local obsidianFang = { DefaultWeight = 56.3, ModelDefaultScale = 4.13 }
+assert(stats.GetSizeTitle(obsidianFang, training.CalculateFishWeight(obsidianFang.DefaultWeight, 1500)) == "Infinite")
+assert(stats.GetSizeTitle({ DefaultWeight = 1 }, 30 ^ 3) == "Infinite", "Cap the title at the last named tier")
+assert(stats.FormatFishWeight({ DefaultWeight = 500, ModelDefaultScale = 3 }, 999) == "Big · 999 kg")
+assert(stats.FormatFishWeight({ DefaultWeight = 999 }, 999) == "999 kg")
+assert(stats.FormatFishWeight({}, 1200) == "1200 kg")
 for _, weight in { 0, -1, math.huge, -math.huge, 0 / 0, "invalid" } do
 	assert(stats.GetSizeTitle(item, weight) == nil, "Invalid catch weight must not show a title")
+	assert(stats.FormatFishWeight(item, weight) == nil, "Invalid catch weight must not show a placeholder")
 end
 for _, weight in { 0, -1, math.huge, -math.huge, 0 / 0 } do
 	assert(stats.GetSizeTitle({ DefaultWeight = weight }, 100) == nil, "Invalid default weight must not show a title")
@@ -45,6 +58,7 @@ local income = assert(load(read(prefix .. "PlotFishIncome.lua"), "PlotFishIncome
 local config = assert(loadstring(read(prefix .. "FishingConfig.lua")))()
 local modules = {
 	FishingConfig = config,
+	GuiUtil = harness.load("GuiUtil"),
 	ItemStatUtil = stats,
 	MutationDataUtil = mutationUtil,
 	NumberUtil = { FormatItemPriceCompact = tostring },
@@ -122,6 +136,14 @@ local function assertMutation(info, expected)
 end
 local function fixture(reuseScale, rarityVisible, tutorial)
 	local name = row("Name")
+	local nameLabel = harness.newInstance("TextLabel")
+	nameLabel.Name, nameLabel.Text = "Label", "original text"
+	nameLabel.TextColor3 = harness.colors.new(0.2, 0.3, 0.4)
+	nameLabel.BackgroundColor3 = harness.colors.new(0.4, 0.3, 0.2)
+	name._children = {}
+	nameLabel.Parent, name.children.Label = name, nameLabel
+	local authoredGradient = harness.newInstance("UIGradient")
+	authoredGradient.Name, authoredGradient.Parent = "AuthoredGradient", nameLabel
 	name.children.New = node("New", "Frame")
 	name.children.New.Position = size(0.9, 0.02)
 	local mutation = row("Mutation")
@@ -141,7 +163,7 @@ local function fixture(reuseScale, rarityVisible, tutorial)
 			UIScale = node("UIScale", "UIScale"),
 		}),
 		RevealInfo = node("RevealInfo", "Frame", {
-			Name = name, Rarity = row("Rarity"), Mutation = mutation, Income = row("Income"),
+			Name = name, Rarity = row("Rarity"), Mutation = mutation, Income = row("Income"), Weight = row("Weight"),
 		}),
 	})
 	local owner = { originals = {}, createdScales = {}, sounds = {}, attempts = {}, enabled = true, phase = "Preparing" }
@@ -159,6 +181,7 @@ local function fixture(reuseScale, rarityVisible, tutorial)
 		value.children.UIScale = scale
 	end
 	gui.children.RevealInfo.children.Rarity.Visible = rarityVisible == true
+	gui.children.RevealInfo.children.Weight.Visible = false
 	function owner:_save(instance, properties)
 		for _, property in properties do
 			table.insert(self.originals, { instance = instance, property = property, value = instance[property] })
@@ -209,6 +232,8 @@ end
 
 for _, reuseScale in { false, true } do
 	local info, owner = fixture(reuseScale, reuseScale)
+	local authoredGradient = info.name:FindFirstChild("AuthoredGradient")
+	local authoredBackground, authoredTextColor = info.name.BackgroundColor3, info.name.TextColor3
 	local holderScale, glowSize = info.luck.children.UIScale.Scale, info.glow.Size
 	assert(info.luck.Visible and not info.reveal.Visible and info.value.Text == "1.00X", "Start with luck and hide result placeholders")
 	assert(not info.name.Parent.children.New.Visible, "Do not display the NEW sample badge")
@@ -258,13 +283,17 @@ for _, reuseScale in { false, true } do
 	assert(#owner.celebrations == 1, "Repeated reveal frames must not repeat the celebration")
 	assert(not info.luck.Visible and info.reveal.Visible, "Switch the card at the exit apex")
 	assert(info.newBadge.Visible, "Show NEW for a server-confirmed first index discovery")
-	assert(info.name.Text == "TestFish (Big)", "Display the fish name and size title")
+	local weightRow = info.reveal.children.Weight
+	assert(info.name.Text == "TestFish", "Put the size title on the weight row")
+	assert(weightRow.Visible and weightRow.children.Label.Text == "Big · 34 kg", "Display size and actual weight")
 	assert(not info.rarityRow.Visible, "Keep rarity hidden when revealing a fish")
 	assert(info.rarityRow.children.Label.Text == "original text"
 		and info.rarityRow.children.Label.TextColor3 == "original color", "Leave the unused rarity label untouched")
-	assert(info.name.TextColor3 == modules.RarityPresentation.GetColor("Rare"), "Use rarity color for the whole fish name")
+	local rareGradient = assert(info.name:FindFirstChild("UIGradient_Rare"))
+	assert(info.name.TextColor3 == harness.colors.new(1, 1, 1) and rareGradient.Enabled)
+	assert(rareGradient.Color == modules.RarityPresentation.GetTemplate("Rare").Color and authoredGradient.Parent == nil)
 	assertMutation(info, "Golden")
-	assert(info.income.Text == "$311/s", "Use both actual weight and mutation for passive income")
+	assert(info.income.Text == "$414/s", "Use both actual weight and mutation for passive income")
 	bite.timeline.phase = "Caught"
 	info:Update(23, bite)
 	assert(#owner.celebrations == 1, "Caught must not repeat the reveal celebration")
@@ -274,12 +303,17 @@ for _, reuseScale in { false, true } do
 	info:Update(24, bite)
 	assert(not info.newBadge.Visible, "Clear NEW when leaving the previous reveal")
 	assert(info.luck.Visible and not info.reveal.Visible, "Hide previous results when waiting for another fish")
-	local normal = { fishConfig = item, catchWeight = 10, isNewDiscovery = false,
+	local nextFish = table.clone(item)
+	nextFish.Rarity = "Uncommon"
+	local normal = { fishConfig = nextFish, catchWeight = 10, isNewDiscovery = false,
 		timeline = { phase = "Caught", startedAt = 25 } }
 	info:Update(25, normal)
+	assert(rareGradient.Parent == nil and #info.name:GetChildren() == 1 and info.name:FindFirstChild("UIGradient_Uncommon"),
+		"A different rarity must replace the previous name gradient")
 	assert(not info.newBadge.Visible, "A repeat catch of the same fish must hide NEW")
 	assert(info.name.Text == "TestFish" and not info.mutationRow.Visible and not info.rarityRow.Visible and info.income.Text == "$100/s",
 		"The next ordinary fish must clear the previous title and mutation")
+	assert(weightRow.Visible and weightRow.children.Label.Text == "10 kg", "Below the first tier, display only the new weight")
 	assertMutation(info, nil)
 	normal.timeline.phase = "Reeling"
 	info:Update(26, normal)
@@ -305,15 +339,18 @@ for _, reuseScale in { false, true } do
 		scale:Destroy()
 	end
 	assert((info.value.children.UIScale ~= nil) == reuseScale, "Remove temporary value scales and preserve authored ones")
+	assert(not weightRow.Visible and weightRow.children.Label.Text == "original text", "Restore the authored weight row")
+	assert(#info.name:GetChildren() == 1 and info.name:FindFirstChild("AuthoredGradient") == authoredGradient)
+	assert(info.name.BackgroundColor3 == authoredBackground and info.name.TextColor3 == authoredTextColor)
 end
 
 do
 	local info, owner = fixture()
 	for index, case in {
-		{ id = "Golden", expected = "Golden", income = "$150/s" },
-		{ id = "Diamond", expected = "Diamond", income = "$200/s" },
-		{ id = "Rainbow", expected = "Rainbow", income = "$250/s" },
-		{ id = "Golden", expected = "Golden", income = "$150/s" },
+		{ id = "Golden", expected = "Golden", income = "$200/s" },
+		{ id = "Diamond", expected = "Diamond", income = "$500/s" },
+		{ id = "Rainbow", expected = "Rainbow", income = "$1000/s" },
+		{ id = "Golden", expected = "Golden", income = "$200/s" },
 		{ income = "$100/s" },
 		{ id = "Unknown", income = "$100/s" },
 		{ id = "Mint", income = "$100/s" },
@@ -345,7 +382,11 @@ do
 	assert(info.income.Text == "$120/s", "Event reveal uses the player's baseline, not the starter fallback")
 	Info.FillReveal(info.reveal, { DisplayName = "Exclusive", Rarity = "Exclusive", CpsPrice = 0.8, DefaultWeight = 10 },
 		10, "Golden", false)
-	assert(info.income.Text == "$120/s", "Paid egg reveal uses the player's baseline and the mutation multiplier")
+	assert(info.income.Text == "$160/s", "Paid egg reveal uses the player's baseline and the mutation multiplier")
+	assert(info.reveal.children.Weight.children.Label.Text == "10 kg", "Paid egg reveal shares the weight format")
+	Info.FillReveal(info.reveal, item, nil, nil, false)
+	assert(not info.reveal.children.Weight.Visible and info.reveal.children.Weight.children.Label.Text == "",
+		"Clear the previous weight when there is no valid catch weight")
 	info:Destroy()
 end
 

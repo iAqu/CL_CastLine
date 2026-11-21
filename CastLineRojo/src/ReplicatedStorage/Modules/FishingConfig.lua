@@ -128,6 +128,7 @@ local Config = {
 	},
 	WaterVFX = {
 		Entry = "Cast_WaterEntry",
+		EntryScale = 1.5,
 		Exit = "Cast_WaterOut",
 		Idle = "Bite_Idle",
 		IdleEnabled = false,
@@ -138,6 +139,8 @@ local Config = {
 		StruggleInterval = 0.1,
 		StrugglePositionScale = 0.6,
 		StruggleScale = 0.75,
+		StruggleStudsPerScale = 16,
+		StruggleDiameterScaleCap = 4.5,
 	},
 	CharacterVFX = {
 		Land = "FishingCast_Land",
@@ -226,7 +229,7 @@ local Config = {
 			WidthRatio = 0.30, MinWidth = 0.6, EdgeDivisor = 28,
 			Lifetime = 0.70, LengthRatio = 2, MinLength = 10,
 		},
-		Prompt = { PopTime = 0.08, StartScale = 0.7, HeightOffset = 3.2 },
+		Prompt = { PopTime = 0.08, StartScale = 0.7, HeightOffset = 2 },
 		-- 独立演出测试可用 FishName 指定鱼种；正式钓鱼使用服务器抽取结果。
 		-- 相对鱼身尺寸的嘴部连接位置。
 		MouthOffset = { 0, -0.1, -0.485 },
@@ -380,6 +383,9 @@ local Config = {
 			CameraBlend = 0.18,
 			CameraLag = 0.12,
 			CameraRiseFollow = 0.35,
+			CameraPullbackStartSize = 6,
+			CameraPullbackPerStud = 0.3,
+			CameraMaxPullback = 8,
 			Exit = { Fov = 10, Recovery = 0.25, Shake = 3.6, Duration = 0.22, Frequency = 22 },
 			Land = { Shake = 0.6, Duration = 0.12, Frequency = 22 },
 		},
@@ -500,6 +506,27 @@ Config.CastRainbow = {
 
 function Config.GetCastProfile(castRating: string?)
 	return if castRating == "GODLIKE" then Config.CastProfiles.Godlike else Config.CastProfiles.Normal
+end
+
+-- Integrate the speed curve once so the meter is independent of client frame rate.
+local meterAcceleration = Config.Meter.BaseSpeed * (Config.Meter.TopSpeedFactor - 1)
+local meterHalfPeriod = math.log(Config.Meter.TopSpeedFactor) / meterAcceleration
+
+function Config.GetCastMeterProgress(elapsed: number): number
+	local time = math.max(elapsed, 0) % (2 * meterHalfPeriod)
+	time = math.min(time, 2 * meterHalfPeriod - time)
+	return math.clamp((math.exp(meterAcceleration * time) - 1) / (Config.Meter.TopSpeedFactor - 1), 0, 1)
+end
+
+function Config.GetFishingInputDelay(player: Player): number
+	return math.clamp(player:GetNetworkPing() / 2, 0, 0.2)
+end
+
+function Config.GetHookTime(receivedAt: number, biteAt: number, biteEndsAt: number, inputDelay: number): number?
+	if receivedAt < biteAt or receivedAt >= biteEndsAt + inputDelay + 0.08 then
+		return nil
+	end
+	return math.clamp(receivedAt - inputDelay, biteAt, biteEndsAt)
 end
 
 -- Pure shared classification. Internal compatibility callers omit progress to use the top curve.

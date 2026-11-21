@@ -7,13 +7,19 @@ local function readModule(path, environment)
 end
 
 local onboarding = readModule("ReplicatedStorage/Modules/FishingOnboarding")
+local intro = readModule("ReplicatedStorage/Modules/FishingIntroConfig")
+local trainingProgress = readModule("ReplicatedStorage/Modules/TrainingProgress")
+local starterUid = intro.RewardUidPrefix .. tostring(intro.Version)
 local args = { plugin = "RestartTest", castLineOnboarding = true }
 local devPlace = 84106335829275
-local function loadProfile(isStudio, placeId, testArgs, forceMock, loadCount, initialStage)
+local function loadProfile(isStudio, placeId, testArgs, forceMock, loadCount, initialStage, storedData)
 	local loadedFrom
 	local data = { Wins = 200, Items = {}, PlotPlacements = {}, EquippedRodId = "Rod_101", Training = { Level = 1 } }
 	if initialStage then
 		data.FishingOnboarding = { Stage = initialStage }
+	end
+	for key, value in pairs(storedData or {}) do
+		data[key] = value
 	end
 	local profile = {
 		MetaData = { SessionLoadCount = loadCount or 1 }, Data = data,
@@ -42,7 +48,16 @@ local function loadProfile(isStudio, placeId, testArgs, forceMock, loadCount, in
 		RunService = { IsStudio = function() return isStudio end },
 		StudioTestService = { GetTestArgs = function() return testArgs end },
 		ServerScriptService = { Libs = { ProfileService = { GetProfileStore = function() return profileStore end } } },
-		ReplicatedFirst = { Data = {} },
+		ReplicatedFirst = { Data = {
+			FishesData = { [intro.StarterFishId] = { DefaultWeight = 1 }, Fish_103 = {} },
+			TrainingData = { Training_101 = { TrainingID = "Training_101", LayoutOrder = 1 } },
+			TrainingLevelsData = {
+				[1] = { Level = 1, XpToNextLevel = 5 },
+				[2] = { Level = 2, XpToNextLevel = 5 },
+				[3] = { Level = 3, XpToNextLevel = 5 },
+				[4] = { Level = 4, XpToNextLevel = 0 },
+			},
+		} },
 		ReplicatedStorage = {
 			Packages = {
 				Knit = {
@@ -55,19 +70,22 @@ local function loadProfile(isStudio, placeId, testArgs, forceMock, loadCount, in
 				},
 				Signal = { new = newSignal },
 			},
-			PlayerData = { Template = {} },
+			PlayerData = { Template = { Settings = {} } },
 			Modules = {
 				FishingOnboarding = onboarding,
+				FishingIntroConfig = intro,
 				FishingProgression = { Ensure = noop },
 				RodInventory = { Reconcile = noop },
 				PetInventory = { Reconcile = noop },
 				EggInventory = { Reconcile = noop },
-				TrainingProgress = { Ensure = noop },
+				TrainingProgress = trainingProgress,
 				ItemPriceMigration = noop,
 				PlotUpgradeData = { NormalizeLevel = function() return 0 end },
 			PlotPlacementUtil = {
-				GetCapacity = function() return 0 end,
+				GetCapacity = function() return 4 end,
 				CoerceNumericKeys = function(value) return value end,
+				GetItemUid = function(placements, slot) return placements[slot] end,
+				IsPlaced = function(placements, uid) return table.find(placements, uid) ~= nil end,
 			},
 				PlotFishIncome = { PrepareOffline = function() return {} end },
 			},
@@ -87,11 +105,13 @@ local function loadProfile(isStudio, placeId, testArgs, forceMock, loadCount, in
 	assert(service:IsStudioOnboardingTest() == (isStudio and placeId == devPlace and testArgs == args), "Unexpected mode")
 	assert(service:IsUsingMockProfiles() == (loadedFrom == "mock"), "Mock flag must match the actual store")
 	assert(service:GetProfile(player) == profile, "The loaded profile must be available to gameplay services")
-	return loadedFrom, attributes[onboarding.StageAttribute]
+	return loadedFrom, attributes[onboarding.StageAttribute], attributes[onboarding.FishAttribute], data
 end
 
-local source, stage = loadProfile(true, devPlace, args)
-assert(source == "mock" and stage == "FirstCatch", "A fresh onboarding test starts at FirstCatch on the mock store")
+local source, stage, target, data = loadProfile(true, devPlace, args)
+assert(source == "mock" and stage == "PlaceFish" and target == starterUid,
+	"A fresh onboarding test starts at placement on the mock store")
+assert(data.Items[target].ItemId == intro.StarterFishId and next(data.Items, target) == nil)
 source, stage = loadProfile(true, devPlace, args, false, 2, "Train")
 assert(source == "mock" and stage == "Train", "Reloads in the same test retain existing progress")
 source, stage = loadProfile(true, devPlace, nil, true)
@@ -106,6 +126,40 @@ for _, case in ipairs({
 	assert(source == "regular" and stage == nil, "Other starts must retain the regular store and onboarding state")
 end
 
+local starter = { ItemId = intro.StarterFishId, Weight = 1 }
+local other = { ItemId = "Fish_103", Weight = 1 }
+local function loadLegacy(items, placements)
+	local _, migratedStage, fishUid, saved = loadProfile(true, devPlace, nil, true, 2, "FirstCatch", {
+		Items = items,
+		PlotPlacements = placements,
+		FishingIntroVersion = intro.Version,
+		OnboardingAnalyticsV1 = { Sent = 8 },
+	})
+	assert(saved.OnboardingAnalyticsV1.Retired and saved.OnboardingAnalyticsV1.Sent == 8)
+	assert(saved.Items == items, "Migration does not grant or replace inventory")
+	return migratedStage, fishUid
+end
+stage, target = loadLegacy({ [starterUid] = starter, other = other }, {})
+assert(stage == "PlaceFish" and target == starterUid)
+assert(loadLegacy({ [starterUid] = starter }, { starterUid }) == "Train")
+assert(loadLegacy({ other = other }, {}) == "PlaceFish")
+assert(loadLegacy({}, {}) == "Train")
+assert(loadLegacy({ other = other }, { "other" }) == "Train")
+source, stage, target = loadProfile(true, devPlace, nil, true, 2, nil, {
+	Items = { oldLesson = other },
+	FishingOnboarding = { Stage = "PlaceFish", FishUid = "oldLesson" },
+})
+assert(stage == "PlaceFish" and target == "oldLesson", "An existing placement target survives rejoining")
+
+for _, checkpoint in ipairs({ "Train", "StopTraining", "RodReward", "FinalCatch", "Complete" }) do
+	local level = if checkpoint == "Train" then 2 else 3
+	local storeName, savedStage, _, saved = loadProfile(false, devPlace, nil, false, 2, checkpoint, {
+		Training = { Level = level, Xp = 4 },
+	})
+	assert(storeName == "regular" and savedStage == checkpoint, "Rejoining publishes the saved checkpoint: " .. checkpoint)
+	assert(saved.Training.Level == level and saved.Training.Xp == 4, "Rejoining preserves training progress")
+end
+
 local onboardingTest, leaderboardWrites = true, 0
 local function writeLeaderboard()
 	leaderboardWrites += 1
@@ -113,12 +167,14 @@ end
 local function getBlacklist()
 	return nil
 end
+local globalLeaderboardConfig = readModule("ReplicatedStorage/Modules/GlobalLeaderboardConfig", {
+	game = { GetService = function() return { Modules = { NumberUtil = {}, WeightFormat = {} } } end },
+	require = function(value) return value end,
+})
 local leaderboardDependencies = {
-	DataStoreService = { GetOrderedDataStore = function()
-		return { SetAsync = writeLeaderboard }
-	end },
+	Players = { GetPlayerByUserId = function() return nil end },
 	ReplicatedStorage = {
-		Modules = {},
+		Modules = { GlobalLeaderboardConfig = globalLeaderboardConfig },
 		Packages = { Knit = {
 			CreateService = function(service) return service end,
 			CreateSignal = function() return { Fire = function() end } end,
@@ -127,7 +183,10 @@ local leaderboardDependencies = {
 	},
 	ServerScriptService = { Services = { PlayerDataService = {
 		IsStudioOnboardingTest = function() return onboardingTest end,
-		GetProfile = function() return { Data = { TotalCashEarned = 300, TotalItemWeightTenths = 100 } } end,
+		IsUsingMockProfiles = function() return false end,
+		GetProfile = function()
+			return { Data = { TotalCashEarned = 300, MaxCaughtFishWeightTenths = 100, TotalFishCaught = 2, PlayTime = 50 } }
+		end,
 	} } },
 	ServerStorage = { Gui = {} },
 }
@@ -137,9 +196,17 @@ local leaderboard = readModule("ServerScriptService/Services/GlobalLeaderboardSe
 	end },
 	require = function(value) return value end,
 })
+for _, boardType in globalLeaderboardConfig.Types do
+	leaderboard._Stores[boardType] = {
+		UpdateAsync = function(_, _, transform)
+			assert(transform(nil) > 0)
+			writeLeaderboard()
+		end,
+	}
+end
 local player = { UserId = 123 }
 leaderboard:SyncPlayerLeaderboardData(player)
 assert(leaderboardWrites == 0, "Onboarding progress must not reach the global leaderboard")
 onboardingTest = false
 leaderboard:SyncPlayerLeaderboardData(player)
-assert(leaderboardWrites == 2, "Regular play still records cash and weight")
+assert(leaderboardWrites == 4, "Regular play records all four scores")

@@ -21,6 +21,7 @@ local Onboarding = require(Modules.FishingOnboarding)
 local Knit = require(ReplicatedStorage.Packages.Knit)
 local ItemGrantUtil = require(script.Parent.ItemGrantUtil)
 local PlayerDataService = require(script.Parent.PlayerDataService)
+local BaitPurchases = require(script.Parent.FishingBaitPurchases)
 local Analytics = require(script.Parent.OnboardingAnalyticsService)
 
 local data = ReplicatedFirst:WaitForChild("Data")
@@ -39,7 +40,6 @@ local presentations = {}
 local nextPresentationId = 0
 local random = Random.new()
 local ROUND_LEAD_SECONDS = 0.35
-local MAX_HOOK_LATENCY = 0.45
 local START_TIMEOUT = 60
 local START_HORIZONTAL_TOLERANCE = 1
 
@@ -63,6 +63,35 @@ local function getSession(player: Player, token)
 		return state
 	end
 	return nil
+end
+
+local poolsByRod = {}
+
+local function getPool(rod, progress)
+	local cache = poolsByRod[rod.RodID]
+	if not cache then
+		cache = {}
+		poolsByRod[rod.RodID] = cache
+	end
+	local grade = Config.GetCastRating(progress).ProbabilityGrade
+	local entry = cache[grade]
+	if not entry then
+		local pool, pity = Progression.BuildPool(FishesData, rod, RodsData, Assets.GetFish, progress)
+		if #pool == 0 then
+			return pool, pity
+		end
+		for _, fish in pool do
+			table.freeze(fish)
+		end
+		entry = {pool = table.freeze(pool), pity = pity}
+		cache[grade] = entry
+	end
+	return entry.pool, entry.pity
+end
+
+local function quoteBait(rod, baitId, profile, progress)
+	local credits = BaitPurchases.GetCredits(profile, progress, rod.RodID)
+	return Progression.Quote(rod, baitId, BaitConfig, BaitPurchases.GetProductId(), credits)
 end
 
 local function clearPresentation(player: Player, state)
@@ -99,18 +128,18 @@ local function scheduleCatchPresentation(player, state, pending, pressedAt, isNe
 	end)
 end
 
-function FishingService.Client:Begin(player: Player)
+local function beginFishing(player: Player, eventSlotId: number?)
 	local character, root, humanoid = getLiveCharacter(player)
 	if not character or not root or not humanoid then
 		return failure("Fishing character unavailable")
 	end
 	local profile = PlayerDataService:GetProfile(player)
-	if not profile then
+	if not profile or (eventSlotId ~= nil and not profile:IsActive()) then
 		return failure("Your fishing data is still loading", "ProfileNotReady")
 	end
 	local plot = Knit.GetService("PlotSlotService"):GetPlayerPlot(player)
 	local part = FishingSpotUtil.GetStartPart(plot)
-	if not part or not FishingSpotUtil.Contains(part, root, humanoid, START_HORIZONTAL_TOLERANCE) then
+	if eventSlotId == nil and (not part or not FishingSpotUtil.Contains(part, root, humanoid, START_HORIZONTAL_TOLERANCE)) then
 		return failure("Stand at your fishing spot to start fishing", "OutsideFishingSpot")
 	end
 	local existing = sessions[player]
@@ -123,21 +152,59 @@ function FishingService.Client:Begin(player: Player)
 	if not rod then
 		return failure("Fishing rod unavailable")
 	end
-	local token = HttpService:GenerateGUID(false)
-	Knit.GetService("TrainingService"):Stop(player, false)
+	local training = Knit.GetService("TrainingService")
+	if eventSlotId == nil then
+		training:Stop(player, false)
+	end
 	local progress = Progression.Ensure(profile.Data)
 	local onboarding = profile.Data.FishingOnboarding
 	local stage = onboarding and onboarding.Stage
-	local lesson = if stage == "FirstCatch" or stage == "FinalCatch" then stage else nil
-	local guideBaitId = if lesson == "FirstCatch" then "NONE" elseif lesson == "FinalCatch" then rod.BaitsSelect[1] else nil
-	local quotes = {}
-	if lesson ~= "FirstCatch" then
-		for _, id in ipairs(rod.BaitsSelect) do
-			quotes[id] = Progression.Quote(rod, id, BaitConfig, progress)
+	local destination
+	if eventSlotId ~= nil then
+		if root.Anchored
+			or humanoid.Sit
+			or player:GetAttribute("IsTraining") == true
+			or Onboarding.IsActiveStage(stage)
+			or Knit.GetService("FishingIntroService"):IsActive(player)
+		then
+			return failure("Finish what you're doing before joining Secret Fish.", "FishingBusy")
 		end
+		if part and plot:GetAttribute("OwnerUserId") == player.UserId then
+			destination = FishingSpotUtil.GetEntryRootCFrame(part, root, humanoid)
+		end
+		if not destination then
+			return failure("Your fishing spot is unavailable.", "MissingFishingSpot")
+		end
+	end
+	local lesson = if stage == "FinalCatch" then stage else nil
+	local guideBaitId = if lesson then rod.BaitsSelect[1] else nil
+	local quotes = {}
+	for _, id in ipairs(rod.BaitsSelect) do
+		quotes[id] = quoteBait(rod, id, profile, progress)
 	end
 	if lesson == "FinalCatch" and not quotes[guideBaitId] then
 		return failure("Your rod has no first-tier bait")
+	end
+	now = Workspace:GetServerTimeNow()
+	local eventFish
+	-- The final lesson can turn into free practice after the bait choice.
+	local fish, window = Knit.GetService("EventFishService"):GetActiveFish(now)
+	if eventSlotId ~= nil and (not fish or not window or window.SlotId ~= eventSlotId) then
+		return failure("This Secret Fish event has ended.", "EventExpired")
+	end
+	if fish then
+		eventFish = {
+			FishId = fish.FishID,
+			SlotId = window.SlotId,
+			StartsAt = window.StartsAt,
+			EndsAt = window.EndsAt,
+		}
+	end
+	local token = HttpService:GenerateGUID(false)
+	if destination then
+		training:Stop(player, false)
+		character:PivotTo(destination * root.CFrame:ToObjectSpace(character:GetPivot()))
+		root.AssemblyLinearVelocity, root.AssemblyAngularVelocity = Vector3.zero, Vector3.zero
 	end
 	local previousPresentation = presentations[player]
 	if previousPresentation then
@@ -151,6 +218,7 @@ function FishingService.Client:Begin(player: Player)
 		rodId = rodId,
 		lesson = lesson,
 		guideBaitId = guideBaitId,
+		eventFish = eventFish,
 		character = character,
 		phase = "Selecting",
 		expiresAt = math.huge,
@@ -179,19 +247,39 @@ function FishingService.Client:Begin(player: Player)
 		baitQuotes = quotes,
 		lesson = lesson,
 		guideBaitId = guideBaitId,
+		eventFish = eventFish,
 	}
 end
 
-function FishingService.Client:SelectBait(player: Player, token, baitId)
+function FishingService.Client:Begin(player: Player)
+	return beginFishing(player)
+end
+
+function FishingService.Client:JoinEvent(player: Player, slotId: number)
+	if typeof(slotId) ~= "number" then
+		return failure("This Secret Fish event has ended.", "EventExpired")
+	end
+	return beginFishing(player, slotId)
+end
+
+local function openBaitPurchase(player, profile, state, token)
+	local function isCurrent()
+		return getSession(player, token) == state and state.phase == "Selecting"
+			and PlayerDataService:GetProfile(player) == profile and RodInventory.GetEquippedId(profile.Data) == state.rodId
+	end
+	if not isCurrent() then
+		return false, "Fishing selection unavailable"
+	end
+	return BaitPurchases.Prompt(player, state.rodId, token, isCurrent)
+end
+
+function FishingService.Client:SelectBait(player: Player, token, baitId, purchaseOnSelect)
 	local state = getSession(player, token)
 	if not state or state.phase ~= "Selecting" then
 		return failure("Fishing selection unavailable")
 	end
 	if typeof(baitId) ~= "string" then
 		return failure("Bait unavailable")
-	end
-	if state.lesson == "FirstCatch" and baitId ~= "NONE" then
-		return failure("This lesson uses no bait.")
 	end
 	if state.lesson == "FinalCatch" and baitId ~= "NONE" and baitId ~= state.guideBaitId then
 		return failure(Onboarding.GetBaitSelectionHint(BaitsData[state.guideBaitId]))
@@ -204,7 +292,7 @@ function FishingService.Client:SelectBait(player: Player, token, baitId)
 	if not template then
 		return failure("Bait model unavailable")
 	end
-	local pool, pity = Progression.BuildPool(FishesData, state.rod, RodsData, Assets.GetFish)
+	local pool, pity = getPool(state.rod)
 	local eggPool = if PetFeatureConfig.Enabled then FishingRoll.GetEggPool(EggsData, math.huge, Assets.GetEgg) else {}
 	if #pool == 0 then
 		return failure("No fish match this rod")
@@ -216,20 +304,29 @@ function FishingService.Client:SelectBait(player: Player, token, baitId)
 	local progress = Progression.Ensure(profile.Data)
 	local practiceWithoutBait = state.lesson == "FinalCatch" and baitId == "NONE"
 	if practiceWithoutBait then
-		local firstTier = Progression.Quote(state.rod, state.guideBaitId, BaitConfig, progress)
+		local firstTier = quoteBait(state.rod, state.guideBaitId, profile, progress)
 		if profile.Data.Wins >= firstTier.price then
 			return failure(Onboarding.GetBaitSelectionHint(BaitsData[state.guideBaitId]))
 		end
 	end
-	local quote = Progression.Quote(state.rod, baitId, BaitConfig, progress)
+	local quote = quoteBait(state.rod, baitId, profile, progress)
 	if not quote then
 		return failure("Bait unavailable")
 	end
 	if not quote.available then
 		return failure("Robux bait is not configured yet")
 	end
-	if quote.tier == 4 and quote.credits <= 0 then
-		return { ok = false, needsPurchase = true, productId = quote.productId, message = "Purchase a Rainbow bait" }
+	if quote.tier == BaitConfig.PaidTier then
+		if RodInventory.GetEquippedId(profile.Data) ~= state.rodId then
+			return failure("Fishing rod changed")
+		end
+		if quote.credits <= 0 then
+			if purchaseOnSelect == true and not state.lesson then
+				local prompted, message = openBaitPurchase(player, profile, state, token)
+				return if prompted then { ok = false, prompted = true } else failure(message)
+			end
+			return { ok = false, needsPurchase = true, productId = quote.productId, message = "Purchase a Rainbow bait" }
+		end
 	end
 	if profile.Data.Wins < quote.price then
 		if state.lesson == "FinalCatch" and bait then
@@ -249,35 +346,70 @@ function FishingService.Client:SelectBait(player: Player, token, baitId)
 	state.eggPool = eggPool
 	state.initialYaw = random:NextNumber(0, 2 * math.pi)
 	state.presentation.baitId, state.presentation.initialYaw = baitId, state.initialYaw
-	publishPresentation(state, "Preparing", Workspace:GetServerTimeNow())
+	local now = Workspace:GetServerTimeNow()
+	state.meterStartsAt = now + 0.25
+	publishPresentation(state, "Preparing", now)
 	-- Meter preparation can stay open until the player casts or leaves.
 	state.expiresAt = math.huge
 	return {
 		ok = true,
 		initialYaw = state.initialYaw,
+		meterStartsAt = state.meterStartsAt,
 		lesson = state.lesson,
 		luck = FishingRoll.GetLuck(state.rod, bait, Config.FixedCastDistance) * Knit.GetService("PetService")
 			:GetLuckMultiplier(player),
 	}
 end
 
-function FishingService.Client:Cast(player: Player, token, progress)
+function FishingService.Client:RequestBaitPurchase(player: Player, token, baitId)
 	local state = getSession(player, token)
-	local now = Workspace:GetServerTimeNow()
-	if not state or state.phase ~= "Preparing" then
+	local profile = PlayerDataService:GetProfile(player)
+	if
+		not profile
+		or not state
+		or state.lesson
+		or state.phase ~= "Selecting"
+		or baitId ~= state.rod.BaitsSelect[BaitConfig.PaidTier]
+		or not BaitsData[baitId]
+	then
+		return failure("Fishing selection unavailable")
+	end
+	if not Assets.GetBait(BaitsData[baitId].Model) then
+		return failure("Bait model unavailable")
+	end
+	local prompted, message = openBaitPurchase(player, profile, state, token)
+	return if prompted then { ok = true } else failure(message)
+end
+
+function FishingService.Client:Cast(player: Player, token)
+	local state = getSession(player, token)
+	local receivedAt = Workspace:GetServerTimeNow()
+	if not state or state.phase ~= "Preparing" or receivedAt < state.meterStartsAt then
 		return failure("Cast unavailable")
 	end
-	if type(progress) ~= "number" or progress ~= progress or progress < 0 or progress > 1 then
-		return failure("Invalid cast progress")
-	end
-	local pool, pity = Progression.BuildPool(FishesData, state.rod, RodsData, Assets.GetFish, progress)
+	local elapsed = receivedAt - state.meterStartsAt - Config.GetFishingInputDelay(player)
+	local progress = Config.GetCastMeterProgress(elapsed)
+	local pool, pity = getPool(state.rod, progress)
 	if #pool == 0 then return failure("No fish match this rod") end
+	if state.quote.tier == BaitConfig.PaidTier then
+		local profile = PlayerDataService:GetProfile(player)
+		if not profile or RodInventory.GetEquippedId(profile.Data) ~= state.rodId then
+			return failure("Fishing rod unavailable")
+		end
+		state.phase = "CommittingCast"
+		if not BaitPurchases.Consume(profile, state.rodId) then
+			state.phase = "Preparing"
+			return failure("Could not use the Rainbow bait. Please try again.")
+		end
+		if getSession(player, token) ~= state then
+			return failure("Fishing session ended")
+		end
+	end
+	local now = Workspace:GetServerTimeNow()
 	local rating = Config.GetCastRating(progress)
 	state.castProgress, state.castRating = progress, rating.Id
 	state.pool, state.pity = pool, pity
 	local distance = Config.FixedCastDistance
-	local eventFish = Knit.GetService("EventFishService"):GetActiveFish()
-	state.eventFishId = eventFish and eventFish.FishID
 	state.castLuckMultiplier = FishingRoll.GetCastLuckMultiplier(progress)
 	state.phase, state.distance = "Waiting", distance
 	local flightTime = ProjectileMath.FlightTime(distance)
@@ -297,6 +429,7 @@ function FishingService.Client:Cast(player: Player, token, progress)
 		ok = true,
 		distance = distance,
 		castRating = state.castRating,
+		castProgress = progress,
 		luck = FishingRoll.GetLuck(state.rod, state.bait, distance, state.castLuckMultiplier)
 			* Knit.GetService("PetService"):GetLuckMultiplier(player),
 	}
@@ -324,7 +457,7 @@ function FishingService.Client:NextRound(player: Player, token, previousRound)
 	local pending = state.pending
 	if not pending then
 		local lesson = state.lesson
-		local lessonFishId = if lesson == "FirstCatch" then "Fish_103" elseif lesson == "FinalCatch" then "Fish_106" else nil
+		local lessonFishId = if lesson then "Fish_106" else nil
 		local entry
 		if lessonFishId then
 			for _, candidate in ipairs(state.pool) do
@@ -341,8 +474,9 @@ function FishingService.Client:NextRound(player: Player, token, previousRound)
 			return failure("Fishing pool unavailable")
 		end
 		local kind, fish = "Fish", entry.fish
-		if not lesson and state.eventFishId then
-			fish = FishesData[state.eventFishId]
+		local eventFish = if lesson then nil else state.eventFish
+		if eventFish then
+			fish = FishesData[eventFish.FishId]
 		elseif not lesson and PetFeatureConfig.Enabled and random:NextNumber() < Config.EggCatchChance then
 			kind, fish = "Egg", FishingRoll.Choose(state.eggPool, 1, random)
 		end
@@ -353,7 +487,7 @@ function FishingService.Client:NextRound(player: Player, token, previousRound)
 			Id = HttpService:GenerateGUID(false),
 			Kind = kind,
 			FishId = if kind == "Fish" then fish.FishID else fish.EggId,
-			IsEvent = not lesson and state.eventFishId ~= nil,
+			IsEvent = eventFish ~= nil,
 			Band = entry.band,
 			IsMax = entry.isMax,
 			Weight = if kind == "Egg" then FishingRoll.RollWeight(fish.DefaultWeight, math.huge, random) else fish.DefaultWeight,
@@ -369,8 +503,8 @@ function FishingService.Client:NextRound(player: Player, token, previousRound)
 		pending.MaxCatchWeight = Knit.GetService("TrainingService"):GetMaxCatchWeight(player)
 		if state.lesson then
 			local levels = require(data:WaitForChild("TrainingLevelsData"))
-			local level = if state.lesson == "FirstCatch" then 1 else Onboarding.TrainingLevel
-			pending.MaxCatchWeight = math.min(pending.MaxCatchWeight, TrainingProgress.GetLevel(levels, level).MaxCatchWeight)
+			local cap = TrainingProgress.GetLevel(levels, Onboarding.FinalCatchWeightCapLevel).MaxCatchWeight
+			pending.MaxCatchWeight = math.min(pending.MaxCatchWeight, cap)
 		end
 		pending.Weight = TrainingProgress.CalculateFishWeight(fish.DefaultWeight, pending.MaxCatchWeight)
 	end
@@ -430,7 +564,7 @@ function FishingService.Client:NextRound(player: Player, token, previousRound)
 	}
 end
 
-function FishingService.Client:Hook(player: Player, token, round, pressedAt)
+function FishingService.Client:Hook(player: Player, token, round)
 	local state = getSession(player, token)
 	local now = Workspace:GetServerTimeNow()
 	local pending = state and state.pending
@@ -440,13 +574,11 @@ function FishingService.Client:Hook(player: Player, token, round, pressedAt)
 		or state.phase ~= "Waiting"
 		or state.round == 0
 		or state.round ~= round
-		or typeof(pressedAt) ~= "number"
-		or pressedAt ~= pressedAt
-		or pressedAt < state.biteAt
-		or pressedAt >= state.biteEndsAt
-		or pressedAt > now + 0.08
-		or now - pressedAt > MAX_HOOK_LATENCY
 	then
+		return failure("Missed the bite")
+	end
+	local pressedAt = Config.GetHookTime(now, state.biteAt, state.biteEndsAt, Config.GetFishingInputDelay(player))
+	if not pressedAt then
 		return failure("Missed the bite")
 	end
 	-- Claim before Grant, which may yield waiting for a Backpack.
@@ -481,8 +613,10 @@ function FishingService.Client:Hook(player: Player, token, round, pressedAt)
 	local succeeded, granted, err = pcall(ItemGrantUtil.Grant, player, pending.FishId, {
 		Weight = pending.Weight,
 		MutationId = pending.MutationId,
+		PaidOrigin = if tier == BaitConfig.PaidTier then BaitConfig.PurchaseId else nil,
 		InstanceId = pending.Id,
 		CountTowardTotalWeight = true,
+		RecordFishingCatch = true,
 		BeforeCommit = function()
 			if
 				PlayerDataService:GetProfile(player) ~= profile
@@ -494,27 +628,19 @@ function FishingService.Client:Hook(player: Player, token, round, pressedAt)
 			if state.lesson and profile.Data.FishingOnboarding.Stage ~= state.lesson then
 				return false, "Practice catch already completed"
 			end
-			if tier == 4 then
-				if (progress.Credits[state.rodId] or 0) < 1 then
-					return false, "Rainbow bait unavailable"
-				end
-			elseif profile.Data.Wins < price then
+			if tier ~= BaitConfig.PaidTier and profile.Data.Wins < price then
 				return false, "Not enough cash"
 			end
 			return true
 		end,
 		OnCommitted = function()
-			if tier == 4 then
-				progress.Credits[state.rodId] -= 1
-			else
+			if tier ~= BaitConfig.PaidTier then
 				profile.Data.Wins = math.round(profile.Data.Wins - price)
 			end
 			if not pending.IsEvent then
 				Progression.Record(progress, state.rodId, pending.FishId, pending.Band, pending.IsMax)
 			end
-			if state.lesson == "FirstCatch" then
-				Onboarding.Advance(player, profile.Data, "FirstCatch", "PlaceFish", pending.Id)
-			elseif state.lesson == "FinalCatch" then
+			if state.lesson == "FinalCatch" then
 				Onboarding.Advance(player, profile.Data, "FinalCatch", "Complete")
 			end
 			state.caughtUid = pending.Id
@@ -539,7 +665,7 @@ function FishingService.Client:Hook(player: Player, token, round, pressedAt)
 	state.phase, state.expiresAt = "Claimed", now + START_TIMEOUT
 	local isNewDiscovery = succeeded and granted and granted.IsNewDiscovery == true or false
 	scheduleCatchPresentation(player, state, pending, pressedAt, isNewDiscovery)
-	if tier ~= 4 and price > 0 then
+	if tier ~= BaitConfig.PaidTier and price > 0 then
 		local refreshed, refreshError = pcall(PlayerDataService.AdjustWins, PlayerDataService, player, 0)
 		if not refreshed then
 			warn("FishingService: cash display refresh failed: " .. tostring(refreshError))

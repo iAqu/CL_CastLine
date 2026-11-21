@@ -62,6 +62,7 @@ local function fixture(eligible)
 		end
 		function result:andThen(callback) self.resolve = callback return self end
 		function result:catch(callback) self.reject = callback return self end
+		function result:finally(callback) self.settle = callback return self end
 		return result
 	end
 	local service = {
@@ -80,8 +81,9 @@ local function fixture(eligible)
 			return request
 		end,
 		Cancel = function(_, token, completed)
-			table.insert(cancellations, { token = token, completed = completed })
-			return promise()
+			local request = promise()
+			table.insert(cancellations, { token = token, completed = completed, request = request })
+			return request
 		end,
 	}
 	local music = {
@@ -91,6 +93,7 @@ local function fixture(eligible)
 	local input = { InputBegan = signal(), GetFocusedTextBox = function() return nil end }
 	local modules = {
 		FishingIntroConfig = introConfig,
+		FishingAnalyticsPresentation = { Report = function() end, ObserveSequence = function() end },
 		FishingInstructionView = assert(load(
 			read("src/ReplicatedStorage/Modules/FishingInstructionView.lua"),
 			"FishingInstructionView", "t", setmetatable({
@@ -98,7 +101,7 @@ local function fixture(eligible)
 				script = { Parent = { FishingIntroConfig = introConfig } },
 				require = function(value) return value end,
 				UDim2 = { fromScale = function() end },
-				Color3 = { fromRGB = function() end },
+				Color3 = { new = function() end, fromRGB = function() end },
 				Enum = { PreferredInput = { Gamepad = "Gamepad" } },
 			}, { __index = getfenv() })
 		))(),
@@ -161,13 +164,15 @@ local function fixture(eligible)
 			local state = {
 				phase = "Prepared", preparedAt = 0, root = root, character = character, humanoid = humanoid, hint = { FindFirstChildOfClass = function() return {} end },
 				service = service, token = "test", saved = {}, connections = {},
+				visibility = { Destroy = function() end },
                 scene = { Destroy = function() end },
                 sequence = {
-                    phase = "Preparing", meter = { prompt = {} }, continueLabel = {},
+                    phase = "Preparing", options = {}, meter = { prompt = {} }, continueLabel = {},
                     Update = function(_,time,dt) table.insert(samples,{time=time,dt=dt}) end,
                     Destroy = function() end,
                 },
 				gui = { SetAttribute = function() end, Destroy = function() end },
+				biteCue = {}, tapIcon = {},
 			}
 			controller.testSetSession(state)
 			return state, samples
@@ -274,9 +279,11 @@ assert(caught.exitRequested and handoff.controller:IsPlaying() and handoff.camer
 handoff.controller.testUpdate(caught, 11.516, 0.016)
 assert(handoff.camera.CameraType == "Custom" and handoff.camera.CFrame == "normal frame" and handoff.camera.FieldOfView == 70,
 	"Cut straight to the normal camera on the first render after confirmation")
-assert(#caughtSamples == 0 and not handoff.controller:IsPlaying() and handoff.attributes.FishingIntroActive == false,
-	"Do not render another shot or leave presentation state active")
+assert(#caughtSamples == 0 and not handoff.controller:IsPlaying() and handoff.attributes.FishingIntroActive == true,
+	"Restore the camera immediately and keep placement hints hidden during server handoff")
 assert(#handoff.cancellations == 1 and handoff.cancellations[1].token == "test"
-	and handoff.cancellations[1].completed == nil, "Close the completed intro session once with just its token")
+	and handoff.cancellations[1].completed == true, "Close the completed intro session once and request the handoff")
+handoff.cancellations[1].request.settle()
+assert(handoff.attributes.FishingIntroActive == false, "Enable placement hints when handoff settles")
 assert(#lateStart.cancellations == 1 and lateStart.cancellations[1].token == "test"
-	and lateStart.cancellations[1].completed == nil, "Close an interrupted intro session in the same way")
+	and lateStart.cancellations[1].completed == false, "Close an interrupted intro without requesting the handoff")

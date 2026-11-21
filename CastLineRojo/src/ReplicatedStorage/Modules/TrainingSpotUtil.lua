@@ -1,25 +1,26 @@
 local FishingSpotUtil = require(script.Parent.FishingSpotUtil)
+local PlotWorkspaceUtil = require(script.Parent.PlotWorkspaceUtil)
 local Config = require(script.Parent.TrainingConfig)
 local Spot = {}
 
-local function towardGround(plot, anchor)
+local function towardGround(plot, position)
 	local ground = plot:FindFirstChild("Ground")
-	local direction = if ground then ground.Position - anchor.Position else Vector3.zAxis
+	local direction = if ground then ground.Position - position else Vector3.zAxis
 	direction = Vector3.new(direction.X, 0, direction.Z)
 	return if direction.Magnitude < 0.01 then Vector3.zAxis else direction.Unit
 end
 
-local function trainingForward(plot, anchor)
-	local forward = anchor.CFrame.LookVector
+local function horizontalForward(plot, frame)
+	local forward = frame.LookVector
 	local direction = Vector3.new(forward.X, 0, forward.Z)
-	return if direction.Magnitude < 0.01 then towardGround(plot, anchor) else direction.Unit
+	return if direction.Magnitude < 0.01 then towardGround(plot, frame.Position) else direction.Unit
 end
 
 function Spot.MarkerCFrame(plot)
 	local anchor = plot.TrainingAnchor
 	local height = math.min(anchor.Size.X, anchor.Size.Y, anchor.Size.Z) / 2 + 0.05
 	local position = anchor.Position + Vector3.yAxis * height
-	return CFrame.lookAt(position, position + trainingForward(plot, anchor))
+	return CFrame.lookAt(position, position + horizontalForward(plot, anchor.CFrame))
 end
 
 function Spot.Contains(anchor, root, humanoid)
@@ -48,18 +49,41 @@ function Spot.SpawnCFrame(plot, character)
 		return nil
 	end
 	local position = anchor.Position + Vector3.yAxis * (FishingSpotUtil.GetFootHeight(root, humanoid) + 0.1)
-	local direction = trainingForward(plot, anchor)
+	local direction = horizontalForward(plot, anchor.CFrame)
 	return CFrame.lookAt(position, position + direction)
+end
+
+local function getExitAnchorFrame(plot, trainingAnchor)
+	local templatePlot = PlotWorkspaceUtil.getPlotBySlot(1)
+	local exitAnchor = templatePlot and templatePlot:FindFirstChild("TrainingExitAnchor")
+	if not exitAnchor or not exitAnchor:IsA("BasePart") then
+		return nil
+	end
+	if plot == templatePlot then
+		return exitAnchor.CFrame
+	end
+	local templateTraining = templatePlot:FindFirstChild("TrainingAnchor")
+	if not templateTraining or not templateTraining:IsA("BasePart") then
+		return nil
+	end
+	local offset = templateTraining.CFrame:ToObjectSpace(exitAnchor.CFrame)
+	return trainingAnchor.CFrame:ToWorldSpace(offset)
 end
 
 function Spot.ExitCFrame(plot, character)
 	local anchor = plot and plot:FindFirstChild("TrainingAnchor")
 	local root = character and character:FindFirstChild("HumanoidRootPart")
 	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-	if not anchor or not root or not humanoid then
+	if not anchor or not anchor:IsA("BasePart") or not root or not humanoid then
 		return nil
 	end
-	local outward = -towardGround(plot, anchor)
+	local footHeight = FishingSpotUtil.GetFootHeight(root, humanoid)
+	local exitFrame = getExitAnchorFrame(plot, anchor)
+	if exitFrame then
+		local position = exitFrame.Position + Vector3.yAxis * (footHeight + 0.1)
+		return CFrame.lookAt(position, position + horizontalForward(plot, exitFrame))
+	end
+	local outward = -towardGround(plot, anchor.Position)
 	local localDirection = anchor.CFrame:VectorToObjectSpace(outward)
 	local size = anchor.Size
 	local extent = math.abs(localDirection.X) * size.X / 2
@@ -72,7 +96,6 @@ function Spot.ExitCFrame(plot, character)
 	params.IgnoreWater, params.RespectCanCollide = true, true
 	local hit = workspace:Raycast(candidate + Vector3.yAxis * 8, -Vector3.yAxis * 24, params)
 	if hit and hit.Normal.Y >= 0.7 and math.abs(hit.Position.Y - anchor.Position.Y) <= 3 then
-		local footHeight = FishingSpotUtil.GetFootHeight(root, humanoid)
 		local height = footHeight + root.Size.Y / 2 + 1
 		local overlap = OverlapParams.new()
 		overlap.FilterType, overlap.FilterDescendantsInstances = Enum.RaycastFilterType.Exclude, { character }

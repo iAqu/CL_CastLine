@@ -82,7 +82,7 @@ function PlotUpgradeController:KnitStart()
 		gui.Adornee = board
 		gui.Enabled = true
 		gui.ResetOnSpawn = false
-		gui.MaxDistance = 70
+		gui.MaxDistance = 100
 		gui.Parent = playerGui
 		local activeGui = gui
 		connection = gui.UpgradeButton.Activated:Connect(function()

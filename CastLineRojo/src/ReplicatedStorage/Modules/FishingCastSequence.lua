@@ -205,7 +205,7 @@ function FishingCastSequence:_bindGui(playerGui)
 		self:_save(bar, { "Size" })
 		bar.Size = UDim2.fromScale(1, 0)
 	end
-	self:_save(self.continueLabel, { "Text", "Visible", "TextTransparency", "TextColor3" })
+	self:_save(self.continueLabel, { "Text", "Visible", "TextTransparency" })
 	self:_save(self.popup, { "Text", "TextColor3", "Visible", "Position", "TextTransparency" })
 	self:_save(self.popupStroke, { "Transparency" })
 	self:_save(self.popupScale, { "Scale" })
@@ -435,9 +435,11 @@ function FishingCastSequence:UpdateMeter(value)
 	end
 end
 
-function FishingCastSequence:_castClickFeedback(value, now)
-	self:_sound("ButtonClick", 0.8, 0.9 + value * 0.5)
-	self:_impulse(Config.Camera.Tap, now, value)
+function FishingCastSequence:_castClickFeedback(value, now, clickPlayed)
+	if not clickPlayed then
+		self:_sound("ButtonClick", 0.8, 0.9 + value * 0.5)
+		self:_impulse(Config.Camera.Tap, now, value)
+	end
 	if FishingCastSequence.GetRating(value).Perfect then
 		self.perfectAt = now
 		self.flash.BackgroundColor3 = Color3.fromRGB(unpack(FishingCastSequence.GetRating(value).Color))
@@ -447,18 +449,24 @@ function FishingCastSequence:_castClickFeedback(value, now)
 	end
 end
 
-function FishingCastSequence:_castFeedback(value, now)
+function FishingCastSequence:_castFeedback(value, now, clickPlayed)
 	self.castFeedback = self.castFeedback or require(script.Parent.FishingCastFeedback)
 	self.castFeedback.Show(self, FishingCastSequence.GetRating(value), now)
-	self:_castClickFeedback(value, now)
+	self:_castClickFeedback(value, now, clickPlayed)
 end
 
 function FishingCastSequence:LockCastMeter(): number
 	if self.lockedMeterProgress == nil then
 		self.lockedMeterProgress = self.meterProgress or 0
-		self.meterLockedAt = os.clock()
-		self:_castFeedback(self.lockedMeterProgress, self.meterLockedAt)
-		self.folder:SetAttribute("CastRating", self.castRating)
+		local now = os.clock()
+		if self.options and self.options.meterStartsAt then
+			self:_sound("ButtonClick", 0.8, 0.9 + self.lockedMeterProgress * 0.5)
+			self:_impulse(Config.Camera.Tap, now, self.lockedMeterProgress)
+		else
+			self.meterLockedAt = now
+			self:_castFeedback(self.lockedMeterProgress, now)
+			self.folder:SetAttribute("CastRating", self.castRating)
+		end
 	end
 	return self.lockedMeterProgress
 end
@@ -469,6 +477,11 @@ function FishingCastSequence:Cast(value: number, distance: number?, luck: number
 	end
 	if self.fixedCast then
 		self:LockCastMeter()
+		if self.options and self.options.meterStartsAt then
+			self.meterProgress, self.lockedMeterProgress = value, value
+			self.meter.marker.Position = UDim2.fromScale(0.5, 1 - value)
+			self:_castFeedback(value, os.clock(), true)
+		end
 	end
 	self.distance = distance or (if self.fixedCast then Config.FixedCastDistance else ProjectileMath.Distance(value))
 	self.folder:SetAttribute("Distance", self.distance)
@@ -578,11 +591,16 @@ end
 
 local playVFX = WaterEffects.Play
 
-function FishingCastSequence:_playWaterVFX(now, name, position, direction, fishScale)
-	local scale = if name == Config.WaterVFX.Struggle
-		then Config.WaterVFX.StruggleScale * math.max(1, fishScale or 1)
-		elseif name == Config.WaterVFX.Exit then fishScale
-		else nil
+function FishingCastSequence:_playWaterVFX(now, name, position, direction, fishScale, fishDiameter)
+	local settings = Config.WaterVFX
+	local scale
+	if name == settings.Struggle then
+		local baseScale = settings.StruggleScale * math.max(1, fishScale or 1)
+		local diameterScale = math.min(settings.StruggleDiameterScaleCap, (fishDiameter or 0) / settings.StruggleStudsPerScale)
+		scale = math.max(baseScale, diameterScale)
+	elseif name == settings.Exit then
+		scale = fishScale
+	end
 	return playVFX(self, now, "WaterVFX", name, position, direction, scale)
 end
 
@@ -671,8 +689,7 @@ function FishingCastSequence:TryHook(now)
 		return hooked
 	end
 	self.hookPendingAt = now
-	local pressedAt = self.serverRoundStart + (now - self.localRoundStart)
-	self.options.hook(self.round, pressedAt):andThen(function(result)
+	self.options.hook(self.round):andThen(function(result)
 		if self.destroyed or self.bite ~= bite then
 			return
 		end
@@ -1048,7 +1065,7 @@ function FishingCastSequence:_showcaseCamera(target, viewport)
 	return CFrame.lookAt(focus - self.forward * distance, focus), focus
 end
 
--- 完整包围球保护也用于横竖屏的离线取景验证。
+-- 鱼蛋展示和水下取景使用包围球补足镜头距离。
 function FishingCastSequence:_protectShowcase(frame, center, radius, viewport, fov, weight)
 	local relative = frame:PointToObjectSpace(center)
 	local vertical = math.rad(fov * 0.5)
@@ -1063,7 +1080,7 @@ function FishingCastSequence:_protectShowcase(frame, center, radius, viewport, f
 end
 
 -- 延迟追随并少量抬升机位，抬头保留高度感；下落后逐渐恢复水平展示。
-function FishingCastSequence:_fishLiftCamera(now, target, viewport)
+function FishingCastSequence:_fishLiftCamera(now, target)
 	local bite, settings = self.bite, Config.Bite.FishLift
 	bite:_prepareLift(target)
 	local plan = bite.liftPlan
@@ -1082,10 +1099,18 @@ function FishingCastSequence:_fishLiftCamera(now, target, viewport)
 	end
 	local entry, pullback = self:_showcaseProgress(now)
 	local settle = smooth((elapsed - plan.timing.landAt) / (plan.timing.duration - plan.timing.landAt))
-	local lagged = bite:_liftFrame(math.max(0, elapsed - settings.CameraLag * (1 - settle)), target).Position
-	local goal, goalFocus = self:_showcaseCamera(target, viewport)
+	local scale = bite.catchScale or bite.defaultScale or 1
+	local laggedAt = math.clamp(elapsed - settings.CameraLag * (1 - settle), 0, plan.timing.duration)
+	local laggedFrame = bite:_liftFrame(laggedAt, target)
+	local laggedScale = bite:_scaleAt("Lifting", laggedAt)
+	local centerOffset = bite.showcaseCenterOffset
+	local lagged = laggedFrame:PointToWorldSpace(centerOffset * laggedScale)
+	-- 以基础姿态下整鱼的几何中心取景，甩尾时镜头保持稳定。
+	local goalFocus = bite:_liftFrame(plan.timing.duration, target):PointToWorldSpace(centerOffset * scale)
 	local focus = (target + self.showcaseFocus):Lerp(lagged:Lerp(goalFocus, settle), entry)
-	local distance = (goal.Position - goalFocus).Magnitude
+	local size = math.max(bite.halfLength * 2, bite.bodyWidth) * scale
+	local distance = Config.Bite.ShowcaseCloseupDistance
+		+ math.clamp((size - settings.CameraPullbackStartSize) * settings.CameraPullbackPerStud, 0, settings.CameraMaxPullback)
 	local incoming = (self.showcaseFrom + target).Position
 	local level = smooth((elapsed - plan.timing.fallStart) / (plan.timing.duration - plan.timing.fallStart))
 	local eye = focus - self.forward * distance
@@ -1253,8 +1278,7 @@ function FishingCastSequence:_updateCamera(now, dt, camera)
 		shot, focus = self:_reelCamera(self:_waterTarget(), viewport)
 		fov = Config.Bite.ShowcaseFov
 	elseif showcasing and not self.bite.isEgg then
-		shot, focus = self:_fishLiftCamera(now, self:_waterTarget(), viewport)
-		showcasePullback = 1
+		shot, focus = self:_fishLiftCamera(now, self:_waterTarget())
 		fov = Config.Bite.ShowcaseFov
 	elseif showcasing then
 		local target = self:_waterTarget()
@@ -1370,7 +1394,7 @@ function FishingCastSequence:_updateCamera(now, dt, camera)
 		presentation = shot * landingMotion:Lerp(CFrame.identity, alpha)
 		renderedFov = fov + fovOffset * (1 - alpha)
 	end
-	if showcasing and self.bite.presentationRadius then
+	if showcasing and self.bite.isEgg and self.bite.presentationRadius then
 		local center = self.bite.showcasePosition or self.bite.lastPosition
 		local radius = if self.bite.timeline.phase == "Caught"
 			then self.bite:GetShowcaseRadius()
@@ -1408,13 +1432,17 @@ function FishingCastSequence:_updatePresentation(now, dt)
 	local meter, settings = self.meter, Config.Meter
 	if self.fixedCast and self.phase == "Preparing" then
 		if self.lockedMeterProgress == nil then
-			local speed = settings.BaseSpeed * (1 + (settings.TopSpeedFactor - 1) * self.meterProgress)
-			self.meterProgress += self.meterDirection * speed * dt
-			-- 与 Throw Food 一致：端点钳制后反向，不累计越界位移。
-			if self.meterProgress >= 1 then
-				self.meterProgress, self.meterDirection = 1, -1
-			elseif self.meterProgress <= 0 then
-				self.meterProgress, self.meterDirection = 0, 1
+			local startsAt = self.options and self.options.meterStartsAt
+			if startsAt then
+				self.meterProgress = Config.GetCastMeterProgress(Workspace:GetServerTimeNow() - startsAt)
+			else
+				local speed = settings.BaseSpeed * (1 + (settings.TopSpeedFactor - 1) * self.meterProgress)
+				self.meterProgress += self.meterDirection * speed * dt
+				if self.meterProgress >= 1 then
+					self.meterProgress, self.meterDirection = 1, -1
+				elseif self.meterProgress <= 0 then
+					self.meterProgress, self.meterDirection = 0, 1
+				end
 			end
 		else
 			self.meterProgress = self.lockedMeterProgress

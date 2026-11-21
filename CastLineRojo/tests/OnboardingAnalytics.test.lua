@@ -12,11 +12,11 @@ local function loadService(studio)
 	local services = {
 		AnalyticsService = {
 			LogFunnelStepEvent = function(_, player, funnel, sessionId, step, name)
-				assert(funnel == "CL_Onboarding_v1" and sessionId == "")
+				assert((funnel == "CL_Onboarding_v1" or funnel == "CL_Onboarding_v2") and sessionId == "")
 				if step == rejected then
 					error("Simulated analytics failure")
 				end
-				table.insert(sent, { player = player, step = step, name = name })
+				table.insert(sent, { player = player, step = step, name = name, funnel = funnel })
 			end,
 			LogCustomEvent = function(_, player, name, value, fields)
 				table.insert(sent, { player = player, name = name, value = value, fields = fields })
@@ -80,7 +80,7 @@ listeners.guide(newcomer, "RodShopOpened")
 pump()
 pump()
 assert(#events == 1 and events[1].step == 1)
-assert(next(first.Data.OnboardingAnalyticsV1.Details) == nil)
+assert(next(first.Data.OnboardingAnalyticsV2.Details) == nil)
 
 service:Step(newcomer, "IntroClaimed")
 pump(2)
@@ -101,8 +101,7 @@ listeners.leave(newcomer)
 local returned = player()
 service:Initialize(returned, profile(2, first.Data))
 for _, step in {
-	"FirstCatchStarted", "FirstCatchCast", "FirstCatchLanded", "FirstCatchBite",
-	"FirstCatchCaught", "FishPlaced", "TrainingStarted", "TrainingLevel2", "TrainingEnded",
+	"FishPlaced", "TrainingStarted", "TrainingLevel2", "TrainingEnded",
 	"RodReady", "FinalCatchStarted",
 } do
 	service:Step(returned, step)
@@ -112,8 +111,8 @@ service:Detail(returned, "FinalCatch", "FreePracticeSelected")
 for _ = 1, 24 do
 	pump()
 end
-assert(first.Data.OnboardingAnalyticsV1.Sent == 19, "Free practice must not complete bait selection")
-assert(first.Data.OnboardingAnalyticsV1.Details["Intro/Reveal"] == nil, "Rejoin must not invent a reveal")
+assert(first.Data.OnboardingAnalyticsV2.Sent == 14, "Free practice must not complete bait selection")
+assert(first.Data.OnboardingAnalyticsV2.Details["Intro/Reveal"] == nil, "Rejoin must not invent a reveal")
 for _, step in { "FinalBaitSelected", "FinalCatchCast", "FinalCatchLanded", "FinalCatchBite", "FinalCatchCaught" } do
 	service:Step(returned, step)
 end
@@ -130,7 +129,10 @@ local cursor, nibbleCount, veteranCount = 0, 0, 0
 for _, event in events do
 	if event.step then
 		cursor += 1
-		assert(event.step == cursor)
+		assert(event.step == cursor and event.funnel == "CL_Onboarding_v2")
+		if cursor == 9 then
+			assert(event.name == "First fish placed", "Placement immediately follows the opening catch")
+		end
 	elseif event.fields.Field2 == "Nibble1" then
 		nibbleCount += 1
 	end
@@ -139,8 +141,23 @@ for _, event in events do
 		assert(event.name == "CL_PlotUpgrade_v1" and event.value == 500 and event.fields.Field2 == "6")
 	end
 end
-assert(cursor == 24 and nibbleCount == 1 and veteranCount == 1 and existing.Data.OnboardingAnalyticsV1 == nil)
+assert(cursor == 19 and nibbleCount == 1 and veteranCount == 1 and existing.Data.OnboardingAnalyticsV2 == nil)
 assert(not service:SampleFishingCast())
+
+local legacy, legacyEvents, _, _, pumpLegacy = loadService(false)
+local pastPlacement = player()
+local skippedLesson = player()
+legacy:Initialize(pastPlacement, profile(2, {
+	OnboardingAnalyticsV1 = { Sent = 13, Observed = {}, Details = {} },
+}))
+legacy:Initialize(skippedLesson, profile(2, {
+	OnboardingAnalyticsV1 = { Sent = 13, Observed = {}, Details = {}, Retired = true },
+}))
+legacy:Step(pastPlacement, "FishPlaced")
+legacy:Step(skippedLesson, "FishPlaced")
+pumpLegacy()
+assert(#legacyEvents == 1 and legacyEvents[1].player == pastPlacement and legacyEvents[1].step == 14
+	and legacyEvents[1].funnel == "CL_Onboarding_v1", "Existing v1 funnels keep their numbering and skipped lessons are not logged")
 
 local dryRun, outgoing, _, _, pumpStudio = loadService(true)
 local mock = profile(1)
@@ -150,7 +167,7 @@ dryRun:Growth(newcomer, "CL_TrainingLevelUp_v1", 1, "Training_101", 2, 2)
 pumpStudio()
 pumpStudio()
 local snapshot = dryRun:GetStudioSnapshot(newcomer)
-assert(snapshot.Sent == 2 and #snapshot.Events == 3 and mock.Data.OnboardingAnalyticsV1 == nil)
+assert(snapshot.Sent == 2 and #snapshot.Events == 3 and mock.Data.OnboardingAnalyticsV2 == nil)
 assert(#outgoing == 0 and dryRun:SampleFishingCast())
 
 local fishingHarness = require("./helpers/FishingHarness")

@@ -114,6 +114,7 @@ local Template = {
     Rebirths = 0,
     Diamonds = 0,
     RobuxSpent = 0,
+    ProductPurchases = { Intent = false, Receipts = {}, Gifts = {}, Review = {}, Revision = 0 },
     PaidEgg = { Intent = false, Receipts = {}, Results = {}, Purchases = {}, Revision = 0 },
     Trophy = 0,
 
@@ -128,6 +129,8 @@ local Template = {
     TotalWins = 0,
     TotalCashEarned = 0,
     TotalItemWeightTenths = 0,
+    TotalFishCaught = 0,
+    MaxCaughtFishWeightTenths = 0,
     TotalStrength = 100,
     TotalTrophy = 0,
     PlayTime = 0,

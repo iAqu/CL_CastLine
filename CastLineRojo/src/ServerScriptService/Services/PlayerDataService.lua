@@ -32,6 +32,22 @@ local LOAD_PROFILE_MAX_ATTEMPTS = 5
 local LOAD_PROFILE_RETRY_BASE_DELAY = 1.5
 local EARLY_DATA_REMOTE_NAME = "RequestPlayerDataEarly"
 
+local function sanitizeSettings(playerData)
+    local saved = playerData.Settings
+    local settings = table.clone(Template.Settings)
+    if type(saved) == "table" then
+        for key, default in settings do
+            local value = saved[key]
+            local validBoolean = type(default) == "boolean" and type(value) == "boolean"
+            local validMode = key == "PerformanceMode" and (value == "Auto" or value == "Battery" or value == "Quality")
+            if validBoolean or validMode then
+                settings[key] = value
+            end
+        end
+    end
+    playerData.Settings = settings
+end
+
 local function sanitizeHotbarLayout(playerData)
     if typeof(playerData.HotbarLayout) ~= "table" then
         playerData.HotbarLayout = {}
@@ -255,6 +271,52 @@ local function migratePlotHome(playerData)
     playerData.PlotPlacements = placements
 end
 
+local function reconcileFishingOnboarding(data, seedStudioOnboarding)
+	local progress = data.FishingOnboarding
+	local seed = seedStudioOnboarding and progress == nil
+	if not seed and (not progress or progress.Stage ~= "FirstCatch") then
+		return
+	end
+
+	local config = require(ReplicatedStorage.Modules.FishingIntroConfig)
+	local fishes = require(ReplicatedFirst.Data.FishesData)
+	if type(data.Items) ~= "table" then
+		data.Items = {}
+	end
+	local version = if seed then config.Version else math.max(1, tonumber(data.FishingIntroVersion) or 0)
+	local uid = config.RewardUidPrefix .. tostring(version)
+	if seed then
+		data.Items[uid] = { ItemId = config.StarterFishId, Weight = fishes[config.StarterFishId].DefaultWeight }
+		data.FishingIntroVersion = config.Version
+		data.FishingOnboarding = { Stage = "PlaceFish", FishUid = uid }
+		return
+	end
+
+	local function isFish(record)
+		local weight = type(record) == "table" and tonumber(record.Weight)
+		return weight and weight > 0 and weight < math.huge and fishes[record.ItemId] ~= nil
+	end
+	local starter = data.Items[uid]
+	if isFish(starter) and starter.ItemId == config.StarterFishId then
+		if PlotPlacementUtil.IsPlaced(data.PlotPlacements, uid) then
+			progress.Stage, progress.FishUid = "Train", nil
+		else
+			progress.Stage, progress.FishUid = "PlaceFish", uid
+		end
+	else
+		progress.Stage, progress.FishUid = "Train", nil
+		for itemUid, record in pairs(data.Items) do
+			if type(itemUid) == "string" and isFish(record) and not PlotPlacementUtil.IsPlaced(data.PlotPlacements, itemUid) then
+				progress.Stage = "PlaceFish"
+				break
+			end
+		end
+	end
+	if type(data.OnboardingAnalyticsV1) == "table" then
+		data.OnboardingAnalyticsV1.Retired = true
+	end
+end
+
 function PlayerDataService:GetProfile(player: Player)
     return self._Profiles[player]
 end
@@ -409,8 +471,10 @@ function PlayerDataService:AdjustWins(player: Player, amount: number, countTowar
     profile.Data.Wins += amount
     profile.Data.Wins = math.round(profile.Data.Wins)
     local leaderstats = player:FindFirstChild("leaderstats")
-    -- leaderstats.Wins.Value = profile.Data.Wins
-    leaderstats["💵Cash"].Value = profile.Data.Wins
+    local cash = leaderstats and leaderstats:FindFirstChild("💵Cash")
+    if cash then
+        cash.Value = profile.Data.Wins
+    end
     self.Client.WinsChanged:Fire(player, profile.Data.Wins)
     self.WinsChangedServerEvent:Fire(player, profile.Data.Wins)
     return true
@@ -425,18 +489,10 @@ function PlayerDataService:AdjustDiamonds(player: Player, amount: number) : bool
     return true
 end
 
-function PlayerDataService.Client:GetAllData(player: Player)
-    return self.Server:GetAllData(player)
-end
-
 function PlayerDataService:GetAllData(player: Player)
     local profile = self._Profiles[player]
     if not profile then return end
     return profile.Data
-end
-
-function PlayerDataService.Client:GetData(player: Player, directory: string)
-    return self.Server:GetData(player, directory)
 end
 
 function PlayerDataService:GetData(player: Player, directory: string)
@@ -467,7 +523,54 @@ function PlayerDataService:RegisterBeforeProfileRelease(callback)
 	table.insert(self._BeforeProfileRelease, callback)
 end
 
+local earlyWaiters = {}
+local earlySent = {}
+local interfaceRequests = {}
+local privateFields = {
+    DEFAULT_AREAS = true,
+    DEFAULT_AREA = true,
+    ProductPurchases = true,
+    PaidEgg = true,
+    FishingProgress = true,
+    RedeemedCodesHistory = true,
+    IndexDiscoveryLog = true,
+    IndexRewardClaimLog = true,
+    NewItemTagSeenLog = true,
+    Items = true,
+    PlotPlacements = true,
+    Eggs = true,
+    Pets = true,
+    PetIndex = true,
+}
+
+function PlayerDataService:_SendInterfaceData(player)
+    local profile = self._Profiles[player]
+    if not profile or interfaceRequests[player] ~= "Pending" then
+        return
+    end
+    interfaceRequests[player] = "Sent"
+    local data = {}
+    for key in Template do
+        if not privateFields[key] then
+            data[key] = profile.Data[key]
+        end
+    end
+    -- The template's nil defaults do not appear during iteration.
+    data.SpinningWheelLastCheckTime = profile.Data.SpinningWheelLastCheckTime
+    data.FirstLoginDate = profile.Data.FirstLoginDate
+    data.LoginDate = profile.Data.LoginDate
+    data.AdvancedPackTask2FirstDate = profile.Data.AdvancedPackTask2FirstDate
+    data.SeasonDailyTaskResetDate = profile.Data.SeasonDailyTaskResetDate
+    data.SeasonWeeklyTaskResetDate = profile.Data.SeasonWeeklyTaskResetDate
+    self.Client.DataLoaded:Fire(player, data)
+end
+
 function PlayerDataService:_ReleasePlayerProfile(player: Player)
+	earlySent[player], interfaceRequests[player] = nil, nil
+	local waiter = earlyWaiters[player]
+	if waiter then
+		waiter:Fire()
+	end
 	local profile = self._Profiles[player] or self._PendingProfiles[player]
 	if profile then
 		for _, callback in ipairs(self._BeforeProfileRelease) do
@@ -488,12 +591,26 @@ function PlayerDataService:_ReleasePlayerProfile(player: Player)
 end
 
 function PlayerDataService:_WaitForEarlyData(player: Player)
-	while player:IsDescendantOf(Players) do
-		local profile = self._Profiles[player] or self._PendingProfiles[player]
-		if profile then
-			return profile.Data
-		end
-		task.wait()
+	if earlyWaiters[player] or earlySent[player] then
+		return nil
+	end
+	local profile = self._Profiles[player] or self._PendingProfiles[player]
+	if not profile then
+		local waiter = Instance.new("BindableEvent")
+		earlyWaiters[player] = waiter
+		task.delay(25, function()
+			if earlyWaiters[player] == waiter then
+				waiter:Fire()
+			end
+		end)
+		waiter.Event:Wait()
+		earlyWaiters[player] = nil
+		waiter:Destroy()
+		profile = self._Profiles[player] or self._PendingProfiles[player]
+	end
+	if profile and player:IsDescendantOf(Players) then
+		earlySent[player] = true
+		return { Wins = profile.Data.Wins, Trophy = profile.Data.Trophy }
 	end
 	return nil
 end
@@ -536,19 +653,30 @@ function PlayerDataService:MarkFrameworkReady()
 end
 
 -- Paid deliveries use the same profile store without taking over an offline session.
-function PlayerDataService:QueuePaidEggDelivery(userId, order)
+function PlayerDataService:QueuePaidDelivery(userId, kind, order)
 	local updates = ProfileStore:GlobalUpdateProfileAsync("Player_" .. userId, function(globalUpdates)
 		for _, list in ipairs({ globalUpdates:GetActiveUpdates(), globalUpdates:GetLockedUpdates() }) do
 			for _, update in ipairs(list) do
 				local value = update[2]
-				if type(value) == "table" and value.Kind == "PaidEggV1" and value.Order.OrderId == order.OrderId then
+				if type(value) == "table" and value.Kind == kind and value.Order.OrderId == order.OrderId then
 					return
 				end
 			end
 		end
-		globalUpdates:AddActiveUpdate({ Kind = "PaidEggV1", Order = order })
+		globalUpdates:AddActiveUpdate({ Kind = kind, Order = order })
 	end)
 	return updates ~= nil
+end
+
+function PlayerDataService:QueuePaidEggDelivery(userId, order)
+	return self:QueuePaidDelivery(userId, "PaidEggV1", order)
+end
+
+function PlayerDataService:MarkPaidEggProfileChanged(profile)
+	local state = require(ReplicatedStorage.Modules.PaidEggDelivery).Ensure(profile.Data)
+	state.Revision += 1
+	profile:SetMetaTag("PaidEggRevision", state.Revision)
+	return state.Revision
 end
 
 function PlayerDataService:SavePaidEggProfile(player)
@@ -556,38 +684,25 @@ function PlayerDataService:SavePaidEggProfile(player)
 	if not profile or not profile:IsActive() then
 		return false
 	end
-	local state = require(ReplicatedStorage.Modules.PaidEggDelivery).Ensure(profile.Data)
-	state.Revision += 1
-	local revision = state.Revision
-	profile:SetMetaTag("PaidEggRevision", revision)
-	profile:Save()
-	local deadline = os.clock() + 10
-	repeat
-		if not profile:IsActive() or self:GetProfile(player) ~= profile then
-			return false
-		end
-		if (profile.MetaData.MetaTagsLatest.PaidEggRevision or -1) >= revision then
-			return true
-		end
-		task.wait(0.1)
-	until os.clock() >= deadline
-	return false
+	local revision = self:MarkPaidEggProfileChanged(profile)
+	local persistence = require(script.Parent.PurchasePersistence)
+	return persistence.Wait(profile, "PaidEggRevision", revision) and self:GetProfile(player) == profile
 end
 
-function PlayerDataService:WatchPaidEggDeliveries(player, callback)
+function PlayerDataService:WatchPaidDeliveries(player, kind, callback)
 	local profile = self:GetProfile(player)
 	if not profile or not profile:IsActive() then
 		return {}
 	end
 	local updates = profile.GlobalUpdates
 	local function active(id, value)
-		if type(value) == "table" and value.Kind == "PaidEggV1" and profile:IsActive() then
+		if type(value) == "table" and value.Kind == kind and profile:IsActive() then
 			updates:LockActiveUpdate(id)
 			profile:Save()
 		end
 	end
 	local function locked(id, value)
-		if type(value) == "table" and value.Kind == "PaidEggV1" then
+		if type(value) == "table" and value.Kind == kind then
 			task.spawn(callback, id, value.Order)
 		end
 	end
@@ -604,18 +719,26 @@ function PlayerDataService:WatchPaidEggDeliveries(player, callback)
 	return connections
 end
 
-function PlayerDataService:ClearPaidEggDelivery(player, updateId)
+function PlayerDataService:ClearPaidDelivery(player, kind, updateId)
 	local profile = self:GetProfile(player)
 	if not profile or not profile:IsActive() then
 		return
 	end
 	for _, update in ipairs(profile.GlobalUpdates:GetLockedUpdates()) do
-		if update[1] == updateId and update[2].Kind == "PaidEggV1" then
+		if update[1] == updateId and update[2].Kind == kind then
 			profile.GlobalUpdates:ClearLockedUpdate(updateId)
 			profile:Save()
 			return
 		end
 	end
+end
+
+function PlayerDataService:WatchPaidEggDeliveries(player, callback)
+	return self:WatchPaidDeliveries(player, "PaidEggV1", callback)
+end
+
+function PlayerDataService:ClearPaidEggDelivery(player, updateId)
+	self:ClearPaidDelivery(player, "PaidEggV1", updateId)
 end
 
 function PlayerDataService:LoadProfile(player: Player)
@@ -667,18 +790,17 @@ function PlayerDataService:LoadProfile(player: Player)
         profile.Data.Wins = 0
     end
     profile:Reconcile()
-    if studioOnboardingTest and profile.MetaData.SessionLoadCount == 1 then
-        profile.Data.FishingOnboarding = { Stage = "FirstCatch" }
-    end
     require(ReplicatedStorage.Modules.FishingProgression).Ensure(profile.Data, profile.MetaData.SessionLoadCount > 1)
     RodInventory.Reconcile(profile.Data)
     migrateRemovedLegacyFields(profile.Data)
 	require(ReplicatedStorage.Modules.PetInventory).Reconcile(profile.Data, require(ReplicatedFirst.Data.PetsData))
 	require(ReplicatedStorage.Modules.EggInventory).Reconcile(profile.Data, require(ReplicatedFirst.Data.EggsData))
     migratePlotHome(profile.Data)
+	reconcileFishingOnboarding(profile.Data, studioOnboardingTest and profile.MetaData.SessionLoadCount == 1)
 	require(ReplicatedStorage.Modules.TrainingProgress).Ensure(
 		profile.Data, require(ReplicatedFirst.Data.TrainingData), require(ReplicatedFirst.Data.TrainingLevelsData)
 	)
+    sanitizeSettings(profile.Data)
     sanitizeHotbarLayout(profile.Data)
 
     sanitizeIndexLogs(profile.Data)
@@ -700,6 +822,10 @@ function PlayerDataService:LoadProfile(player: Player)
 	-- 数据已经可以先返回客户端；业务 Service 的 ProfileLoaded 广播等待 Knit 就绪。
 	self._PendingProfiles[player] = profile
 	self._LoadingProfiles[player] = nil
+	local waiter = earlyWaiters[player]
+	if waiter then
+		waiter:Fire()
+	end
 	while player:IsDescendantOf(Players) and not self._FrameworkReady do
 		task.wait()
 	end
@@ -721,8 +847,9 @@ function PlayerDataService:LoadProfile(player: Player)
 	local offline = PlotFishIncome.PrepareOffline(profile.Data, os.time())
 	player:SetAttribute("PlotOfflineAwaySeconds", offline.away)
 	player:SetAttribute("PlotOfflineCountedSeconds", offline.counted)
+	player:SetAttribute("PlayerProfileReady", true)
 	self.ProfileLoaded:Fire(player, profile.Data)
-	self.Client.DataLoaded:Fire(player, profile.Data)
+	self:_SendInterfaceData(player)
 end
 
 function PlayerDataService:KnitInit()
@@ -732,6 +859,13 @@ end
 
 function PlayerDataService:KnitStart()
     LogHelper.Print("PlayerDataService started")
+
+    self.Client.DataLoaded:Connect(function(player)
+        if not interfaceRequests[player] then
+            interfaceRequests[player] = "Pending"
+            self:_SendInterfaceData(player)
+        end
+    end)
 
     task.spawn(function()
         local isLive = ProfileService.IsLive()
@@ -743,7 +877,9 @@ function PlayerDataService:KnitStart()
     end)
 
     self.Client.UpdateLoginDate:Connect(function(player: Player, localDate: number)
-        if math.abs(TimeUtil.GetUniversalDate() - localDate) > 1 then warn("Time difference is too large") return end
+        if type(localDate) ~= "number" or localDate % 1 ~= 0 or math.abs(TimeUtil.GetUniversalDate() - localDate) > 1 then
+            return
+        end
         
         local profile = self._Profiles[player]
         if not profile then return end

@@ -13,6 +13,7 @@ local FishesData = require(ReplicatedFirst.Data.FishesData)
 local PlayerDataService = require(script.Parent.PlayerDataService)
 local ItemGrantUtil = require(script.Parent.ItemGrantUtil)
 local Policy = require(script.Parent.PaidItemPolicy)
+local Persistence = require(script.Parent.PurchasePersistence)
 
 local Service = Knit.CreateService({
 	Name = "PaidEggService",
@@ -25,7 +26,9 @@ local Service = Knit.CreateService({
 local orders = DataStoreService:GetDataStore("PaidEggReceipts_v1")
 local random = Random.new()
 local promptBusy, receiptBusy = {}, {}
+local openPrompts, canceledPrompts, preparing = {}, {}, {}
 local staged, watchers = {}, {}
+local REOPEN_WINDOW = 3
 
 function Service:IsProduct(productId)
 	return Config.FindProduct(productId, PurchaseData) ~= nil
@@ -39,13 +42,11 @@ end
 function Service:GetAvailability(player)
 	local profile = PlayerDataService:GetProfile(player)
 	if not profile or not profile:IsActive() then
-		return { Allowed = false, Message = "Player data is loading." }
-	end
-	if Delivery.Ensure(profile.Data).Intent then
-		return { Allowed = false, Message = "A paid egg order is awaiting confirmation." }
+		return { Allowed = false }
 	end
 	local recipient = recipientFor(player)
-	if not recipient or not PlayerDataService:GetProfile(recipient) then
+	local recipientProfile = recipient and PlayerDataService:GetProfile(recipient)
+	if not recipientProfile or not recipientProfile:IsActive() then
 		return { Allowed = false, Message = "Gift recipient is unavailable." }
 	end
 	for _, purchaseId in ipairs(Config.PurchaseOrder) do
@@ -53,75 +54,115 @@ function Service:GetAvailability(player)
 			return { Allowed = false, Message = "Paid eggs are not configured." }
 		end
 	end
-	local allowed, message = Policy.CanPurchase(player, recipient)
-	return { Allowed = allowed, Message = message }
+	local allowed, message, retryable = Policy.CanPurchase(player, recipient)
+	return { Allowed = allowed, Message = message, Retryable = retryable }
 end
 
-function Service:_prompt(player, purchaseId)
+local function matchesSnapshot(intent, maxWeight)
+	if intent.Version ~= Config.Version or intent.MaxWeight ~= maxWeight
+		or #intent.Pool.Fish ~= #Config.Fish or #intent.Pool.Mutations ~= #Config.Mutations
+	then
+		return false
+	end
+	for index, fish in ipairs(Config.Fish) do
+		local saved = intent.Pool.Fish[index]
+		local data = intent.FishData[fish.Id]
+		if saved.Id ~= fish.Id or saved.Chance ~= fish.Chance or saved.Card ~= fish.Card
+			or not data or data.DefaultWeight ~= FishesData[fish.Id].DefaultWeight
+		then
+			return false
+		end
+	end
+	for index, mutation in ipairs(Config.Mutations) do
+		local saved = intent.Pool.Mutations[index]
+		if saved.Id ~= mutation.Id or saved.Weight ~= mutation.Weight then
+			return false
+		end
+	end
+	return true
+end
+
+function Service:_prompt(player, purchaseId, forSelf)
 	local row, quantity = Config.GetPurchase(purchaseId, PurchaseData)
 	if not row then
 		return false, "Paid egg is unavailable."
 	end
-	local recipient = recipientFor(player)
-	local availability = self:GetAvailability(player)
-	if not availability.Allowed then
-		return false, availability.Message
-	end
+	local recipient = if forSelf then player else recipientFor(player)
 	local profile = PlayerDataService:GetProfile(player)
 	local recipientProfile = recipient and PlayerDataService:GetProfile(recipient)
+	if not profile or not profile:IsActive() or not recipientProfile or not recipientProfile:IsActive() then
+		return false, "Player data is unavailable."
+	end
 	local allowed, policyMessage = Policy.CanPurchase(player, recipient)
 	if not allowed then
 		return false, policyMessage
 	end
-	if not profile or not profile:IsActive() or not recipientProfile or not recipientProfile:IsActive() then
+	if PlayerDataService:GetProfile(player) ~= profile or not profile:IsActive()
+		or PlayerDataService:GetProfile(recipient) ~= recipientProfile or not recipientProfile:IsActive()
+	then
 		return false, "Player data is unavailable."
 	end
 	local state = Delivery.Ensure(profile.Data)
-	if state.Intent then
-		return false, "A paid egg order is awaiting confirmation."
+	local canceled = canceledPrompts[player]
+	local intent = state.Intent
+	if openPrompts[player] or (intent and (not canceled or canceled.Profile ~= profile or canceled.Intent ~= intent)) then
+		return false, "Your previous paid egg purchase is still processing."
 	end
-	local snapshot = { Fish = {}, Mutations = {} }
-	local fishData = {}
-	for _, entry in ipairs(Config.Fish) do
-		table.insert(snapshot.Fish, table.clone(entry))
-		fishData[entry.Id] = { DefaultWeight = FishesData[entry.Id].DefaultWeight }
+
+	local maxWeight = Knit.GetService("TrainingService"):GetMaxCatchWeight(recipient)
+	local reopening = intent and os.clock() < canceled.Expires and intent.PurchaseId == purchaseId
+		and intent.ProductId == row.ProductId and intent.RecipientUserId == recipient.UserId
+		and intent.Quantity == quantity and intent.Price == row.Price and matchesSnapshot(intent, maxWeight)
+	canceledPrompts[player] = nil
+	if not reopening then
+		local snapshot = { Fish = {}, Mutations = {} }
+		local fishData = {}
+		for _, entry in ipairs(Config.Fish) do
+			table.insert(snapshot.Fish, table.clone(entry))
+			fishData[entry.Id] = { DefaultWeight = FishesData[entry.Id].DefaultWeight }
+		end
+		for _, entry in ipairs(Config.Mutations) do
+			table.insert(snapshot.Mutations, table.clone(entry))
+		end
+		intent = {
+			Token = HttpService:GenerateGUID(false),
+			PurchaseId = purchaseId,
+			ProductId = row.ProductId,
+			RecipientUserId = recipient.UserId,
+			Quantity = quantity,
+			Price = row.Price,
+			MaxWeight = maxWeight,
+			Version = Config.Version,
+			Pool = snapshot,
+			FishData = fishData,
+			CreatedAt = os.time(),
+		}
+		state.Intent = intent
+		preparing[player] = intent
+		local saved = PlayerDataService:SavePaidEggProfile(player)
+		preparing[player] = nil
+		if not saved then
+			return false, "Could not save the order. Please try again later."
+		end
 	end
-	for _, entry in ipairs(Config.Mutations) do
-		table.insert(snapshot.Mutations, table.clone(entry))
-	end
-	local intent = {
-		Token = HttpService:GenerateGUID(false),
-		PurchaseId = purchaseId,
-		ProductId = row.ProductId,
-		RecipientUserId = recipient.UserId,
-		Quantity = quantity,
-		Price = row.Price,
-		MaxWeight = Knit.GetService("TrainingService"):GetMaxCatchWeight(recipient),
-		Version = Config.Version,
-		Pool = snapshot,
-		FishData = fishData,
-		CreatedAt = os.time(),
-	}
-	state.Intent = intent
-	if not PlayerDataService:SavePaidEggProfile(player) then
-		return false, "Order could not be confirmed. Please wait before trying again."
-	end
-	if PlayerDataService:GetProfile(player) ~= profile or player.Parent ~= Players then
+	if PlayerDataService:GetProfile(player) ~= profile or player.Parent ~= Players or state.Intent ~= intent then
 		return false
 	end
 	-- The target and training snapshot are immutable after this point, including when the shop closes.
 	self.Client.PromptPrepared:Fire(player, row.ProductId, quantity, recipient == player)
+	openPrompts[player] = intent
 	MarketplaceService:PromptProductPurchase(player, row.ProductId)
 	return true
 end
 
-function Service:Prompt(player, purchaseId)
+function Service:Prompt(player, purchaseId, forSelf)
 	if promptBusy[player] then
 		return false, "A purchase is already being prepared."
 	end
 	promptBusy[player] = true
-	local ok, success, message = pcall(self._prompt, self, player, purchaseId)
+	local ok, success, message = pcall(self._prompt, self, player, purchaseId, forSelf)
 	promptBusy[player] = nil
+	preparing[player] = nil
 	if not ok then
 		warn("PaidEggService: purchase prompt failed: " .. tostring(success))
 		return false, "Purchase could not be opened. Your order is awaiting confirmation."
@@ -129,19 +170,38 @@ function Service:Prompt(player, purchaseId)
 	return success, message
 end
 
-function Service:CancelPrompt(player, productId, purchased)
-	if purchased or not self:IsProduct(productId) then
-		return
+function Service:_clearCanceledPrompt(player, profile)
+	local canceled = canceledPrompts[player]
+	if not canceled or canceled.Profile ~= profile then
+		return false
 	end
-	local profile = PlayerDataService:GetProfile(player)
-	if not profile or not profile:IsActive() then
-		return
-	end
+	canceledPrompts[player] = nil
 	local state = Delivery.Ensure(profile.Data)
-	if state.Intent and state.Intent.ProductId == productId then
-		state.Intent = false
-		PlayerDataService:SavePaidEggProfile(player)
+	if state.Intent ~= canceled.Intent then
+		return false
 	end
+	state.Intent = false
+	PlayerDataService:MarkPaidEggProfileChanged(profile)
+	return true
+end
+
+function Service:CancelPrompt(player, productId, purchased)
+	local intent = openPrompts[player]
+	if not intent or intent.ProductId ~= productId then
+		return
+	end
+	openPrompts[player] = nil
+	local profile = PlayerDataService:GetProfile(player)
+	if purchased or not profile or not profile:IsActive() or Delivery.Ensure(profile.Data).Intent ~= intent then
+		return
+	end
+	local canceled = { Intent = intent, Profile = profile, Expires = os.clock() + REOPEN_WINDOW }
+	canceledPrompts[player] = canceled
+	task.delay(REOPEN_WINDOW, function()
+		if canceledPrompts[player] == canceled and profile:IsActive() and self:_clearCanceledPrompt(player, profile) then
+			Persistence.Request(profile)
+		end
+	end)
 end
 
 function Service:_processReceipt(player, receipt)
@@ -157,6 +217,13 @@ function Service:_processReceipt(player, receipt)
 	local state = Delivery.Ensure(profile.Data)
 	if not order then
 		local intent = state.Intent
+		local canceled = canceledPrompts[player]
+		if (canceled and canceled.Intent == intent) or (intent and preparing[player] == intent) then
+			return false
+		end
+		if receipt.ProductPurchaseChannel == Enum.ProductPurchaseChannel.ExperienceDetailsPage then
+			return false, "Receipt originated outside the paid egg shop"
+		end
 		if not intent or intent.ProductId ~= receipt.ProductId then
 			return false, "Receipt has no durable matching purchase intent"
 		end
@@ -222,6 +289,9 @@ function Service:_processReceipt(player, receipt)
 			else order.Price
 	end
 	if state.Intent and state.Intent.Token == order.IntentToken then
+		if openPrompts[player] == state.Intent then
+			openPrompts[player] = nil
+		end
 		state.Intent = false
 	end
 	if not PlayerDataService:SavePaidEggProfile(player) then
@@ -229,6 +299,7 @@ function Service:_processReceipt(player, receipt)
 	end
 	self.Client.PurchaseCompleted:Fire(player, {
 		OrderId = key,
+		ProductId = order.ProductId,
 		Quantity = #order.Rewards,
 		IsGift = order.RecipientUserId ~= player.UserId,
 	})
@@ -236,13 +307,13 @@ function Service:_processReceipt(player, receipt)
 end
 
 function Service:ProcessReceipt(receipt)
-	local key = tostring(receipt.PlayerId) .. ":" .. tostring(receipt.PurchaseId)
-	if receiptBusy[key] then
+	local userId = receipt.PlayerId
+	if receiptBusy[userId] then
 		return false
 	end
-	receiptBusy[key] = true
-	local ok, granted, message = pcall(self._processReceipt, self, Players:GetPlayerByUserId(receipt.PlayerId), receipt)
-	receiptBusy[key] = nil
+	receiptBusy[userId] = true
+	local ok, granted, message = pcall(self._processReceipt, self, Players:GetPlayerByUserId(userId), receipt)
+	receiptBusy[userId] = nil
 	if not ok or (not granted and message) then
 		warn("PaidEggService: receipt pending: " .. tostring(if ok then message else granted))
 	end
@@ -375,6 +446,12 @@ function Service.Client:AcknowledgeResult(player, orderId)
 end
 
 function Service:KnitStart()
+	PlayerDataService:RegisterBeforeProfileRelease(function(player)
+		local profile = PlayerDataService:GetProfile(player)
+		if profile and profile:IsActive() then
+			self:_clearCanceledPrompt(player, profile)
+		end
+	end)
 	local function bind(player)
 		if watchers[player] or not PlayerDataService:GetProfile(player) then
 			return
@@ -388,6 +465,11 @@ function Service:KnitStart()
 		bind(player)
 	end
 	Players.PlayerRemoving:Connect(function(player)
+		local profile = PlayerDataService:GetProfile(player)
+		if profile and profile:IsActive() then
+			self:_clearCanceledPrompt(player, profile)
+		end
+		openPrompts[player], canceledPrompts[player], preparing[player] = nil, nil, nil
 		for _, connection in ipairs(watchers[player] or {}) do
 			connection:Disconnect()
 		end

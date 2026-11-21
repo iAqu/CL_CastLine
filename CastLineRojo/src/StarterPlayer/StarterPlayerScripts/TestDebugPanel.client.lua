@@ -14,41 +14,20 @@ local testGui = playerGui:WaitForChild("TestGui")
 local frame = testGui:WaitForChild("Frame")
 local homeButton = frame:FindFirstChild("HomeButton")
 local toggleButton = testGui:WaitForChild("ToggleButton")
-local eventDebugRemote = ReplicatedStorage:WaitForChild("EventDebugRemote")
-
 local HOME_SPAWN_OFFSET = CFrame.new(0, 4, 0)
 
-local EVENT_BUTTONS = {
-	{
-		buttonName = "StartEvent_01Button",
-		eventId = "Event_01",
-	},
-	{
-		buttonName = "StartEvent_02Button",
-		eventId = "Event_02",
-	},
-	{
-		buttonName = "StartEvent_03Button",
-		eventId = "Event_03",
-	},
-}
+for _, buttonName in { "StartEvent_01Button", "StartEvent_02Button", "StartEvent_03Button" } do
+    local button = frame:FindFirstChild(buttonName)
+    if button and button:IsA("GuiObject") then
+        button.Visible = false
+    end
+end
 
 testGui.Enabled = true
 
 local function setPanelCollapsed(isCollapsed: boolean)
     frame.Visible = not isCollapsed
     toggleButton.Text = isCollapsed and "<" or ">"
-end
-
-for _, eventButton in EVENT_BUTTONS do
-	local button = frame:FindFirstChild(eventButton.buttonName)
-	if button and button:IsA("TextButton") then
-		button.Activated:Connect(function()
-			eventDebugRemote:FireServer(eventButton.eventId)
-		end)
-	else
-		warn("TestDebugPanel: TestGui.Frame." .. eventButton.buttonName .. " is missing or is not a TextButton")
-	end
 end
 
 if homeButton and homeButton:IsA("TextButton") then

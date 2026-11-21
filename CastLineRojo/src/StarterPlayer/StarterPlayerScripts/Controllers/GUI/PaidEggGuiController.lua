@@ -677,11 +677,14 @@ function Controller:KnitStart()
 	self._waiting, self._confirmed = {}, {}
 	self._giftNotices, self._seenGiftNotices = {}, {}
 	self._service = Knit.GetService("PaidEggService")
-	Knit.GetService("PlayerDataService").DataLoaded:Connect(function()
+	player:GetAttributeChangedSignal("PlayerProfileReady"):Connect(function()
 		self:_fetch()
 	end)
-	Knit.GetService("PurchaseService").PromptPurchaseFail:Connect(function()
-		self._prompt = nil
+	Knit.GetService("PurchaseService").PromptPurchaseFail:Connect(function(_, purchaseId)
+		local row = purchaseId and PurchaseData[purchaseId]
+		if row and self._prompt and self._prompt.ProductId == row.ProductId then
+			self._prompt = nil
+		end
 	end)
 	self._gui.CloseButton.Activated:Connect(function()
 		if self._scene and self._scene.Revealed then

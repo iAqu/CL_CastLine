@@ -121,7 +121,7 @@ function Controller:KnitStart()
 		local currency = bottom and bottom:FindFirstChild("CurrencyFrame")
 		local frame = currency and currency:FindFirstChild("Weight")
 		if frame and snapshot then
-			local text = WeightFormat.FormatMaxCatchWeight(snapshot.maxCatchWeight)
+			local text = WeightFormat.FormatKg(snapshot.maxCatchWeight)
 			for _, label in ipairs(frame:GetDescendants()) do
 				if label:IsA("TextLabel") then
 					label.Text = text
@@ -235,6 +235,8 @@ function Controller:KnitStart()
 		prompt.Name = "TrainingUpgradePrompt"
 		prompt.ActionText = "UPGRADE"
 		prompt.ObjectText = ""
+		prompt:SetAttribute("StudsOffsetWorldSpace", Vector3.new(0, -2, 0))
+		prompt:SetAttribute("ActionTextStrokeScale", 0.16)
 		prompt.Parent = anchor
 		billboard = titleTemplate:Clone()
 		billboard.Name = "TrainingUpgradeTitle"

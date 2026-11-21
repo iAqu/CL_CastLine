@@ -8,11 +8,15 @@ local MutationVisualUtil = require(ReplicatedStorage.Modules.MutationVisualUtil)
 
 local FishRainbowController = Knit.CreateController({ Name = "FishRainbowController" })
 local HUE_SPEED = 0.5
+local COLOR_DISTANCE = 160
+local DISTANCE_CHECK_INTERVAL = 0.25
 local TAG = MutationVisualUtil.RAINBOW_TAG
 local random = Random.new()
 
 local watched = {}
-local visible = {}
+local inWorld = {}
+local nearby = {}
+local nextDistanceCheck = 0
 local heartbeat: RBXScriptConnection? = nil
 
 local function restore(mesh: MeshPart, original)
@@ -52,8 +56,23 @@ local function refreshMeshes(root: Instance, state)
 end
 
 local function updateColors()
-	local baseHue = Workspace:GetServerTimeNow() * HUE_SPEED % 1
-	for root, state in pairs(visible) do
+	local now = Workspace:GetServerTimeNow()
+	if now >= nextDistanceCheck then
+		nextDistanceCheck = now + DISTANCE_CHECK_INTERVAL
+		table.clear(nearby)
+		local camera = Workspace.CurrentCamera
+		if camera then
+			local position = camera.CFrame.Position
+			for root, state in inWorld do
+				local part = if root:IsA("PVInstance") then root else root:FindFirstChildWhichIsA("BasePart", true)
+				if part and (part:GetPivot().Position - position).Magnitude <= COLOR_DISTANCE then
+					nearby[root] = state
+				end
+			end
+		end
+	end
+	local baseHue = now * HUE_SPEED % 1
+	for root, state in pairs(nearby) do
 		if state.dirty then
 			refreshMeshes(root, state)
 		end
@@ -70,17 +89,17 @@ local function updateColors()
 end
 
 local function stopVisual(root: Instance, state)
-	if not visible[root] then
+	if not inWorld[root] then
 		return
 	end
-	visible[root] = nil
+	inWorld[root], nearby[root] = nil, nil
 	state.added:Disconnect()
 	state.removing:Disconnect()
 	for mesh, original in pairs(state.meshes) do
 		restore(mesh, original)
 	end
 	table.clear(state.meshes)
-	if heartbeat and next(visible) == nil then
+	if heartbeat and next(inWorld) == nil then
 		heartbeat:Disconnect()
 		heartbeat = nil
 	end
@@ -95,7 +114,7 @@ local function watch(root: Instance)
 	local function updateVisibility()
 		if not root:IsDescendantOf(Workspace) then
 			stopVisual(root, state)
-		elseif not visible[root] then
+		elseif not inWorld[root] then
 			local function markDirty(descendant: Instance)
 				if descendant:IsA("MeshPart") or descendant:IsA("SurfaceAppearance") then
 					state.dirty = true
@@ -104,7 +123,8 @@ local function watch(root: Instance)
 			state.dirty = true
 			state.added = root.DescendantAdded:Connect(markDirty)
 			state.removing = root.DescendantRemoving:Connect(markDirty)
-			visible[root] = state
+			inWorld[root] = state
+			nextDistanceCheck = 0
 			if not heartbeat then
 				heartbeat = RunService.Heartbeat:Connect(updateColors)
 			end

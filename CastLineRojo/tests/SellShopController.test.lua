@@ -155,8 +155,36 @@ function player:GetAttribute()
 end
 local heartbeat, inventoryChanged = signal(), signal()
 local fetches, sales, deferred, notifications = {}, {}, {}, {}
-local anchor = {}
+local function shopAnchor()
+	return { CFrame = { Position = {}, LookVector = {}, RightVector = {} } }
+end
+local anchor = shopAnchor()
 local currentAnchor = anchor
+local workspace = node("Workspace")
+local plotTemplates = node("Folder", "PlotTemplates")
+local shopTemplate = plotTemplates:Add(node("Model", "SellShop"))
+local primaryPart = shopTemplate:Add(node("MeshPart", "ActivationCircle"))
+local pivotOffset = {}
+local modelPivot = {}
+primaryPart.CFrame = {
+	ToObjectSpace = function(_, pivot)
+		assert(pivot == modelPivot, "Shop should account for the primary part's offset from the model pivot")
+		return pivotOffset
+	end,
+}
+function shopTemplate.Clone()
+	local shop = node("Model", "SellShop")
+	shop.PrimaryPart = shop:Add(primaryPart:Clone())
+	function shop:GetPivot()
+		return modelPivot
+	end
+	function shop:PivotTo(pivot)
+		self.movedTo = pivot
+	end
+	return shop
+end
+local availableTemplates
+local shopWarnings = 0
 local navigationBack, navigationFocus
 local guiService = { MenuIsOpen = false }
 local service = {
@@ -235,6 +263,7 @@ local services = {
 	ReplicatedFirst = { LoadingAttributes = { LOADING_SCREEN_DONE = "loaded" } },
 	RunService = { Heartbeat = heartbeat },
 	UserInputService = { PreferredInput = "Gamepad" },
+	Workspace = workspace,
 	ReplicatedStorage = {
 		Modules = modules,
 		Packages = {
@@ -253,8 +282,8 @@ local services = {
 				end,
 			},
 		},
-		FindFirstChild = function()
-			return nil
+		FindFirstChild = function(_, name)
+			return if name == "PlotTemplates" then availableTemplates else nil
 		end,
 	},
 }
@@ -274,6 +303,22 @@ local controller = assert(load(
 		require = function(value)
 			return value
 		end,
+		Instance = { new = node },
+		CFrame = {
+			fromMatrix = function(position, right, up)
+				assert(position == currentAnchor.CFrame.Position, "The shop should target the anchor center")
+				assert(
+					right == currentAnchor.CFrame.LookVector and up == currentAnchor.CFrame.RightVector,
+					"The shop should convert the anchor's axes to keep the model upright"
+				)
+				return setmetatable({}, {
+					__mul = function(_, offset)
+						assert(offset == pivotOffset, "The move should include the primary part's pivot offset")
+						return position
+					end,
+				})
+			end,
+		},
 		Enum = { PreferredInput = { Gamepad = "Gamepad" }, SelectionBehavior = { Stop = "Stop" } },
 		task = {
 			defer = function(callback)
@@ -281,6 +326,10 @@ local controller = assert(load(
 			end,
 		},
 		warn = function(message, err)
+			if string.find(message, "PlotTemplates.SellShop", 1, true) then
+				shopWarnings += 1
+				return
+			end
 			error(message .. ": " .. tostring(err))
 		end,
 	}, { __index = getfenv() })
@@ -324,10 +373,17 @@ worldAllowed, otherPopup = true, true
 tick()
 assert(#fetches == 0)
 otherPopup = false
+availableTemplates = plotTemplates
 tick()
 assert(#fetches == 1 and not gui.Enabled)
 fetches[1]:Resolve(inventory({ "a", "b" }))
 assert(gui.Enabled and list.Fish_a and list.Fish_b and list.Fish_a ~= list.Fish_b)
+assert(shopWarnings == 1 and not workspace.LocalPlotProps, "Missing template or primary part warns once without blocking sales")
+shopTemplate.PrimaryPart = primaryPart
+tick()
+local props = workspace.LocalPlotProps
+local firstShop = props.SellShop
+assert(firstShop.movedTo == anchor.CFrame.Position, "A valid template should generate on the next check")
 assert(list.Fish_a.NameLabel.rarity == "Rare" and not list.Fish_a.MutationLabel.Visible)
 assert(list.Fish_b.MutationLabel.FontFace == golden.FontFace and list.Fish_b.MutationLabel.UIGradient)
 assert(sellAll.SellButton.NumberLabel.Text == "SELL ALL (2)")
@@ -413,9 +469,22 @@ assert(#sales == 2)
 
 player.Character = {}
 tick()
+assert(props.SellShop == firstShop and #props:GetChildren() == 1, "Respawn should keep the same shop")
 fetches[10]:Resolve(inventory({ "external" }))
 sellAll.SellButton.Activated:Fire()
 assert(confirmation.Visible)
 gui.Enabled = false
 confirmButton.Activated:Fire()
 assert(not confirmation.Visible and list.ScrollingEnabled and #sales == 2, "Disabling the shop cancels the quote")
+
+entry, exit = false, false
+currentAnchor = shopAnchor()
+tick()
+local nextShop = props.SellShop
+assert(
+	firstShop.destroyed and #props:GetChildren() == 1 and nextShop.movedTo == currentAnchor.CFrame.Position,
+	"Changing plots should replace the shop at the new anchor"
+)
+currentAnchor = nil
+tick()
+assert(nextShop.destroyed and #props:GetChildren() == 0, "Losing the anchor should remove the shop")

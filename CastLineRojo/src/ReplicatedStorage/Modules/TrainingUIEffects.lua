@@ -138,7 +138,7 @@ function Effects:LevelUp(weight, root)
 	self:_popup(
 		"WeightPopup",
 		root,
-		"Max Catch +" .. WeightFormat.FormatMaxCatchWeight(weight),
+		"Max Catch +" .. WeightFormat.FormatKg(weight),
 		Vector3.new(0, 3.1, 0),
 		Vector3.new(0, 1.3, 0),
 		1.6

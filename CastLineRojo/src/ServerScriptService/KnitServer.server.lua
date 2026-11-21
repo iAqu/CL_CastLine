@@ -15,19 +15,24 @@ end
 
 hideAuxiliaryPart(areas and areas:FindFirstChild("ResetPlayerBox"), "Workspace.Areas.ResetPlayerBox")
 
+local airWalls = areas and areas:FindFirstChild("AirWalls")
+if airWalls then
+    for _, descendant in airWalls:GetDescendants() do
+        if descendant:IsA("BasePart") then
+            descendant.Transparency = 1
+        end
+    end
+end
+
 local water = areas and areas:FindFirstChild("Water")
 hideAuxiliaryPart(water and water:FindFirstChild("Surface"), "Workspace.Areas.Water.Surface")
 
 local Knit = require(ReplicatedStorage.Packages.Knit)
 local LogHelper = require(ReplicatedStorage.Modules.LogHelper)
-local EventService = require(ServerScriptService.Services.EventService)
 local PlayerDataService = require(ServerScriptService.Services.PlayerDataService)
 
 -- 尽早发起 DataStore 请求，让网络读取与其余 Service 的加载/初始化并行。
 PlayerDataService:BeginEarlyLoading()
--- 活动同样属于首屏状态，先发布本服务器当前档位的活动快照。
-EventService:BeginEarlyState()
-
 
 for _,v in ipairs(ServerScriptService.Services:GetDescendants()) do
     if v:IsA("ModuleScript") and v.Name:match("Service$") then

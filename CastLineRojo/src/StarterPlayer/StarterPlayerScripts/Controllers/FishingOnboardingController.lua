@@ -22,6 +22,7 @@ local TutorialClickMask = require(Modules.TutorialClickMask)
 local player = Players.LocalPlayer
 local Controller = Knit.CreateController({ Name = "FishingOnboardingController" })
 local ARROW_TEXTURE = "rbxassetid://94490357052336"
+local TRAINING_PROMPT = `TRAIN TO LEVEL {Onboarding.TrainingLevel}`
 local yellow = Color3.fromRGB(255, 205, 0)
 
 local function fishUid(tool)
@@ -128,7 +129,6 @@ function Controller:KnitStart()
 	playerGui:WaitForChild("FishingSequenceGui")
 	local fishing = Knit.GetController("FishingController")
 	local shop = Knit.GetController("RodShopGuiController")
-	local trainingController = Knit.GetController("TrainingController")
 	local analytics = Knit.GetService("OnboardingAnalyticsService").GuidePresentation
 	local observed = {}
 	local function report(detail)
@@ -231,15 +231,11 @@ function Controller:KnitStart()
 			if player:GetAttribute("IsTraining") then
 				if stage == "StopTraining" then
 					local training = playerGui:FindFirstChild("TrainingGui")
-					message, pointAt = "LEVEL 2 REACHED", training and training:FindFirstChild("StopButton")
+					message, pointAt = "TRAINING GOAL REACHED", training and training:FindFirstChild("StopButton")
 					detail = "StopTrainingPrompt"
 				elseif stage == "Train" then
-					local snapshot = trainingController:GetSnapshot()
-					message = "TRAIN TO LEVEL 2"
+					message = TRAINING_PROMPT
 					detail = "TrainingPrompt"
-					if snapshot and snapshot.level < Onboarding.TrainingLevel then
-						message ..= string.format(" · %d/%d XP", snapshot.xp, snapshot.xpToNextLevel)
-					end
 				end
 			elseif stage == "PlaceFish" and not Gate.IsActive("Popup") then
 				local held = character:FindFirstChildOfClass("Tool")
@@ -278,10 +274,10 @@ function Controller:KnitStart()
 					end
 				end
 			elseif not pointAt and not Gate.IsUiBlockingWorld() then
-				if stage == "FirstCatch" or stage == "FinalCatch" then
-					message = if stage == "FirstCatch" then "TRY AGAIN!" else "CAST WITH YOUR NEW ROD!"
+				if stage == "FinalCatch" then
+					message = "CAST WITH YOUR NEW ROD!"
 					destination = plot:FindFirstChild("FishingStartPart")
-					detail = if stage == "FirstCatch" then "FirstLessonRoute" else "FinalLessonRoute"
+					detail = "FinalLessonRoute"
 				elseif stage == "RodReward" then
 					message, destination = "GET YOUR NEW ROD", plot:FindFirstChild("RodShopAnchor")
 					detail = "RodShopRoute"

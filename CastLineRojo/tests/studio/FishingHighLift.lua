@@ -32,21 +32,6 @@ local function cleanup()
 		folder = nil
 	end
 end
-local function protected(frame, center, radius, viewport, fov)
-	local view = Cast._protectShowcase({}, frame, center, radius, viewport, fov, 1)
-	local point = view:PointToObjectSpace(center)
-	local vertical = math.rad(fov * 0.5)
-	local horizontal = math.atan(math.tan(vertical) * viewport.X / viewport.Y)
-	assert(
-		-point.Z * math.sin(vertical) - math.abs(point.Y) * math.cos(vertical) >= radius - 0.002,
-		"Fish sphere clipped vertically"
-	)
-	assert(
-		-point.Z * math.sin(horizontal) - math.abs(point.X) * math.cos(horizontal) >= radius - 0.002,
-		"Fish sphere clipped horizontally"
-	)
-	return view
-end
 local function run(template, maximum, fps)
 	folder = Instance.new("Folder")
 	folder.Name, folder.Parent = "_FishingHighLiftQA", workspace
@@ -141,24 +126,8 @@ local function run(template, maximum, fps)
 			local lowest = active.displayFrame.Position.Y - active.presentationRadius * active.scale
 			assert(lowest >= target.Y + Config.Bite.WaterClearance - 0.002, "Rebound dipped into the water")
 		end
-		for _, viewport in ipairs({ Vector2.new(390, 844), Vector2.new(844, 390) }) do
-			local base = owner:_fishLiftCamera(100 + t, target, viewport)
-			if t >= timing.riseEnd and t < timing.fallStart then
-				assert(base.LookVector.Y > 0.05, "Apex camera must tilt upward")
-			end
-			local radius = (
-				if active.timeline.phase == "Caught"
-					then active:GetShowcaseRadius()
-					else active.presentationRadius * active.scale
-			) + Config.Bite.ShowcasePadding
-			-- 验证震动后的保护，包括竖屏和起跳的第一帧。
-			protected(
-				base * CFrame.new(0.5, 0.4, 0) * CFrame.Angles(0.02, 0.02, 0.01),
-				active.showcasePosition,
-				radius,
-				viewport,
-				60
-			)
+		if t >= timing.riseEnd and t < timing.fallStart then
+			assert(owner.cameraFrame.LookVector.Y > 0.05, "Apex camera must tilt upward")
 		end
 		if t >= timing.duration then
 			endBase = endBase or owner.cameraFrame
@@ -186,6 +155,36 @@ local function run(template, maximum, fps)
 	local before = #impulses
 	active:Update(110, true)
 	assert(#impulses == before, "Stale update replayed feedback")
+	local size = math.max(active.halfLength * 2, active.bodyWidth) * active.catchScale
+	local distance = 24 + math.clamp((size - 6) * 0.3, 0, 8)
+	local bounds = template:GetBoundingBox()
+	local centerOffset = template.PrimaryPart.CFrame:PointToObjectSpace(bounds.Position)
+	local settled = active:_liftFrame(timing.duration, target)
+	local center = settled:PointToWorldSpace(centerOffset * active.catchScale)
+	local framing = {}
+	for _, viewport in { Vector2.new(390, 844), Vector2.new(844, 390) } do
+		local view = { ViewportSize = viewport }
+		owner:_updateCamera(110, 1 / fps, view)
+		assert((view.Focus.Position - center).Magnitude < 0.002, "Showcase focus missed the fish model center")
+		local depth = (view.Focus.Position - view.CFrame.Position):Dot(owner.forward)
+		assert(math.abs(depth - distance) < 0.01, "Showcase camera added extra pullback")
+		local body = active.fish.PrimaryPart
+		local tangent = math.tan(math.rad(view.FieldOfView * 0.5))
+		local occupancy = 0
+		for x = -1, 1, 2 do
+			for y = -1, 1, 2 do
+				for z = -1, 1, 2 do
+					local corner = body.CFrame:PointToWorldSpace(body.Size * Vector3.new(x, y, z) * 0.5)
+					local point = view.CFrame:PointToObjectSpace(corner)
+					local depthToCorner = math.max(-point.Z, 0.001)
+					local horizontal = math.abs(point.X) / (depthToCorner * tangent * viewport.X / viewport.Y)
+					local vertical = math.abs(point.Y) / (depthToCorner * tangent)
+					occupancy = math.max(occupancy, horizontal, vertical)
+				end
+			end
+		end
+		table.insert(framing, occupancy)
+	end
 	local audioFolder, fish = owner.fishAudio.folder, active.fish
 	local result = {
 		name = template.Name,
@@ -195,11 +194,13 @@ local function run(template, maximum, fps)
 		peak = active.liftPlan.peakHeight,
 		cues = cues,
 		lag = lagged,
-		framed = true,
+		distance = distance,
+		framing = framing,
 	}
 	cleanup()
 	assert(not audioFolder.Parent and not fish.Parent, "Exit left fish or audio objects alive")
 	table.insert(job.cases, result)
+	return framing
 end
 
 task.spawn(function()
@@ -220,14 +221,23 @@ task.spawn(function()
 				end
 			end
 		end
+		local normalFraming = {}
 		for _, case in ipairs({
 			{ smallest.model, false },
 			{ longest.model, false },
 			{ widest.model, false },
 			{ longest.model, true },
+			{ storage.Models.Fish.Kraken, false },
 		}) do
 			for _, fps in ipairs({ 30, 60, 144 }) do
-				run(case[1], case[2], fps)
+				local framing = run(case[1], case[2], fps)
+				if case[2] then
+					for axis, occupancy in framing do
+						assert(occupancy > normalFraming[fps][axis], "Larger fish did not take up more screen space")
+					end
+				elseif case[1] == longest.model then
+					normalFraming[fps] = framing
+				end
 			end
 		end
 	end, debug.traceback)

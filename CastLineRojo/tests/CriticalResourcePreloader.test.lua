@@ -173,9 +173,16 @@ assert(not h.attempts["rbxassetid://201"] and not h.attempts["rbxassetid://301"]
 h.setLoaded(true)
 h.advance(0.5)
 local ready = h.preloader.GetStatus()
-assert(ready.phase == "Ready" and ready.total == 11 and ready.loaded == 11)
+assert(ready.phase == "Ready" and ready.total == 9 and ready.loaded == 9)
 assert(#h.warnings == 0)
-for id = 101, 111 do assert(h.attempts["rbxassetid://" .. id] == 1, "Missing or duplicated critical resource " .. id) end
+for id = 101, 111 do
+	assert(h.attempts["rbxassetid://" .. id] == 1, "Missing or duplicated resource " .. id)
+end
+for _, call in h.calls do
+	if call.at < 0.2 then
+		assert(not table.find(call.ids, "rbxassetid://103") and not table.find(call.ids, "rbxassetid://111"))
+	end
+end
 assert(h.attempts["rbxassetid://201"] == 1 and h.attempts["rbxassetid://202"] == 1)
 assert(h.attempts["rbxassetid://301"] == 1 and h.attempts["rbxassetid://302"] == 1)
 local fishCall, otherCall
@@ -203,7 +210,7 @@ for _, failure in ipairs({ "Failure", "throw", "silent" }) do
 	h = harness({ fetch = function(id) return if id == "rbxassetid://102" then failure else "Success" end })
 	h.preloader.Start()
 	h.advance(1)
-	assert(h.preloader.GetStatus().phase == "Failed" and h.preloader.GetStatus().loaded == 10,
+	assert(h.preloader.GetStatus().phase == "Failed" and h.preloader.GetStatus().loaded == 8,
 		"A normal return without successful callbacks must not count as ready")
 	assert(h.attempts["rbxassetid://102"] == 2 and #h.warnings == 1, "Retry once, then warn and release")
 end
@@ -251,7 +258,7 @@ assert(h.preloader.GetStatus().phase == "TimedOut")
 h = harness({ noMenu = true })
 h.preloader.Start()
 h.advance(1)
-assert(h.preloader.GetStatus().phase == "Ready" and h.preloader.GetStatus().total == 10,
+assert(h.preloader.GetStatus().phase == "Ready" and h.preloader.GetStatus().total == 8,
 	"A missing loading presentation must not prevent fishing preloads")
 
 h = harness({ failRequire = true })
@@ -282,7 +289,7 @@ h = harness({ fetch = function(id)
 end })
 h.preloader.Start()
 h.advance(1)
-assert(h.preloader.GetStatus().phase == "Ready" and h.preloader.GetStatus().loaded == 11,
+assert(h.preloader.GetStatus().phase == "Ready" and h.preloader.GetStatus().loaded == 9,
 	"Background errors must not change critical readiness or progress")
 assert(#h.warnings == 1 and h.attempts["rbxassetid://301"] == 1)
 

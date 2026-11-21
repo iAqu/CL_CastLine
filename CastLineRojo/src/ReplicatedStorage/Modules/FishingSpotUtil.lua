@@ -16,6 +16,16 @@ function FishingSpotUtil.GetFootHeight(root: BasePart, humanoid: Humanoid): numb
 	return height
 end
 
+function FishingSpotUtil.GetEntryRootCFrame(part: BasePart, root: BasePart, humanoid: Humanoid): CFrame?
+	local forward = part.CFrame.LookVector * Vector3.new(1, 0, 1)
+	if forward.Magnitude < 0.001 then
+		return nil
+	end
+	local surface = part.Position + part.CFrame.UpVector * (part.Size.Y / 2)
+	local position = surface + Vector3.yAxis * (FishingSpotUtil.GetFootHeight(root, humanoid) + 0.1)
+	return CFrame.lookAt(position, position + forward)
+end
+
 function FishingSpotUtil.Contains(part: BasePart, root: BasePart, humanoid: Humanoid, horizontalTolerance: number?): boolean
 	-- The marker is a thin floor, so check the feet rather than the root.
 	local feet = root.Position - Vector3.yAxis * FishingSpotUtil.GetFootHeight(root, humanoid)

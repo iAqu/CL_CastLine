@@ -27,6 +27,7 @@ local PlayerGui = localPlayer:WaitForChild("PlayerGui")
 local PurchaseBoardController = Knit.CreateController {
     Name = "PurchaseBoardController",
 }
+local boundButtons = setmetatable({}, { __mode = "k" })
 
 local DETECT_DISTANCE = 8
 local isClosing = false
@@ -58,17 +59,21 @@ local function initPurchaseBoards()
             -- model.SurfaceGui.Frame.RightFrame.BuyButton.Visible = not playerData.LimitedPurchaseHistory[purchaseId]
             -- model.SurfaceGui.Frame.RightFrame.OwnedLabel.Visible = playerData.LimitedPurchaseHistory[purchaseId]
 
-            model.SurfaceGui.Frame.RightFrame.BuyButton.Activated:Connect(function()
+            local button = model.SurfaceGui.Frame.RightFrame.BuyButton
+            local row = PurchaseDataHelper.GetData(purchaseId)
+            if not row or boundButtons[button] then continue end
+            boundButtons[button] = true
+            button.Activated:Connect(function()
 
                 if playerData.LimitedPurchaseHistory[purchaseId] then
                     NotificationClient.RedNotify("💡 You already bought this item!")
                     return
                 end
 
-                if PurchaseDataHelper.GetTypeByPurchaseId(purchaseId) == "GamePass" then
-                    MarketplaceService:PromptGamePassPurchase(localPlayer, PurchaseDataHelper.GetProductId(purchaseId))
+                if row.Type == "GamePass" then
+                    MarketplaceService:PromptGamePassPurchase(localPlayer, row.ProductId)
                 else
-                    MarketplaceService:PromptProductPurchase(localPlayer, PurchaseDataHelper.GetProductId(purchaseId))
+                    Knit.GetService("PurchaseService").PromptPurchase:Fire(purchaseId, true)
                 end
             end)
         end

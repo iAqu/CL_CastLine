@@ -2,20 +2,34 @@ local Players = game:GetService("Players")
 local PolicyService = game:GetService("PolicyService")
 local Policy = {}
 local cache = {}
+local pending = {}
 
 function Policy.Get(player)
 	if not player or player.Parent ~= Players then
 		return nil
 	end
-	local entry = cache[player.UserId]
+	local entry = cache[player]
 	if entry and entry.Expires > os.clock() then
 		return entry.Value
 	end
-	local ok, value = pcall(PolicyService.GetPolicyInfoForPlayerAsync, PolicyService, player)
-	if not ok or type(value) ~= "table" then
-		return nil
+	local waiters = pending[player]
+	if waiters then
+		table.insert(waiters, coroutine.running())
+		local value = coroutine.yield()
+		return if player.Parent == Players then value else nil
 	end
-	cache[player.UserId] = { Value = value, Expires = os.clock() + 60 }
+	waiters = {}
+	pending[player] = waiters
+	local ok, value = pcall(PolicyService.GetPolicyInfoForPlayerAsync, PolicyService, player)
+	if ok and type(value) == "table" and player.Parent == Players then
+		cache[player] = { Value = value, Expires = os.clock() + 60 }
+	else
+		cache[player], value = nil, nil
+	end
+	pending[player] = nil
+	for _, waiter in ipairs(waiters) do
+		task.defer(waiter, value)
+	end
 	return value
 end
 
@@ -23,7 +37,7 @@ function Policy.CanPurchase(buyer, recipient)
 	local buyerPolicy = Policy.Get(buyer)
 	local recipientPolicy = if buyer == recipient then buyerPolicy else Policy.Get(recipient)
 	if not buyerPolicy or not recipientPolicy then
-		return false, "Purchase availability could not be checked. Please try again."
+		return false, "Purchase availability could not be checked. Please try again.", true
 	end
 	if buyerPolicy.ArePaidRandomItemsRestricted ~= false or recipientPolicy.ArePaidRandomItemsRestricted ~= false then
 		return false, "Paid eggs are unavailable for this player."
@@ -46,6 +60,12 @@ function Policy.CanTransfer(sender, recipient)
 end
 
 Players.PlayerRemoving:Connect(function(player)
-	cache[player.UserId] = nil
+	cache[player] = nil
 end)
+Players.PlayerAdded:Connect(function(player)
+	task.defer(Policy.Get, player)
+end)
+for _, player in Players:GetPlayers() do
+	task.defer(Policy.Get, player)
+end
 return Policy

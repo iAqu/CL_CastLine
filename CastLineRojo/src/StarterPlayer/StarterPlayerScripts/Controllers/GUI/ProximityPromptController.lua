@@ -225,7 +225,7 @@ local function ensureSharedProgress()
 	sharedProgressValue = progress
 end
 
-local function attachSharedProgress(prompt: ProximityPrompt, keyBillboardWidth: number, inputFrame: Frame)
+local function attachSharedProgress(prompt: ProximityPrompt, promptBillboard: BillboardGui, inputFrame: Frame)
 	ensureSharedProgress()
 	local billboard = sharedProgressBillboard
 	local progressBar = sharedProgressBar
@@ -237,7 +237,8 @@ local function attachSharedProgress(prompt: ProximityPrompt, keyBillboardWidth: 
 	if adornee and adornee:IsA("BasePart") then
 		billboard.Adornee = adornee
 	end
-	billboard.SizeOffset = progressSizeOffsetForPrompt(prompt, keyBillboardWidth)
+	billboard.SizeOffset = progressSizeOffsetForPrompt(prompt, promptBillboard.Size.Width.Offset)
+	billboard.StudsOffsetWorldSpace = promptBillboard.StudsOffsetWorldSpace
 	if sharedProgressValue then
 		sharedProgressValue.Value = 0
 	end
@@ -271,6 +272,7 @@ local function detachSharedProgress(prompt: ProximityPrompt)
 	if sharedProgressBillboard and sharedProgressWarmupAdornee then
 		sharedProgressBillboard.Adornee = sharedProgressWarmupAdornee
 		sharedProgressBillboard.SizeOffset = Vector2.zero
+		sharedProgressBillboard.StudsOffsetWorldSpace = Vector3.zero
 	end
 end
 
@@ -457,6 +459,10 @@ local function createPrompt(
 	billboard.Name = "Prompt"
 	billboard.AlwaysOnTop = true
 	billboard.Enabled = true
+	local worldOffset = prompt:GetAttribute("StudsOffsetWorldSpace")
+	if typeof(worldOffset) == "Vector3" then
+		billboard.StudsOffsetWorldSpace = worldOffset
+	end
 
 	local promptFrame = Instance.new("Frame")
 	promptFrame.Size = UDim2.fromScale(0.5, 1)
@@ -526,6 +532,22 @@ local function createPrompt(
 
 	addTextTweens(actionText)
 	addTextTweens(objectText)
+
+	local strokeScale = prompt:GetAttribute("ActionTextStrokeScale")
+	if typeof(strokeScale) == "number" and strokeScale > 0 then
+		local stroke = Instance.new("UIStroke")
+		stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual
+		stroke.StrokeSizingMode = Enum.StrokeSizingMode.ScaledSize
+		stroke.Thickness = strokeScale
+		stroke.Color = actionText.TextStrokeColor3
+		stroke.Transparency = 1
+		stroke.Parent = actionText
+		actionText.TextStrokeTransparency = 1
+		table.insert(holdTweens, TweenService:Create(stroke, fadeTweenInfo, { Transparency = 1 }))
+		table.insert(holdEndTweens, TweenService:Create(stroke, fadeTweenInfo, { Transparency = 0 }))
+		table.insert(triggerTweens, TweenService:Create(stroke, fadeTweenInfo, { Transparency = 1 }))
+		table.insert(showTweens, TweenService:Create(stroke, fadeTweenInfo, { Transparency = 0 }))
+	end
 
 	table.insert(holdTweens, TweenService:Create(promptFrame, fadeTweenInfo, {
 		BackgroundTransparency = 1,
@@ -728,7 +750,7 @@ local function createPrompt(
 	end
 
 	if prompt.HoldDuration > 0 then
-		attachSharedProgress(prompt, billboard.Size.Width.Offset, inputFrame)
+		attachSharedProgress(prompt, billboard, inputFrame)
 	end
 
 	local cleanedUp = false

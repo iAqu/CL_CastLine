@@ -76,6 +76,19 @@ local ok, err = xpcall(function()
 		assert(list.Bait_115.Button.Interactable, "Owned state changed")
 		assert(list.Bait_114.Button.Price.Text == "$123", "Cash price changed")
 		assert(list.Bait_115.Button.Price.Text == "OWNED", "Owned price changed")
+		local disclosure = list.Bait_115.Button:FindFirstChild("Name")
+		assert(disclosure.Visible and disclosure.Text == "100% Rainbow", "Paid bait odds are hidden")
+		local authoredName = list.Template.Button:FindFirstChild("Name")
+		assert(disclosure.Size == authoredName.Size and disclosure.Position == authoredName.Position
+			and disclosure.AnchorPoint == authoredName.AnchorPoint, "Paid bait title differs from template layout")
+		assert(disclosure.FontFace == authoredName.FontFace and disclosure.TextScaled == authoredName.TextScaled
+			and disclosure.TextWrapped == authoredName.TextWrapped
+			and disclosure.TextSize == authoredName.TextSize, "Paid bait title differs from template typography")
+		local stroke, authoredStroke = disclosure:FindFirstChildOfClass("UIStroke"), authoredName:FindFirstChildOfClass("UIStroke")
+		assert(stroke and authoredStroke and stroke.Color == authoredStroke.Color
+			and stroke.Thickness == authoredStroke.Thickness, "Paid bait title differs from template stroke")
+		local rainbow = disclosure:FindFirstChild("UIGradient_Mutation_Rainbow")
+		assert(rainbow and rainbow.Enabled, "Paid bait odds are missing the rainbow gradient")
 		binding.SetBusy(true)
 		assert(not list.Bait_114.Button.Interactable and not list.Bait_115.Button.Interactable, "Busy buttons remain active")
 		binding.SetBusy(false)

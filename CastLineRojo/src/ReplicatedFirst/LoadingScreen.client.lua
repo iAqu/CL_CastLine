@@ -19,16 +19,29 @@ local LOADING_FOV = 45
 local MENU_DISTANCE = 16
 local ENTRY_FADE_DURATION_SECONDS = 0.4
 local ENTRY_CAMERA_DURATION_SECONDS = 1.25
+local ENTRY_CAMERA_HANDOFF_SECONDS = 0.2
 local ENTRY_CAMERA_DISTANCE = 25
 local ENTRY_CAMERA_BINDING_NAME = "SeaDigLoadingEntryCamera"
+local ENTRY_CAMERA_DEFAULT_STATE_BINDING_NAME = "SeaDigLoadingEntryCameraDefaultState"
 local ENTRY_CAMERA_TARGET_SAMPLE_BINDING_NAME = "SeaDigLoadingEntryCameraTargetSample"
 local ENTRY_CAMERA_TARGET_SAMPLE_FRAMES = 2
 local ENTRY_CAMERA_MIN_ARC_HEIGHT = 4
 local ENTRY_CAMERA_MAX_ARC_HEIGHT = 10
 local ENTRY_CAMERA_SCALE = 0.96
+local HIDDEN_SCENE_GUI_DISTANCE = 0.01
+local SCENE_GUI_ORIGINAL_DISTANCE = "LoadingSceneGuiOriginalDistance"
+
+type SceneGui = BillboardGui | SurfaceGui
+type SceneGuiState = {
+	distance: number,
+	hiddenDistance: number,
+	connection: RBXScriptConnection,
+}
 
 local hiddenGuis: { [ScreenGui]: boolean } = {}
 local guiConnections: { [ScreenGui]: RBXScriptConnection } = {}
+local sceneGuiStates: { [SceneGui]: SceneGuiState } = {}
+local sceneGuiConnections: { RBXScriptConnection } = {}
 local anchoredRoots: { [BasePart]: boolean } = {}
 local depthOfFieldStates: { [DepthOfFieldEffect]: boolean } = {}
 
@@ -129,6 +142,60 @@ local function restoreOtherGuis()
 		end
 		hiddenGuis[gui] = nil
 	end
+end
+
+local function hideSceneGui(instance: Instance)
+	if #sceneGuiConnections == 0 or not (instance:IsA("BillboardGui") or instance:IsA("SurfaceGui")) then
+		return
+	end
+	if sceneGuiStates[instance] or (loadingPart and instance:IsDescendantOf(loadingPart)) then
+		return
+	end
+
+	-- Leave Enabled available to the controllers that own each scene GUI.
+	local currentDistance = instance.MaxDistance
+	local inheritedDistance = instance:GetAttribute(SCENE_GUI_ORIGINAL_DISTANCE)
+	instance.MaxDistance = HIDDEN_SCENE_GUI_DISTANCE
+	local hiddenDistance = instance.MaxDistance
+	-- Clones of masked templates need the original distance along with the temporary value.
+	local distance = if currentDistance == hiddenDistance and typeof(inheritedDistance) == "number"
+		then inheritedDistance
+		else currentDistance
+	instance:SetAttribute(SCENE_GUI_ORIGINAL_DISTANCE, distance)
+	local connection = instance:GetPropertyChangedSignal("MaxDistance"):Connect(function()
+		local state = sceneGuiStates[instance]
+		local updatedDistance = instance.MaxDistance
+		if state and updatedDistance ~= hiddenDistance then
+			state.distance = updatedDistance
+			instance:SetAttribute(SCENE_GUI_ORIGINAL_DISTANCE, updatedDistance)
+			instance.MaxDistance = hiddenDistance
+		end
+	end)
+	sceneGuiStates[instance] = { distance = distance, hiddenDistance = hiddenDistance, connection = connection }
+end
+
+local function hideSceneGuis()
+	for _, root in { Workspace, playerGui } do
+		table.insert(sceneGuiConnections, root.DescendantAdded:Connect(hideSceneGui))
+		for _, instance in root:GetDescendants() do
+			hideSceneGui(instance)
+		end
+	end
+end
+
+local function restoreSceneGuis()
+	for _, connection in sceneGuiConnections do
+		connection:Disconnect()
+	end
+	table.clear(sceneGuiConnections)
+	for gui, state in sceneGuiStates do
+		state.connection:Disconnect()
+		if gui.MaxDistance == state.hiddenDistance then
+			gui.MaxDistance = state.distance
+		end
+		gui:SetAttribute(SCENE_GUI_ORIGINAL_DISTANCE, nil)
+	end
+	table.clear(sceneGuiStates)
 end
 
 local function anchorCharacter(character: Model)
@@ -250,44 +317,78 @@ local function sampleEntryCameraTarget(
 	local sampledFocus = CFrame.new(seedFocus)
 	local sampledFieldOfView = targetFieldOfView
 	local sampleCount = 0
+	local priority = Enum.RenderPriority.Camera.Value
 
-	local function restoreLoadingCamera()
-		camera.CameraType = Enum.CameraType.Scriptable
+	-- The temporary view is only live around PlayerModule's update within each render step.
+	RunService:BindToRenderStep(ENTRY_CAMERA_DEFAULT_STATE_BINDING_NAME, priority - 1, function()
+		camera.CFrame = sampledCFrame
+		camera.Focus = sampledFocus
+		camera.FieldOfView = sampledFieldOfView
+	end)
+	RunService:BindToRenderStep(ENTRY_CAMERA_TARGET_SAMPLE_BINDING_NAME, priority + 1, function()
+		sampledCFrame = camera.CFrame
+		sampledFocus = camera.Focus
+		sampledFieldOfView = camera.FieldOfView
 		camera.CFrame = startCFrame
 		camera.Focus = startFocus
 		camera.FieldOfView = LOADING_FOV
-	end
 
-	local function primeDefaultCamera()
-		camera.CFrame = seedCFrame
-		camera.Focus = CFrame.new(seedFocus)
-		camera.CameraSubject = humanoid
-		camera.FieldOfView = targetFieldOfView
-		camera.CameraType = Enum.CameraType.Custom
-	end
-
-	primeDefaultCamera()
-	RunService:BindToRenderStep(
-		ENTRY_CAMERA_TARGET_SAMPLE_BINDING_NAME,
-		Enum.RenderPriority.Camera.Value + 1,
-		function()
-			sampledCFrame = camera.CFrame
-			sampledFocus = camera.Focus
-			sampledFieldOfView = camera.FieldOfView
-			sampleCount += 1
-			restoreLoadingCamera()
+		sampleCount += 1
+		if sampleCount >= ENTRY_CAMERA_TARGET_SAMPLE_FRAMES then
+			camera.CameraType = Enum.CameraType.Scriptable
+			RunService:UnbindFromRenderStep(ENTRY_CAMERA_DEFAULT_STATE_BINDING_NAME)
+			RunService:UnbindFromRenderStep(ENTRY_CAMERA_TARGET_SAMPLE_BINDING_NAME)
 		end
-	)
+	end)
 
+	camera.CameraSubject = humanoid
+	camera.CameraType = Enum.CameraType.Custom
 	while sampleCount < ENTRY_CAMERA_TARGET_SAMPLE_FRAMES do
 		RunService.RenderStepped:Wait()
-		if sampleCount < ENTRY_CAMERA_TARGET_SAMPLE_FRAMES then
-			primeDefaultCamera()
-		end
 	end
-	RunService:UnbindFromRenderStep(ENTRY_CAMERA_TARGET_SAMPLE_BINDING_NAME)
 
 	return sampledCFrame, sampledFocus, sampledFieldOfView
+end
+
+local function handoffEntryCamera(camera: Camera, targetCFrame: CFrame, targetFocus: CFrame)
+	local priority = Enum.RenderPriority.Camera.Value
+	local defaultCFrame = targetCFrame
+	local defaultFocus = targetFocus
+	local elapsed = 0
+	local completed = false
+	local function isCurrentCustomCamera()
+		return Workspace.CurrentCamera == camera and camera.CameraType == Enum.CameraType.Custom
+	end
+
+	-- PlayerModule reads the previous CFrame for look input. Give it its own last output before it updates.
+	RunService:BindToRenderStep(ENTRY_CAMERA_DEFAULT_STATE_BINDING_NAME, priority - 1, function()
+		if not completed and isCurrentCustomCamera() then
+			camera.CFrame = defaultCFrame
+			camera.Focus = defaultFocus
+		end
+	end)
+	RunService:BindToRenderStep(ENTRY_CAMERA_BINDING_NAME, priority + 1, function(deltaTime)
+		if not isCurrentCustomCamera() or elapsed >= ENTRY_CAMERA_HANDOFF_SECONDS then
+			completed = true
+			return
+		end
+		defaultCFrame, defaultFocus = camera.CFrame, camera.Focus
+		local alpha = TweenService:GetValue(
+			elapsed / ENTRY_CAMERA_HANDOFF_SECONDS,
+			Enum.EasingStyle.Sine,
+			Enum.EasingDirection.InOut
+		)
+		camera.CFrame = targetCFrame:Lerp(defaultCFrame, alpha)
+		camera.Focus = targetFocus:Lerp(defaultFocus, alpha)
+		elapsed += deltaTime
+	end)
+
+	camera.CameraType = Enum.CameraType.Custom
+	while not completed do
+		RunService.RenderStepped:Wait()
+	end
+	RunService:UnbindFromRenderStep(ENTRY_CAMERA_DEFAULT_STATE_BINDING_NAME)
+	RunService:UnbindFromRenderStep(ENTRY_CAMERA_BINDING_NAME)
 end
 
 local function playEntryCamera(): boolean
@@ -299,8 +400,6 @@ local function playEntryCamera(): boolean
 	end
 
 	local camera = getCurrentCamera()
-	local startCFrame = camera.CFrame
-	local startFocus = camera.Focus
 	local originalMinZoomDistance = localPlayer.CameraMinZoomDistance
 	local originalMaxZoomDistance = localPlayer.CameraMaxZoomDistance
 	local entryZoomDistance = math.clamp(ENTRY_CAMERA_DISTANCE, originalMinZoomDistance, originalMaxZoomDistance)
@@ -315,6 +414,8 @@ local function playEntryCamera(): boolean
 
 	-- UI 和模糊完全淡出后，才释放 loading 相机并准备入场镜头。
 	disconnectConnections()
+	local startCFrame = camera.CFrame
+	local startFocus = camera.Focus
 
 	-- 在每一帧渲染前恢复 loading 视角，避免默认相机取样过程被玩家看见。
 	local seedFocus = root.Position + Vector3.new(0, math.max(2.25, root.Size.Y * 1.25), 0)
@@ -335,43 +436,49 @@ local function playEntryCamera(): boolean
 		whoosh:Play()
 	end
 
+	local startPosition = startCFrame.Position
+	local targetPosition = targetCFrame.Position
+	local startRotation = startCFrame.Rotation
+	local targetRotation = targetCFrame.Rotation
+	local horizontalDistance = Vector3.new(targetPosition.X - startPosition.X, 0, targetPosition.Z - startPosition.Z).Magnitude
+	local arcHeight = math.clamp(horizontalDistance * 0.08, ENTRY_CAMERA_MIN_ARC_HEIGHT, ENTRY_CAMERA_MAX_ARC_HEIGHT)
+	local controlPosition = (startPosition + targetPosition) * 0.5 + Vector3.new(0, arcHeight, 0)
 	local elapsed = 0
 	local completed = false
 	RunService:BindToRenderStep(ENTRY_CAMERA_BINDING_NAME, Enum.RenderPriority.Camera.Value + 1, function(deltaTime)
 		elapsed = math.min(elapsed + deltaTime, ENTRY_CAMERA_DURATION_SECONDS)
+		if elapsed >= ENTRY_CAMERA_DURATION_SECONDS then
+			camera.CFrame = targetCFrame
+			camera.Focus = targetFocus
+			camera.FieldOfView = targetFieldOfView
+			completed = true
+			return
+		end
+
 		local alpha = TweenService:GetValue(
 			elapsed / ENTRY_CAMERA_DURATION_SECONDS,
 			Enum.EasingStyle.Sine,
 			Enum.EasingDirection.InOut
 		)
-		local startPosition = startCFrame.Position
-		local targetPosition = targetCFrame.Position
-		local horizontalDistance = Vector3.new(targetPosition.X - startPosition.X, 0, targetPosition.Z - startPosition.Z).Magnitude
-		local arcHeight = math.clamp(horizontalDistance * 0.08, ENTRY_CAMERA_MIN_ARC_HEIGHT, ENTRY_CAMERA_MAX_ARC_HEIGHT)
-		local controlPosition = (startPosition + targetPosition) * 0.5 + Vector3.new(0, arcHeight, 0)
 		local inverseAlpha = 1 - alpha
 		local cameraPosition = inverseAlpha * inverseAlpha * startPosition
 			+ 2 * inverseAlpha * alpha * controlPosition
 			+ alpha * alpha * targetPosition
-		local focus = startFocus.Position:Lerp(targetFocus.Position, alpha)
-		camera.CFrame = CFrame.lookAt(cameraPosition, focus)
-		camera.Focus = CFrame.new(focus)
+		-- Loading 的 Focus 与相机同位，不能用它重建过渡起点的朝向。
+		camera.CFrame = CFrame.new(cameraPosition) * startRotation:Lerp(targetRotation, alpha)
+		camera.Focus = startFocus:Lerp(targetFocus, alpha)
 		camera.FieldOfView = LOADING_FOV + (targetFieldOfView - LOADING_FOV) * alpha
-		completed = elapsed >= ENTRY_CAMERA_DURATION_SECONDS
 	end)
 
 	while not completed do
 		RunService.RenderStepped:Wait()
 	end
 	RunService:UnbindFromRenderStep(ENTRY_CAMERA_BINDING_NAME)
-	camera.CFrame = targetCFrame
-	camera.Focus = targetFocus
-	camera.FieldOfView = targetFieldOfView
-	camera.CameraType = Enum.CameraType.Custom
-	RunService.RenderStepped:Wait()
-	RunService.RenderStepped:Wait()
+	handoffEntryCamera(camera, targetCFrame, targetFocus)
 	localPlayer.CameraMinZoomDistance = originalMinZoomDistance
 	localPlayer.CameraMaxZoomDistance = originalMaxZoomDistance
+	-- Let the settled gameplay camera render once before revealing the scene UI.
+	RunService.RenderStepped:Wait()
 	return true
 end
 
@@ -403,6 +510,7 @@ local function restoreRuntimeState(deferCompletion: boolean?)
 	if deferCompletion then
 		return
 	end
+	restoreSceneGuis()
 	if loadingGui then
 		loadingGui.Enabled = false
 	end
@@ -498,6 +606,7 @@ localPlayer:SetAttribute(LoadingAttributes.LOADING_SCREEN_ACTIVE, true)
 localPlayer:SetAttribute(LoadingAttributes.LOADING_SCREEN_DONE, false)
 localPlayer:SetAttribute(LoadingAttributes.LOADING_BASE_READY, false)
 localPlayer:SetAttribute(LoadingAttributes.INTRO_HANDOFF_READY, false)
+hideSceneGuis()
 
 local template = ReplicatedFirst:WaitForChild("LoadingScreenMenu", 15)
 if not template or not template:IsA("BasePart") then

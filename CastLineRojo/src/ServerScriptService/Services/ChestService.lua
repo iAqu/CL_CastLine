@@ -13,6 +13,8 @@ export type RedeemResult = {
     resultText: string,
 }
 
+local groupClaims = {}
+
 local JOIN_GROUP_NOTIF_TEXT = "👍 Like the game and join the group to unlock!"
 
 local DailyChestReward = {
@@ -36,7 +38,7 @@ function ChestService.Client:ClaimDailyChest(player: Player): {string}
     return self.Server:ClaimDailyChest(player)
 end
 
-local function chooseDailyRewardIndex(player: Player): number
+local function chooseDailyRewardIndex(): number
     local itemList = {}
     local totalWeight = 0
     for index, weight in pairs(Constants.CHEST_DAILY_CHANCE) do
@@ -46,8 +48,6 @@ local function chooseDailyRewardIndex(player: Player): number
             WEIGHT = weight,
         })
     end
-
-    table.sort(itemList, function(a, b) return a.WEIGHT < b.WEIGHT end)
 
     local randomNum = math.random(1, totalWeight)
     local count = 0
@@ -67,23 +67,27 @@ function ChestService:ClaimDailyChest(player: Player): {string}
 		return {PotionFeatureHelper.ACQUISITION_DISABLED_MESSAGE}
 	end
 	local profile = PlayerDataService:GetProfile(player)
-    if not profile then warn "No profile found!" end
-    if not profile.Data.DailyChestLastOpenTime then warn "No daily chest data found!" end
-
-    if os.time() - profile.Data.DailyChestLastOpenTime < Constants.CHEST_OPEN_COOLDOWN then
-        warn("Daily chest cooldown not reached!")
+    if not profile or not profile:IsActive() then
+        return { "Player data is not ready." }
+    end
+    local now = os.time()
+    local lastOpenTime = profile.Data.DailyChestLastOpenTime
+    if now - (tonumber(lastOpenTime) or 0) < Constants.CHEST_OPEN_COOLDOWN then
+        return { "Daily chest cooldown not reached." }
     end
 
-    local rewardIndex = chooseDailyRewardIndex(player)
+    local rewardIndex = chooseDailyRewardIndex()
     local rewardType = DailyChestReward[rewardIndex].Type
     local rewardId = DailyChestReward[rewardIndex].Id
     local resultText = nil
     if rewardType == "Potion" then
-        Knit.GetService("PotionService"):AdjustPotionCount(player, rewardId, 1)
+        profile.Data.DailyChestLastOpenTime = now
+        if not Knit.GetService("PotionService"):AdjustPotionCount(player, rewardId, 1) then
+            profile.Data.DailyChestLastOpenTime = lastOpenTime
+            return { "Could not claim this reward." }
+        end
         resultText = Constants.NOTIFICATION.GOT_POTION:gsub("#POTION", PurchaseDataHelper.GetName(rewardId))
     end
-
-    profile.Data.DailyChestLastOpenTime = os.time()
 
     self.Client.ClaimDailyChestComplete:Fire(player, profile.Data.DailyChestLastOpenTime)
 
@@ -108,20 +112,29 @@ function ChestService:ClaimGroupChest(player: Player): RedeemResult
         return {isSuccess = false, resultText = "Group chest already claimed!"}
     end
 
-    local isInGroup = false
-    local ok, result = pcall(function()
-        return player:IsInGroupAsync(game.CreatorId)
-    end)
-    if ok then
-        isInGroup = result
-    else
-        warn("ChestService: IsInGroupAsync failed for", player, result)
+    if groupClaims[player] then
+        return {isSuccess = false, resultText = "Group chest claim is in progress."}
     end
-    if not isInGroup and profile.Data.GroupJoinPromptSucceeded ~= true then
+
+    groupClaims[player] = true
+    local ok, isInGroup = pcall(player.IsInGroupAsync, player, game.CreatorId)
+    groupClaims[player] = nil
+    if PlayerDataService:GetProfile(player) ~= profile or not profile:IsActive() then
+        return {isSuccess = false, resultText = "Player data is not ready."}
+    end
+    if profile.Data.GroupChestIsClaimed then
+        return {isSuccess = false, resultText = "Group chest already claimed!"}
+    end
+    if not ok then
+        warn("ChestService: IsInGroupAsync failed for", player, isInGroup)
+    end
+    if (not ok or not isInGroup) and profile.Data.GroupJoinPromptSucceeded ~= true then
         return {isSuccess = false, resultText = JOIN_GROUP_NOTIF_TEXT}
     end
 
-    PlayerDataService:AdjustWins(player, 5000)
+    if not PlayerDataService:AdjustWins(player, 5000) then
+        return {isSuccess = false, resultText = "Could not claim this reward."}
+    end
     profile.Data.GroupChestIsClaimed = true
     self.Client.ClaimGroupChestComplete:Fire(player)
     return {isSuccess = true, resultText = "Received 5000 Wins!"}
@@ -144,6 +157,9 @@ function ChestService:MarkGroupJoined(player: Player): boolean
         return false
     end
 
+    if PlayerDataService:GetProfile(player) ~= profile or not profile:IsActive() then
+        return false
+    end
     profile.Data.GroupJoinPromptSucceeded = true
     self.Client.MarkGroupJoinedComplete:Fire(player)
     return true

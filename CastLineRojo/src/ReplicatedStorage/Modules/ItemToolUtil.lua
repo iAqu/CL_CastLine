@@ -158,7 +158,7 @@ function ItemToolUtil.Create(instanceId: string, item: ItemConfig, instanceData:
 		"%s | <font color=\"%s\">%s</font> | <font color=\"%s\">$%s</font>",
 		item.DisplayName,
 		TITLE_WEIGHT_COLOR,
-		WeightFormat.FormatKgCompact(instanceData.Weight),
+		WeightFormat.FormatKg(instanceData.Weight),
 		TOOLTIP_PRICE_COLOR,
 		NumberUtil.FormatItemPriceCompact(instanceData.Price)
 	)

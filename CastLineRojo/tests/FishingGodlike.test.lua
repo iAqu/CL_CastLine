@@ -103,11 +103,11 @@ P.Destroy(owner)
 assert(preloads == 8)
 
 local new = require("./helpers/FishingHarness")
-for _, progress in { 0.95, 0.950001, 1 } do
+for _, progress in { 0.949999, 0.950001, 1 } do
 	local h = new()
 	h.begin("NONE")
+	local result = h.castAt(progress)
 	local start = h.now
-	local result = h.client:Cast(h.player, h.token, progress)
 	assert(result.ok)
 	local profile = Config.GetCastProfile(result.castRating)
 	local earliest = start + profile.LeadTime + profile.ReleaseTime + 1 -- FishingHarness uses a one-second flight

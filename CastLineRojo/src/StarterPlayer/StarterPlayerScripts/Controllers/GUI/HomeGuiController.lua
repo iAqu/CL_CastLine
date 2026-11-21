@@ -3,6 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local StarterPlayer = game:GetService("StarterPlayer")
 local SocialService = game:GetService("SocialService")
+local StarterGui = game:GetService("StarterGui")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
 
@@ -132,14 +133,9 @@ if not PetFeatureConfig.Enabled then
     end
 end
 
-local SpinningWheelGui = PlayerGUI:WaitForChild("SpinningWheelGui")
 local IndexGui = PlayerGUI:WaitForChild("IndexGui_New")
 local SettingsGui = PlayerGUI:WaitForChild("SettingsGui")
-local UgcListGui = PlayerGUI:WaitForChild("UgcListGui")
 local StoreGui = PlayerGUI:WaitForChild("StoreGui")
-local RebirthGui = PlayerGUI:WaitForChild("RebirthGui")
-local TradeMenuGui = PlayerGUI:WaitForChild("TradeMenuGui")
-local HalloweenDailyRewardGui = PlayerGUI:WaitForChild("HalloweenDailyRewardGui")
 local currentWinsValue = Instance.new("NumberValue")
 local currentTrophyValue = Instance.new("NumberValue")
 
@@ -468,7 +464,7 @@ function HomeGuiController:AddTopBarIcon(gui, image: string, order: number, imag
             return
         end
         if not gui.Enabled then
-            if gui == TradeMenuGui then
+            if gui.Name == "TradeMenuGui" then
                 local playerData = PlayerDataController:GetData()
                 if not playerData then warn("No player data found!") return end
 
@@ -480,7 +476,7 @@ function HomeGuiController:AddTopBarIcon(gui, image: string, order: number, imag
             end
 
             local isHideHomeGui = false
-            if gui == SpinningWheelGui then
+            if gui.Name == "SpinningWheelGui" then
                 isHideHomeGui = true
             end
             GuiAnimation.OpenGui(gui, isHideHomeGui)
@@ -888,7 +884,10 @@ function HomeGuiController:KnitStart()
 
     -- Trade 功能已停用：保留旧资源但移除所有玩家入口。
     RightMenuFrame.TradeFrame.Visible = false
-    TradeMenuGui.Enabled = false
+    local tradeMenuGui = PlayerGUI:FindFirstChild("TradeMenuGui")
+    if tradeMenuGui then
+        tradeMenuGui.Enabled = false
+    end
 
     PickUpButton.Activated:Connect(activatePickUpTarget)
 
@@ -918,6 +917,7 @@ function HomeGuiController:KnitStart()
     end)
 
     StarterPackButton.Activated:Connect(function()
+        if not StarterGui:FindFirstChild("LimitedStarterPackGui") then return end
         if not GuiHelper.CanOpenGui() then return end
         local LimitedStarterPackGuiController = Knit.GetController("LimitedStarterPackGuiController")
         if LimitedStarterPackGuiController:IsOpen() then
@@ -997,6 +997,7 @@ function HomeGuiController:KnitStart()
     -- end)
 
     OnlineRewardButton.Activated:Connect(function()
+        if not StarterGui:FindFirstChild("OnlineRewardGui") then return end
         if not GuiHelper.CanOpenGui() then return end
         local OnlineRewardGuiController = Knit.GetController("OnlineRewardGuiController")
         if OnlineRewardGuiController:IsOpen() then
@@ -1069,6 +1070,8 @@ function HomeGuiController:KnitStart()
     end)
 
     RebirthButton.Activated:Connect(function()
+        local RebirthGui = PlayerGUI:FindFirstChild("RebirthGui")
+        if not RebirthGui then return end
         if not GuiHelper.CanOpenGui() then return end
 
         if not RebirthGui.Enabled then
@@ -1089,6 +1092,7 @@ function HomeGuiController:KnitStart()
     -- end)
 
     AchievementButton.Activated:Connect(function()
+        if not StarterGui:FindFirstChild("AchievementGui") then return end
         if not GuiHelper.CanOpenGui() then return end
         local AchievementGuiController = Knit.GetController("AchievementGuiController")
         if AchievementGuiController:IsOpen() then
@@ -1099,6 +1103,7 @@ function HomeGuiController:KnitStart()
     end)
 
     SeasonButton.Activated:Connect(function()
+        if not StarterGui:FindFirstChild("SeasonGui") then return end
         if not GuiHelper.CanOpenGui() then return end
         -- if GameDataUtil.IsSeasonSystemLocked(PlayerDataController:GetData()) then
         --     NotificationClient.Notify("🔒 Complete tutorial to unlock")

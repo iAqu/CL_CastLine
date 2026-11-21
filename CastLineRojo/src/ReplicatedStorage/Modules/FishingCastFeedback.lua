@@ -86,11 +86,24 @@ local function rainbow(owner)
 	state.gradient.Enabled = true
 end
 
+local function restoreMeterDisplayOrder(meterGui, state)
+	local originalDisplayOrder = state.originalMeterDisplayOrder
+	if originalDisplayOrder ~= nil then
+		meterGui.DisplayOrder = originalDisplayOrder
+		state.originalMeterDisplayOrder = nil
+	end
+end
+
 function Feedback.Show(owner, rating, now)
 	Feedback.Bind(owner)
 	local state = owner.meterFeedback
 	state.finished = false
 	local meter = owner.meter
+	local popupDisplayOrder = owner.popup.Parent.DisplayOrder
+	if meter.gui.DisplayOrder >= popupDisplayOrder then
+		state.originalMeterDisplayOrder = state.originalMeterDisplayOrder or meter.gui.DisplayOrder
+		meter.gui.DisplayOrder = popupDisplayOrder - 1
+	end
 	local color = Color3.fromRGB(unpack(rating.Color))
 	owner.castRating = rating.Id
 	owner.meterLockedAt = owner.meterLockedAt or now
@@ -132,7 +145,11 @@ function Feedback.Update(owner, now)
 	for _, entry in ipairs(state.fades) do
 		entry.object[entry.property] = entry.base + (1 - entry.base) * fade
 	end
-	owner.meter.gui.Enabled = now < owner.meterLockedAt + (settings.Hold + settings.Exit)
+	local meterGui = owner.meter.gui
+	meterGui.Enabled = now < owner.meterLockedAt + (settings.Hold + settings.Exit)
+	if not meterGui.Enabled then
+		restoreMeterDisplayOrder(meterGui, state)
+	end
 	owner.popupScale.Scale = 0.3 + 0.7 * ease(elapsed, 0.3, Enum.EasingStyle.Back)
 	local viewport = Workspace.CurrentCamera.ViewportSize
 	local rise = settings.PopupRise * viewport.Y * ease(elapsed - 0.15, settings.PopupDuration - 0.15)
@@ -146,14 +163,18 @@ function Feedback.Update(owner, now)
 		math.clamp((elapsed - settings.PopupFadeAt) / (settings.PopupDuration - settings.PopupFadeAt), 0, 1)
 	owner.popup.TextTransparency, owner.popupStroke.Transparency = popupFade, popupFade
 	owner.popup.Visible = now < owner.meterLockedAt + settings.PopupDuration
-	if not owner.popup.Visible and not owner.meter.gui.Enabled then
+	if not owner.popup.Visible and not meterGui.Enabled then
 		state.finished = true
 	end
 end
 
 function Feedback.Destroy(owner)
 	local state = owner.meterFeedback
-	if state and state.createdGradient then
+	if not state then
+		return
+	end
+	restoreMeterDisplayOrder(owner.meter.gui, state)
+	if state.createdGradient then
 		state.gradient:Destroy()
 	end
 	owner.meterFeedback = nil

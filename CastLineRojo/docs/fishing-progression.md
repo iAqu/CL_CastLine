@@ -17,28 +17,19 @@
 
 免费饵按 MutationsData.Chance 抽一次。普通鱼在每轮出现鱼影前，由服务端根据当前训练等级的最大捕获重量确定重量：基础重量超过上限时缩到上限，否则逐次乘 3.375，保留最后一个不超过上限的重量；该轮体型保持固定。鱼竿、鱼饵和抛竿幸运只展示。保留鱼、鱼竿价格及变异收益倍率；鱼蛋沿用原重量规则。
 
-鱼饵在成功收鱼时扣现金或扣 1 次付费权益。选择时检查余额，发鱼提交前再次校验会话、余额和权益。同一场钓鱼漏钩后重试时保留鱼种和变异，下轮出现鱼影前按最新训练上限重新确定普通鱼重量。退出钓鱼、重生或断线会丢弃待结算结果，重进时可以重新选饵并重新抽取。已提交的收鱼只发放和扣费一次。
+现金饵在成功收鱼时扣费。第四档使用已购买的同竿次数，服务端接受抛竿时消耗 1 次，漏钩后仍可在本场用同一鱼种和变异重试。已完成付款但未抛竿即离开时，剩余次数可在同一根鱼竿上补用。
 
-## 配置第四档产品
+## 第四档产品
 
-在 `src/ReplicatedStorage/Modules/FishingBaitConfig.lua` 的 `ProductIds` 中填入：
+每根鱼竿的第四档从 `PurchaseData.PremiumBait.ProductId` 读取商品 ID。正式版 Pull Up a Fish 使用 Roblox 原生窗口处理真实购买，#CL_DEV 的 Studio Play 使用同一 ID 模拟购买。卡片由 MarketplaceService 查询实际价格，基准价为 9 Robux。购买意向记录原会话和鱼竿，商品通过钓鱼界面售卖。
 
-```lua
-ProductIds = {
-    Rod_101 = 1234567890,
-    -- 其余鱼竿使用各自独立的 Developer Product ID。
-}
-```
-
-每个产品购买一次，获得对应鱼竿 1 次彩虹鱼饵。不同鱼竿不得复用同一个 Product ID；空值/0/重复映射不开放购买。界面向 MarketplaceService 查询产品的实际 R 币价格。未配置 ID 时已有权益仍能使用。
-
-沿用 PurchaseService 唯一的 ProcessReceipt 入口；凭 PurchaseId 去重，保存权益与收据后，用 ProfileService.MetaTagsLatest 确认已持久化才返回 PurchaseGranted。保存超时返回 NotProcessedYet，重试不会重复发放；客户端关闭购买窗口只触发重新检查，不发权益。
+`PurchaseService.ProcessReceipt` 按 Roblox 的 `PurchaseId` 去重，按保存的意向向对应鱼竿发放 1 次权益，再用 ProfileService.MetaTagsLatest 确认持久化。客户端关闭购买窗口后向服务端查询状态。收据在退出后送达时仍发给原鱼竿；收据尚未确认期间可以选择免费饵和现金饵。
 
 ## 存档
 
-`FishingProgress` v2 保存版本、新手进度、每竿 MissHigh，以及 Credits、Receipts、ReceiptRevision。旧存档首次加载时只清除各鱼竿的 Pending。新玩家首次初始化时按历史会话、开场奖励、累计重量、物品和图鉴判断是否为老账号。鱼的库存写入、扣费、推进保底和清除本场待结算结果在同一个不让出执行权的提交段完成，美术呈现和通知在提交后执行。
+`FishingProgress` v2 保存新手进度、每竿 MissHigh，以及 Credits、Receipts、ReceiptRevision。付费饵将待确认意向和新发放权益的写入版本保存在 `PendingBaitPurchase` 和 `BaitCreditRevisions`。存档里的同竿旧权益继续可用。旧存档首次加载时只清除各鱼竿的 Pending。新玩家首次初始化时按历史会话、开场奖励、累计重量、物品和图鉴判断是否为老账号。鱼的库存写入、现金扣费、推进保底和清除本场待结算结果在同一个不让出执行权的提交段完成，美术呈现和通知在提交后执行。
 
-验证：运行 `python3 tools/run-tests.py FishingProgression FishingBaitPurchases FishingService FishingCastLuck FishingLuckyRewards FishingIntro FishingTransition`，并在项目目录运行 selene。真实 R 币订单仍需配置有效产品 ID 后验证。
+验证可运行 `python3 tools/run-tests.py FishingProgression FishingBaitPurchases FishingService FishingIntro FishingTransition`，并在项目目录运行 selene。
 
 ## 初版验证记录
 

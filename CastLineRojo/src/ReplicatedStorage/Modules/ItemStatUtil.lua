@@ -1,4 +1,5 @@
 local RarityConfig = require(script.Parent.RarityConfig)
+local WeightFormat = require(script.Parent.WeightFormat)
 
 local ItemStatUtil = {}
 
@@ -30,12 +31,11 @@ local function getPositiveMultiplier(value: unknown): number
 	return multiplier
 end
 
-local function getWeightRatio(item: ItemConfig, actualWeight: number): number
-	local defaultWeight = tonumber(item.DefaultWeight) or 0
-	if defaultWeight <= 0 then
-		return 1
-	end
-	return math.max(0, actualWeight) / defaultWeight
+local function getRawScaleRatio(defaultWeight: number?, actualWeight: number, modelDefaultScale: number?): number
+	local baseWeight = tonumber(defaultWeight) or 0
+	local weightRatio = if baseWeight <= 0 then 1 else math.max(0, actualWeight) / baseWeight
+	local weightScale = if weightRatio > 0 then weightRatio ^ (1 / 3) else 1
+	return getPositiveMultiplier(modelDefaultScale) * weightScale
 end
 
 function ItemStatUtil.RollWeight(item: ItemConfig, random: Random?): number
@@ -48,23 +48,48 @@ function ItemStatUtil.RollWeight(item: ItemConfig, random: Random?): number
 	return math.round(rawWeight * 10) / 10
 end
 
-local SIZE_TITLES = { "Big", "Large", "Huge", "Colossal", "Gigantic", "Titanic", "Monstrous", "Cosmic", "Infinite" }
+local SIZE_TIERS = {
+	{ name = "Big", minScale = 3.6 },
+	{ name = "Large", minScale = 5.2 },
+	{ name = "Huge", minScale = 6.6 },
+	{ name = "Colossal", minScale = 7.7 },
+	{ name = "Gigantic", minScale = 8.7 },
+	{ name = "Titanic", minScale = 9.5 },
+	{ name = "Monstrous", minScale = 10.4 },
+	{ name = "Cosmic", minScale = 11.2 },
+	{ name = "Infinite", minScale = 12 },
+}
 
-function ItemStatUtil.GetSizeTitle(item: ItemConfig, actualWeight: number?): string?
-	local weight, defaultWeight = tonumber(actualWeight), tonumber(item.DefaultWeight)
-	if not weight or not defaultWeight
-		or weight ~= weight or defaultWeight ~= defaultWeight
-		or weight == math.huge or defaultWeight == math.huge
-		or defaultWeight <= 0 or weight <= defaultWeight
-	then
+type FishWeightConfig = { DefaultWeight: number?, ModelDefaultScale: number? }
+
+local function positiveWeight(value: unknown): number?
+	local weight = tonumber(value)
+	return if weight and weight > 0 and weight < math.huge then weight else nil
+end
+
+function ItemStatUtil.GetSizeTitle(item: FishWeightConfig, actualWeight: number?): string?
+	local weight, defaultWeight = positiveWeight(actualWeight), positiveWeight(item.DefaultWeight)
+	if not weight or not defaultWeight then
 		return nil
 	end
-	local size = getWeightRatio(item, weight) ^ (1 / 3)
-	if size <= 1.0001 then
+	local rawScale = getRawScaleRatio(defaultWeight, weight, item.ModelDefaultScale)
+	for index = #SIZE_TIERS, 1, -1 do
+		local tier = SIZE_TIERS[index]
+		if rawScale >= tier.minScale then
+			return tier.name
+		end
+	end
+	return nil
+end
+
+function ItemStatUtil.FormatFishWeight(item: FishWeightConfig, actualWeight: number?): string?
+	local weight = positiveWeight(actualWeight)
+	if not weight then
 		return nil
 	end
-	local level = math.max(1, math.floor(math.log(size) / math.log(1.5) + 0.5))
-	return SIZE_TITLES[math.min(level, #SIZE_TITLES)]
+	local weightText = WeightFormat.FormatKg(weight)
+	local sizeTitle = ItemStatUtil.GetSizeTitle(item, weight)
+	return if sizeTitle then sizeTitle .. " · " .. weightText else weightText
 end
 
 function ItemStatUtil.GetWeightValueMultiplier(item: ItemConfig, actualWeight: number?): number
@@ -189,9 +214,7 @@ function ItemStatUtil.CompressScaleRatio(template: Model, rawRatio: number): num
 end
 
 function ItemStatUtil.GetScaleRatio(item: ItemConfig, actualWeight: number, template: Model): (number, number)
-	local weightRatio = getWeightRatio(item, actualWeight)
-	local weightScale = if weightRatio > 0 then weightRatio ^ (1 / 3) else 1
-	local rawRatio = getPositiveMultiplier(item.ModelDefaultScale) * weightScale
+	local rawRatio = getRawScaleRatio(item.DefaultWeight, actualWeight, item.ModelDefaultScale)
 	return ItemStatUtil.CompressScaleRatio(template, rawRatio), rawRatio
 end
 

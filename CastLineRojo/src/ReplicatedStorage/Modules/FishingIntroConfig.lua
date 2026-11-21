@@ -2,6 +2,7 @@
 return {
 	Version = 1,
 	StarterFishId = "Fish_102",
+	RewardUidPrefix = "FishingIntro_",
 	SuccessHold = 1.4,
 	RaiseFishTime = 0.25,
 	Instructions = {

@@ -70,8 +70,10 @@ local function new()
 	h.humanoid = { Health = 100, HipHeight = 2, RigType = "R15", Died = signal() }
 	h.player = {
 		UserId = 12,
+		GetNetworkPing = function() return h.networkPing or 0 end,
 		Character = instance("Model", { HumanoidRootPart = rootPart, Humanoid = h.humanoid }),
 		CharacterRemoving = signal(),
+		GetAttribute = function(self, name) return self[name] end,
 		SetAttribute = function(self, name, value)
 			self[name] = value
 		end,
@@ -81,6 +83,21 @@ local function new()
 	h.slotReleased, h.playerRemoving = signal(), signal()
 	h.profile =
 		{ Data = { Wins = 100000, OwnedRods = { Rod_101 = true, Rod_102 = true, Rod_103 = true }, EquippedRodId = "Rod_101" } }
+	h.profile.MetaData = { MetaTags = {}, MetaTagsLatest = {} }
+	function h.profile:IsActive()
+		return h.ready
+	end
+	function h.profile:SetMetaTag(key, value)
+		self.MetaData.MetaTags[key] = value
+	end
+	function h.profile:Save()
+		h.saveCalls = (h.saveCalls or 0) + 1
+		if not h.pauseSave then
+			self.MetaData.MetaTagsLatest = table.clone(self.MetaData.MetaTags)
+		end
+	end
+	h.purchaseData = loadSource("src/ReplicatedFirst/Data/PurchaseData.lua")
+	h.prompts = {}
 	h.rods = loadSource("src/ReplicatedFirst/Data/RodsData.lua")
 	h.baits = loadSource("src/ReplicatedFirst/Data/BaitsData.lua")
 	h.fishes = {}
@@ -165,6 +182,7 @@ local function new()
 			{ __index = getfenv() }
 		)
 	)
+	h.fishingSpot = modules.FishingSpotUtil
 	local data = {
 		FishesData = h.fishes,
 		BaitsData = h.baits,
@@ -188,6 +206,16 @@ local function new()
 	end
 	local delayed, encoded = {}, {}
 	local services = {
+		MarketplaceService = {
+			PromptProductPurchase = function(_, player, productId)
+				assert(player == h.player)
+				table.insert(h.prompts, productId)
+				if h.onPrompt then
+					h.onPrompt()
+				end
+			end,
+		},
+		RunService = { IsStudio = function() return h.studio == true end },
 		HttpService = {
 			JSONEncode = function(_, value)
 				table.insert(encoded, table.clone(value))
@@ -208,6 +236,7 @@ local function new()
 			end,
 		},
 		ReplicatedFirst = {
+			Data = { PurchaseData = h.purchaseData },
 			WaitForChild = function()
 				return {
 					WaitForChild = function(_, name)
@@ -238,10 +267,16 @@ local function new()
 						end
 						if name == "EventFishService" then
 							return {
-								GetActiveFish = function()
-									return h.activeEvent
+								GetActiveFish = function(_, now)
+									local window = h.eventWindow
+									if window and now >= window.StartsAt and now < window.EndsAt then
+										return h.activeEvent, window
+									end
 								end,
 							}
+						end
+						if name == "FishingIntroService" then
+							return { IsActive = function() return h.introActive == true end }
 						end
 						return {
 							GetLuckMultiplier = function()
@@ -255,6 +290,7 @@ local function new()
 	}
 	h.env = setmetatable({
 		game = {
+			GameId = h.baitConfig.PurchaseUniverseId,
 			GetService = function(_, name)
 				return services[name]
 			end,
@@ -267,7 +303,16 @@ local function new()
 				return h.rng
 			end,
 		},
+		Vector3 = { zero = vector(0, 0, 0) },
+		Enum = { ProductPurchaseChannel = { ExperienceDetailsPage = "ExperienceDetailsPage" } },
+		os = { clock = function() return h.now end },
 		task = {
+			wait = function(seconds)
+				h.now += seconds
+				if h.onWait then
+					h.onWait()
+				end
+			end,
 			delay = function(seconds, callback)
 				table.insert(delayed, { at = h.now + seconds, callback = callback })
 			end,
@@ -276,6 +321,11 @@ local function new()
 		script = {
 			Parent = {
 				PlayerDataService = h.playerData,
+				PaidItemPolicy = {
+					Get = function()
+						return if h.noPolicy then nil else { ArePaidRandomItemsRestricted = h.restrictPaid == true }
+					end,
+				},
 				OnboardingAnalyticsService = {
 					Step = function(_, _, ...) recordAnalytics("Step", ...) end,
 					Detail = function(_, _, ...) recordAnalytics("Detail", ...) end,
@@ -316,9 +366,21 @@ local function new()
 		},
 	}, { __index = getfenv() })
 	modules.FishingObserverState = loadSource(root .. "FishingObserverState.lua", h.env)
+	h.env.script.Parent.PurchasePersistence =
+		require("./helpers/PurchasePersistenceMock")(h.env.os.clock, h.env.task.wait)
+	h.purchases = loadSource("src/ServerScriptService/Services/FishingBaitPurchases.lua", h.env)
+	h.env.script.Parent.FishingBaitPurchases = h.purchases
 	function h.reload()
 		h.service = loadSource("src/ServerScriptService/Services/FishingService.lua", h.env)
 		h.client = h.service.Client
+		local selectBait = h.client.SelectBait
+		function h.client:SelectBait(player, token, bait, purchaseOnSelect)
+			local result = selectBait(self, player, token, bait, purchaseOnSelect)
+			if result.ok then
+				h.meterStartsAt = result.meterStartsAt
+			end
+			return result
+		end
 	end
 	function h.presentation()
 		return modules.FishingObserverState.Decode(h.player.Character:GetAttribute(modules.FishingObserverState.Attribute))
@@ -343,8 +405,17 @@ local function new()
 		end
 		return r
 	end
+	function h.castAt(progress)
+		local meter = config.Meter
+		local acceleration = meter.BaseSpeed * (meter.TopSpeedFactor - 1)
+		local period = 2 * math.log(meter.TopSpeedFactor) / acceleration
+		local elapsed = math.log(1 + (meter.TopSpeedFactor - 1) * (progress or 1)) / acceleration
+		local cycles = math.max(0, math.ceil((h.now - h.meterStartsAt - elapsed) / period))
+		h.now = h.meterStartsAt + cycles * period + elapsed + (h.networkPing or 0) / 2
+		return h.client:Cast(h.player, h.token)
+	end
 	function h.cast()
-		assert(h.client:Cast(h.player, h.token, 1).ok)
+		assert(h.castAt(1).ok)
 		h.now += 5
 		local timerCount = #delayed
 		local r = h.client:NextRound(h.player, h.token, 0)

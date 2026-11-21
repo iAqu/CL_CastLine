@@ -120,15 +120,17 @@ function H.attach(owner, width, height, markerY)
 	marker.children = { label }
 	local scale = object("UIScale")
 	table.insert(holder.children, scale)
+	local meterGui, popupGui = object("ScreenGui"), object("ScreenGui")
+	meterGui.DisplayOrder, popupGui.DisplayOrder = 0, 0
 	local popup, stroke, popupScale = object("TextLabel"), object("UIStroke"), object("UIScale")
+	popup.Parent = popupGui
 	popup.AbsoluteSize = { X = w * 0.2, Y = h * 0.07 }
 	popup.Text = ""
 	popup.children = { stroke, popupScale }
 	popup.Visible = false
 	owner.originals = owner.originals or {}
 	owner.createdScales = owner.createdScales or {}
-	owner.meter =
-		{ holder = holder, gui = object("ScreenGui"), bar = bar, marker = marker, label = label, prompt = prompt }
+	owner.meter = { holder = holder, gui = meterGui, bar = bar, marker = marker, label = label, prompt = prompt }
 	owner.popup, owner.popupStroke, owner.popupScale = popup, stroke, popupScale
 	owner.folder = owner.folder or { SetAttribute = function() end }
 	owner.castFeedback = feedback

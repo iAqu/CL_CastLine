@@ -12,7 +12,10 @@ success.cast()
 local cast = success.presentation()
 assert(cast.phase == "Cast" and cast.distance > 0 and cast.castRating and cast.startedAt < success.now)
 assert(cast.catchId == nil and cast.weight == nil and cast.mutationId == nil and cast.seed == nil)
-assert(not success.client:Hook(success.player, success.token, success.round.round, success.now - 10).ok)
+local lateAt = success.round.readyAt + 3
+success.now = lateAt
+assert(not success.client:Hook(success.player, success.token, success.round.round, lateAt - 2).ok,
+	"The receive window cannot be extended by an earlier timestamp")
 assert(success.presentation() == cast)
 success.onGrant = function()
 	assert(success.presentation().catchId == nil)

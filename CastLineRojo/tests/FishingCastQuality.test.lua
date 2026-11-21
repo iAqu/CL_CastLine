@@ -15,7 +15,12 @@ for _, case in ipairs(cases) do
 	assert(C.GetCastRating(case[1]).Id == case[2])
 	local h = new()
 	h.begin("NONE")
-	local response = h.client:Cast(h.player, h.token, case[1])
+	local nearBoundary = case[1] == 0.5 or case[1] == 0.8 or case[1] == 0.95
+	local timedProgress = case[1]
+	if nearBoundary then
+		timedProgress += if case[1] == 0.95 then -0.000001 else 0.000001
+	end
+	local response = h.castAt(timedProgress)
 	assert(response.ok and response.castRating == case[2])
 	assert(not h.client:Cast(h.player, h.token, 1 - case[1]).ok, "An accepted cast cannot change grade")
 	h.now += 5
@@ -25,9 +30,12 @@ for _, case in ipairs(cases) do
 	local retry = h.client:NextRound(h.player, h.token, 1)
 	assert(retry.ok and retry.fishId == r.fishId and retry.castRating == r.castRating)
 end
-local missing = new()
-missing.begin("NONE")
-assert(not missing.client:Cast(missing.player, missing.token).ok, "Missing progress is invalid")
+local receiving = new()
+receiving.begin("NONE")
+assert(not receiving.client:Cast(receiving.player, receiving.token, 1).ok, "The meter start is enforced")
+receiving.now = receiving.meterStartsAt
+local first = receiving.client:Cast(receiving.player, receiving.token, 1)
+assert(first.ok and first.castRating == "BAD" and first.castProgress == 0, "Client-supplied progress cannot affect the grade")
 local h = new()
 local P = h.progression
 local expected = {
@@ -97,7 +105,7 @@ for _, value in ipairs({ 0, 0.5, 0.8, 1 }) do
 		return model == "Fish_103"
 	end
 	fixture.begin("Bait_102")
-	assert(fixture.client:Cast(fixture.player, fixture.token, value).ok)
+	assert(fixture.castAt(value).ok)
 	fixture.now += 5
 	fixture.round = fixture.client:NextRound(fixture.player, fixture.token, 0)
 	assert(fixture.hook().ok)
@@ -143,3 +151,46 @@ for _, case in ipairs(cases) do
 	end
 	assert(owner.meter.marker.BackgroundTransparency == 0.2 and owner.meter.holder.BackgroundTransparency == 0.2)
 end
+
+local feedback = feedbackHarness.feedback
+local rating = C.GetCastRating(0.8)
+for _, originalOrder in ipairs({ 9, 10, 15 }) do
+	local owner = feedbackHarness.attach({})
+	local meterGui = owner.meter.gui
+	owner.popup.Parent.DisplayOrder = 10
+	meterGui.DisplayOrder = originalOrder
+
+	feedback.Show(owner, rating, 10)
+	assert(meterGui.DisplayOrder == 9, "Rating text must render in front of the meter")
+	feedback.Update(owner, 11.19)
+	assert(meterGui.Enabled and meterGui.DisplayOrder == 9, "Keep the rating on top until the meter exits")
+	feedback.Update(owner, 11.2)
+	assert(not meterGui.Enabled and meterGui.DisplayOrder == originalOrder, "Restore the meter layer on exit")
+	assert(owner.popup.Visible, "The rating animation continues after the meter exits")
+	feedback.Destroy(owner)
+end
+
+do
+	local owner = feedbackHarness.attach({})
+	local meterGui = owner.meter.gui
+	meterGui.DisplayOrder = 0
+	feedback.Show(owner, rating, 10)
+	assert(meterGui.DisplayOrder == -1, "Move an equal-order meter one layer behind the rating")
+	owner.popup.Parent.DisplayOrder = -1
+	feedback.Show(owner, rating, 10.1)
+	assert(meterGui.DisplayOrder == -2, "Keep the rating above the meter when feedback is shown again")
+	feedback.Destroy(owner)
+	assert(meterGui.DisplayOrder == 0, "Early cleanup restores the original layer after repeated feedback")
+end
+
+local latency = new()
+latency.networkPing = 0.32
+latency.begin("NONE")
+local cast = latency.castAt(0.7)
+assert(cast.castRating == "GOOD" and math.abs(cast.castProgress - 0.7) < 1e-8)
+latency.now += 5
+local round = latency.client:NextRound(latency.player, latency.token, 0)
+latency.now = round.readyAt + 0.99
+assert(not latency.client:Hook(latency.player, latency.token, round.round).ok, "The bite has not started")
+latency.now = round.readyAt + 2.12
+assert(latency.client:Hook(latency.player, latency.token, round.round).ok, "Allow bounded measured network delay")

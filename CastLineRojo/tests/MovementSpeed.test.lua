@@ -23,8 +23,8 @@ for _, zone in zonesData do
 end
 
 for _, path in {
-	"src/ReplicatedStorage/Modules/EventStateUtil.lua",
-	"src/ServerScriptService/Services/EventService.lua",
+	"src/ServerScriptService/Services/EventFishService.lua",
+	"src/StarterPlayer/StarterPlayerScripts/Controllers/EventFishController.lua",
 } do
 	assert(not read(path):find("GetMoveSpeedMultiplier", 1, true), "Events must not expose movement speed multipliers")
 end

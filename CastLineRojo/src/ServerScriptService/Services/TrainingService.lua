@@ -296,9 +296,9 @@ function Service:_step(player, dt)
 		return
 	end
 	state.elapsed += dt
-	if not state.onboardingTrainingObserved and state.data.FishingOnboarding
-		and state.data.FishingOnboarding.Stage == "Train"
-	then
+	local onboarding = state.data.FishingOnboarding
+	local isOnboardingTraining = onboarding and onboarding.Stage == "Train"
+	if isOnboardingTraining and not state.onboardingTrainingObserved then
 		-- The roster can begin this step while the player is already training.
 		state.onboardingTrainingObserved = true
 		Analytics:Step(player, "TrainingStarted")
@@ -313,10 +313,12 @@ function Service:_step(player, dt)
 			Analytics:Growth(player, "CL_TrainingLevelUp_v1", gained, state.training.TrainingID,
 				state.training.Level, multiplier)
 		end
-		if state.training.Level >= Onboarding.TrainingLevel
-			and Onboarding.Advance(player, state.data, "Train", "StopTraining")
-		then
+		if isOnboardingTraining and state.training.Level >= 2 and not state.onboardingTrainingLevel2Observed then
+			state.onboardingTrainingLevel2Observed = true
 			Analytics:Step(player, "TrainingLevel2")
+		end
+		if isOnboardingTraining and state.training.Level >= Onboarding.TrainingLevel then
+			Onboarding.Advance(player, state.data, "Train", "StopTraining")
 		end
 		state.training.LastActiveAt = os.time()
 		self:_publish(player)

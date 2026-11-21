@@ -8,4 +8,5 @@ end
 return require("./helpers/RarityHarness")({
 	RarityConfig = read("RarityConfig"),
 	ItemStatUtil = read("ItemStatUtil"),
+	WeightFormat = read("WeightFormat"),
 }).load("ItemStatUtil")

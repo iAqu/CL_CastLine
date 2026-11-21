@@ -66,6 +66,7 @@ local income = loadSource(modulesPath .. "PlotFishIncome.lua", {
 	require = function(value) return value end,
 })
 local modules = {
+	GuiUtil = { SetRarityGradient = function(label, rarity) label.gradientRarity = rarity end },
 	MutationDataUtil = mutationData,
 	NumberUtil = { FormatItemPriceCompact = tostring },
 	PlotFishIncome = income,
@@ -96,11 +97,12 @@ function template:Clone()
 end
 
 local titleGui = instance("ScreenGui", { FishTitleTemplate = template })
-local item = { DisplayName = "Duck", CpsPrice = 5 }
+local item = { DisplayName = "Duck", CpsPrice = 5, Rarity = "Rare" }
 local function assertFishTitle(mutationId, expectedLabel, expectedCps)
 	local title = assert(fishTitle.Create(titleGui, item, mutationId))
 	local frame = assert(title:FindFirstChild("Frame"))
 	assert(frame:FindFirstChild("NameLabel").Text == item.DisplayName, "Fish titles must show only the fish name")
+	assert(frame:FindFirstChild("NameLabel").gradientRarity == item.Rarity, "Fish titles use the fish rarity gradient")
 	assert(frame:FindFirstChild("CpsLabel").Text == expectedCps)
 	for _, name in mutationNames do
 		local label = frame:FindFirstChild("MutationLabel_" .. name)
@@ -110,9 +112,9 @@ local function assertFishTitle(mutationId, expectedLabel, expectedCps)
 end
 
 assertFishTitle(nil, nil, "$5/s")
-assertFishTitle("Golden", "Golden", "$7/s")
-assertFishTitle("Diamond", "Diamond", "$10/s")
-assertFishTitle("Rainbow", "Rainbow", "$12/s")
+assertFishTitle("Golden", "Golden", "$10/s")
+assertFishTitle("Diamond", "Diamond", "$25/s")
+assertFishTitle("Rainbow", "Rainbow", "$50/s")
 assertFishTitle("Mint", nil, "$5/s")
 assertFishTitle("Unknown", nil, "$5/s")
 assert(fishTitle.Create(nil, item, nil) == nil, "Missing templates must allow the caller to fall back")

@@ -421,7 +421,9 @@ function FishingBiteSequence.new(
 	local self =
 		prepareRound(owner, template, startedAt, readyAt, random, visualRandom, fishConfig, catchKind, tutorial, weight)
 	self.template, self.fishConfig = template, fishConfig
-	self.presentationRadius = ItemStatUtil.GetModelBounds(template).framingRadius
+	local bounds = ItemStatUtil.GetModelBounds(template)
+	self.presentationRadius = bounds.framingRadius
+	self.showcaseCenterOffset = (bounds.minimum + bounds.maximum) * 0.5
 	local fish = template:Clone()
 	fish:ScaleTo(self.baseScale * self.scale)
 	fish.Name, fish.Parent = "BitingFish", owner.folder
@@ -1433,12 +1435,14 @@ function FishingBiteSequence:Update(now, deferPresentation)
 			if self.struggleVFXTick ~= tick then
 				self.struggleVFXTick = tick
 				local effectPosition = target:Lerp(baitPosition, Config.WaterVFX.StrugglePositionScale)
+				local fishDiameter = if self.isEgg then nil else 2 * self.presentationRadius * self.scale
 				owner:_playWaterVFX(
 					now,
 					Config.WaterVFX.Struggle,
 					Vector3.new(effectPosition.X, target.Y, effectPosition.Z),
 					frame.LookVector,
-					self.scale
+					self.scale,
+					fishDiameter
 				)
 			end
 			if now >= (self.nextRipple or 0) then
@@ -1468,7 +1472,6 @@ function FishingBiteSequence:Update(now, deferPresentation)
 			and phase ~= "Reeling"
 			and phase ~= "Reeled"
 	owner.continueLabel.TextTransparency = 0
-	owner.continueLabel.TextColor3 = if phase == "Bite" then Color3.fromRGB(255, 220, 100) else Color3.new(1, 1, 1)
 	return phase
 end
 

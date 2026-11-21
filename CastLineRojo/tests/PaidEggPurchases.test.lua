@@ -185,6 +185,7 @@ local buyer, buyerProfile = makePlayer(1)
 local friend, friendProfile = makePlayer(2)
 local saveSucceeds, queueSucceeds, policyAllows = true, true, true
 local saves = 0
+local delayed = {}
 local playerData = {}
 function playerData:GetProfile(player)
 	return profiles[player]
@@ -192,6 +193,9 @@ end
 function playerData:SavePaidEggProfile(_player)
 	saves += 1
 	return saveSucceeds
+end
+function playerData:MarkPaidEggProfileChanged(profile)
+	Delivery.Ensure(profile.Data).Revision += 1
 end
 function playerData:QueuePaidEggDelivery(userId, value)
 	if not queueSucceeds then
@@ -250,6 +254,7 @@ local guid = 0
 local grantCount = 0
 local dependencies = {
 	PlayerDataService = playerData,
+	PurchasePersistence = { Request = function() saves += 1 end },
 	PaidItemPolicy = {
 		CanPurchase = function()
 			return policyAllows, "Restricted"
@@ -301,6 +306,7 @@ local service = loadSource("src/ServerScriptService/Services/PaidEggService.lua"
 		end,
 	},
 	script = { Parent = dependencies },
+	Enum = { ProductPurchaseChannel = { ExperienceDetailsPage = "Details" } },
 	require = function(value)
 		return value
 	end,
@@ -314,6 +320,9 @@ local service = loadSource("src/ServerScriptService/Services/PaidEggService.lua"
 		end,
 	},
 	task = {
+		delay = function(_, callback)
+			table.insert(delayed, callback)
+		end,
 		spawn = function(fn, ...)
 			table.insert(jobs, { fn, ... })
 		end,
@@ -324,11 +333,35 @@ services.PaidEggService = service
 assert(service:IsProduct(purchases.Egg_R_1.ProductId) and not service:IsProduct(0))
 policyAllows = false
 assert(not service:Prompt(buyer, "Egg_R_1") and #prompts == 0)
+local uncertain, uncertainProfile = makePlayer(3)
 policyAllows, saveSucceeds = true, false
-assert(not service:Prompt(buyer, "Egg_R_1") and #prompts == 0)
-assert(Delivery.Ensure(buyerProfile.Data).Intent, "Unknown persistence keeps the intent reserved")
+assert(not service:Prompt(uncertain, "Egg_R_1") and #prompts == 0)
+assert(Delivery.Ensure(uncertainProfile.Data).Intent, "Unknown persistence keeps the intent reserved")
 saveSucceeds = true
+service:CancelPrompt(uncertain, purchases.Egg_R_1.ProductId, false)
+assert(uncertainProfile.Data.PaidEgg.Intent, "Only a prompt opened in this session can be canceled")
+
+local eggProduct = purchases.Egg_R_1.ProductId
+assert(service:Prompt(buyer, "Egg_R_1"))
+local reopenedIntent = buyerProfile.Data.PaidEgg.Intent
+local savedBeforeCancel = saves
+service:CancelPrompt(buyer, eggProduct, false)
+assert(not service:ProcessReceipt({ PlayerId = 1, PurchaseId = "unexpected", ProductId = eggProduct }))
+assert(service:Prompt(buyer, "Egg_R_1") and saves == savedBeforeCancel
+	and buyerProfile.Data.PaidEgg.Intent == reopenedIntent, "Reopening the same SKU and recipient must skip saving")
+delayed[#delayed]()
+assert(buyerProfile.Data.PaidEgg.Intent == reopenedIntent, "Stale callbacks cannot clear a reopened prompt")
 service:CancelPrompt(buyer, purchases.Egg_R_1.ProductId, false)
+buyer.Maximum += 1
+assert(service:Prompt(buyer, "Egg_R_1") and saves > savedBeforeCancel
+	and buyerProfile.Data.PaidEgg.Intent.MaxWeight == buyer.Maximum, "Changed reward snapshot must be saved")
+service:CancelPrompt(buyer, eggProduct, false)
+purchaseService._PlayerGifted[1] = 2
+local previousSaves = saves
+assert(service:Prompt(buyer, "Egg_R_1") and saves > previousSaves
+	and buyerProfile.Data.PaidEgg.Intent.RecipientUserId == 2, "A new recipient must be saved")
+service:CancelPrompt(buyer, eggProduct, false)
+delayed[#delayed]()
 assert(not buyerProfile.Data.PaidEgg.Intent)
 
 purchaseService._PlayerGifted[1] = 2
@@ -383,12 +416,19 @@ for _, reward in pairs(friendProfile.Data.Items) do
 	assert(reward.PaidOrigin == sent.OrderId and reward.ConditionId == nil)
 end
 assert(not service:ProcessReceipt({ PlayerId = 1, PurchaseId = "unmatched", ProductId = purchases.Egg_R_1.ProductId }))
-assert(updates >= 2 and #prompts == 1)
+assert(updates >= 2 and #prompts == 5)
 
 -- Policy reads fail closed; transfer checks both sides and cached entries expire.
 local policyRows, clock = {}, 0
+local policyCalls = 0
+local yieldPolicy = false
+players.PlayerAdded = signal()
 local policyApi = {
 	GetPolicyInfoForPlayerAsync = function(_, target)
+		policyCalls += 1
+		if yieldPolicy then
+			coroutine.yield()
+		end
 		return assert(policyRows[target.UserId], "Policy unavailable")
 	end,
 }
@@ -403,6 +443,13 @@ local policy = loadSource("src/ServerScriptService/Services/PaidItemPolicy.lua",
 			return clock
 		end,
 	},
+	task = { defer = function(callback, ...)
+		if type(callback) == "thread" then
+			assert(coroutine.resume(callback, ...))
+		else
+			callback(...)
+		end
+	end },
 })
 assert(not policy.CanPurchase(buyer, friend))
 policyRows[1] = { ArePaidRandomItemsRestricted = false, IsPaidItemTradingAllowed = true }
@@ -414,4 +461,10 @@ assert(not policy.CanPurchase(buyer, friend))
 clock = 122
 policyRows[2].IsPaidItemTradingAllowed = false
 assert(not policy.CanTransfer(buyer, friend))
+clock, yieldPolicy = 183, true
+local beforeConcurrent = policyCalls
+local first = coroutine.create(function() assert(policy.Get(buyer) == policyRows[1]) end)
+local second = coroutine.create(function() assert(policy.Get(buyer) == policyRows[1]) end)
+assert(coroutine.resume(first) and coroutine.resume(second))
+assert(coroutine.resume(first) and coroutine.status(second) == "dead" and policyCalls == beforeConcurrent + 1)
 print("Paid egg probability, frozen intents, durable delivery, receipt replay, cancellation and policy tests passed")

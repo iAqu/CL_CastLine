@@ -74,10 +74,13 @@ local constantsModule = assert(load(constants, "Constants", "t", setmetatable({
 	Color3 = { fromRGB = function() return {} end },
 	require = function(module) return assert(module) end,
 }, { __index = getfenv() })))()
-local profile = { Data = { GamePasses = {} } }
+local profile = { Data = { GamePasses = {}, ProductPurchases = {Receipts = {}, Review = {}} } }
+function profile:IsActive() return true end
 local denied = 0
 local previouslyGranted = false
+local buyer = { UserId = 42 }
 local services = {
+	Players = {GetPlayerByUserId = function() return buyer end},
 	ReplicatedFirst = {
 		Data = { AreasData = {} },
 		DataHelpers = {
@@ -103,7 +106,8 @@ local services = {
 		},
 	},
 	ServerScriptService = { Services = {
-		PlayerDataService = { GetAllData = function() return profile.Data end, GetProfile = function() return profile end },
+		PlayerDataService = { GetAllData = function() return profile.Data end, GetProfile = function() return profile end, IsUsingMockProfiles = function() return false end },
+        PurchasePersistence = {},
 		HGAnalyticsService = {},
 	} },
 	DataStoreService = { GetDataStore = function()
@@ -114,11 +118,11 @@ local services = {
 	end },
 }
 local decisions = { PurchaseGranted = "PurchaseGranted", NotProcessedYet = "NotProcessedYet" }
-local function loadModule(path)
+local function loadModule(path, products)
 	return assert(load(read(path), path, "t", setmetatable({
 		game = { GetService = function(_, name) return services[name] or {} end },
 		require = function(module) return assert(module) end,
-		script = {Parent={FishingBaitPurchases={GetRod=function() return nil end}}},
+		script = {Parent={ProductPurchases=products,PaidItemPolicy={},FishingBaitPurchases={IsProduct=function() return false end, IsPurchaseId=function() return false end}}},
 		Enum = { ProductPurchaseDecision = decisions },
 	}, { __index = getfenv() })))()
 end
@@ -131,9 +135,9 @@ for purchaseId in pairs(gamePasses) do
 	assert(template.GamePasses[purchaseId] == false, "Configured passes must default to unowned: " .. purchaseId)
 end
 
-local purchaseService = loadModule("src/ServerScriptService/Services/PurchaseService.lua")
+local productPurchases = loadModule("src/ServerScriptService/Services/ProductPurchases.lua")
+local purchaseService = loadModule("src/ServerScriptService/Services/PurchaseService.lua", productPurchases)
 local gamePassService = loadModule("src/ServerScriptService/Services/GamePassService.lua")
-local buyer = { UserId = 42 }
 purchaseService:PromptPurchase(buyer, "FastMove")
 purchaseService._PlayerGifted[buyer.UserId] = 43
 purchaseService:PromptPurchase(buyer, "FastMove")

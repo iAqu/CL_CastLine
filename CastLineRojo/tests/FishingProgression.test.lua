@@ -141,7 +141,7 @@ assert(P.RollMutation(0, C, ranges, {
 local p = P.Ensure({})
 for _, rod in pairs(rods) do
 	for tier, baitId in ipairs(rod.BaitsSelect) do
-		local q = P.Quote(rod, baitId, C, p)
+		local q = P.Quote(rod, baitId, C)
 		assert(q.tier == tier)
 		if tier < 4 then
 			assert(q.price == math.round(rod.Price * C.CashMultipliers[tier]))
@@ -150,26 +150,26 @@ for _, rod in pairs(rods) do
 		end
 	end
 end
-assert(P.Quote(rods.Rod_101, "NONE", C, p).price == 0)
-assert(P.Quote(rods.Rod_101, "not-allowed", C, p) == nil)
+assert(P.Quote(rods.Rod_101, "NONE", C).price == 0)
+assert(P.Quote(rods.Rod_101, "not-allowed", C) == nil)
 assert(P.GrantReceipt(p, "Rod_101", "receipt-1"))
 assert(not P.GrantReceipt(p, "Rod_101", "receipt-1") and p.Credits.Rod_101 == 1)
-assert(P.Quote(rods.Rod_101, rods.Rod_101.BaitsSelect[4], C, p).available)
+assert(P.Quote(rods.Rod_101, rods.Rod_101.BaitsSelect[4], C, nil, p.Credits.Rod_101).available)
 -- The same bait has a contextual tier determined by the current rod.
-assert(P.Quote(rods.Rod_101, "Bait_104", C, p).tier == 2)
-assert(P.Quote(rods.Rod_105, "Bait_104", C, p).tier == 1)
--- Premium bait is consumed once on success, and is preserved after a failed grant.
-local paid = new()
-paid.baitConfig.ProductIds.Rod_101 = 123456
-paid.begin()
-local r = paid.client:SelectBait(paid.player, paid.token, "Bait_108")
-assert(r.needsPurchase and r.productId == 123456 and not r.ok)
-local pp = P.Ensure(paid.profile.Data)
-P.GrantReceipt(pp, "Rod_101", "paid-1")
-assert(paid.client:SelectBait(paid.player, paid.token, "Bait_108").ok)
-paid.cast()
-paid.failGrant = true
-assert(not paid.hook().ok and pp.Credits.Rod_101 == 1)
-paid.failGrant = false
-assert(paid.hook().mutationId == "Rainbow" and pp.Credits.Rod_101 == 0)
-assert(not paid.hook().ok and pp.Credits.Rod_101 == 0)
+assert(P.Quote(rods.Rod_101, "Bait_104", C).tier == 2)
+assert(P.Quote(rods.Rod_105, "Bait_104", C).tier == 1)
+-- The fourth slot always uses the same product, including overlapping bait IDs on other rods.
+local productId = h.purchaseData.PremiumBait.ProductId
+local paidIds = {}
+for _, rod in pairs(rods) do
+	for tier, baitId in ipairs(rod.BaitsSelect) do
+		local quote = P.Quote(rod, baitId, C, productId)
+		assert(quote.productId == (if tier == 4 then productId else nil))
+		if tier == 4 then
+			assert(quote.price == 0 and quote.available)
+			paidIds[baitId] = true
+		end
+	end
+end
+assert(paidIds.Bait_108 and paidIds.Bait_117)
+assert(P.Quote(rods.Rod_105, "Bait_108", C, productId).price > 0)

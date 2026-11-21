@@ -108,6 +108,7 @@ local title = { FindFirstChild = function() return frame end,
 local template = { IsA = function() return true end, Clone = function() return title end }
 local titleUtil = loadSource(prefix .. "FishTitleUtil.lua", {
 	game = { GetService = function() return { Modules = {
+		GuiUtil = { SetRarityGradient = function() end },
 		MutationDataUtil = mutations, PlotFishIncome = income, NumberUtil = { FormatItemPriceCompact = tostring },
 	} } end }, require = function(module) return module end,
 })

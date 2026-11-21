@@ -186,9 +186,11 @@ function MyFishGuiController:KnitStart()
 
 	local function updateRow(row, entry, item)
 		row.Info.AnimalName.Text = item.DisplayName
+		GuiUtil.SetRarityGradient(row.Info.AnimalName, item.Rarity)
 		row.Info.Rarity.Text = RarityConfig.Normalize(item.Rarity)
 		GuiUtil.SetRarityGradient(row.Info.Rarity, item.Rarity)
-		row.Preview.Weight.Text = string.upper(WeightFormat.FormatKgCompact(entry.weight))
+		GuiUtil.SetRarityGradient(row.Preview, item.Rarity)
+		row.Preview.Weight.Text = WeightFormat.FormatKg(entry.weight)
 		row.Info.Income.Text = "$" .. NumberUtil.FormatItemPriceCompact(entry.income) .. "/s"
 		local mutation = MutationDataUtil.GetConfig(entry.mutationId)
 		row.Info.Mutation.Text = if mutation then mutation.DisplayName else ""

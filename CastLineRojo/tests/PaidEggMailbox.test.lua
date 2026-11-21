@@ -94,6 +94,10 @@ local services = {
 	} } },
 }
 local now = 0
+local function wait(seconds)
+	now += seconds
+end
+local persistence = require("./helpers/PurchasePersistenceMock")(function() return now end, wait)
 local service = loadModule("src/ServerScriptService/Services/PlayerDataService.lua", {
 	game = {
 		GetService = function(_, name)
@@ -103,6 +107,7 @@ local service = loadModule("src/ServerScriptService/Services/PlayerDataService.l
 	require = function(value)
 		return value
 	end,
+	script = { Parent = { PurchasePersistence = persistence } },
 	os = {
 		clock = function()
 			return now
@@ -112,9 +117,7 @@ local service = loadModule("src/ServerScriptService/Services/PlayerDataService.l
 		spawn = function(fn, ...)
 			fn(...)
 		end,
-		wait = function(seconds)
-			now += seconds
-		end,
+		wait = wait,
 	},
 })
 globals:AddActiveUpdate({ Kind = "OtherFeature" })

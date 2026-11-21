@@ -28,10 +28,12 @@ local function create(baitHeight)
 	local owner = setmetatable({
 		folder = folder,
 		bait = bait,
+		baitVisualScale = Vector3.one,
 		forward = Vector3.zAxis,
 		launch = target - Vector3.zAxis * 55,
 		spin = 0,
 		continueLabel = {},
+		bitePrompt = Instance.new("BillboardGui"),
 		trail = {},
 		track = { Stop = function() end },
 		rig = rig,
@@ -54,12 +56,14 @@ local function create(baitHeight)
 			self.legacySplashes += 1
 		end,
 		_playRarityVFX = function() end, -- 稀有度演出由 FishingRarityVFX 单独验证。
-		_playWaterVFX = function(self, now, name, position, direction, fishScale)
-			local effect = Cast._playWaterVFX(self, now, name, position, direction, fishScale)
+		_playWaterVFX = function(self, now, name, position, direction, fishScale, fishDiameter)
+			local effect = Cast._playWaterVFX(self, now, name, position, direction, fishScale, fishDiameter)
 			assert(effect, "Missing test VFX: " .. name)
-			local source = storage.VFX.WaterVFX[name]
-			local scale = if name == vfx.Struggle then vfx.StruggleScale * math.max(1, fishScale or 1) else 1
-			near(effect.model:GetScale(), source:GetScale() * scale)
+			if name ~= vfx.Struggle then
+				local source = storage.VFX.WaterVFX[name]
+				local scale = if name == vfx.Entry then 1.5 elseif name == vfx.Exit then fishScale or 1 else 1
+				near(effect.model:GetScale(), source:GetScale() * scale)
+			end
 			assert((effect.model:GetPivot().Position - position).Magnitude < 0.001, "VFX position changed")
 			for _, part in ipairs(effect.model:GetDescendants()) do
 				if part:IsA("BasePart") then
@@ -100,7 +104,7 @@ local function create(baitHeight)
 	return owner, target
 end
 
-local function begin(owner, nibbles, template)
+local function begin(owner, nibbles, template, catchKind, weight)
 	local random = {
 		NextInteger = function(_, low)
 			return if low == 0 then nibbles or 0 else 1
@@ -109,7 +113,8 @@ local function begin(owner, nibbles, template)
 			return if low < 0 then 0 else 1
 		end,
 	}
-	owner.bite = Bite.new(owner, 0, 0, random, nil, template)
+	local fishConfig = if weight then { DefaultWeight = 1 } else nil
+	owner.bite = Bite.new(owner, 0, 0, random, nil, template, fishConfig, catchKind, nil, weight)
 	return owner.bite.timeline
 end
 
@@ -121,6 +126,44 @@ local function count(owner, name)
 		end
 	end
 	return result
+end
+
+local function checkStruggleSize()
+	local source = storage.VFX.WaterVFX[vfx.Struggle]
+	local cases = {
+		{ size = Vector3.new(2, 4, 4), expected = 0.75 },
+		{ size = Vector3.new(12, 24, 24), expected = 2.25 },
+		{ size = Vector3.new(6, 12, 12), weight = 8, fishScale = 2, expected = 2.25 },
+		{ size = Vector3.new(2, 4, 4), radius = 45, expected = 4.5 },
+		{ size = Vector3.new(12, 24, 24), catchKind = "Egg", expected = 0.75 },
+	}
+	for _, case in ipairs(cases) do
+		local owner = create()
+		local template = Instance.new("Model")
+		local body = Instance.new("Part")
+		body.Size, body.Anchored, body.Parent = case.size, true, template
+		template.PrimaryPart = body
+		template:SetAttribute("PresentationRadius", case.radius)
+		local timeline = begin(owner, 0, template, case.catchKind, case.weight)
+		while timeline.phase ~= "Bite" do
+			timeline:Advance(timeline.endsAt)
+		end
+		local hookAt = timeline.startedAt + 0.01
+		assert(owner.bite:TryHook(hookAt), "Struggle size test could not hook the catch")
+		local expectedBursts = math.ceil(timeline.struggleTime / vfx.StruggleInterval)
+		for tick = 0, expectedBursts - 1 do
+			local now = hookAt + tick * vfx.StruggleInterval
+			owner.bite:Update(now, true)
+			local event = owner.events[#owner.events]
+			assert(event.name == vfx.Struggle, "Struggle burst did not play")
+			near(event.effect.model:GetScale(), source:GetScale() * case.expected)
+			owner:_updateWaterEffects(now)
+		end
+		near(owner.bite.fish:GetScale(), case.fishScale or 1)
+		assert(count(owner, vfx.Struggle) == expectedBursts, "Missing struggle bursts in size test")
+		owner:Destroy()
+		template:Destroy()
+	end
 end
 
 local function checkIdleWaterVFX()
@@ -163,6 +206,7 @@ local function checkIdleWaterVFX()
 end
 
 local ok, result = xpcall(function()
+	checkStruggleSize()
 	local idleEnabled = vfx.IdleEnabled
 	local idleOK, idleError = pcall(checkIdleWaterVFX)
 	vfx.IdleEnabled = idleEnabled
@@ -171,8 +215,8 @@ local ok, result = xpcall(function()
 	local source = storage.VFX.WaterVFX[vfx.Struggle]
 	local defaultEffect = Cast._playWaterVFX(scaling, 0, vfx.Struggle, scalingTarget)
 	near(defaultEffect.model:GetScale(), source:GetScale() * vfx.StruggleScale)
-	for _, case in ipairs({ { 0.5, 0.75 }, { 1, 0.75 }, { 2, 1.5 } }) do
-		local effect = Cast._playWaterVFX(scaling, 0, vfx.Struggle, scalingTarget, nil, case[1])
+	for _, case in ipairs({ { 0.5, 0.75 }, { 1, 0.75 }, { 2, 1.5 }, { 8, 6, 90 } }) do
+		local effect = Cast._playWaterVFX(scaling, 0, vfx.Struggle, scalingTarget, nil, case[1], case[3])
 		near(effect.model:GetScale(), source:GetScale() * case[2])
 	end
 	local lightEffect = Cast._playWaterVFX(scaling, 0, vfx.Light, scalingTarget, nil, 2)
@@ -218,6 +262,17 @@ local ok, result = xpcall(function()
 	assert(entry.soundsPlayed.Splash == 1, "Landing audio changed")
 	local effect = entry.events[1].effect
 	near(effect.model:GetPivot().Position.Y, target.Y)
+	local originalDroplets = assert(storage.VFX.WaterVFX[vfx.Entry]:FindFirstChild("Droplets", true))
+	local droplets = assert(effect.model:FindFirstChild("Droplets", true))
+	for index, original in ipairs(originalDroplets.Size.Keypoints) do
+		local scaled = droplets.Size.Keypoints[index]
+		near(scaled.Time, original.Time)
+		near(scaled.Value, original.Value * 1.5)
+		near(scaled.Envelope, original.Envelope * 1.5)
+	end
+	near(droplets.Speed.Min, originalDroplets.Speed.Min * 1.5)
+	near(droplets.Speed.Max, originalDroplets.Speed.Max * 1.5)
+	near((droplets.Acceleration - originalDroplets.Acceleration * 1.5).Magnitude, 0)
 	assert(#effect.emissions == 1, "Entry Wind should be the only delayed emission")
 	local wind = effect.emissions[1]
 	assert(wind.emitter.Name == "Wind" and not wind.emitted and not wind.emitter.Enabled, "Wind delay ignored")

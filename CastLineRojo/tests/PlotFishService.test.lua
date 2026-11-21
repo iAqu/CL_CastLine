@@ -137,6 +137,7 @@ local dataService = {
 }
 local benefits = { luck = 0 }
 local signals = {}
+local onboardingSteps = {}
 local createCount, failOnCreate = 0, nil
 local services = {
 	PlotUpgradeService = { ApplyForPlayer = function() end, ResetPlot = function() end },
@@ -159,7 +160,7 @@ local services = {
 	ReplicatedFirst = { Data = { ConditionsData = { Codition_1 = {} } } },
 	ServerScriptService = { Services = {
 		PlayerDataService = dataService,
-		OnboardingAnalyticsService = { Step = function() end },
+		OnboardingAnalyticsService = { Step = function(_, _, step) table.insert(onboardingSteps, step) end },
 	} },
 	ReplicatedStorage = {
 		Packages = { Knit = {
@@ -250,6 +251,7 @@ local plotService = loadSource("src/ServerScriptService/Services/PlotFishService
 })
 
 local first = hold("first")
+data.FishingOnboarding = { Stage = "PlaceFish", FishUid = "first" }
 plot:SetAttribute("OwnerUserId", 43)
 assert(not plotService:RequestPlace(player, "first").ok, "Do not place fish in another player's plot")
 plot:SetAttribute("OwnerUserId", 42)
@@ -257,10 +259,13 @@ root.Position = position(23)
 assert(not plotService:RequestPlace(player, "first").ok and first.Parent == player.Character)
 root.Position = position(0)
 assert(not plotService:RequestPlace(player, "forged").ok, "The requested fish must be the held tool")
+assert(data.FishingOnboarding.Stage == "PlaceFish" and #onboardingSteps == 0)
 local response = plotService:RequestPlace(player, "first")
 assert(response.ok and response.position.X == 5 and response.rate == 8 and not first.Parent)
 assert(not plotService:RequestPlace(player, "first").ok)
 assert(placements.GetItemUid(data.PlotPlacements, 1) == "first")
+assert(data.FishingOnboarding.Stage == "Train" and data.FishingOnboarding.FishUid == nil)
+assert(#onboardingSteps == 1 and onboardingSteps[1] == "FishPlaced", "Successful placement advances the guide exactly once")
 assert(benefits.luck == 1)
 assert(plotService.RequestPickup == nil and plotService.Client.RequestPickup == nil, "World pickup must be disabled")
 local firstDisplay = plot:FindFirstChild("PlacedFish"):FindFirstChild("first")

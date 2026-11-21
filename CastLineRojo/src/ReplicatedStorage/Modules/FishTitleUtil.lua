@@ -1,5 +1,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local GuiUtil = require(ReplicatedStorage.Modules.GuiUtil)
+local ItemStatUtil = require(ReplicatedStorage.Modules.ItemStatUtil)
 local MutationDataUtil = require(ReplicatedStorage.Modules.MutationDataUtil)
 local NumberUtil = require(ReplicatedStorage.Modules.NumberUtil)
 local PlotFishIncome = require(ReplicatedStorage.Modules.PlotFishIncome)
@@ -8,7 +10,13 @@ local FishTitleUtil = {}
 
 local MUTATION_LABEL_IDS = { "Golden", "Diamond", "Mint", "Rainbow" }
 
-type FishTitleItem = { DisplayName: string, CpsPrice: number, Rarity: string?, DefaultWeight: number? }
+type FishTitleItem = {
+	DisplayName: string,
+	CpsPrice: number,
+	Rarity: string?,
+	DefaultWeight: number?,
+	ModelDefaultScale: number?,
+}
 
 local function findLabel(frame: Instance, name: string): TextLabel?
 	local label = frame:FindFirstChild(name)
@@ -31,6 +39,14 @@ function FishTitleUtil.Create(titleGui: Instance?, item: FishTitleItem, mutation
 	local nameLabel = findLabel(frame, "NameLabel")
 	if nameLabel then
 		nameLabel.Text = item.DisplayName
+		GuiUtil.SetRarityGradient(nameLabel, item.Rarity)
+	end
+
+	local weightLabel = findLabel(frame, "WeightLabel")
+	if weightLabel then
+		local weightText = ItemStatUtil.FormatFishWeight(item, actualWeight)
+		weightLabel.Text = weightText or ""
+		weightLabel.Visible = weightText ~= nil
 	end
 
 	local normalizedId = MutationDataUtil.NormalizeMutationId(mutationId)

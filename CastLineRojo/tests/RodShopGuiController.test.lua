@@ -15,6 +15,8 @@ assert(h.list.CanvasPosition.X == 350, "Horizontal rod shop layouts must center 
 local target
 for _, card in ipairs(h.cards) do if card.Name == "b" then target = card end end
 assert(target.EquipedButton.Visible and not target.BuyButton.Visible, "New inventory signal must win over the initial request")
+assert(target.Information.Weight.Counter.Text == "1234567 kg")
+assert(h:getCard("a").Information.Weight.Counter.Text == "")
 h:flush()
 h:close()
 assert(not h.gui.Enabled)

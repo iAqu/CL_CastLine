@@ -11,8 +11,12 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 	local now, render, locked, movement = 0, nil, false, false
 	local created, warnings = {}, {}
 	local requests, cancellations, notices = {}, {}, {}
+	local eventRequests = {}
 	local castReplies = {}
-	local selections, autoSelectFailure = {}, nil
+	local selections = {}
+	local purchaseFinished = nil
+	local purchaseRequests, tasks = {}, {}
+	local paidBaitReady, promptError, pickerBusy = false, nil, false
 	local pickerShows, pickerDestroys = 0, 0
 	local fishingAudio = { active = false, starts = 0 }
 	local effectAudio = { clears = 0, refreshes = 0, preloads = 0 }
@@ -20,22 +24,23 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 		local handlers = {}
 		return {
 			Connect = function(_, callback)
-				local connection = { connected = true }
+				local connection = { Connected = true }
 				function connection:Disconnect()
-					self.connected = false
+					self.Connected = false
 				end
 				table.insert(handlers, { callback, connection })
 				return connection
 			end,
 			Fire = function(_, ...)
 				for _, handler in ipairs(handlers) do
-					if handler[2].connected then
+					if handler[2].Connected then
 						handler[1](...)
 					end
 				end
 			end,
 		}
 	end
+	purchaseFinished = signal()
 	local vm = {}
 	local function vec(x, y, z)
 		return setmetatable({ X = x, Y = y, Z = z }, vm)
@@ -206,22 +211,25 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 	plot.Name, plot.owner = "Plot_1", player.UserId
 	function plot:GetAttribute() return self.owner end
 	local workspace = object("Workspace", { Areas = object("Folder", { Plot = object("Folder", { Plot_1 = plot }) }) })
+	workspace.GetServerTimeNow = function() return now end
 	workspace.CurrentCamera = camera
-	local function addBillboard(inPlayerGui, enabled, exempt)
+	local function addSceneGui(class, inPlayerGui, enabled, exempt)
 		local container = if inPlayerGui then playerGui else workspace
-		local billboard = object("BillboardGui")
-		billboard.Enabled = enabled
-		billboard:SetAttribute("FishingBillboardExempt", exempt)
-		container.children[billboard] = billboard
-		container.DescendantAdded:Fire(billboard)
-		return billboard
+		local gui = object(class)
+		gui.Enabled = enabled
+		gui:SetAttribute("FishingBillboardExempt", exempt)
+		container.children[gui] = gui
+		container.DescendantAdded:Fire(gui)
+		return gui
 	end
-	local billboards = {}
+	local sceneGuis = {}
 	for _, container in ipairs({ workspace, playerGui }) do
-		local visible, hidden = object("BillboardGui"), object("BillboardGui")
-		visible.Enabled, hidden.Enabled = true, false
-		container.children.SceneLabels = object("Folder", { Visible = visible, Hidden = hidden })
-		table.insert(billboards, { visible = visible, hidden = hidden })
+		for _, class in ipairs({ "BillboardGui", "SurfaceGui" }) do
+			local visible, hidden = object(class), object(class)
+			visible.Enabled, hidden.Enabled = true, false
+			container.children[class .. "Labels"] = object("Folder", { Visible = visible, Hidden = hidden })
+			table.insert(sceneGuis, { visible = visible, hidden = hidden })
+		end
 	end
 	local input, heartbeat = signal(), signal()
 	local sequence, failCreate = nil, false
@@ -237,12 +245,22 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 	end
 	local fishingService = {
 		AnalyticsPresentation = { Fire = function() end },
+		JoinEvent = function(_, slotId)
+			return {
+				andThen = function(self, callback)
+					table.insert(eventRequests, { slotId = slotId, resolve = callback })
+					return self
+				end,
+				catch = function(self) return self end,
+			}
+		end,
 		Begin = function()
 			if not deferBegin then
 				return resolved({
 					ok = true,
 					token = "test",
 					rodId = "Rod_101",
+					baitQuotes = { Premium = { productId = 1234, credits = 0 } },
 					lesson = lesson,
 					guideBaitId = if lesson == "FinalCatch" then "Bait_102" else nil,
 				})
@@ -255,10 +273,15 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 				catch = function(self) return self end,
 			}
 		end,
-		SelectBait = function(_, _, baitId)
+		SelectBait = function(_, token, baitId, purchaseOnSelect)
 			table.insert(selections, baitId)
-			if autoSelectFailure then
-				return resolved({ ok = false, message = autoSelectFailure })
+			if baitId == "Premium" and not paidBaitReady then
+				if purchaseOnSelect then
+					assert(token == "test")
+					table.insert(purchaseRequests, baitId)
+					return resolved({ ok = false, prompted = not promptError, message = promptError })
+				end
+				return resolved({ ok = false, needsPurchase = true, productId = 1234 })
 			end
 			if baitId == "Unaffordable" then
 				return resolved({ ok = false, message = "Not enough cash" })
@@ -266,7 +289,7 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 			return resolved({ ok = true, initialYaw = 0, luck = 7.25, lesson = lesson })
 		end,
 		Cast = function(_, _, progress)
-			assert(progress == 0.5, "Send the locked visible meter progress")
+			assert(progress == nil, "The server owns the meter progress")
 			assert(sequence.clickSounds == 1, "Local click feedback must occur before the server request")
 			if deferCast then
 				return {
@@ -277,7 +300,7 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 					catch = function(self) return self end,
 				}
 			end
-			return resolved({ ok = true, distance = 30, luck = 3.9875 })
+			return resolved({ ok = true, distance = 30, luck = 3.9875, castProgress = 0.55 })
 		end,
 		Cancel = function(_, token)
 			table.insert(cancellations, token)
@@ -317,6 +340,8 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 		Config = config,
 		RodsData = { Rod_101 = { Model = "Alien Antenna", MaxWeight = 10 } },
 		BaitsData = { Bait_102 = { Model = "1", DisplayName = "Caterpillar" } },
+		PurchaseData = {},
+		FishingBaitConfig = { PurchaseId = "PremiumBait" },
 		FishesData = {},
 		EggsData = {},
 		NotificationClient = { RedNotify = function(message) table.insert(notices, message) end },
@@ -331,7 +356,7 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 					pickerShows += 1
 					gui.Enabled = true
 				end,
-				SetBusy = function() end,
+				SetBusy = function(value) pickerBusy = value end,
 				Destroy = function()
 					pickerDestroys += 1
 					gui.Enabled = false
@@ -358,6 +383,9 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 			IsWorldActionAllowed = function()
 				return not locked
 			end,
+			IsPlacementActionAllowed = function()
+				return not locked
+			end,
 		},
 		FishingRigUtil = {
 			PlaceAtFishingSpot = function(_, part)
@@ -382,7 +410,7 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 				sequence = {
 					phase = "Preparing",
 					gui = object("ScreenGui"),
-					bitePrompt = addBillboard(false, false, true),
+					bitePrompt = addSceneGui("BillboardGui", false, false, true),
 					continueLabel = object("TextLabel"),
 					RefreshSoundSetting = function() end,
 					Update = function(self, now)
@@ -400,13 +428,14 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 						self.keepFail = keepFail
 						self.destroyCount = (self.destroyCount or 0) + 1
 					end,
+					options = {meterStartsAt = 0},
 					LockCastMeter = function(self)
 						self.meterLocks = (self.meterLocks or 0) + 1
 						self.clickSounds = (self.clickSounds or 0) + 1
 						return 0.5
 					end,
 					Cast = function(self, progress, distance, luck)
-						assert(progress == 0.5 and distance == 30 and luck == 3.9875,
+						assert(progress == 0.55 and distance == 30 and luck == 3.9875,
 							"Use the locked meter and the server-confirmed luck")
 						self.phase = "Casting"
 						self.casts = (self.casts or 0) + 1
@@ -446,6 +475,7 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 		FishingConfig = "Config",
 		FishingAssets = "FishingAssets",
 		FishingBaitSelect = "FishingBaitSelect",
+		FishingBaitConfig = "FishingBaitConfig",
 		FishingSpotUtil = "FishingSpotUtil",
 		PlotWorkspaceUtil = "PlotWorkspaceUtil",
 		NotificationClient = "NotificationClient",
@@ -453,6 +483,7 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 		GameplayInputGate = "GameplayInputGate",
 	}
 	local services = {
+		MarketplaceService = { PromptProductPurchaseFinished = purchaseFinished },
 		Players = {
 			LocalPlayer = player,
 			PlayerAdded = signal(),
@@ -497,7 +528,6 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 	local env = setmetatable({
 		game = {
 			GetService = function(_, name)
-				if name == "MarketplaceService" then return {} end
 				return assert(services[name], name)
 			end,
 		},
@@ -509,6 +539,11 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 				local obj = object(class)
 				table.insert(created, obj)
 				return obj
+			end,
+		},
+		task = {
+			delay = function(seconds, callback)
+				table.insert(tasks, { at = now + seconds, callback = callback })
 			end,
 		},
 		os = {
@@ -575,15 +610,22 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 		character = character,
 		camera = camera,
 		warnings = warnings,
-		billboards = billboards,
-		addBillboard = addBillboard,
+		sceneGuis = sceneGuis,
+		addSceneGui = addSceneGui,
 		castPrompt = meter.children.Meter.children.Prompt,
 		requests = requests,
+		eventRequests = eventRequests,
 		cancellations = cancellations,
 		notices = notices,
 		castReplies = castReplies,
 		selections = selections,
-		failAutoSelect = function(message) autoSelectFailure = message end,
+		purchaseRequests = purchaseRequests,
+		purchaseFinished = function(purchased, productId)
+			purchaseFinished:Fire(player.UserId, productId or 1234, purchased)
+		end,
+		pickerBusy = function() return pickerBusy end,
+		showPromptError = function(message) promptError = message end,
+		receiveBaitReceipt = function() paidBaitReady = true end,
 		leave = function()
 			root.Position = vec(0, 3.5, -20)
 			heartbeat:Fire()
@@ -597,6 +639,11 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 		toggleSound = function() controllers.SettingsGuiController.ToggleSound:Fire() end,
 		advance = function(dt)
 			now += dt
+			for index = #tasks, 1, -1 do
+				if tasks[index].at <= now then
+					table.remove(tasks, index).callback()
+				end
+			end
 			if render then
 				render(dt)
 			end
@@ -644,28 +691,21 @@ local function revealPicker(fishing)
 	fishing.advance(0.101)
 end
 
-for _, lesson in ipairs({ "FirstCatch", "FinalCatch" }) do
-	local fishing = fixture(false, false, false, lesson)
+do
+	local fishing = fixture(false, false, false, "FinalCatch")
 	revealPicker(fishing)
-	if lesson == "FirstCatch" then
-		assert(fishing.pickerShows() == 0 and not fishing.baitVisible() and not fishing.cashVisible())
-		assert(#fishing.selections == 1 and fishing.selections[1] == "NONE")
-		local active, hint = fishing.controller:GetOnboardingHint()
-		assert(active and hint == "Cast", "First catch must wait for the player's cast")
-	else
-		assert(fishing.baitVisible() and fishing.cashVisible() and fishing.pickerShows() == 1)
-		local active, hint, baitButton, message = fishing.controller:GetOnboardingHint()
-		assert(active and not hint and baitButton == fishing.guideButton and message == "SELECT CATERPILLAR",
-			"The final catch must point to the configured bait button and name the bait")
-		fishing.choose("Bait_104")
-		assert(fishing.notices[1] == "Select Caterpillar." and fishing.baitVisible() and #fishing.selections == 0)
-		assert(select(3, fishing.controller:GetOnboardingHint()) == fishing.guideButton,
-			"A rejected selection must keep guiding the player")
-		fishing.choose("Bait_102")
-		assert(fishing.selections[1] == "Bait_102")
-		local casting, castHint, staleTarget, staleMessage = fishing.controller:GetOnboardingHint()
-		assert(casting and castHint == "FinalCast" and not staleTarget and not staleMessage)
-	end
+	assert(fishing.baitVisible() and fishing.cashVisible() and fishing.pickerShows() == 1)
+	local active, hint, baitButton, message = fishing.controller:GetOnboardingHint()
+	assert(active and not hint and baitButton == fishing.guideButton and message == "SELECT CATERPILLAR",
+		"The final catch must point to the configured bait button and name the bait")
+	fishing.choose("Bait_104")
+	assert(fishing.notices[1] == "Select Caterpillar." and fishing.baitVisible() and #fishing.selections == 0)
+	assert(select(3, fishing.controller:GetOnboardingHint()) == fishing.guideButton,
+		"A rejected selection must keep guiding the player")
+	fishing.choose("Bait_102")
+	assert(fishing.selections[1] == "Bait_102")
+	local casting, castHint, staleTarget, staleMessage = fishing.controller:GetOnboardingHint()
+	assert(casting and castHint == "FinalCast" and not staleTarget and not staleMessage)
 	local sequence = fishing.sequence()
 	assert(sequence, "Selecting bait must start the teaching sequence")
 	for _, phase in ipairs({ "Nibbling", "Bite", "Bite", "Struggling" }) do
@@ -674,7 +714,7 @@ for _, lesson in ipairs({ "FirstCatch", "FinalCatch" }) do
 		assert(#fishing.warnings == 0 and fishing.controller:IsPreparing(), "The lesson must remain active")
 		assert(
 			sequence.bitePrompt.Enabled == (phase == "Bite"),
-			lesson .. " has incorrect prompt visibility during " .. phase
+			"The final lesson has incorrect prompt visibility during " .. phase
 		)
 		assert(
 			not fishing.castPrompt.Visible and not sequence.continueLabel.Visible,
@@ -700,43 +740,41 @@ exitPicker.abort()
 assert(not exitPicker.controller:GetOnboardingHint() and not exitPicker.baitVisible())
 
 do
-	local fishing = fixture(false, false, false, "FirstCatch")
-	fishing.failAutoSelect("Bait model unavailable")
-	revealPicker(fishing)
-	assert(fishing.notices[1] == "Bait model unavailable" and #fishing.cancellations == 1)
-	assert(fishing.pickerShows() == 0 and not fishing.baitVisible() and fishing.cashVisible())
-	assert(not fishing.controller:IsPreparing() and not fishing.locked() and not fishing.root.Anchored)
-	assert(fishing.camera.CameraType == "Custom")
-end
-
-do
 	local fishing = fixture()
-	for _, pair in ipairs(fishing.billboards) do
-		assert(not pair.visible.Enabled and not pair.hidden.Enabled, "Hide nested scene billboards at session start")
+	for _, pair in ipairs(fishing.sceneGuis) do
+		assert(not pair.visible.Enabled and not pair.hidden.Enabled, "Hide nested scene UI at session start")
 		pair.visible.Enabled, pair.hidden.Enabled = true, true
 		assert(not pair.visible.Enabled and not pair.hidden.Enabled, "Hold both original states hidden")
 	end
 	revealPicker(fishing)
-	local addedWorld = fishing.addBillboard(false, true)
-	local addedGui = fishing.addBillboard(true, false)
-	local bitePrompt = fishing.addBillboard(false, false, true)
-	bitePrompt.Enabled = true
-	assert(not addedWorld.Enabled and not addedGui.Enabled and bitePrompt.Enabled,
-		"Hide newly added scene billboards while allowing the bite prompt")
+	fishing.choose()
+	local addedWorld = fishing.addSceneGui("SurfaceGui", false, true)
+	local ripple = fishing.addSceneGui("SurfaceGui", false, true, true)
+	fishing.sequence().phase = "Lifting"
+	fishing.advance(0.016)
+	assert(not addedWorld.Enabled and ripple.Enabled, "Hide world signs while preserving the fishing ripple")
+	fishing.sequence().phase = "Caught"
+	fishing.advance(0.016)
+	local addedGui = fishing.addSceneGui("BillboardGui", true, false)
+	assert(fishing.sequence().continueLabel.Visible, "Keep the catch confirmation visible")
+	for _, pair in ipairs(fishing.sceneGuis) do
+		assert(not pair.visible.Enabled and not pair.hidden.Enabled, "Keep scene UI hidden through the showcase")
+	end
 	addedWorld.Enabled, addedGui.Enabled = true, true
-	assert(not addedWorld.Enabled and not addedGui.Enabled, "Keep new billboards hidden when enabled externally")
+	assert(not addedWorld.Enabled and not addedGui.Enabled, "Keep new scene UI hidden when enabled externally")
 	fishing.controller:ReturnToSpawn()
 	fishing.advance(0.15)
-	assert(not fishing.billboards[1].visible.Enabled, "Keep billboards hidden until return is covered")
+	assert(not fishing.sceneGuis[1].visible.Enabled and not addedWorld.Enabled, "Keep scene UI hidden until return is covered")
 	fishing.advance(0.16)
-	for _, pair in ipairs(fishing.billboards) do
-		assert(pair.visible.Enabled and not pair.hidden.Enabled, "Restore each billboard's original Enabled state")
+	for _, pair in ipairs(fishing.sceneGuis) do
+		assert(pair.visible.Enabled and not pair.hidden.Enabled, "Restore each scene GUI's original Enabled state")
 		pair.hidden.Enabled = true
 		assert(pair.hidden.Enabled, "Release the property listener during covered return")
 	end
-	assert(addedWorld.Enabled and not addedGui.Enabled, "Restore original states for billboards added during fishing")
+	assert(addedWorld.Enabled and not addedGui.Enabled, "Restore original states for scene UI added during fishing")
 	addedGui.Enabled = true
-	assert(addedGui.Enabled and fishing.addBillboard(false, true).Enabled and fishing.addBillboard(true, true).Enabled,
+	assert(addedGui.Enabled and fishing.addSceneGui("SurfaceGui", false, true).Enabled
+		and fishing.addSceneGui("BillboardGui", true, true).Enabled,
 		"Release property and descendant listeners before the return reveal finishes")
 	fishing.advance(0.36)
 	assert(not fishing.controller:IsPreparing() and #fishing.warnings == 0)
@@ -756,11 +794,12 @@ for _, exit in ipairs({ "abort", "die", "prepareFailure", "sequenceFailure" }) d
 		revealPicker(fishing)
 		fishing[exit]()
 	end
-	for _, pair in ipairs(fishing.billboards) do
-		assert(pair.visible.Enabled and not pair.hidden.Enabled, "Restore billboards after " .. exit)
+	for _, pair in ipairs(fishing.sceneGuis) do
+		assert(pair.visible.Enabled and not pair.hidden.Enabled, "Restore scene UI after " .. exit)
 	end
-	assert(fishing.addBillboard(false, true).Enabled and fishing.addBillboard(true, true).Enabled,
-		"Stop watching new billboards after " .. exit)
+	assert(fishing.addSceneGui("BillboardGui", false, true).Enabled
+		and fishing.addSceneGui("SurfaceGui", true, true).Enabled,
+		"Stop watching new scene UI after " .. exit)
 end
 
 local normal = fixture()
@@ -848,7 +887,7 @@ delayedCast.tap()
 assert(#delayedCast.castReplies == 1 and delayedCast.sequence().meterLocks == 1,
 	"Repeated input must not relock the meter or submit another pending cast")
 assert(delayedCast.sequence().phase == "Preparing", "Wait for server confirmation before casting")
-delayedCast.castReplies[1]({ ok = true, distance = 30, luck = 3.9875 })
+delayedCast.castReplies[1]({ ok = true, distance = 30, luck = 3.9875, castProgress = 0.55 })
 assert(delayedCast.sequence().casts == 1 and delayedCast.sequence().phase == "Casting",
 	"The pending cast must complete once with its original meter snapshot")
 assert(delayedCast.sequence().clickSounds == 1, "Server confirmation must not repeat the click feedback")
@@ -996,6 +1035,26 @@ timedOut.requests[1]({ ok = true, token = "late" })
 timedOut.advance(0.5)
 assert(timedOut.cancellations[1] == "late" and #timedOut.notices == 1)
 
+local event = fixture(true, true)
+local eventJoined
+local function onEventComplete(joined)
+	eventJoined = joined
+end
+assert(event.controller:JoinEvent(-7, onEventComplete))
+assert(not event.controller:JoinEvent(-7, onEventComplete))
+assert(#event.eventRequests == 1 and event.eventRequests[1].slotId == -7)
+event.eventRequests[1].resolve({ ok = true, token = "event", rodId = "Rod_101" })
+assert(eventJoined == nil and not event.locked(), "Wait for the teleport when the response arrives first")
+event.move(0)
+revealPicker(event)
+assert(eventJoined and event.baitVisible() and #event.requests == 0)
+
+local replaced = fixture(true, true)
+assert(replaced.controller:JoinEvent(-7, onEventComplete))
+replaced.abort()
+replaced.eventRequests[1].resolve({ ok = true, token = "departed", rodId = "Rod_101" })
+assert(eventJoined == false and replaced.cancellations[1] == "departed" and not replaced.locked())
+
 do
 	local Visibility = dofile("src/ReplicatedStorage/Modules/FishingVisibility.lua")
 	local part = { LocalTransparencyModifier = 0.25, GetPropertyChangedSignal = function()
@@ -1008,4 +1067,27 @@ do
 	assert(part.LocalTransparencyModifier == 1, "The observer's replacement rig still hides the original")
 	observer:Destroy()
 	assert(part.LocalTransparencyModifier == 0.25, "Restore the original transparency after both uses end")
+end
+
+do
+	local fishing = fixture()
+	revealPicker(fishing)
+	fishing.choose("Premium")
+	assert(#fishing.purchaseRequests == 1 and fishing.pickerBusy())
+	fishing.purchaseFinished(false, 9876)
+	assert(fishing.pickerBusy(), "Unrelated prompts must not unlock the bait picker")
+	fishing.purchaseFinished(false)
+	assert(fishing.baitVisible() and not fishing.pickerBusy(), "Cancel restores the picker")
+	fishing.showPromptError("Unavailable")
+	fishing.choose("Premium")
+	assert(fishing.notices[1] == "Unavailable" and not fishing.pickerBusy())
+	fishing.showPromptError(nil)
+	fishing.choose("Premium")
+	fishing.purchaseFinished(true)
+	assert(fishing.baitVisible() and not fishing.sequence() and #fishing.purchaseRequests == 3)
+	fishing.advance(0.51)
+	assert(fishing.pickerBusy() and not fishing.sequence() and #fishing.purchaseRequests == 3)
+	fishing.receiveBaitReceipt()
+	fishing.advance(0.51)
+	assert(fishing.sequence() and not fishing.baitVisible() and #fishing.purchaseRequests == 3)
 end

@@ -183,16 +183,14 @@ local function start()
 				elseif recorded then
 					stats.expired = true
 				end
-				-- Use the protected production fish shot to check both screen shapes.
+				-- 记录实际展示机位在横竖屏下的裁边帧数。
 				for _, size in { camera.ViewportSize, Vector2.new(390, 844) } do
-					local frame = owner:_fishLiftCamera(now, target, size)
 					local radius = (
 						active.timeline.phase == "Caught" and active:GetShowcaseRadius()
 						or active.presentationRadius * active.scale
 					) + Config.Bite.ShowcasePadding
-					frame = Cast._protectShowcase(owner, frame, active.showcasePosition, radius, size, 60, 1)
-					local p = frame:PointToObjectSpace(active.showcasePosition)
-					local vertical = math.rad(30)
+					local p = camera.CFrame:PointToObjectSpace(active.showcasePosition)
+					local vertical = math.rad(camera.FieldOfView * 0.5)
 					local horizontal = math.atan(math.tan(vertical) * size.X / size.Y)
 					if
 						-p.Z * math.sin(vertical) - math.abs(p.Y) * math.cos(vertical) < radius - 0.01

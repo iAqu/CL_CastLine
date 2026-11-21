@@ -4,6 +4,7 @@ local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
+local Workspace = game:GetService("Workspace")
 local Modules = ReplicatedStorage.Modules
 local ButtonAnimation = require(Modules.ButtonAnimation)
 local FishIconPresentation = require(Modules.FishIconPresentation)
@@ -20,6 +21,38 @@ local SellShopZone = require(Modules.SellShopZone)
 local SoundHelper = require(Modules.SoundHelper)
 local localPlayer = Players.LocalPlayer
 local SellShopController = Knit.CreateController({ Name = "SellShopController" })
+
+local function createLocalShop(anchor: BasePart): Model?
+	local templates = ReplicatedStorage:FindFirstChild("PlotTemplates")
+	local template = templates and templates:FindFirstChild("SellShop")
+	if not (template and template:IsA("Model") and template.PrimaryPart) then
+		return nil
+	end
+
+	local shop = template:Clone()
+	if not shop then
+		return nil
+	end
+	local primaryPart = shop.PrimaryPart
+	if not primaryPart then
+		shop:Destroy()
+		return nil
+	end
+
+	-- SellShopAnchor has local X up, while ActivationCircle has local Y up.
+	local anchorFrame = anchor.CFrame
+	local target = CFrame.fromMatrix(anchorFrame.Position, anchorFrame.LookVector, anchorFrame.RightVector)
+	shop:PivotTo(target * primaryPart.CFrame:ToObjectSpace(shop:GetPivot()))
+
+	local props = Workspace:FindFirstChild("LocalPlotProps")
+	if not props then
+		props = Instance.new("Folder")
+		props.Name = "LocalPlotProps"
+		props.Parent = Workspace
+	end
+	shop.Parent = props
+	return shop
+end
 
 local function priceText(value: number): string
 	return "+$" .. NumberUtil.FormatItemPriceCompact(value)
@@ -82,6 +115,8 @@ function SellShopController:KnitStart()
 	local service = Knit.GetService("SellService")
 	local rows = {}
 	local inventory, visit, currentAnchor, currentCharacter
+	local localShop
+	local warnedMissingShop = false
 	local requestPending, loading, closing, refreshQueued = false, false, false, false
 	local fetchSerial = 0
 	local pendingSale
@@ -363,9 +398,20 @@ function SellShopController:KnitStart()
 		end
 		elapsed = 0
 		local anchor, character = SellShopZone.GetOwnedAnchor(localPlayer), localPlayer.Character
+		if anchor ~= currentAnchor and localShop then
+			localShop:Destroy()
+			localShop = nil
+		end
 		if anchor ~= currentAnchor or character ~= currentCharacter then
 			currentAnchor, currentCharacter, visit = anchor, character, nil
 			close()
+		end
+		if anchor and not localShop then
+			localShop = createLocalShop(anchor)
+			if not localShop and not warnedMissingShop then
+				warnedMissingShop = true
+				warn("SellShopController: PlotTemplates.SellShop or its cloneable PrimaryPart is missing")
+			end
 		end
 		if not anchor or not SellShopZone.Contains(anchor, character, SellShopZone.ExitMargin) then
 			visit = nil

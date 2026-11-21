@@ -32,6 +32,7 @@ local Controller = Knit.CreateController({ Name = "FishingIntroController" })
 local player = Players.LocalPlayer
 local CAMERA_BINDING, MOVEMENT_BINDING = "FishingIntroCamera", "FishingIntroMovement"
 local CONFIRM_BINDING = "FishingIntroConfirm"
+local BITE_GUIDE_PHASES = { Waiting = true, Approaching = true, Holding = true, Nibbling = true, Bite = true }
 local session
 
 local function remember(state, object, property, value)
@@ -68,6 +69,13 @@ end
 
 local function makeGui(state, playerGui)
 	state.gui, state.hint, state.tapIcon, state.biteCue = FishingInstructionView.Create(playerGui, "FishingIntroGui")
+	local template = playerGui.FishingSequenceGui:FindFirstChild("IntroBiteGuide")
+	if template and template:IsA("ImageLabel") then
+		local guide = template:Clone()
+		guide.Visible = false
+		guide.Parent = state.gui
+		state.biteGuide = guide
+	end
 	instruction(state, "Cast")
 end
 
@@ -141,11 +149,21 @@ function Controller:Cancel()
 			GuiAnimation.PushModal(dismissed.gui, dismissed.gui.Frame.ConfirmButton)
 		end
 	end
-	player:SetAttribute("FishingIntroActive", false)
 	player:SetAttribute("FishingIntroPhase", nil)
 	if state.token then
-		state.service:Cancel(state.token, state.exitRequested == true):catch(function() end)
+		local request = state.service:Cancel(state.token, state.exitRequested == true)
+		if state.exitRequested and not state.preview then
+			-- Give the server a chance to equip the fish before the placement hints appear.
+			request:timeout(Loading.INTRO_CLAIM_TIMEOUT):finally(function()
+				if not session then
+					player:SetAttribute("FishingIntroActive", false)
+				end
+			end):catch(function() end)
+			return
+		end
+		request:catch(function() end)
 	end
+	player:SetAttribute("FishingIntroActive", false)
 end
 
 local function failed(state, message)
@@ -157,9 +175,11 @@ local function failed(state, message)
 end
 
 local function prepareTeaching(state)
-	local animation = ReplicatedStorage.Animation.Fishing.CastRod
+	local fishingAnimations = ReplicatedStorage.Animation.Fishing
+	local animation = fishingAnimations.CastRod
 	local bait, model = Assets.GetBait(nil)
 	state.sequence = Sequence.new(state.scene.playerRig, state.playerGui, state.meter, animation, model or bait, {
+		specialCastAnimation = fishingAnimations:FindFirstChild("SpecialCastRod"),
 		tutorial = true,
 		fixedCast = true,
 		initialYaw = 0,
@@ -183,8 +203,8 @@ local function prepareTeaching(state)
 		requestRound = function(previous)
 			return state.service:NextRound(state.token, previous)
 		end,
-		hook = function(round, pressedAt)
-			return state.service:Hook(state.token, round, pressedAt)
+		hook = function(round)
+			return state.service:Hook(state.token, round)
 		end,
 		onFailure = function(message)
 			failed(state, message)
@@ -198,9 +218,10 @@ local function prepareTeaching(state)
 	state.preparedAt = os.clock()
 end
 
-local function startTeaching(state)
+local function startTeaching(state, meterStartsAt)
 	local now = os.clock()
 	state.phase, state.startedAt, state.readyAt = "Teaching", now, now + 0.15
+	state.sequence.options.meterStartsAt = meterStartsAt
 	state.sequence.meterStarted, state.sequence.lastMeterStep = now, -1
 	instruction(state, "Cast")
 end
@@ -218,7 +239,7 @@ local function beginPlayback(state)
 				failed(state, result.message)
 				return
 			end
-			startTeaching(state)
+			startTeaching(state, result.meterStartsAt)
 			Knit.GetController("MusicController"):SetFishingActive(true)
 		end)
 		:catch(function(err)
@@ -255,6 +276,9 @@ local function update(state, now, dt)
 		Knit.GetController("MusicController"):SetCinematicDuck(Controller, nil)
 		seq:Update(now, dt)
 		local phase = seq.phase
+		if state.biteGuide then
+			state.biteGuide.Visible = BITE_GUIDE_PHASES[phase] == true and not seq.hookPendingAt
+		end
 		seq.meter.prompt.Visible, seq.continueLabel.Visible = false, false
 		instruction(state, nil)
 		local timeline = seq.bite and seq.bite.timeline
@@ -566,17 +590,20 @@ function Controller:HandleInput(input, processed)
 	end
 	local sequence = state.sequence
 	if sequence.phase == "Preparing" then
+		if Workspace:GetServerTimeNow() < sequence.options.meterStartsAt then
+			return
+		end
 		state.castPending = true
-		local progress = sequence:LockCastMeter()
+		sequence:LockCastMeter()
 		state.service
-			:Cast(state.token, progress)
+			:Cast(state.token)
 			:andThen(function(result)
 				if session ~= state then
 					return
 				end
 				state.castPending = false
 				if result.ok then
-					sequence:Cast(progress, result.distance, result.luck)
+					sequence:Cast(result.castProgress, result.distance, result.luck, result.castRating)
 				else
 					failed(state, result.message)
 				end
@@ -590,6 +617,9 @@ function Controller:HandleInput(input, processed)
 	elseif sequence.bite and os.clock() >= sequence.readyAt then
 		sequence:TryHook(os.clock())
 		if session == state and (sequence.hookPendingAt or sequence.bite.timeline.phase ~= "Bite") then
+			if state.biteGuide then
+				state.biteGuide.Visible = false
+			end
 			FishingInstructionView.ShowBiteCue(state.biteCue, state.tapIcon)
 		end
 	end

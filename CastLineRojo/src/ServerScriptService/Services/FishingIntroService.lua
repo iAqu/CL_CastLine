@@ -45,12 +45,17 @@ local function current(player, token)
 		else nil
 end
 
+local function canAutoPlay(profile)
+	local progress = profile.Data.FishingOnboarding
+	return profile.MetaData.SessionLoadCount == 1 and not (progress and progress.Stage)
+end
+
 function Service.Client:ClaimAutoPlay(player)
 	if PlayerDataService:IsStudioOnboardingTest() then
 		return false
 	end
 	local profile = PlayerDataService:GetProfile(player)
-	if not profile or not profile:IsActive() or autoClaims[player] or profile.MetaData.SessionLoadCount ~= 1 then
+	if not profile or not profile:IsActive() or autoClaims[player] or not canAutoPlay(profile) then
 		return false
 	end
 	-- Claim and consume without yielding. Cancel/death never restores this first-session claim.
@@ -77,7 +82,7 @@ function Service.Client:Begin(player, mode)
 		return failure("Opening already active")
 	end
 	if mode == "Auto" then
-		if autoClaims[player] ~= "Claimed" or profile.MetaData.SessionLoadCount ~= 1 then
+		if autoClaims[player] ~= "Claimed" or not canAutoPlay(profile) then
 			return failure("Opening first-session claim unavailable")
 		end
 		autoClaims[player] = "Started"
@@ -103,35 +108,31 @@ function Service.Client:StartPlayback(player, token)
 		return failure("Opening playback unavailable")
 	end
 	state.phase = "ReadyToCast"
+	state.meterStartsAt = Workspace:GetServerTimeNow() + 0.25
 	if not state.preview then
 		Analytics:Step(player, "IntroStarted")
 	end
-	return { ok = true }
+	return { ok = true, meterStartsAt = state.meterStartsAt }
 end
 
-function Service.Client:Cast(player, token, progress)
+function Service.Client:Cast(player, token)
 	local state = current(player, token)
 	local now = Workspace:GetServerTimeNow()
-	if
-		not state
-		or state.phase ~= "ReadyToCast"
-		or type(progress) ~= "number"
-		or progress ~= progress
-		or progress < 0
-		or progress > 1
-	then
+	if not state or state.phase ~= "ReadyToCast" or now < state.meterStartsAt then
 		return failure("Opening cast unavailable")
 	end
+	local progress = FishingConfig.GetCastMeterProgress(now - state.meterStartsAt - FishingConfig.GetFishingInputDelay(player))
+	local castRating = FishingConfig.GetCastRating(progress).Id
+	local castProfile = FishingConfig.GetCastProfile(castRating)
+	local distance = FishingConfig.FixedCastDistance
+	local flightTime = ProjectileMath.FlightTime(distance)
 	state.phase = "Waiting"
-	state.spin = ProjectileMath.FlightTime(FishingConfig.FixedCastDistance) * 7
-	state.landingAt = now
-		+ FishingConfig.CastLeadTime
-		+ FishingConfig.ReleaseTime
-		+ ProjectileMath.FlightTime(FishingConfig.FixedCastDistance)
+	state.spin = flightTime * 7
+	state.landingAt = now + castProfile.LeadTime + castProfile.ReleaseTime + flightTime
 	if not state.preview then
 		Analytics:Step(player, "IntroCast")
 	end
-	return { ok = true, distance = FishingConfig.FixedCastDistance, luck = 1 }
+	return { ok = true, distance = distance, luck = 1, castRating = castRating, castProgress = progress }
 end
 
 function Service.Client:NextRound(player, token, previousRound)
@@ -157,7 +158,7 @@ function Service.Client:NextRound(player, token, previousRound)
 	local startedAt = now + 0.35
 	local readyAt = startedAt + 0.5
 	local seed, motionSeed = random:NextInteger(1, 2 ^ 30), random:NextInteger(1, 2 ^ 30)
-	local biteAt = BiteSequence.GetBiteWindow(
+	local biteAt, biteEndsAt = BiteSequence.GetBiteWindow(
 		template,
 		bait.Size * FishingConfig.BaitFlightScale,
 		startedAt,
@@ -171,7 +172,7 @@ function Service.Client:NextRound(player, token, previousRound)
 		state.weight
 	)
 	state.round += 1
-	state.biteAt = biteAt
+	state.biteAt, state.biteEndsAt = biteAt, biteEndsAt
 	if not state.preview and Analytics:IsNewPlayer(player) then
 		Analytics:Step(player, "IntroLanded")
 		local round = state.round
@@ -197,7 +198,7 @@ function Service.Client:NextRound(player, token, previousRound)
 	}
 end
 
-function Service.Client:Hook(player, token, round, pressedAt)
+function Service.Client:Hook(player, token, round)
 	local state = current(player, token)
 	local now = Workspace:GetServerTimeNow()
 	if
@@ -205,11 +206,7 @@ function Service.Client:Hook(player, token, round, pressedAt)
 		or state.phase ~= "Waiting"
 		or state.round == 0
 		or state.round ~= round
-		or type(pressedAt) ~= "number"
-		or pressedAt ~= pressedAt
-		or pressedAt < state.biteAt
-		or pressedAt > now + 0.08
-		or now - pressedAt > 0.45
+		or not FishingConfig.GetHookTime(now, state.biteAt, state.biteEndsAt, FishingConfig.GetFishingInputDelay(player))
 	then
 		return failure("Missed the bite")
 	end
@@ -236,29 +233,35 @@ function Service.Client:Hook(player, token, round, pressedAt)
 				break
 			end
 		end
-		local uid = "FishingIntro_" .. tostring(Config.Version)
+		local uid = Config.RewardUidPrefix .. tostring(Config.Version)
+		local committed = false
 		local succeeded, granted, err = pcall(ItemGrantUtil.Grant, player, fish.FishID, {
 			Weight = state.weight,
 			CountTowardTotalWeight = true,
+			RecordFishingCatch = true,
 			InstanceId = uid,
 			BeforeCommit = function()
 				return (profile.Data.FishingIntroVersion or 0) < Config.Version, "Opening reward already received"
 			end,
 			OnCommitted = function()
 				profile.Data.FishingIntroVersion = Config.Version
-				Onboarding.Advance(player, profile.Data, nil, "FirstCatch")
+				state.caughtUid = uid
+				committed = true
+				Onboarding.Advance(player, profile.Data, nil, "PlaceFish", uid)
 				Analytics:Step(player, "IntroCaught")
 				if starter then
 					Progression.Record(progress, "Rod_101", fish.FishID, starter.band, starter.isMax)
 				end
 			end,
 		})
-		if not succeeded or not granted then
-			claiming[player] = nil
-			return failure(err or "Could not store your first fish")
-		end
-		profile.Data.FishingIntroVersion = Config.Version
 		claiming[player] = nil
+		if not committed then
+			state.phase = "Waiting"
+			return failure(if succeeded then err or "Could not store your first fish" else "Could not store your first fish")
+		end
+		if not succeeded then
+			warn("FishingIntroService: opening reward committed; presentation failed", granted)
+		end
 	end
 	state.phase = "Caught"
 	return { ok = true, weight = state.weight, catchId = fish.FishID, catchKind = "Fish", isNewDiscovery = true }
@@ -267,11 +270,12 @@ end
 function Service.Client:Cancel(player, token, continued)
 	local state = sessions[player]
 	if state and state.token == token then
-		if continued == true and state.phase == "Caught" and not state.preview then
+		sessions[player] = nil
+		if continued == true and state.phase == "Caught" and state.caughtUid then
 			Analytics:Detail(player, "Intro", "ContinueConfirmed")
 			Analytics:Detail(player, "Intro", "ControlsRestored")
+			ItemGrantUtil.EquipCaughtFish(player, state.character, state.caughtUid)
 		end
-		sessions[player] = nil
 	end
 end
 

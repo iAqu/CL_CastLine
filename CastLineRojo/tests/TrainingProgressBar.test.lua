@@ -70,7 +70,7 @@ end
 local function minimum(_, value)
 	return value
 end
-local formats = { FormatNumberStartKWithDecimal = tostring, FormatMaxCatchWeight = tostring }
+local formats = { FormatNumberStartKWithDecimal = tostring, FormatKg = tostring }
 local effectsChunk = assert(loadstring(read(modules .. "TrainingUIEffects.lua")))
 setfenv(
 	effectsChunk,

@@ -3,7 +3,8 @@ local Onboarding = {
 	LessonActiveAttribute = "FishingOnboardingLessonActive",
 	FishAttribute = "FishingOnboardingFish",
 	RewardRodId = "Rod_102",
-	TrainingLevel = 2,
+	TrainingLevel = 3,
+	FinalCatchWeightCapLevel = 2,
 }
 
 function Onboarding.IsActiveStage(stage)

@@ -34,7 +34,7 @@ assert(stats.CalculatePrice(fish, 1297.46337890625, 1) == 55588, "Sale value mus
 assert(stats.CalculatePrice(fish, 1297.46337890625, 1.5) == 83381, "Keep the existing mutation sale multiplier")
 assert(income.GetCpsPrice(fish, 1.5, nil, 1297.46337890625) == 2779, "CPS must use the same size factor and keep flooring")
 assert(stats.CalculatePrice(fish, 10, 2) == 6000, "Only the mutation multiplies the base sale price")
-for id, rate in pairs({ Golden = 1.5, Diamond = 2, Rainbow = 2.5 }) do
+for id, rate in pairs({ Golden = 2, Diamond = 5, Rainbow = 10 }) do
 	assert(stats.CalculatePrice(fish, 10, mutations.GetPriceRate(id)) == 3000 * rate)
 	assert(income.GetCpsPrice(fish, mutations.GetEarnCashRate(id), nil, 10) == 100 * rate)
 end
@@ -60,18 +60,18 @@ local migrate = loadSource(root .. "ItemPriceMigration.lua", {
 	require = function(value) return value end,
 })
 migrate(data)
-assert(data.Items.held.Price == 83381 and data.Items.placed.Price == 6000, "Reprice carried and placed legacy fish")
+assert(data.Items.held.Price == 111175 and data.Items.placed.Price == 15000, "Reprice carried and placed legacy fish")
 assert(data.Items.held.Weight == 1297.46337890625 and data.Items.held.MutationId == "Golden", "Migration changes only cached sale values")
 assert(data.Items.unknown.Price == 123 and data.Items.invalid.Price == 456, "Invalid records are not deleted or repriced")
 local eventPrice = data.Items.event.Price
 migrate(data)
-assert(data.Items.held.Price == 83381 and data.Items.event.Price == eventPrice, "Repricing is idempotent")
+assert(data.Items.held.Price == 111175 and data.Items.event.Price == eventPrice, "Repricing is idempotent")
 migrate({ Items = false })
 assert(income.GetBestOwnedBaseCps(data) == 100, "A large mutated fish must not inflate the Event baseline")
 assert(income.GetCpsPrice(event, 2.5, 100, 6.75) == 1037, "Apply an Event fish's own weight exactly once")
-assert(income.GetRate(data) == 1237, "Online income must count placed fish once with their actual weights")
+assert(income.GetRate(data) == 4649, "Online income must count placed fish once with their actual weights")
 income.PrepareOffline(data, 110)
-assert(data.PendingPlotOfflineCash == 6185, "Offline income shares weighted CPS and the existing 50% rate")
+assert(data.PendingPlotOfflineCash == 23245, "Offline income shares weighted CPS and the existing 50% rate")
 
 -- Exercise authoritative quotes and bulk sales against stale cached prices.
 local heldTool = { uid = "held", Parent = true }
@@ -107,11 +107,11 @@ local sell = loadSource("src/ServerScriptService/Services/SellService.lua", {
 	game = { GetService = function(_, name) return services[name] end }, require = function(value) return value end,
 })
 data.Items.held.Price = 1e15
-assert(sell:GetHeldItemQuote(player).price == 125072, "Quotes must ignore the historical price and keep the sale game pass")
-assert(data.Items.held.Price == 83381, "Quotes repair the cached price")
+assert(sell:GetHeldItemQuote(player).price == 166763, "Quotes must ignore the historical price and keep the sale game pass")
+assert(data.Items.held.Price == 111175, "Quotes repair the cached price")
 data.Items.held.Price = 1e15
 data.Items.unknown, data.Items.invalid, data.Items.broken = nil, nil, nil
 local sold = sell:SellAllItems(player)
-assert(sold.success and sold.soldCount == 1 and sold.earnedCash == 125072 and credits == 125072)
+assert(sold.success and sold.soldCount == 1 and sold.earnedCash == 166763 and credits == 166763)
 assert(data.Items.held == nil and data.Items.placed and data.Items.event, "Bulk sales must preserve placed fish")
 assert(refreshes == 1 and #removed == 1 and removed[1] == "held")

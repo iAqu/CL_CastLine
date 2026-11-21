@@ -1,4 +1,5 @@
 local Config = require(script.Parent.FishingConfig)
+local GuiUtil = require(script.Parent.GuiUtil)
 local ItemStatUtil = require(script.Parent.ItemStatUtil)
 local MutationDataUtil = require(script.Parent.MutationDataUtil)
 local NumberUtil = require(script.Parent.NumberUtil)
@@ -100,12 +101,16 @@ function FishingSequenceInfo.new(gui, owner, initialLuck, now)
 	for _, frame in { luck, reveal, self.name.Parent, self.rarityRow, self.income.Parent, self.mutationRow } do
 		owner:_save(frame, { "Visible" })
 	end
+	local weightRow = child(reveal, "Weight", "Frame")
+	owner:_save(weightRow, { "Visible" })
+	owner:_save(child(weightRow, "Label", "TextLabel"), { "Text" })
 	self.name.Parent.Visible, self.income.Parent.Visible = true, true
 	self.rarityRow.Visible = false
 	self.mutationRow.Visible = false
 	for _, label in { self.value, self.name, self.income } do
 		owner:_save(label, { "Text", "TextColor3" })
 	end
+	owner:_save(self.name, { "BackgroundColor3" })
 	owner:_save(self.glow, { "BackgroundTransparency" })
 	owner:_save(self.valueGradient, { "Color" })
 	owner:_save(self.glowGradient, { "Color" })
@@ -192,9 +197,12 @@ function FishingSequenceInfo.FillReveal(reveal, item, weight, mutation, isNew)
 	if badge then
 		badge.Visible = isNew == true
 	end
-	local sizeTitle = ItemStatUtil.GetSizeTitle(item, weight)
-	nameLabel.Text = item.DisplayName .. (if sizeTitle then " (" .. sizeTitle .. ")" else "")
+	nameLabel.Text = item.DisplayName
 	nameLabel.TextColor3 = RarityPresentation.GetColor(item.Rarity)
+	local weightRow = child(reveal, "Weight", "Frame")
+	local weightText = ItemStatUtil.FormatFishWeight(item, weight)
+	child(weightRow, "Label", "TextLabel").Text = weightText or ""
+	weightRow.Visible = weightText ~= nil
 	local mutationId = MutationDataUtil.NormalizeMutationId(mutation)
 	local mutationRow = child(reveal, "Mutation", "Frame")
 	local visible = false
@@ -226,6 +234,16 @@ function FishingSequenceInfo:_showCatch(bite)
 	end
 	local item = bite.fishConfig or { DisplayName = bite.template.Name, CpsPrice = 0 }
 	FishingSequenceInfo.FillReveal(self.reveal, item, bite.catchWeight, bite.mutationId, bite.isNewDiscovery)
+	if not self.originalNameGradients then
+		self.originalNameGradients = {}
+		for _, childInstance in self.name:GetChildren() do
+			if childInstance:IsA("UIGradient") then
+				table.insert(self.originalNameGradients, childInstance)
+				childInstance.Parent = nil
+			end
+		end
+	end
+	GuiUtil.SetRarityGradient(self.name, item.Rarity or "Common")
 	self.revealedBite = bite
 	self.owner:_celebrateCatch(bite)
 end
@@ -253,7 +271,13 @@ function FishingSequenceInfo:Update(now, bite)
 end
 
 function FishingSequenceInfo:Destroy()
-	-- GUI 属性由演出 owner 保存和统一还原；这里没有独立连接或 Tween。
+	if self.originalNameGradients then
+		GuiUtil.ClearGradeint(self.name)
+		for _, gradient in self.originalNameGradients do
+			gradient.Parent = self.name
+		end
+		self.originalNameGradients = nil
+	end
 	self.destroyed = true
 end
 

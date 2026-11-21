@@ -10,6 +10,7 @@ local function loadModule(path, environment)
 end
 
 local config = loadModule("ReplicatedStorage/Modules/FishingIntroConfig")
+local openingUid = config.RewardUidPrefix .. tostring(config.Version)
 local fishing = loadModule("ReplicatedStorage/Modules/FishingConfig")
 local lift = loadModule("ReplicatedStorage/Modules/FishingLiftMotion")
 local bite = loadModule(
@@ -58,7 +59,7 @@ assert(fish.HookWindow == 0.85 and fish.NibbleCountMin == 0, "Tutorial must not 
 
 local function fixture(preview, cancelDuringGrant, onboardingTest)
 	local now, grants, guid = 100, 0, 0
-	local heldUid
+	local heldUid, equips = nil, 0
 	local profile = {
 		Data = { FishingIntroVersion = 0, TotalItemWeightTenths = 0 },
 		MetaData = { SessionLoadCount = 1 },
@@ -70,8 +71,8 @@ local function fixture(preview, cancelDuringGrant, onboardingTest)
 			return humanoid
 		end,
 	}
-	local player = { Character = character, SetAttribute = function() end }
-	local client, token, round, pressed
+	local player = { Character = character, SetAttribute = function() end, GetNetworkPing = function() return 0 end }
+	local client, token, round, meterStartsAt
 	local grantFails = false
 	local services = {
 		HttpService = {
@@ -170,6 +171,7 @@ local function fixture(preview, cancelDuringGrant, onboardingTest)
 						EquipCaughtFish = function(receiver, caughtCharacter, uid)
 							assert(receiver == player and caughtCharacter == character)
 							heldUid = uid
+							equips += 1
 						end,
 						Grant = function(_, id, options)
 							if grantFails then
@@ -180,17 +182,17 @@ local function fixture(preview, cancelDuringGrant, onboardingTest)
 								id == config.StarterFishId and options.CountTowardTotalWeight and options.Weight == 1
 							)
 							assert(
-								not client:Hook(player, token, round, pressed).ok,
+								not client:Hook(player, token, round).ok,
 								"Grant yield must not allow a concurrent claim"
 							)
-					if cancelDuringGrant then
-						client:Cancel(player, token)
-						assert(not client:Begin(player, "Auto").ok, "Cancellation during a grant must not reopen reward eligibility")
-					end
+							if cancelDuringGrant then
+								client:Cancel(player, token)
+								assert(not client:Begin(player, "Auto").ok, "Cancellation during a grant must not reopen reward eligibility")
+							end
 							assert(options.BeforeCommit())
-							options.OnCommitted()
 							profile.Data.Items = profile.Data.Items or {}
 							profile.Data.Items[options.InstanceId] = { ItemId = id, Weight = options.Weight }
+							options.OnCommitted()
 							return { Weight = 1 }
 						end,
 					},
@@ -206,9 +208,11 @@ local function fixture(preview, cancelDuringGrant, onboardingTest)
 		profile = profile,
 		humanoid = humanoid,
 		time = function(value)
-			now = value
+			now = value or now
+			return now
 		end,
 		heldUid = function() return heldUid end,
+		equips = function() return equips end,
 		grants = function()
 			return grants
 		end,
@@ -224,15 +228,27 @@ local function fixture(preview, cancelDuringGrant, onboardingTest)
 			local result = client:Begin(player, mode)
 			token = result.token
 			if token and not prepareOnly then
-				assert(client:StartPlayback(player, token).ok)
+				local playback = client:StartPlayback(player, token)
+				assert(playback.ok)
+				meterStartsAt = playback.meterStartsAt
 			end
 			return result
 		end,
 		startPlayback = function()
-			return client:StartPlayback(player, token)
+			local playback = client:StartPlayback(player, token)
+			meterStartsAt = playback.meterStartsAt
+			return playback
 		end,
-		cast = function()
-			return client:Cast(player, token, 0)
+		cast = function(progress)
+			if progress then
+				local meter = fishing.Meter
+				local acceleration = meter.BaseSpeed * (meter.TopSpeedFactor - 1)
+				local period = 2 * math.log(meter.TopSpeedFactor) / acceleration
+				local elapsed = math.log(1 + (meter.TopSpeedFactor - 1) * progress) / acceleration
+				local cycles = math.max(0, math.ceil((now - meterStartsAt - elapsed) / period))
+				now = meterStartsAt + cycles * period + elapsed
+			end
+			return client:Cast(player, token)
 		end,
 		round = function(previous)
 			local result = client:NextRound(player, token, previous)
@@ -242,13 +258,31 @@ local function fixture(preview, cancelDuringGrant, onboardingTest)
 			return result
 		end,
 		hook = function(time, roundOverride)
-			pressed = time
 			return client:Hook(player, token, roundOverride or round, time)
 		end,
 		cancel = function(finished)
 			client:Cancel(player, token, finished)
 		end,
 	}
+end
+
+for _, case in ipairs({
+	{ progress = 0.949999, rating = "PERFECT", profile = fishing.CastProfiles.Normal },
+	{ progress = 0.950001, rating = "GODLIKE", profile = fishing.CastProfiles.Godlike },
+	{ progress = 1, rating = "GODLIKE", profile = fishing.CastProfiles.Godlike },
+}) do
+	local intro = fixture(false)
+	assert(intro.begin().ok)
+	local castTime = 120
+	intro.time(castTime)
+	local cast = intro.cast(case.progress)
+	assert(cast.ok and cast.castRating == case.rating, "Intro must confirm the shared rating for " .. case.progress)
+	assert(cast.distance == fishing.FixedCastDistance and cast.luck == 1)
+	local landingTime = intro.time() + case.profile.LeadTime + case.profile.ReleaseTime + 1 -- Mocked flight time.
+	intro.time(landingTime - 0.001)
+	assert(not intro.round(0).ok, "Intro must reject a bite round before " .. case.rating .. " lands")
+	intro.time(landingTime + 0.001)
+	assert(intro.round(0).ok, "Intro must allow a bite round after " .. case.rating .. " lands")
 end
 
 local live = fixture(false)
@@ -263,19 +297,34 @@ local first = live.round(0)
 assert(first.ok and first.weight == 1 and not live.round(0).ok,"Tutorial round must use the configured default weight")
 assert(not live.hook(124).ok, "Cannot claim before a genuine bite")
 live.time(128)
-assert(not live.hook(128, 0).ok and not live.hook(0 / 0).ok and not live.hook(1e9).ok)
+assert(not live.hook(128, 0).ok, "Wrong round must remain ineligible")
 assert(live.hook(128).ok and live.grants() == 1)
 assert(not live.hook(128).ok and live.grants() == 1)
 assert(live.profile.Data.FishingIntroVersion == config.Version)
-assert(live.profile.Data.FishingOnboarding.Stage == "FirstCatch")
+assert(live.profile.Data.FishingOnboarding.Stage == "PlaceFish" and live.profile.Data.FishingOnboarding.FishUid == openingUid)
 assert(live.profile.Data.FishingProgress.Count == 1, "Teaching fish counts once toward newcomer milestones")
 assert(live.heldUid() == nil)
 live.cancel(true)
 live.cancel(true)
-local introReward = live.profile.Data.Items["FishingIntro_" .. tostring(config.Version)]
-assert(live.heldUid() == nil, "Completing the intro must leave the reward unequipped")
+local introReward = live.profile.Data.Items[openingUid]
+assert(live.heldUid() == openingUid and live.equips() == 1, "Continue equips the committed opening fish exactly once")
 assert(introReward.ItemId == config.StarterFishId and introReward.Weight == 1 and live.grants() == 1)
 assert(not live.begin().ok, "Consumed first-session claim must not reopen after completion")
+
+local disconnected = fixture(false)
+disconnected.begin()
+disconnected.time(120)
+disconnected.cast()
+disconnected.time(124)
+disconnected.round(0)
+disconnected.time(128)
+assert(disconnected.hook(128).ok)
+disconnected.cancel(false)
+disconnected.profile.MetaData.SessionLoadCount = 2
+assert(not disconnected.client:ClaimAutoPlay(disconnected.player))
+assert(disconnected.profile.Data.FishingOnboarding.Stage == "PlaceFish")
+assert(disconnected.profile.Data.FishingOnboarding.FishUid == openingUid and disconnected.profile.Data.Items[openingUid])
+assert(disconnected.heldUid() == nil and disconnected.grants() == 1, "Leaving before Continue preserves the fish for placement on rejoin")
 
 local retry = fixture(false)
 retry.begin()
@@ -329,6 +378,8 @@ racing.time(124)
 racing.round(0)
 racing.time(128)
 assert(racing.hook(128).ok and racing.grants() == 1)
+assert(racing.profile.Data.FishingOnboarding.Stage == "PlaceFish" and racing.profile.Data.Items[openingUid])
+assert(racing.heldUid() == nil, "A grant completing after interruption leaves the fish for inventory recovery")
 assert(not racing.begin().ok, "A grant that finishes after cancellation must still close onboarding eligibility")
 
 local unclaimed = fixture(false)
@@ -344,13 +395,28 @@ assert(not unclaimed.client:Begin(unclaimed.player, "Auto").ok, "Interruption ca
 unclaimed.profile.MetaData.SessionLoadCount = 2
 assert(not unclaimed.client:ClaimAutoPlay(unclaimed.player), "Rejoining cannot claim again")
 
+for _, stage in ipairs({ "PlaceFish", "Train", "StopTraining", "RodReward", "FinalCatch", "Complete" }) do
+	local resumed = fixture(false)
+	resumed.profile.Data.FishingOnboarding = { Stage = stage }
+	assert(not resumed.client:ClaimAutoPlay(resumed.player), "Saved stage must take priority over first-session metadata: " .. stage)
+end
+
+local resumedDuringClaim = fixture(false)
+assert(resumedDuringClaim.client:ClaimAutoPlay(resumedDuringClaim.player))
+resumedDuringClaim.profile.Data.FishingOnboarding = { Stage = "Train" }
+assert(not resumedDuringClaim.client:Begin(resumedDuringClaim.player, "Auto").ok,
+	"Starting the opening must not interrupt a saved training checkpoint")
+
 local prepared = fixture(false)
 assert(prepared.begin("Auto", true).ok)
 prepared.time(1000)
 assert(not prepared.cast().ok, "Time under loading cannot unlock teaching")
-assert(prepared.startPlayback().ok)
+local playback = prepared.startPlayback()
+assert(playback.ok)
 assert(not prepared.startPlayback().ok, "Repeated start cannot reset the server clock")
-assert(prepared.cast().ok, "Cast must unlock immediately after the loading handoff")
+assert(not prepared.cast().ok, "The server start time provides time to show the meter")
+prepared.time(playback.meterStartsAt)
+assert(prepared.cast().ok, "Cast unlocks at the synchronized start time")
 assert(not prepared.cast().ok, "Repeated input cannot start another cast")
 
 local progressDoesNotGate = fixture(false)
@@ -374,11 +440,11 @@ assert(studioAuto.round(0).ok)
 studioAuto.time(128)
 assert(studioAuto.hook(128).ok and studioAuto.grants() == 1)
 assert(studioAuto.profile.Data.FishingIntroVersion == config.Version)
-assert(studioAuto.profile.Data.FishingOnboarding.Stage == "FirstCatch")
+assert(studioAuto.profile.Data.FishingOnboarding.Stage == "PlaceFish")
 assert(not studioAuto.hook(128).ok and studioAuto.grants() == 1)
 assert(studioAuto.heldUid() == nil)
 studioAuto.cancel(true)
-assert(studioAuto.heldUid() == nil)
+assert(studioAuto.heldUid() == openingUid)
 
 local onboardingPreview = fixture(true, false, true)
 assert(not onboardingPreview.client:ClaimAutoPlay(onboardingPreview.player), "Onboarding tests skip the opening")

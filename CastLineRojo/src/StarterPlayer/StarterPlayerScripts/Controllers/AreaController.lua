@@ -172,10 +172,15 @@ local function hideDevParts()
     end
 end
 
--- 家园定位用的 Part 只在客户端隐藏：它们仍会作为出生点和加载相机的空间锚点使用。
+-- 家园定位用的 Part 只在客户端隐藏，仍提供出生、交互和相机所需的位置。
 local PLOT_RUNTIME_MARKERS = {
     LoadingScreenCam = true,
     AreaSpawnPoint = true,
+    SellShopAnchor = true,
+    TrainingAnchor = true,
+    TrainingExitAnchor = true,
+    TrainingUpgradeAnchor = true,
+    RodShopAnchor = true,
 }
 
 local function hidePlotRuntimeMarkers(plot: Instance)
@@ -191,7 +196,7 @@ local function hidePlotRuntimeMarkers(plot: Instance)
     end
 end
 
--- Studio 编辑模式不会运行 LocalScript；Play/Run 与正式服都会经过这里。
+-- Studio Play 客户端与正式服都会经过这里。
 local function initPlotRuntimeMarkerHiding()
     local areas = Workspace:FindFirstChild("Areas")
     if not areas then
@@ -240,11 +245,6 @@ local function initAirWalls()
                     airWall.Transparency = 1
                 end
             end
-        end
-
-        local areas = workspace:FindFirstChild("Areas")
-        if areas then
-            hideAirWalls(areas:FindFirstChild("AirWalls"))
         end
 
         for _, area in workspace.Areas:GetChildren() do

@@ -1,6 +1,6 @@
 local createHarness = require("./helpers/RarityHarness")
 local sources = {}
-for _, name in ipairs({ "RarityConfig", "RarityPresentation", "ItemRollUtil", "ItemStatUtil", "RarityRevealConfig", "GuiUtil", "DropVFXUtil" }) do
+for _, name in ipairs({ "RarityConfig", "RarityPresentation", "ItemRollUtil", "ItemStatUtil", "WeightFormat", "RarityRevealConfig", "GuiUtil", "DropVFXUtil" }) do
 	local file = assert(io.open("src/ReplicatedStorage/Modules/" .. name .. ".lua", "r"))
 	sources[name] = file:read("*a")
 	file:close()

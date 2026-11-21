@@ -26,7 +26,7 @@ python3 build.py --install
 
 保持 Studio Settings → Studio → **Load User Plugins In Run Modes** 开启。按钮在 Plugins 工具栏和 Plugins → Restart Test 菜单中；也可以在 Studio 的 Customize Shortcuts 中为 `Restart Test` 动作自行绑定快捷键，插件不会占用默认按键。
 
-在 `#CL_DEV` 的 **Customize Shortcuts** 中将 **Restart Onboarding Test** 绑定到 `F4`。单人试玩中按 `F4` 会重开 Play，载入全新的隔离存档并直接显示 `TRY AGAIN!`。普通的 **Restart Test** 动作仍启动常规试玩。
+在 `#CL_DEV` 的 **Customize Shortcuts** 中将 **Restart Onboarding Test** 绑定到 `F4`。单人试玩中按 `F4` 会重开 Play，载入带有一条开场鱼的全新隔离存档，并直接从放养引导开始。普通的 **Restart Test** 动作仍启动常规试玩。
 
 ## 边界
 

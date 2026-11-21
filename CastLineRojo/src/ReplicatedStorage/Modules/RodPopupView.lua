@@ -8,14 +8,15 @@ local RarityPresentation = require(ReplicatedStorage.Modules.RarityPresentation)
 local View = {}
 View.__index = View
 
-function View.new(gui: ScreenGui, popup: Frame, kind: "Rod" | "Barbell")
+function View.new(gui: ScreenGui, popup: Frame, kind: "Rod" | "Barbell" | "Event")
 	local main = popup.MainFrame
 	return setmetatable({
 		gui = gui,
 		popup = popup,
 		kind = kind,
 		main = main,
-		preview = main.PreviewFrame,
+		preview = if kind == "Event" then nil else main.PreviewFrame,
+		button = if kind == "Event" then main.JoinButton else main.ShopButton,
 		restingPosition = popup.Position,
 		baseSize = popup.Size,
 		scale = popup:FindFirstChildOfClass("UIScale"),
@@ -57,7 +58,9 @@ function View:SetItem(item)
 end
 
 function View:Show(item)
-	self:SetItem(item)
+	if item then
+		self:SetItem(item)
+	end
 	self.generation += 1
 	if self.tween then
 		self.tween:Cancel()
@@ -75,11 +78,11 @@ function View:Show(item)
 	self.tween:Play()
 	if UserInputService.PreferredInput == Enum.PreferredInput.Gamepad then
 		self.previousSelection = GuiService.SelectedObject
-		GuiService.SelectedObject = self.main.ShopButton
+		GuiService.SelectedObject = self.button
 	end
 end
 
-function View:Hide()
+function View:Hide(immediate: boolean?)
 	self.generation += 1
 	local generation = self.generation
 	if self.tween then
@@ -93,6 +96,11 @@ function View:Hide()
 			else nil
 	end
 	self.previousSelection = nil
+	if immediate then
+		self.popup.Visible, self.gui.Enabled = false, false
+		self.closing = false
+		return
+	end
 	self.tween = TweenService:Create(self.popup, TweenInfo.new(0.28, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
 		Position = UDim2.new(self.restingPosition.X.Scale, self.restingPosition.X.Offset, -0.4, -64),
 	})
@@ -105,8 +113,8 @@ function View:Hide()
 	self.tween:Play()
 end
 
-function View:Step(remaining: number)
-	self.main.ProgressFrame.ProgressBar.Size = UDim2.fromScale(math.clamp(remaining / 7, 0, 1), 1)
+function View:Step(remaining: number, duration: number?)
+	self.main.ProgressFrame.ProgressBar.Size = UDim2.fromScale(math.clamp(remaining / (duration or 7), 0, 1), 1)
 	self:Fit()
 end
 

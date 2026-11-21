@@ -42,6 +42,7 @@ function Effects.Ripple(self, startedAt, position, strength, now)
 	part.CanCollide, part.CanTouch, part.CanQuery = false, false, false
 	local gui = Instance.new("SurfaceGui")
 	gui.Face, gui.CanvasSize, gui.LightInfluence = Enum.NormalId.Top, Vector2.new(256, 256), 0
+	gui:SetAttribute("FishingBillboardExempt", true)
 	gui.Parent = part
 	local ring = Instance.new("Frame")
 	ring.Size, ring.Position, ring.BackgroundTransparency = UDim2.fromScale(0.9, 0.9), UDim2.fromScale(0.05, 0.05), 1
@@ -82,11 +83,16 @@ function Effects.Play(owner, now, group, name, position, direction, scale, conti
 		return
 	end
 	local model = template:Clone()
-	local exitParticles = {}
-	if scale and group == "WaterVFX" and name == Config.WaterVFX.Exit then
+	local isWaterVFX = group == "WaterVFX"
+	local isEntry = isWaterVFX and name == Config.WaterVFX.Entry
+	if isEntry then
+		scale = Config.WaterVFX.EntryScale
+	end
+	local originalParticles = {}
+	if scale and (isEntry or (isWaterVFX and name == Config.WaterVFX.Exit)) then
 		for _, instance in ipairs(model:GetDescendants()) do
 			if instance:IsA("ParticleEmitter") then
-				table.insert(exitParticles, { instance, instance.Size, instance.Speed, instance.Acceleration })
+				table.insert(originalParticles, { instance, instance.Size, instance.Speed, instance.Acceleration })
 			end
 		end
 	end
@@ -101,7 +107,7 @@ function Effects.Play(owner, now, group, name, position, direction, scale, conti
 		end
 	end
 	-- 从缩放前的数值覆盖，避免 ScaleTo 和粒子空间参数重复缩放。
-	for _, original in ipairs(exitParticles) do
+	for _, original in ipairs(originalParticles) do
 		local points = {}
 		for _, key in ipairs(original[2].Keypoints) do
 			table.insert(points, NumberSequenceKeypoint.new(key.Time, key.Value * scale, key.Envelope * scale))

@@ -3,6 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 
 local FishInventoryData = require(ReplicatedStorage.Modules.FishInventoryData)
+local GlobalLeaderboardConfig = require(ReplicatedStorage.Modules.GlobalLeaderboardConfig)
 local ItemStatUtil = require(ReplicatedStorage.Modules.ItemStatUtil)
 local ItemToolUtil = require(ReplicatedStorage.Modules.ItemToolUtil)
 local Knit = require(ReplicatedStorage.Packages.Knit)
@@ -15,6 +16,7 @@ export type GrantOptions = {
 	Random: Random?,
 	Weight: number?,
 	CountTowardTotalWeight: boolean?,
+	RecordFishingCatch: boolean?,
 	MutationId: string?,
 	InstanceId: string?,
 	PaidOrigin: string?,
@@ -174,6 +176,9 @@ function ItemGrantUtil.Grant(player: Player, itemId: string, options: GrantOptio
 		MutationId = mutationId,
 		PaidOrigin = options and options.PaidOrigin,
 	}
+	if options and options.RecordFishingCatch then
+		GlobalLeaderboardConfig.RecordCatch(profile.Data, weight)
+	end
 	if options and options.OnCommitted then
 		options.OnCommitted()
 	end

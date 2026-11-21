@@ -1,6 +1,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local Players = game:GetService("Players")
+local StarterGui = game:GetService("StarterGui")
 local StarterPlayer = game:GetService("StarterPlayer")
 
 -- 按钮反馈先启动，避免依赖 Controller 加载顺序或首批 GUI 的复制时机。
@@ -13,12 +14,10 @@ local LoadingAttributes = require(ReplicatedFirst:WaitForChild("LoadingAttribute
 local localPlayer = Players.LocalPlayer
 local controllersFolder = StarterPlayer.StarterPlayerScripts.Controllers
 local PlayerDataController = require(controllersFolder:WaitForChild("PlayerDataController"))
-local EventController = require(controllersFolder:WaitForChild("EventController"))
 local FarmSignController = require(controllersFolder:WaitForChild("FarmSignController"))
 
 -- 与其余 Controller 的 require 并行等待服务端存档，避免 HomeGui 先显示模板占位值。
 PlayerDataController:BeginEarlyFetch()
-EventController:BeginEarlyState()
 -- 首屏农场头像不依赖 Knit 启动，先绑定 UI，再加载其余 Controller。
 FarmSignController:BeginEarlyUi()
 
@@ -26,10 +25,52 @@ FarmSignController:BeginEarlyUi()
 -- 导致 Knit 不启动、背包快捷栏等全部消失；超时告警帮助定位卡住的 Controller。
 local REQUIRE_STUCK_WARN_SECONDS = 10
 
+-- 旧界面的控制器只在对应的 Studio 模板存在时加载。
+local optionalControllerTemplates: { [string]: { string } } = {
+    AchievementGuiController = { "AchievementGui" },
+    ChestController = { "ChestDailyRewardGui" },
+    ChristmasDailyRewardGuiController = { "ChristmasDailyRewardGui" },
+    DailyRewardGuiController = { "DailyRewardGui" },
+    DiamondBuyGuiController = { "DiamondBuyGui" },
+    HalloweenDailyRewardGuiController = { "HalloweenDailyRewardGui" },
+    HareDailyRewardGuiController = { "HareDailyRewardGui" },
+    LimitedAdvancedPackGuiController = { "LimitedAdvancedPackGui" },
+    LimitedChristmasPackGuiController = { "LimitedChristmasPackGui" },
+    LimitedPackDetailGuiController = { "LimitedPackListGui", "LimitedPackDetailGui" },
+    LimitedPackListGuiController = { "LimitedPackListGui", "LimitedPackDetailGui" },
+    LimitedSquidPackGuiController = { "LimitedSquidPackGui" },
+    LimitedStarterPackGuiController = { "LimitedStarterPackGui" },
+    LongDailyRewardGuiController = { "LongDailyRewardGui" },
+    OnlineQuestGuiController = { "OnlineQuestGui" },
+    OnlineRewardGuiController = { "OnlineRewardGui" },
+    RandomPotionGuiController = { "RandomPotionGui" },
+    RebirthGuiController = { "RebirthGui" },
+    SeasonGuiController = { "SeasonGui" },
+    SpinningWheelController = { "SpinningWheelGui" },
+    StarterPackGuiController = { "StarterPackGui" },
+    SuperRebirthGuiController = { "RebirthGui", "SuperRebirthGui" },
+    TradeGuiController = { "TradeGui" },
+    TradeMenuGuiController = { "TradeMenuGui" },
+    ValentineDailyRewardGuiController = { "ValentineDailyRewardGui" },
+}
+
+local function hasControllerTemplates(controllerName: string): boolean
+    local templates = optionalControllerTemplates[controllerName]
+    if not templates then
+        return true
+    end
+    for _, guiName in ipairs(templates) do
+        if not StarterGui:FindFirstChild(guiName) then
+            return false
+        end
+    end
+    return true
+end
+
 localPlayer:SetAttribute(LoadingAttributes.CLIENT_CONTROLLERS_READY, false)
 
 for _,v in ipairs(controllersFolder:GetDescendants()) do
-    if v:IsA("ModuleScript") and v.Name:match("Controller$") then
+    if v:IsA("ModuleScript") and v.Name:match("Controller$") and hasControllerTemplates(v.Name) then
         local finished = false
         task.delay(REQUIRE_STUCK_WARN_SECONDS, function()
             if not finished then

@@ -1,4 +1,5 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local StarterGui = game:GetService("StarterGui")
 
 local Knit = require(ReplicatedStorage.Packages.Knit)
 local NotificationClient = require(ReplicatedStorage.Modules.NotificationClient)
@@ -10,7 +11,7 @@ local currentGuis = {}
 local isHideMode = false
 
 function GuiHelper.CanOpenGui(): boolean
-    if Knit.GetController("TradeGuiController"):IsTrading() then
+    if StarterGui:FindFirstChild("TradeGui") and Knit.GetController("TradeGuiController"):IsTrading() then
         NotificationClient.WhiteNotify(Constants.NOTIFICATION.TRADE_IN_PROGRESS)
         return false
     end

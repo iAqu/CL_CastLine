@@ -5,6 +5,7 @@ local GuiService = game:GetService("GuiService")
 local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local StarterGui = game:GetService("StarterGui")
 local UserInputService = game:GetService("UserInputService")
 
 local FovController = require(ReplicatedStorage.Modules.FovController)
@@ -373,13 +374,18 @@ local POPUP_GUI_NAMES = {
     "GroupRewardGui",
 }
 
--- 带超时收集弹窗 GUI：任何一个名字与 StarterGui 不一致时只告警跳过，
--- 避免模块顶层无限 WaitForChild 卡死所有 require 本模块的控制器（会导致背包/快捷栏等全部消失）。
+-- 已移除模板的弹窗不参与启动等待。
 local POPUP_GUI_WAIT_SECONDS = 10
 
 local PopupGuis: { ScreenGui } = {}
 for _, guiName in ipairs(POPUP_GUI_NAMES) do
-    local gui = PlayerGui:WaitForChild(guiName, POPUP_GUI_WAIT_SECONDS)
+    local gui = PlayerGui:FindFirstChild(guiName)
+    if not gui then
+        if not StarterGui:FindFirstChild(guiName) then
+            continue
+        end
+        gui = PlayerGui:WaitForChild(guiName, POPUP_GUI_WAIT_SECONDS)
+    end
     if gui and gui:IsA("ScreenGui") then
         table.insert(PopupGuis, gui)
     else

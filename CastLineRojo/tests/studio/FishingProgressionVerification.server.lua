@@ -40,7 +40,13 @@ local humanoid = character and character:FindFirstChildOfClass("Humanoid")
 if not spot or not root or not humanoid then report({ok=false,error="Missing live fishing spot or character"}); return end
 local oldPivot = character:GetPivot()
 local existingTools = {}; for _,v in player.Backpack:GetChildren() do existingTools[v] = true end
-local isolated = {Data=copy(original.Data),MetaData={SessionLoadCount=2},IsActive=function() return true end}
+local isolated = {Data=copy(original.Data),MetaData={SessionLoadCount=2,MetaTags={},MetaTagsLatest={}},IsActive=function() return true end}
+function isolated:SetMetaTag(key, value)
+ self.MetaData.MetaTags[key] = value
+end
+function isolated:Save()
+ self.MetaData.MetaTagsLatest = table.clone(self.MetaData.MetaTags)
+end
 isolated.Data.Wins=100000
 isolated.Data.Items={}; isolated.Data.PlotPlacements={}; isolated.Data.IndexDiscoveryLog={}; isolated.Data.NewItemTagSeenLog={}
 isolated.Data.EquippedRodId="Rod_101"; isolated.Data.OwnedRods={Rod_101=true,Rod_102=true}
@@ -103,6 +109,7 @@ local ok,err=xpcall(function()
  local progress=isolated.Data.FishingProgress
  P.GrantReceipt(progress,"Rod_101","isolated-verification-receipt")
  local rainbow=begin("Bait_108")
+ check(progress.Credits.Rod_101==0,"premium consumed when the cast is accepted")
  local rainbowResult=hook(rainbow)
  check(rainbowResult.ok and rainbowResult.mutationId=="Rainbow","premium rainbow grant")
  check(progress.Credits.Rod_101==0,"premium consumed once")

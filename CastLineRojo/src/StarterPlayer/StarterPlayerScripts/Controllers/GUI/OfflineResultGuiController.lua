@@ -48,7 +48,7 @@ function OfflineResultGuiController:KnitStart()
 				warn("OfflineResultGuiController: could not load offline earnings")
 			end)
 	end
-	Knit.GetService("PlayerDataService").DataLoaded:Connect(loadReward)
+	Players.LocalPlayer:GetAttributeChangedSignal("PlayerProfileReady"):Connect(loadReward)
 	loadReward()
 
 	claim.Activated:Connect(function()

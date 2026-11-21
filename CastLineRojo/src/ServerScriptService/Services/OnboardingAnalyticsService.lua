@@ -9,16 +9,14 @@ local Service = Knit.CreateService({
 	Client = { GuidePresentation = Knit.CreateSignal() },
 })
 
-local FUNNEL = "CL_Onboarding_v1"
 local DETAIL_EVENT = "CL_OnboardingDetail_v1"
-local PROFILE_KEY = "OnboardingAnalyticsV1"
 local IS_STUDIO = RunService:IsStudio()
 local CUSTOM_FIELD_1 = Enum.AnalyticsCustomFieldKeys.CustomField01.Name
 local CUSTOM_FIELD_2 = Enum.AnalyticsCustomFieldKeys.CustomField02.Name
 local CUSTOM_FIELD_3 = Enum.AnalyticsCustomFieldKeys.CustomField03.Name
 
 -- Steps and names are stable once published.
-local steps = {
+local stepsV1 = {
 	{ "ProfileReady", "Profile ready" },
 	{ "IntroClaimed", "Intro autoplay claimed" },
 	{ "IntroCreated", "Intro session created" },
@@ -44,13 +42,15 @@ local steps = {
 	{ "FinalCatchBite", "Final lesson hook window opened" },
 	{ "FinalCatchCaught", "Onboarding completed" },
 }
-local stepIndex = {}
-for index, step in ipairs(steps) do
+local stepsV2, stepIndex = {}, {}
+for index, step in ipairs(stepsV1) do
 	stepIndex[step[1]] = index
+	if not step[1]:match("^FirstCatch") then
+		table.insert(stepsV2, step)
+	end
 end
 
 local guideStages = {
-	FirstLessonRoute = "FirstCatch",
 	BackpackPrompt = "PlaceFish",
 	HoldFishPrompt = "PlaceFish",
 	FishHeld = "PlaceFish",
@@ -121,18 +121,20 @@ function Service:Initialize(player, profile)
 	if sessions[player] then
 		return
 	end
-	local saved = profile.Data[PROFILE_KEY]
+	local saved = profile.Data.OnboardingAnalyticsV2 or profile.Data.OnboardingAnalyticsV1
+	local version = if profile.Data.OnboardingAnalyticsV2 or not saved then 2 else 1
 	if saved == nil and profile.MetaData.SessionLoadCount == 1 then
 		saved = { Observed = {}, Sent = 0, Details = {} }
 		if not IS_STUDIO then
-			profile.Data[PROFILE_KEY] = saved
+			profile.Data.OnboardingAnalyticsV2 = saved
 		end
 	elseif saved and IS_STUDIO then
-		saved = { Observed = table.clone(saved.Observed), Sent = saved.Sent, Details = table.clone(saved.Details) }
+		saved = { Observed = table.clone(saved.Observed), Sent = saved.Sent, Details = table.clone(saved.Details), Retired = saved.Retired }
 	end
 	sessions[player] = {
 		Profile = profile,
 		Onboarding = saved,
+		FunnelVersion = version,
 		ClientTokens = 16,
 		ClientAt = os.clock(),
 		Events = if IS_STUDIO then {} else nil,
@@ -218,7 +220,7 @@ function Service:_send(player, session, event)
 		end
 		table.insert(events, event)
 	elseif event.Step then
-		AnalyticsService:LogFunnelStepEvent(player, FUNNEL, "", event.Step, event.Name)
+		AnalyticsService:LogFunnelStepEvent(player, `CL_Onboarding_v{session.FunnelVersion}`, "", event.Step, event.Name)
 	else
 		AnalyticsService:LogCustomEvent(player, event.Name, event.Value, event.Fields)
 	end
@@ -247,8 +249,9 @@ function Service:Pump()
 		end
 		local session = activeSession(player)
 		local saved = session and session.Onboarding
-		if saved and now >= (session.FunnelRetryAt or 0) then
+		if saved and not saved.Retired and now >= (session.FunnelRetryAt or 0) then
 			local index = saved.Sent + 1
+			local steps = if session.FunnelVersion == 1 then stepsV1 else stepsV2
 			local step = steps[index]
 			if step and saved.Observed[step[1]] then
 				if send(player, session, { Step = index, Name = step[2] }) then

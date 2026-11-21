@@ -32,6 +32,7 @@ local anchor = {
 	end,
 }
 anchor.CFrame = {
+	Position = zero,
 	LookVector = vector(0, 0, 1),
 	UpVector = vector(1, 0, 0),
 	VectorToObjectSpace = function(_, v)
@@ -88,7 +89,12 @@ local parent =
 		GetFootHeight = function()
 			return 3
 		end,
-	}, TrainingConfig = { FootTolerance = 2.5 } }
+	}, TrainingConfig = { FootTolerance = 2.5 }, PlotWorkspaceUtil = {
+		getPlotBySlot = function(slotId)
+			assert(slotId == 1, "Plot_1 supplies the exit anchor template")
+			return plot
+		end,
+	} }
 local env = setmetatable({
 	script = { Parent = parent },
 	require = function(m)
@@ -134,13 +140,13 @@ end
 assertFacing(plot, vector(0, 0, 1))
 local rotatedPlot = table.clone(plot)
 rotatedPlot.TrainingAnchor = table.clone(anchor)
-rotatedPlot.TrainingAnchor.CFrame = { LookVector = vector(-0.8, 0.6, 0), UpVector = vector(0, 0, 1) }
+rotatedPlot.TrainingAnchor.CFrame = { Position = zero, LookVector = vector(-0.8, 0.6, 0) }
 assertFacing(rotatedPlot, vector(-1, 0, 0))
 rotatedPlot.TrainingAnchor.CFrame.LookVector = vector(0, 1, 0)
 assertFacing(rotatedPlot, vector(1, 0, 0))
 
 local exit = Spot.ExitCFrame(plot, character)
-assert(math.abs(exit.Position.X + 7.95) < 1e-9 and exit.LookVector.X == -1, "Exit clears marker edge by 2.5 studs")
+assert(math.abs(exit.Position.X + 7.95) < 1e-9 and exit.LookVector.X == -1, "Missing exit anchor uses the marker edge")
 assert(
 	not Spot.Contains(anchor, { Position = exit.Position, Size = root.Size, Parent = character }, humanoid),
 	"Exit lands outside the marker"
@@ -156,3 +162,34 @@ assert(Spot.ExitCFrame(plot, character) == spawn.CFrame, "Steep ground is reject
 steep = false
 high = true
 assert(Spot.ExitCFrame(plot, character) == spawn.CFrame, "Fence tops are rejected")
+high = false
+
+plot.TrainingExitAnchor = {
+	CFrame = { Position = vector(18, 0.25, 1), LookVector = vector(0, 0.6, 0.8) },
+	IsA = function()
+		return true
+	end,
+}
+local function assertExit(testPlot, expectedPosition, expectedFacing)
+	local frame = Spot.ExitCFrame(testPlot, character)
+	assert((frame.Position - expectedPosition).Magnitude < 1e-9, "Exit keeps foot clearance above its anchor")
+	assert((frame.LookVector - expectedFacing).Magnitude < 1e-9, "Exit uses the anchor's horizontal facing")
+end
+
+assertExit(plot, vector(18, 3.35, 1), vector(0, 0, 1))
+
+local relativeFrame = {}
+anchor.CFrame.ToObjectSpace = function(_, frame)
+	assert(frame == plot.TrainingExitAnchor.CFrame, "Exit offset uses Plot_1's authored anchor")
+	return relativeFrame
+end
+rotatedPlot.TrainingAnchor.CFrame.ToWorldSpace = function(_, frame)
+	assert(frame == relativeFrame, "Destination plot receives the offset from Plot_1's training anchor")
+	return { Position = vector(99, 0.25, 18), LookVector = vector(-0.8, 0.6, 0) }
+end
+assertExit(rotatedPlot, vector(99, 3.35, 18), vector(-1, 0, 0))
+
+plot.TrainingExitAnchor.IsA = function()
+	return false
+end
+assertExit(plot, exit.Position, exit.LookVector)

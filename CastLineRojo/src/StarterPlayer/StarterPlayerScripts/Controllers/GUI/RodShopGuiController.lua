@@ -16,6 +16,7 @@ local GuiUtil = require(Modules.GuiUtil)
 local IndexItemViewport = require(Modules.IndexItemViewport)
 local NotificationClient = require(Modules.NotificationClient)
 local NumberUtil = require(Modules.NumberUtil)
+local WeightFormat = require(Modules.WeightFormat)
 local PlotWorkspaceUtil = require(Modules.PlotWorkspaceUtil)
 local RodShopZone = require(Modules.RodShopZone)
 local RodShopClientState = require(Modules.RodShopClientState)
@@ -226,7 +227,7 @@ function RodShopGuiController:KnitStart()
 			-- The template has a hidden Weight row as well as the displayed one.
 			for _, row in information:GetChildren() do
 				if row.Name == "Weight" then
-					row.Counter.Text = tostring(rod.MaxWeight) .. "kg"
+					row.Counter.Text = if rod.MaxWeight ~= nil then WeightFormat.FormatKg(rod.MaxWeight) else ""
 					if not FishingConfig.RodWeightLimitEnabled then
 						row.Visible = false
 					end

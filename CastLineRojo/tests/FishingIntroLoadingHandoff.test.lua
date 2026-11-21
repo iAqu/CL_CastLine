@@ -32,6 +32,13 @@ local function fixture(initialState, prepare)
 		restoreCharacterAnchoring = function() table.insert(releases, "anchor") end,
 		restoreLighting = function() table.insert(releases, "lighting") end,
 		restoreOtherGuis = function() table.insert(releases, "gui") end,
+		restoreSceneGuis = function()
+			if releases[#releases] ~= "scene gui" then
+				assert(objects[1] and not objects[1].destroyed, "Release scene UI under the intro cover")
+				assert(not attributes[loading.LOADING_SCREEN_DONE], "Restore scene UI before signaling completion")
+				table.insert(releases, "scene gui")
+			end
+		end,
 		setCoreGuiEnabled = function() end,
 		ENTRY_CAMERA_DISTANCE = 25,
 		Enum = { CameraType = { Custom = "Custom" }, CoreGuiType = {} },
@@ -51,6 +58,7 @@ local function fixture(initialState, prepare)
 			if attributes[loading.INTRO_HANDOFF_READY] and prepare then
 				assert(camera.CameraType == "Custom", "Loading must release its camera before intro captures it")
 				assert(camera.FieldOfView == 70)
+				assert(#releases == 4, "Loading must keep scene UI hidden until the intro is prepared")
 				camera.CameraType, camera.FieldOfView = "Intro", 55
 				attributes[loading.INTRO_STARTUP_STATE] = "Prepared"
 			end
@@ -65,10 +73,10 @@ assert(ready.ops.handoff())
 assert(ready.attributes[loading.LOADING_SCREEN_DONE] == true)
 assert(ready.camera.CameraType == "Intro" and ready.camera.FieldOfView == 55,
 	"Final loading cleanup must preserve intro camera ownership")
-assert(#ready.releases == 4, "Loading snapshots restore exactly once")
+assert(#ready.releases == 5 and ready.releases[5] == "scene gui", "Scene UI restores at final completion")
 assert(ready.objects[1].destroyed, "Cover must be removed after first-frame preparation")
 ready.ops.restore()
-assert(#ready.releases == 4 and ready.camera.CameraType == "Intro", "Repeated cleanup cannot override the intro")
+assert(#ready.releases == 5 and ready.camera.CameraType == "Intro", "Repeated cleanup cannot override the intro")
 
 local veteran = fixture("Skipped", false)
 assert(not veteran.ops.handoff() and #veteran.objects == 0 and #veteran.releases == 0,
@@ -83,7 +91,7 @@ assert(timedOut.ops.handoff())
 assert(timedOut.attributes[loading.INTRO_STARTUP_STATE] == "Skipped")
 assert(timedOut.attributes[loading.LOADING_SCREEN_DONE] == true and timedOut.objects[1].destroyed,
 	"Preparation failure must release loading and its cover")
-assert(timedOut.camera.CameraType == "Custom" and #timedOut.releases == 4)
+assert(timedOut.camera.CameraType == "Custom" and #timedOut.releases == 5)
 
 local invalidCharacter = fixture("Preparing", false)
 invalidCharacter.player.Character = nil
@@ -91,3 +99,4 @@ assert(invalidCharacter.ops.handoff())
 assert(invalidCharacter.attributes[loading.INTRO_STARTUP_STATE] == "Skipped")
 assert(invalidCharacter.attributes[loading.LOADING_SCREEN_DONE] == true and invalidCharacter.objects[1].destroyed,
 	"An exception during handoff must clean up loading and the black cover")
+assert(#invalidCharacter.releases == 5, "An exception must release scene UI")

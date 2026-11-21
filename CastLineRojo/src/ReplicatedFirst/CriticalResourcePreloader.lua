@@ -6,6 +6,7 @@ local SoundService = game:GetService("SoundService")
 
 local Preloader = {}
 local WAIT_SECONDS = 5
+local BACKGROUND_BATCH_SIZE = 24
 local phase = "Idle"
 local deadline = 0
 local records = {}
@@ -164,7 +165,6 @@ local function collectCritical()
 		return root
 	end
 	scan(required(find(ReplicatedStorage, "Sound", "Fishing"), "Sound.Fishing"))
-	scan(required(find(ReplicatedStorage, "Sound", "Gui", "Gui_Fuse_Success"), "Gui_Fuse_Success"))
 	scan(required(find(ReplicatedStorage, "Animation", "Fishing", "CastRod"), "CastRod"))
 	local player = Players.LocalPlayer
 	local gui = player and player:FindFirstChildOfClass("PlayerGui")
@@ -183,13 +183,6 @@ local function collectCritical()
 	end) then
 		table.insert(missing, "FishingConfig")
 	end
-	if not readOnce(find(ReplicatedFirst, "Data", "BaitsData"), function(baits)
-		for _, bait in pairs(baits) do
-			add(bait.Icon, "ImageLabel", "Image")
-		end
-	end) then
-		table.insert(missing, "BaitsData")
-	end
 end
 
 local function preloadBackground(assets, label)
@@ -197,15 +190,25 @@ local function preloadBackground(assets, label)
 		return
 	end
 	local failures = 0
-	local ok, err = pcall(function()
-		ContentProvider:PreloadAsync(assets, function(_, status)
-			if status ~= Enum.AssetFetchStatus.Success then
-				failures += 1
-			end
+	for first = 1, #assets, BACKGROUND_BATCH_SIZE do
+		local last = math.min(#assets, first + BACKGROUND_BATCH_SIZE - 1)
+		local batch = table.move(assets, first, last, 1, {})
+		local ok = pcall(function()
+			ContentProvider:PreloadAsync(batch, function(_, status)
+				if status ~= Enum.AssetFetchStatus.Success then
+					failures += 1
+				end
+			end)
 		end)
-	end)
-	if not ok or failures > 0 then
-		warn("CriticalResourcePreloader: " .. label .. " preload failed: " .. tostring(err or failures))
+		if not ok then
+			failures += 1
+		end
+		if last < #assets then
+			task.wait()
+		end
+	end
+	if failures > 0 then
+		warn("CriticalResourcePreloader: " .. label .. " preload failures: " .. tostring(failures))
 	end
 end
 
@@ -222,14 +225,30 @@ local function runBackground()
 	local fishing = {}
 	scan(find(animations, "Fishing"), fishing)
 	local vfx = ReplicatedStorage:FindFirstChild("VFX")
-	for _, name in ipairs({ "Fishing", "Fish", "WaterVFX", "AnimalRoller" }) do
+	for _, name in ipairs({ "Fishing", "Fish", "WaterVFX" }) do
 		scan(find(vfx, name), fishing)
 	end
 	preloadBackground(fishing, "fishing")
 	local general = {}
 	scan(animations, general)
 	scan(sounds, general)
+	local icons = {}
+	readOnce(find(ReplicatedFirst, "Data", "BaitsData"), function(baits)
+		for _, bait in pairs(baits) do
+			local id = contentId(bait.Icon)
+			if id and not records[id] then
+				records[id] = { loaded = false }
+				local icon = Instance.new("ImageLabel")
+				icon.Image = id
+				table.insert(icons, icon)
+				table.insert(general, icon)
+			end
+		end
+	end)
 	preloadBackground(general, "general")
+	for _, icon in icons do
+		icon:Destroy()
+	end
 end
 
 function Preloader.Start()

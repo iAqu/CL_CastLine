@@ -19,7 +19,9 @@ function View.Create(playerGui, name)
 	constraint.MinTextSize, constraint.MaxTextSize, constraint.Parent = 16, 94, label
 	local stroke = label:FindFirstChildOfClass("UIStroke") or Instance.new("UIStroke")
 	stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Contextual
-	stroke.Thickness, stroke.Color, stroke.Transparency, stroke.Parent = 4, Color3.new(0, 0, 0), 0, label
+	stroke.StrokeSizingMode = Enum.StrokeSizingMode.ScaledSize
+	stroke.Thickness = 0.08
+	stroke.Color, stroke.Transparency, stroke.Parent = Color3.new(0, 0, 0), 0, label
 	label.Visible, label.Parent = false, gui
 	local biteCue = label:Clone()
 	biteCue.Name, biteCue.AnchorPoint, biteCue.ZIndex = "BiteCue", Vector2.new(0.5, 1), 4

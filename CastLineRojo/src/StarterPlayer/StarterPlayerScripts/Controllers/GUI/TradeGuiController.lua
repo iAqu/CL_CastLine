@@ -96,7 +96,7 @@ local function Cleanup()
     HintLabel.Text = Constants.TRADE_HINT.COMFIRM
 end
 
-local function UnacceptTrade()
+local function UnacceptTrade(fromServer: boolean?)
     if tradeConfirmCountDownTimer then tradeConfirmCountDownTimer:Destroy() end
     isCountingDown = false
     MyConfirmedLabel.Visible = false
@@ -110,11 +110,17 @@ local function UnacceptTrade()
             child.Color = Constants.COLOR.GREEN_DARK
         end
     end
-    Knit.GetService("TradeService").TradeUnaccept:Fire()
+    if not fromServer then
+        Knit.GetService("TradeService").TradeUnaccept:Fire()
+    end
 end
 
-local function TradeInputDiamond(count: number)
-    OtherDiamondLabel.Text = count
+local tradeRevision = 0
+local function TradeInputDiamond(count: number, revision: number, ownOffer: boolean?)
+    tradeRevision = revision
+    if not ownOffer then
+        OtherDiamondLabel.Text = count
+    end
 end
 
 -- local function TradeInputToken(count: number)
@@ -132,6 +138,7 @@ local function OpenTradeGui()
 end
 
 local function BeginTrade(targetId: number)
+    tradeRevision = 0
     LogHelper.Print("BeginTrade")
     local targetPlayer = Players:GetPlayerByUserId(targetId)
     if not targetPlayer then return end
@@ -182,7 +189,14 @@ local function TradeAccept()
     OtherOfferArrowImage.ImageColor3 = Constants.COLOR.GREEN_LIGHT
 end
 
-local function TradeUnaccept()
+local function TradeUnaccept(resetBoth: boolean?, otherAccepted: boolean?)
+    if resetBoth then
+        UnacceptTrade(true)
+    end
+    if otherAccepted then
+        TradeAccept()
+        return
+    end
     isCountingDown = false
     if tradeConfirmCountDownTimer then tradeConfirmCountDownTimer:Destroy() end
     HintLabel.Text = Constants.TRADE_HINT.COMFIRM
@@ -278,7 +292,7 @@ function TradeGuiController:KnitStart()
                     child.Color = Constants.COLOR.RED_DARK
                 end
             end
-            TradeService.TradeAccept:Fire()
+            TradeService.TradeAccept:Fire(tradeRevision)
         else
             UnacceptTrade()
         end

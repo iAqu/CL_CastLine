@@ -12,15 +12,19 @@ local AchievementsDataHelper = require(ReplicatedFirst.DataHelpers.AchievementsD
 local NumberUtil = require(ReplicatedStorage.Modules.NumberUtil)
 local LoadingAttributes = require(ReplicatedFirst:WaitForChild("LoadingAttributes"))
 local EARLY_DATA_REMOTE_NAME = "RequestPlayerDataEarly"
+local interfaceReady = Instance.new("BindableEvent")
 
+local currencyRevision = 0
 local function applyEarlyHomeCurrency(profileData)
+	currencyRevision += 1
+	local revision = currencyRevision
 	task.spawn(function()
 		local playerGui = Players.LocalPlayer:FindFirstChildOfClass("PlayerGui")
 			or Players.LocalPlayer:WaitForChild("PlayerGui", 5)
 		local homeGui = playerGui and playerGui:FindFirstChild("HomeGui")
 		local bottomFrame = homeGui and homeGui:FindFirstChild("BottomFrame")
 		local currencyFrame = bottomFrame and bottomFrame:FindFirstChild("CurrencyFrame")
-		if not currencyFrame then
+		if not currencyFrame or revision ~= currencyRevision then
 			return
 		end
 
@@ -71,31 +75,40 @@ function PlayerDataController:BeginEarlyFetch()
 		local success, result = pcall(function()
 			return remote:InvokeServer()
 		end)
-		if success then
-			self:LoadData(result)
-		else
+		if success and result and not self._IsDataLoaded then
+			applyEarlyHomeCurrency(result)
+			Players.LocalPlayer:SetAttribute(LoadingAttributes.PLAYER_DATA_LOADED, true)
+		elseif not success then
 			warn("PlayerDataController: early data request failed", result)
 		end
 	end)
 end
 
-function PlayerDataController:GetData() : Template.PlayerData
-    while not self._IsDataLoaded do
-		task.wait()
+function PlayerDataController:_RequestInterfaceData()
+    if self._InterfaceService and not self._InterfaceRequested then
+        self._InterfaceRequested = true
+        self._InterfaceService.DataLoaded:Fire()
     end
+end
 
+function PlayerDataController:GetData(): Template.PlayerData
+    if not self._IsDataLoaded then
+        self._WaitingForInterface = true
+        self:_RequestInterfaceData()
+        interfaceReady.Event:Wait()
+    end
     return self._PlayerData
 end
 
-function PlayerDataController:LoadData(profileData : Template.PlayerData)
-    if not profileData then
+function PlayerDataController:LoadData(profileData: Template.PlayerData)
+    if not profileData or self._IsDataLoaded then
         return
     end
-
     self._PlayerData = profileData
     self._IsDataLoaded = true
-	Players.LocalPlayer:SetAttribute(LoadingAttributes.PLAYER_DATA_LOADED, true)
-	applyEarlyHomeCurrency(profileData)
+    Players.LocalPlayer:SetAttribute(LoadingAttributes.PLAYER_DATA_LOADED, true)
+    applyEarlyHomeCurrency(profileData)
+    interfaceReady:Fire()
 end
 
 function PlayerDataController:KnitInit()
@@ -112,55 +125,63 @@ function PlayerDataController:KnitStart()
         self:LoadData(result)
     end)
 
+    local function listen(signal, callback)
+        signal:Connect(function(...)
+            if self._IsDataLoaded then
+                callback(...)
+            end
+        end)
+    end
+
     local HotbarLayoutService = Knit.GetService("HotbarLayoutService")
-    HotbarLayoutService.HotbarLayoutChanged:Connect(function(layout)
-        if self._IsDataLoaded and typeof(layout) == "table" then
+    listen(HotbarLayoutService.HotbarLayoutChanged, function(layout)
+        if typeof(layout) == "table" then
             self._PlayerData.HotbarLayout = layout
         end
     end)
 
-    PlayerDataService.StrengthChanged:Connect(function(result)
+    listen(PlayerDataService.StrengthChanged, function(result)
         self._PlayerData.Strength = result
     end)
 
-    PlayerDataService.RebirthsChanged:Connect(function(result)
+    listen(PlayerDataService.RebirthsChanged, function(result)
         self._PlayerData.Rebirths = result
     end)
 
-    PlayerDataService.SuperRebirthsChanged:Connect(function(result)
+    listen(PlayerDataService.SuperRebirthsChanged, function(result)
         self._PlayerData.SuperRebirths = result
     end)
 
-    PlayerDataService.SuperRebirthTokensChanged:Connect(function(result)
+    listen(PlayerDataService.SuperRebirthTokensChanged, function(result)
         self._PlayerData.SuperRebirthTokens = result
     end)
 
-    PlayerDataService.RebirthUpgradeChanged:Connect(function(upgradeId, newUpgradeLevel)
+    listen(PlayerDataService.RebirthUpgradeChanged, function(upgradeId, newUpgradeLevel)
         self._PlayerData.RebirthUpgrades[upgradeId] = newUpgradeLevel
     end)
 
-    PlayerDataService.WinsChanged:Connect(function(result)
+    listen(PlayerDataService.WinsChanged, function(result)
         self._PlayerData.Wins = result
     end)
 
-    PlayerDataService.DiamondsChanged:Connect(function(result)
+    listen(PlayerDataService.DiamondsChanged, function(result)
         self._PlayerData.Diamonds = result
     end)
 
-    PlayerDataService.TotalWinsChanged:Connect(function(result)
+    listen(PlayerDataService.TotalWinsChanged, function(result)
         self._PlayerData.TotalWins = result
     end)
 
-    PlayerDataService.TotalStrengthChanged:Connect(function(result)
+    listen(PlayerDataService.TotalStrengthChanged, function(result)
         self._PlayerData.TotalStrength = result
     end)
 
-    PlayerDataService.TrophyChanged:Connect(function(result)
+    listen(PlayerDataService.TrophyChanged, function(result)
         self._PlayerData.Trophy = result
     end)
 
     local UpgradeService = Knit.GetService("UpgradeService")
-    UpgradeService.Upgrade:Connect(function(upgradeId: string, isSuccess: boolean, _resultText: string, newLevel: number?)
+    listen(UpgradeService.Upgrade, function(upgradeId: string, isSuccess: boolean, _resultText: string, newLevel: number?)
         if isSuccess then
 			self._PlayerData.Upgrades[upgradeId] = newLevel
 				or ((self._PlayerData.Upgrades[upgradeId] or 0) + 1)
@@ -168,19 +189,19 @@ function PlayerDataController:KnitStart()
     end)
 
     local AreaService = Knit.GetService("AreaService")
-    AreaService.ResetAreas:Connect(function()
+    listen(AreaService.ResetAreas, function()
         self._PlayerData.Areas = Template.DEFAULT_AREAS
         self._PlayerData.PlayerLocation = Template.DEFAULT_AREA
         self._PlayerData.NewestArea = Template.DEFAULT_AREA
     end)
 
     local AreaController = Knit.GetController("AreaController")
-    AreaController.ChangeAreaEvent:Connect(function(areaId : string)
+    listen(AreaController.ChangeAreaEvent, function(areaId : string)
         self._PlayerData.PlayerLocation = areaId
     end)
 
     local PurchaseService = Knit.GetService("PurchaseService")
-    PurchaseService.PurchaseSuccess:Connect(function(productId: string)
+    listen(PurchaseService.PurchaseSuccess, function(productId: string)
         local purchaseId = PurchaseDataHelper.GetPurchaseId(productId)
         local purchaseType = PurchaseDataHelper.GetType(productId)
         if purchaseType == Constants.PURCHASE_TYPE.GAMEPASS then
@@ -188,119 +209,119 @@ function PlayerDataController:KnitStart()
         end
     end)
 
-    PurchaseService.PurchaseLimitSuccess:Connect(function(purchaseId: string)
+    listen(PurchaseService.PurchaseLimitSuccess, function(purchaseId: string)
         self._PlayerData.LimitedPurchaseHistory[purchaseId] = true
     end)
 
     local GamePassService = Knit.GetService("GamePassService")
-    GamePassService.GiveGamePass:Connect(function(gamePassId: string)
+    listen(GamePassService.GiveGamePass, function(gamePassId: string)
         self._PlayerData.GamePasses[gamePassId] = true
     end)
 
     local ChestService = Knit.GetService("ChestService")
-    ChestService.ClaimDailyChestComplete:Connect(function(openTime: number)
+    listen(ChestService.ClaimDailyChestComplete, function(openTime: number)
         self._PlayerData.DailyChestLastOpenTime = openTime
     end)
 
-    ChestService.ClaimGroupChestComplete:Connect(function(_openTime: number)
+    listen(ChestService.ClaimGroupChestComplete, function(_openTime: number)
         self._PlayerData.GroupChestIsClaimed = true
     end)
 
-    ChestService.MarkGroupJoinedComplete:Connect(function()
+    listen(ChestService.MarkGroupJoinedComplete, function()
         self._PlayerData.GroupJoinPromptSucceeded = true
     end)
 
     local PotionService = Knit.GetService("PotionService")
-    PotionService.UpdatePotionCount:Connect(function(potionId: string, potionCount: number)
+    listen(PotionService.UpdatePotionCount, function(potionId: string, potionCount: number)
         self._PlayerData.Potions[potionId].Count = potionCount
     end)
 
     local DailyRewardService = Knit.GetService("DailyRewardService")
-    DailyRewardService.ClaimDailyReward:Connect(function(index: number, isSuccess: boolean, _resultText: string)
+    listen(DailyRewardService.ClaimDailyReward, function(index: number, isSuccess: boolean, _resultText: string)
         if isSuccess then
             self._PlayerData.DailyRewards[index].IsClaimed = true
         end
     end)
 
-    DailyRewardService.CompleteDailyReward:Connect(function(index: number, completeDate: string)
+    listen(DailyRewardService.CompleteDailyReward, function(index: number, completeDate: string)
         self._PlayerData.DailyRewards[index].CompleteDate = completeDate
     end)
 
-    DailyRewardService.ResetAllRewards:Connect(function(DailyRewards: {})
+    listen(DailyRewardService.ResetAllRewards, function(DailyRewards: {})
         self._PlayerData.DailyRewards = DailyRewards
     end)
 
     local HareDailyRewardService = Knit.GetService("HareDailyRewardService")
-    HareDailyRewardService.ClaimDailyReward:Connect(function(index: number, isSuccess: boolean, _resultText: string)
+    listen(HareDailyRewardService.ClaimDailyReward, function(index: number, isSuccess: boolean, _resultText: string)
         if isSuccess then
             self._PlayerData.HareDailyRewards[index].IsClaimed = true
         end
     end)
 
-    HareDailyRewardService.CompleteDailyReward:Connect(function(index: number, completeDate: string)
+    listen(HareDailyRewardService.CompleteDailyReward, function(index: number, completeDate: string)
         self._PlayerData.HareDailyRewards[index].CompleteDate = completeDate
     end)
 
-    HareDailyRewardService.ResetAllRewards:Connect(function(HareDailyRewards: {})
+    listen(HareDailyRewardService.ResetAllRewards, function(HareDailyRewards: {})
         self._PlayerData.HareDailyRewards = HareDailyRewards
     end)
 
     local LongDailyRewardService = Knit.GetService("LongDailyRewardService")
-    LongDailyRewardService.ClaimLongDailyReward:Connect(function(index: number, isSuccess: boolean, _resultText: string)
+    listen(LongDailyRewardService.ClaimLongDailyReward, function(index: number, isSuccess: boolean, _resultText: string)
         if isSuccess then
             self._PlayerData.LongDailyRewards[index].IsClaimed = true
         end
     end)
 
-    LongDailyRewardService.CompleteLongDailyReward:Connect(function(index: number, completeDate: string)
+    listen(LongDailyRewardService.CompleteLongDailyReward, function(index: number, completeDate: string)
         self._PlayerData.LongDailyRewards[index].CompleteDate = completeDate
     end)
 
-    LongDailyRewardService.ResetAllRewards:Connect(function(longDailyRewards: {})
+    listen(LongDailyRewardService.ResetAllRewards, function(longDailyRewards: {})
         self._PlayerData.LongDailyRewards = longDailyRewards
     end)
 
     local ChristmasDailyRewardService = Knit.GetService("ChristmasDailyRewardService")
-    ChristmasDailyRewardService.ClaimRewardEvent:Connect(function(index: number, isSuccess: boolean, _resultText: string)
+    listen(ChristmasDailyRewardService.ClaimRewardEvent, function(index: number, isSuccess: boolean, _resultText: string)
         if isSuccess then
             self._PlayerData.ChristmasDailyRewards[index].IsClaimed = true
         end
     end)
 
-    ChristmasDailyRewardService.CompleteDailyRewardEvent:Connect(function(index: number, completeDate: string)
+    listen(ChristmasDailyRewardService.CompleteDailyRewardEvent, function(index: number, completeDate: string)
         self._PlayerData.ChristmasDailyRewards[index].CompleteDate = completeDate
     end)
 
     local ValentineDailyRewardService = Knit.GetService("ValentineDailyRewardService")
-    ValentineDailyRewardService.ClaimRewardEvent:Connect(function(index: number, isSuccess: boolean, _resultText: string)
+    listen(ValentineDailyRewardService.ClaimRewardEvent, function(index: number, isSuccess: boolean, _resultText: string)
         if isSuccess then
             self._PlayerData.ValentineDailyRewards[index].IsClaimed = true
         end
     end)
 
-    ValentineDailyRewardService.CompleteDailyRewardEvent:Connect(function(index: number, completeDate: string)
+    listen(ValentineDailyRewardService.CompleteDailyRewardEvent, function(index: number, completeDate: string)
         self._PlayerData.ValentineDailyRewards[index].CompleteDate = completeDate
     end)
 
     local HalloweenDailyRewardService = Knit.GetService("HalloweenDailyRewardService")
-    HalloweenDailyRewardService.ClaimRewardEvent:Connect(function(index: number, isSuccess: boolean, _resultText: string)
+    listen(HalloweenDailyRewardService.ClaimRewardEvent, function(index: number, isSuccess: boolean, _resultText: string)
         if isSuccess then
             self._PlayerData.HalloweenDailyRewards[index].IsClaimed = true
         end
     end)
 
-    HalloweenDailyRewardService.CompleteDailyRewardEvent:Connect(function(index: number, completeDate: string)
+    listen(HalloweenDailyRewardService.CompleteDailyRewardEvent, function(index: number, completeDate: string)
         self._PlayerData.HalloweenDailyRewards[index].CompleteDate = completeDate
     end)
 
     local SpinningWheelService = Knit.GetService("SpinningWheelService")
-    SpinningWheelService.UpdateSpinningWheelCount:Connect(function(spinningWheelLastCheckTime: number, spinningWheelBonusSpins: number)
+    listen(SpinningWheelService.UpdateSpinningWheelCount, function(spinningWheelLastCheckTime: number, spinningWheelBonusSpins: number)
         self._PlayerData.SpinningWheelLastCheckTime = spinningWheelLastCheckTime
         self._PlayerData.SpinningWheelBonusSpins = spinningWheelBonusSpins
     end)
 
     local GiftBoxService = Knit.GetService("GiftBoxService")
-    GiftBoxService.DropGifts:Connect(function(giftBoxId: string, _dropGifts: {})
+    listen(GiftBoxService.DropGifts, function(giftBoxId: string, _dropGifts: {})
         self._PlayerData.GiftBoxClaimLog[giftBoxId] = true
     end)
 
@@ -308,25 +329,25 @@ function PlayerDataController:KnitStart()
     PlayerDataService.UpdateLoginDate:Fire(localDate)
 
     local SeasonService = Knit.GetService("SeasonService")
-    SeasonService.UpdateSeasonTaskProgress:Connect(function(dailyTasksProgress, weeklyTasksProgress)
+    listen(SeasonService.UpdateSeasonTaskProgress, function(dailyTasksProgress, weeklyTasksProgress)
         self._PlayerData.SeasonDailyTasksProgress = dailyTasksProgress
         self._PlayerData.SeasonWeeklyTasksProgress = weeklyTasksProgress
     end)
 
-    SeasonService.UpdateFreeRewardsClaimLog:Connect(function(freeRewardsClaimLog)
+    listen(SeasonService.UpdateFreeRewardsClaimLog, function(freeRewardsClaimLog)
         self._PlayerData.SeasonFreeRewardsClaimLog = freeRewardsClaimLog
     end)
 
-    SeasonService.UpdatePremiumRewardsClaimLog:Connect(function(premiumRewardsClaimLog)
+    listen(SeasonService.UpdatePremiumRewardsClaimLog, function(premiumRewardsClaimLog)
         self._PlayerData.SeasonPremiumRewardsClaimLog = premiumRewardsClaimLog
     end)
 
-    SeasonService.UpdateSeasonXp:Connect(function(seasonXp)
+    listen(SeasonService.UpdateSeasonXp, function(seasonXp)
         self._PlayerData.SeasonXp = seasonXp
     end)
 
     local AchievementService = Knit.GetService("AchievementService")
-    AchievementService.ClaimAchievementResultEvent:Connect(function(achievementId: string, isSuccess: boolean, _resultText: string)
+    listen(AchievementService.ClaimAchievementResultEvent, function(achievementId: string, isSuccess: boolean, _resultText: string)
         if isSuccess then
             local achievementType = AchievementsDataHelper.GetAchievementType(achievementId)
             local currentRank = self._PlayerData.AchievementRanks[achievementType] or 0
@@ -335,12 +356,12 @@ function PlayerDataController:KnitStart()
     end)
 
     local RandomPotionService = Knit.GetService("RandomPotionService")
-    RandomPotionService.UpdateRandomPotionBuyLogEvent:Connect(function(randomPotionBuyLog: {})
+    listen(RandomPotionService.UpdateRandomPotionBuyLogEvent, function(randomPotionBuyLog: {})
         self._PlayerData.RandomPotionBuyLog = randomPotionBuyLog
     end)
 
     local OnlineRewardService = Knit.GetService("OnlineRewardService")
-    OnlineRewardService.ResetOnlineRewards:Connect(function(_rebirth: number, _onlineStartTime: number, _onlineRewards: {})
+    listen(OnlineRewardService.ResetOnlineRewards, function(_rebirth: number, _onlineStartTime: number, _onlineRewards: {})
         self._PlayerData.OnlineRewardsKeepTime = 0
         self._PlayerData.OnlineRewardsClaimLog = {
             [1] = false, [2] = false, [3] = false, [4] = false,
@@ -349,11 +370,15 @@ function PlayerDataController:KnitStart()
         }
     end)
 
-    OnlineRewardService.ClaimOnlineReward:Connect(function(index: number, isSuccess: boolean, _resultText: string)
+    listen(OnlineRewardService.ClaimOnlineReward, function(index: number, isSuccess: boolean, _resultText: string)
         if isSuccess then
             self._PlayerData.OnlineRewardsClaimLog[index] = true
         end
     end)
+    self._InterfaceService = PlayerDataService
+    if self._WaitingForInterface then
+        self:_RequestInterfaceData()
+    end
 end
 
 return PlayerDataController
