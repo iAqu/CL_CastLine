@@ -23,7 +23,9 @@ function OfflineResultGuiController:KnitStart()
 	frame.TitleLabel.Text = "OFFLINE EARNINGS:"
 
 	frame.ICON.Size = UDim2.fromScale(0.42, 0.42)
-	frame.ResultLabel.Position = UDim2.fromScale(0.5475, 0.60)
+	frame.ResultLabel.AnchorPoint = Vector2.new(0.5, frame.ResultLabel.AnchorPoint.Y)
+	frame.ResultLabel.Position = UDim2.fromScale(0.5, 0.60)
+	frame.ResultLabel.TextXAlignment = Enum.TextXAlignment.Center
 	frame.Currency.Position = UDim2.fromScale(0.2477, 0.60)
 
 	local service = Knit.GetService("PlotFishService")
@@ -40,7 +42,7 @@ function OfflineResultGuiController:KnitStart()
 					return
 				end
 				displayed = true
-				frame.ResultLabel.Text = NumberUtil.FormatItemPriceCompact(reward.amount)
+				frame.ResultLabel.Text = "$" .. NumberUtil.FormatItemPriceCompact(reward.amount)
 				gui.Enabled = true
 				GuiAnimation.PushModal(gui, claim)
 			end)
