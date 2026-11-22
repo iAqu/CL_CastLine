@@ -94,7 +94,10 @@ function PlotSlotService:_spawnPlayerAtPlot(player: Player, request)
 			return
 		end
 		local root = character:FindFirstChild("HumanoidRootPart")
-		if character:IsDescendantOf(workspace) and root and root:IsA("BasePart") then
+		-- Choose the spawn once the saved training state is available.
+		if humanoid and character:IsDescendantOf(workspace) and root and root:IsA("BasePart")
+			and PlayerDataService:GetProfile(player)
+		then
 			local resume = Knit.GetService("TrainingService"):ConsumeResumeSpawn(player, plot, character)
 			character:PivotTo(resume or spawnPoint.CFrame)
 			root.AssemblyLinearVelocity = Vector3.zero

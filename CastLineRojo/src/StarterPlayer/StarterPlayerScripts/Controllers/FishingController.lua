@@ -1,5 +1,6 @@
 local MarketplaceService = game:GetService("MarketplaceService")
 local ContextActionService = game:GetService("ContextActionService")
+local GuiService = game:GetService("GuiService")
 local Players = game:GetService("Players")
 local ProximityPromptService = game:GetService("ProximityPromptService")
 local ReplicatedFirst = game:GetService("ReplicatedFirst")
@@ -19,6 +20,7 @@ local Analytics = require(ReplicatedStorage.Modules.FishingAnalyticsPresentation
 local Config = require(ReplicatedStorage.Modules.FishingConfig)
 local FishingAssets = require(ReplicatedStorage.Modules.FishingAssets)
 local FishingBaitSelect = require(ReplicatedStorage.Modules.FishingBaitSelect)
+local UltraLuckDetails = require(ReplicatedStorage.Modules.UltraLuckDetails)
 local BaitConfig = require(ReplicatedStorage.Modules.FishingBaitConfig)
 local FishingSpotUtil = require(ReplicatedStorage.Modules.FishingSpotUtil)
 local PlotWorkspaceUtil = require(ReplicatedStorage.Modules.PlotWorkspaceUtil)
@@ -37,7 +39,7 @@ local EggsData = if PetFeatureConfig.Enabled then require(fishingData:WaitForChi
 
 local localPlayer = Players.LocalPlayer
 local CAMERA_BINDING = "CastLineFishingCamera"
-local LESSON_CONFIRM_BINDING = "FishingLessonConfirm"
+local CONFIRM_BINDING = "CastLineFishingConfirm"
 local MOVEMENT_BINDING = "CastLineFishingMovement"
 local ENTRY_RETRY_SECONDS = 0.1
 local ENTRY_TIMEOUT_SECONDS = 1
@@ -189,11 +191,16 @@ local function restore(state, returnToSpawn: boolean)
 		return
 	end
 	state.restored = true
+	if state.oddsView then
+		state.oddsView.Destroy()
+	end
 	if state.baitSelection then
 		state.baitSelection.Destroy()
 		state.baitSelection = nil
 	end
-	Knit.GetController("MusicController"):SetFishingActive(false)
+	if state.fishingMusic then
+		Knit.GetController("MusicController"):SetFishingActive(false)
+	end
 	for _, connection in ipairs(state.connections) do
 		connection:Disconnect()
 	end
@@ -206,7 +213,7 @@ local function restore(state, returnToSpawn: boolean)
 	if state.rig then
 		state.rig:Destroy()
 	end
-	if state.character.Parent and state.root.Parent and localPlayer.Character == state.character then
+	if state.originalRootCFrame and state.character.Parent and state.root.Parent and localPlayer.Character == state.character then
 		if returnToSpawn then
 			local plot = getOwnPlot()
 			local spawn = plot and plot:FindFirstChild("AreaSpawnPoint")
@@ -240,7 +247,7 @@ local function restore(state, returnToSpawn: boolean)
 			StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, state.backpackEnabled)
 		end)
 	end
-	if state.camera then
+	if state.camera.changed then
 		local camera = Workspace.CurrentCamera
 		if camera then
 			local character = localPlayer.Character
@@ -252,7 +259,7 @@ local function restore(state, returnToSpawn: boolean)
 			end
 			camera.CFrame = offset * state.camera.cframe
 			camera.Focus = offset * state.camera.focus
-			camera.CameraType = Enum.CameraType.Custom
+			camera.CameraType = state.camera.cameraType
 		end
 	end
 end
@@ -266,12 +273,12 @@ local function finish(returnToSpawn: boolean, completedReturn: boolean?)
 		return
 	end
 	session = nil
-	mustLeaveArea = true
+	if state.originalRootCFrame then
+		mustLeaveArea = true
+	end
 	RunService:UnbindFromRenderStep(CAMERA_BINDING)
 	ContextActionService:UnbindAction(MOVEMENT_BINDING)
-	if state.lesson then
-		ContextActionService:UnbindAction(LESSON_CONFIRM_BINDING)
-	end
+	ContextActionService:UnbindAction(CONFIRM_BINDING)
 	restore(state, returnToSpawn)
 	cancelServerSession(state, completedReturn and state.caughtOnReturn)
 	if state.coverGui then
@@ -288,6 +295,15 @@ local function startTransition(state, mode)
 	state.transition = { mode = mode, started = os.clock() }
 	state.coverGui.Enabled = true
 	state.cover.BackgroundTransparency = 1
+end
+
+local function showBaitSelection(state, now)
+	if session == state and not state.transition and state.onReady then
+		local onReady = state.onReady
+		state.onReady = nil
+		state.readyAt = now
+		onReady()
+	end
 end
 
 local function updateTransition(state, now)
@@ -317,10 +333,7 @@ local function updateTransition(state, now)
 			if state.restored then
 				finish(false, true)
 			else
-				state.readyAt = now
-				local onReady = state.onReady
-				state.onReady = nil
-				onReady()
+				showBaitSelection(state, now)
 			end
 		end
 	end
@@ -361,7 +374,7 @@ function FishingController:GetOnboardingHint()
 		return true, "Continue"
 	elseif state.earlyUntil and now < state.earlyUntil then
 		return true, "Retry"
-	elseif phase == "Bite" and not seq.hookPendingAt then
+	elseif phase == "Bite" and not seq.hookPending then
 		return true, "Hook", nil, nil, phase
 	elseif phase == "Nibbling" then
 		return true, "Waiting", nil, nil, phase
@@ -387,21 +400,25 @@ function FishingController:ReportOnboardingPrompt(hint, baitTarget)
 end
 
 function FishingController:ReturnToSpawn()
-	if session and not session.transition then
-		session.caughtOnReturn = session.sequence ~= nil and session.sequence.phase == "Caught"
-		startTransition(session, "Returning")
+	local state = session
+	if state and pendingEntry and pendingEntry.preview == state then
+		finish(false)
+		return
+	end
+	local sequence = state and state.sequence
+	if state and not state.transition and not (sequence and sequence.hookPending) then
+		state.caughtOnReturn = sequence ~= nil and sequence.phase == "Caught"
+		startTransition(state, "Returning")
 	end
 end
 
-local function begin(entry)
+local function startEntryPresentation(entry)
 	local part, character, root, humanoid = entry.part, entry.character, entry.root, entry.humanoid
 	local meter = getCastPrompt()
 	local characters = ReplicatedStorage:FindFirstChild("Character")
 	local template = characters and characters:FindFirstChild("PoseDefaultCharacter")
-	local models = ReplicatedStorage:FindFirstChild("Models")
-	local rods = models and models:FindFirstChild("FishRod")
-	local rodData = RodsData[entry.rodId]
-	local rod = rods and rodData and rods:FindFirstChild(rodData.Model)
+	local templateRoot = template and template:FindFirstChild("HumanoidRootPart")
+	local templateHumanoid = template and template:FindFirstChildOfClass("Humanoid")
 	local playerGui = localPlayer:FindFirstChildOfClass("PlayerGui")
 	local baitGui = playerGui and playerGui:FindFirstChild("BaitSelectGui")
 	local fishingAnimations = ReplicatedStorage:FindFirstChild("Animation")
@@ -412,8 +429,8 @@ local function begin(entry)
 		warnOnce("Fishing cast prompt or BaitSelectGui is missing")
 		return
 	end
-	if not (template and template:IsA("Model") and rod and rod:IsA("Tool")) then
-		warnOnce("PoseDefaultCharacter or equipped rod model is missing")
+	if not (template and template:IsA("Model") and templateRoot and templateRoot:IsA("BasePart") and templateHumanoid) then
+		warnOnce("PoseDefaultCharacter or its root and humanoid are missing")
 		return
 	end
 	if not (animation and animation:IsA("Animation")) then
@@ -434,29 +451,20 @@ local function begin(entry)
 		character = character,
 		root = root,
 		humanoid = humanoid,
-		originalRootCFrame = root.CFrame,
-		footHeight = FishingSpotUtil.GetFootHeight(root, humanoid),
 		saved = {},
 		connections = {},
 		visibility = FishingVisibility.new(),
 		meter = meter,
 		service = entry.service,
-		token = entry.token,
-		lesson = entry.lesson,
-		guideBaitId = entry.guideBaitId,
-		eventFish = entry.eventFish,
 		camera = {
+			cameraType = camera.CameraType,
 			subject = camera.CameraSubject,
 			fov = camera.FieldOfView,
 			cframe = camera.CFrame,
 			focus = camera.Focus,
 		},
 	}
-	entry.token = nil
 	session = state
-	if state.lesson then
-		localPlayer:SetAttribute(FishingOnboarding.LessonActiveAttribute, true)
-	end
 	FishingAudio.ClearTails()
 	local ok, err = xpcall(function()
 		hideSceneUi(state, playerGui)
@@ -469,9 +477,6 @@ local function begin(entry)
 		state.cover.BackgroundTransparency, state.cover.Active = 1, true
 		state.cover.Parent = state.coverGui
 		state.coverGui.Parent = playerGui
-		remember(state, root, "Anchored", true)
-		remember(state, humanoid, "AutoRotate", false)
-		root.AssemblyLinearVelocity, root.AssemblyAngularVelocity = Vector3.zero, Vector3.zero
 		GameplayInputGate.SetActive("Fishing", FishingController, true)
 		ContextActionService:BindActionAtPriority(MOVEMENT_BINDING, function()
 			return Enum.ContextActionResult.Sink
@@ -482,22 +487,21 @@ local function begin(entry)
 				finish(false)
 			end)
 		)
-		state.prepare = function()
+		local function prepareConfirmedScene()
+			local models = ReplicatedStorage:FindFirstChild("Models")
+			local rods = models and models:FindFirstChild("FishRod")
+			local rodData = RodsData[entry.rodId]
+			local rod = rods and rodData and rods:FindFirstChild(rodData.Model)
+			assert(rod and rod:IsA("Tool"), "Equipped rod model is missing")
 			state.rig = FishingRigUtil.Create(template, character, rod)
 			local rig = state.rig
-			local rigRoot = rig.PrimaryPart
-			local position = FishingRigUtil.PlaceAtFishingSpot(rig, part)
+			FishingRigUtil.PlaceAtFishingSpot(rig, part)
 			rig.Parent = Workspace
 			local dataController = Knit.GetController("PlayerDataController")
 			local function isSoundEnabled()
 				local data = dataController:GetData()
 				return data ~= nil and data.Settings[Constants.SETTINGS_ID.SOUND] ~= false
 			end
-			local behindFocus = position + rigRoot.CFrame.LookVector * 14 + Vector3.new(0, 0.5, 0)
-			camera.CameraType = Enum.CameraType.Scriptable
-			camera.CFrame = CFrame.lookAt(rigRoot.CFrame:PointToWorldSpace(Vector3.new(3.2, 2.4, 7.5)), behindFocus)
-			camera.Focus, camera.FieldOfView = CFrame.new(behindFocus), 62
-
 			local function fail(message)
 				if session == state then
 					NotificationClient.RedNotify(message)
@@ -506,7 +510,7 @@ local function begin(entry)
 			end
 			state.fail = fail
 			local function chooseBait(baitId)
-				if session ~= state or not state.token or state.choosing then
+				if session ~= state or state.transition or not state.token or state.choosing then
 					return
 				end
 				if state.lesson == "FinalCatch" and baitId ~= "NONE" and baitId ~= state.guideBaitId then
@@ -624,24 +628,33 @@ local function begin(entry)
 										else FishingAssets.GetFish(config.Model))
 							end,
 							requestRound = function(previousRound)
-								return state.service:NextRound(state.token, previousRound)
+								return state.service:NextRound(state.token, previousRound):andThen(function(round)
+									if session == state and not state.restored and state.oddsView and round.odds then
+										state.oddsView.Update(round.odds)
+									end
+									return round
+								end)
 							end,
-							hook = function(round)
-								return state.service:Hook(state.token, round)
+								hook = function(round, pressedAt)
+									return state.service:Hook(state.token, round, pressedAt)
 							end,
-							cancel = function(emptyReelRound)
+							getHookResult = function(round)
+							return state.service:GetHookResult(state.token, round)
+						end,
+						cancel = function(emptyReelRound)
 								cancelServerSession(state, false, emptyReelRound)
 							end,
 							onFailure = fail,
 						})
-						if state.lesson then
-							ContextActionService:BindActionAtPriority(LESSON_CONFIRM_BINDING, function(_, inputState, input)
-								if inputState == Enum.UserInputState.Begin then
-									FishingController:HandleFishingInput(input, false, true)
-								end
-								return Enum.ContextActionResult.Sink
-							end, false, Enum.ContextActionPriority.High.Value + 120, Enum.KeyCode.ButtonA)
-						end
+						ContextActionService:BindActionAtPriority(CONFIRM_BINDING, function(_, inputState, input)
+							if session ~= state or GameplayInputGate.IsUiBlockingWorld() or GuiService.SelectedObject then
+								return Enum.ContextActionResult.Pass
+							end
+							if inputState == Enum.UserInputState.Begin then
+								FishingController:HandleFishingInput(input, false, true)
+							end
+							return Enum.ContextActionResult.Sink
+						end, false, Enum.ContextActionPriority.High.Value + 120, Enum.KeyCode.ButtonA)
 					end)
 					:catch(function(purchaseError)
 						if session == state then
@@ -674,7 +687,8 @@ local function begin(entry)
 				closeBaitSelection,
 				entry.baitQuotes,
 				entry.lesson == "FinalCatch",
-				if cash and cash:IsA("NumberValue") then cash else nil
+				if cash and cash:IsA("NumberValue") then cash else nil,
+				if entry.lesson == "FinalCatch" then entry.guideBaitId else nil
 			)
 			local cashHome = bindBaitCash(state, playerGui, baitGui)
 			state.onReady = state.baitSelection.Show
@@ -695,6 +709,7 @@ local function begin(entry)
 					gui:IsA("ScreenGui")
 					and gui ~= meter.gui
 					and gui.Name ~= "FishingSequenceGui"
+					and gui.Name ~= UltraLuckDetails.FishingGuiName
 					and gui.Name ~= "FishingVignetteGui"
 					and gui.Name ~= "FishingOnboardingGui"
 					and gui.Name ~= "NotificationGui"
@@ -719,7 +734,35 @@ local function begin(entry)
 			pcall(function()
 				StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
 			end)
+			state.fishingMusic = true
 			Knit.GetController("MusicController"):SetFishingActive(true)
+		end
+		state.prepare = function()
+			local target = FishingRigUtil.GetSpotRootCFrame(part, templateRoot, templateHumanoid)
+			local behindFocus = target.Position + target.LookVector * 14 + Vector3.new(0, 0.5, 0)
+			state.camera.changed = true
+			camera.CameraType = Enum.CameraType.Scriptable
+			camera.CFrame = CFrame.lookAt(target:PointToWorldSpace(Vector3.new(3.2, 2.4, 7.5)), behindFocus)
+			camera.Focus, camera.FieldOfView = CFrame.new(behindFocus), 62
+			if state.token then
+				prepareConfirmedScene()
+			end
+		end
+		state.confirm = function()
+			state.token, entry.token = entry.token, nil
+			state.lesson, state.guideBaitId, state.eventFish = entry.lesson, entry.guideBaitId, entry.eventFish
+			if state.lesson then
+				localPlayer:SetAttribute(FishingOnboarding.LessonActiveAttribute, true)
+			end
+			state.footHeight = FishingSpotUtil.GetFootHeight(root, humanoid)
+			state.originalRootCFrame = root.CFrame
+			remember(state, root, "Anchored", true)
+			remember(state, humanoid, "AutoRotate", false)
+			root.AssemblyLinearVelocity, root.AssemblyAngularVelocity = Vector3.zero, Vector3.zero
+			if state.camera.changed then
+				prepareConfirmedScene()
+				showBaitSelection(state, os.clock())
+			end
 		end
 		startTransition(state, "Entering")
 		RunService:BindToRenderStep(CAMERA_BINDING, Enum.RenderPriority.Camera.Value + 2, function(dt)
@@ -762,7 +805,9 @@ local function begin(entry)
 	if not ok then
 		warnOnce(tostring(err))
 		finish(false)
+		return
 	end
+	return state
 end
 
 local function clearEntry(entry)
@@ -790,6 +835,9 @@ end
 local function abandonEntry(entry, message: string?)
 	if not entry.abandoned then
 		entry.abandoned = true
+		if entry.preview and session == entry.preview then
+			finish(false)
+		end
 		if message then
 			NotificationClient.RedNotify(message)
 		end
@@ -801,6 +849,9 @@ end
 
 local function canKeepEntry(entry): boolean
 	local character = localPlayer.Character
+	local allowed = if entry.eventSlotId ~= nil
+		then GameplayInputGate.IsPlacementActionAllowed()
+		else session == entry.preview and not GameplayInputGate.IsUiBlockingWorld()
 	return character == entry.character
 		and character:FindFirstChild("HumanoidRootPart") == entry.root
 		and character:FindFirstChildOfClass("Humanoid") == entry.humanoid
@@ -808,7 +859,14 @@ local function canKeepEntry(entry): boolean
 		and not entry.root.Anchored
 		and FishingSpotUtil.GetStartPart(getOwnPlot()) == entry.part
 		and (entry.eventSlotId ~= nil or FishingSpotUtil.Contains(entry.part, entry.root, entry.humanoid))
-		and (if entry.eventSlotId ~= nil then GameplayInputGate.IsPlacementActionAllowed() else GameplayInputGate.IsWorldActionAllowed())
+		and allowed
+end
+
+local function entryInterruption(entry): string?
+	if entry.eventSlotId ~= nil and FishingSpotUtil.GetStartPart(getOwnPlot()) ~= entry.part then
+		return "Your fishing spot is unavailable."
+	end
+	return nil
 end
 
 local function completeEntry(entry)
@@ -816,8 +874,15 @@ local function completeEntry(entry)
 		return -- The teleport and the response can replicate in either order.
 	end
 	mustLeaveArea = true
-	begin(entry)
-	entry.started = session ~= nil
+	local state = entry.preview or startEntryPresentation(entry)
+	if state and session == state then
+		local ok, err = xpcall(state.confirm, debug.traceback)
+		if not ok then
+			warnOnce(tostring(err))
+			finish(false)
+		end
+		entry.started = session == state
+	end
 	if entry.onComplete and not entry.started then
 		NotificationClient.RedNotify("Could not start fishing.")
 	end
@@ -854,7 +919,7 @@ local function updateEntry(entry, now: number)
 			entry.eventFish = result.eventFish
 		end
 		if entry.abandoned or not canKeepEntry(entry) then
-			abandonEntry(entry)
+			abandonEntry(entry, entryInterruption(entry))
 			return
 		end
 		if os.clock() >= entry.deadline then
@@ -937,6 +1002,7 @@ function FishingController:HandleFishingInput(input, processed, fromGamepad)
 		not state
 		or state.transition
 		or not state.sequence
+		or state.castPending
 		or not state.readyAt
 		or os.clock() < state.readyAt
 		or processed
@@ -961,23 +1027,29 @@ function FishingController:HandleFishingInput(input, processed, fromGamepad)
 		local sequence = state.sequence
 		local now = os.clock()
 		if sequence.phase == "Preparing" then
-			if state.castPending or Workspace:GetServerTimeNow() < sequence.options.meterStartsAt then
+			if Workspace:GetServerTimeNow() < sequence.options.meterStartsAt then
 				return
 			end
 			state.castPending = true
-			sequence:LockCastMeter()
-			state.service:Cast(state.token):andThen(function(result)
+			sequence:BeginCast(now)
+			state.service:Cast(state.token):timeout(Config.CastConfirmationTimeout):andThen(function(result)
 				if session ~= state or state.restored or state.transition then
 					return
 				end
 				state.castPending = false
 				if result.ok then
 					sequence:Cast(result.castProgress, result.distance, result.luck, result.castRating)
+					if result.odds and not state.restored then
+						state.oddsView = UltraLuckDetails.BindFishing(localPlayer:FindFirstChildOfClass("PlayerGui"))
+						state.oddsView.Update(result.odds)
+					end
 				else
 					state.fail(result.message)
 				end
 			end):catch(function()
-				state.fail("Could not cast")
+				if session == state and not state.restored and not state.transition then
+					state.fail("Could not confirm the cast.")
+				end
 			end)
 		elseif sequence.phase == "Reeling" or sequence.phase == "Reeled" then
 			return
@@ -1017,7 +1089,7 @@ function FishingController:KnitStart()
 		local character = localPlayer.Character
 		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
 		local root = character and character:FindFirstChild("HumanoidRootPart")
-		if session then
+		if session and (not pendingEntry or session ~= pendingEntry.preview) then
 			if
 				character ~= session.character
 				or not root
@@ -1037,7 +1109,7 @@ function FishingController:KnitStart()
 		end
 		if pendingEntry then
 			if not canKeepEntry(pendingEntry) then
-				abandonEntry(pendingEntry)
+				abandonEntry(pendingEntry, entryInterruption(pendingEntry))
 			else
 				updateEntry(pendingEntry, os.clock())
 			end
@@ -1071,7 +1143,12 @@ function FishingController:KnitStart()
 			nextAttemptAt = now,
 		}
 		pendingEntry = entry
-		updateEntry(entry, now)
+		entry.preview = startEntryPresentation(entry)
+		if entry.preview then
+			updateEntry(entry, now)
+		else
+			clearEntry(entry)
+		end
 	end)
 end
 

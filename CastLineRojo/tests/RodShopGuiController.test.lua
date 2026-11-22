@@ -6,7 +6,8 @@ local h = harness()
 assert(h.controller:IsReady())
 h.controller:OpenForRod("b")
 h.controller:OpenForRod("b")
-assert(#h.requests == 1 and h.teleports == 0, "Double click must not duplicate a pending open")
+assert(#h.requests == 1 and h.teleports == 1, "Double click must not duplicate a pending open")
+assert(h.gui.Enabled and h.status == "Loading..." and not h:getCard("b"))
 h.service.InventoryChanged:Fire(purchased)
 h.requests[1](initial)
 assert(h.teleports == 1 and h.gui.Enabled, "Hint must teleport and open")
@@ -28,25 +29,29 @@ assert(#h.requests == 1 and h.error == "Fishing rod unavailable")
 h = harness()
 h.controller:OpenForRod("b")
 h.player.Character = h.character()
+h.inside = false
 h:step()
 h.requests[1](initial)
-assert(h.teleports == 0 and not h.gui.Enabled, "Respawn cancels pending travel")
+assert(h.teleports == 1 and not h.gui.Enabled and not h:getCard("b"), "Respawn discards the old inventory response")
 h.controller:OpenForRod("b")
 h.requests[2](initial)
-assert(h.teleports == 1 and h.gui.Enabled, "A new character can make a new request")
+assert(h.teleports == 2 and h.gui.Enabled, "A new character can make a new request")
 
 h = harness()
 h.controller:OpenForRod("b")
-h.modal = true
-h:step()
-h.modal = false
+h.gui.Enabled = false
+h.controller:OpenForRod("b")
 h.requests[1](initial)
-assert(h.teleports == 0 and not h.gui.Enabled, "A competing modal cancels the old request even if it closes again")
+assert(h.gui.Enabled and h.status == "Loading..." and not h:getCard("b"), "Old responses cannot fill a reopened shop")
+h.requests[2]({ ok = false, message = "Inventory unavailable" })
+assert(h.gui.Enabled and h.status == "Inventory unavailable" and h.focus.Name == "CloseButton")
+h:close()
+assert(not h.gui.Enabled, "A failed inventory read must leave Close usable")
 
 h = harness()
 h.inside = true
 h:step()
-assert(#h.requests == 1)
+assert(#h.requests == 1 and h.gui.Enabled and h.status == "Loading...")
 h.requests[1](initial)
 assert(h.gui.Enabled and h.teleports == 0, "Ordinary area entry must still open without teleporting")
 h.inside = false
@@ -56,8 +61,10 @@ assert(not h.gui.Enabled, "Walking out still closes the shop")
 h = harness()
 h.controller:OpenForRod("b")
 h.humanoid.Health = 0
+h.inside = false
+h:step()
 h.requests[1](initial)
-assert(h.teleports == 0 and not h.gui.Enabled, "A dead character cannot complete a request")
+assert(h.teleports == 1 and not h.gui.Enabled and not h:getCard("b"), "A dead character cannot complete a request")
 
 local function expectGradient(button, canBuy, message)
 	assert(button.Gradient_CanBuy.Enabled == canBuy and button.Gradient_CannotBuy.Enabled == not canBuy, message)

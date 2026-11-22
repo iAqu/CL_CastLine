@@ -20,6 +20,8 @@
 
 ## 验证
 
+`#CL_DEV` 的 Studio Play 默认用独立购买意图存储。对照测试时在 Workspace 把布尔属性 `StudioDedicatedPaidEggCheckout` 设为 `false` 可使用旧路径。清除该属性可恢复默认值。线上继续读取 `DedicatedPurchaseCheckout`。
+
 运行 `python3 tools/run-tests.py PaidEggPurchases PaidEggMailbox`，覆盖概率边界、冻结订单、重复与并发回执、部分失败、明确取消、离线投递、邮箱隔离及持久化确认。品质相关回归还覆盖出售、摆放、幸运、工具恢复和赠送。
 
 Studio 测试须持有工程共享锁。仅在 Edit 下显式设置 Workspace 属性 `StudioUseMockProfiles=true`，临时通过 Rojo 将 `tests/studio/PaidEggVerification.server.lua`、`.client.lua` 放入对应运行目录；断言 `_is_user_mock` 后才生成测试奖励，不弹出购买窗口、不调用真实商品回执。测试结果写入 Workspace／PlayerGui 的 `PaidEggVerificationServer`／`PaidEggVerificationClient` 属性。结束后 Stop，删除临时运行入口并清除上述属性，再确认 Edit。该隔离开关只在 Studio 生效，不发布或保存工程。

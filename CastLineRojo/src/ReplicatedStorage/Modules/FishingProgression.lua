@@ -1,6 +1,7 @@
 -- Pure probability and profile transitions; only successful grants advance progress.
 local Config = require(script.Parent.FishingConfig)
 local Progression = {}
+Progression.ULTRA_LUCK_HIGH_BAND_WEIGHT = 2
 
 function Progression.GetCurve(rod, rods, castProgress: number?)
 	local rating = Config.GetCastRating(castProgress)
@@ -102,9 +103,9 @@ function Progression.GetRod(progress, rodId)
 	return progress.Rods[rodId]
 end
 
-function Progression.Choose(pool, progress, rodId, pity, random)
-	local state = Progression.GetRod(progress, rodId)
-	local forceMax, forceHigh, forceNew = false, state.MissHigh >= pity - 1, false
+function Progression.GetCandidates(pool, progress, rodId, pity)
+	local state = progress.Rods[rodId]
+	local forceMax, forceHigh, forceNew = false, (if state then state.MissHigh else 0) >= pity - 1, false
 	if not progress.NewbieComplete then
 		local distinct = 0
 		for _, seen in pairs(progress.Seen) do
@@ -138,21 +139,58 @@ function Progression.Choose(pool, progress, rodId, pity, random)
 			end
 		end
 	end
-	local total = 0
-	for _, entry in ipairs(candidates) do
-		total += entry.weight
+	return candidates
+end
+
+function Progression.GetWeights(candidates, highBandMultiplier: number?)
+	local weights, total = {}, 0
+	for i, entry in ipairs(candidates) do
+		local weight = entry.weight * (if entry.band == 3 then highBandMultiplier or 1 else 1)
+		weights[i] = weight
+		total += weight
 	end
+	return weights, total
+end
+
+function Progression.Choose(pool, progress, rodId, pity, random, highBandMultiplier: number?)
+	Progression.GetRod(progress, rodId)
+	local candidates = Progression.GetCandidates(pool, progress, rodId, pity)
+	local weights, total = Progression.GetWeights(candidates, highBandMultiplier)
 	if total <= 0 then
 		return nil
 	end
 	local sample = random:NextNumber() * total
-	for _, entry in ipairs(candidates) do
-		sample -= entry.weight
+	for i, entry in ipairs(candidates) do
+		sample -= weights[i]
 		if sample < 0 then
 			return entry
 		end
 	end
 	return candidates[#candidates]
+end
+
+function Progression.GetMutationOdds(tier, config, ranges)
+	local odds = {}
+	local weights = config.MutationWeights[tier]
+	if weights then
+		for _, id in ipairs({ "Golden", "Diamond", "Rainbow" }) do
+			if weights[id] > 0 then
+				table.insert(odds, { name = id, chance = weights[id] / 100 })
+			end
+		end
+	else
+		local lower = 0
+		for _, range in ipairs(ranges) do
+			if range.upperBound > lower then
+				table.insert(odds, { name = range.mutationId, chance = range.upperBound - lower })
+			end
+			lower = range.upperBound
+		end
+		if lower < 1 then
+			table.insert(odds, { name = "Normal", chance = 1 - lower })
+		end
+	end
+	return odds
 end
 
 function Progression.Record(progress, rodId, fishId, band, isMax)

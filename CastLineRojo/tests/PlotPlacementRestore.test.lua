@@ -91,7 +91,7 @@ assert(
 	not plotFishService:find('typeof(slot) == "number" and profile.Data.PlotPlacements[slot]', 1, true),
 	"Raw numeric PlotPlacements lookup is the DataStore key-mismatch bug"
 )
-assert(playerDataService:find("PlotPlacementUtil.CoerceNumericKeys", 1, true), "Loaded profiles must sanitize placement keys")
+assert(playerDataService:find("PlotPlacementUtil.Reconcile", 1, true), "Loaded profiles must reconcile saved placements")
 assert(cashPoolService:find("PlotPlacementUtil.GetItemUid", 1, true), "Cash production must read coerced placement keys")
 
 print("PlotPlacementRestore.test.lua passed")

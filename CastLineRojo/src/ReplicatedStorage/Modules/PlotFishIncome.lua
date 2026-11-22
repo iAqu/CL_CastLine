@@ -8,6 +8,8 @@ local PlotFishIncome = {}
 PlotFishIncome.OFFLINE_RATE = 0.5
 PlotFishIncome.MAX_OFFLINE_SECONDS = 8 * 60 * 60
 PlotFishIncome.BEST_CPS_ATTRIBUTE = "BestOwnedFishBaseCps"
+PlotFishIncome.MULTIPLIER_ATTRIBUTE = "PlotFishIncomeMultiplier"
+PlotFishIncome.BASE_RATE_ATTRIBUTE = "PlotFishBaseCashPerSecond"
 
 local function finiteNonnegative(value): number?
 	local numberValue = tonumber(value)
@@ -66,7 +68,11 @@ function PlotFishIncome.NormalizeBalance(value: unknown): number
 	return math.max(0, math.floor(numberValue))
 end
 
-function PlotFishIncome.GetRate(data): number
+function PlotFishIncome.GetMultiplier(data): number
+	return if data.GamePasses and data.GamePasses.DoubleWins == true then 2 else 1
+end
+
+function PlotFishIncome.GetBaseRate(data): number
 	local rate = 0
 	local bestBaseCps = PlotFishIncome.GetBestOwnedBaseCps(data)
 	local counted = {}
@@ -86,12 +92,16 @@ function PlotFishIncome.GetRate(data): number
 	return rate
 end
 
+function PlotFishIncome.GetRate(data): number
+	return PlotFishIncome.GetBaseRate(data) * PlotFishIncome.GetMultiplier(data)
+end
+
 function PlotFishIncome.PrepareOffline(data, now: number)
 	local lastOnline = tonumber(data.LastOnlineTime) or 0
 	local away = if lastOnline > 0 then math.max(0, now - lastOnline) else 0
 	local counted = math.min(away, PlotFishIncome.MAX_OFFLINE_SECONDS)
 	data.PendingPlotOfflineCash = PlotFishIncome.NormalizeBalance(data.PendingPlotOfflineCash)
-		+ PlotFishIncome.ComputeOfflineCash(PlotFishIncome.GetRate(data), counted)
+		+ PlotFishIncome.ComputeOfflineCash(PlotFishIncome.GetBaseRate(data), counted) * PlotFishIncome.GetMultiplier(data)
 	data.LastOnlineTime = now
 	return { away = away, counted = counted }
 end

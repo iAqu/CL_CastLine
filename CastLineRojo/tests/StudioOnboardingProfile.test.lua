@@ -12,8 +12,11 @@ local trainingProgress = readModule("ReplicatedStorage/Modules/TrainingProgress"
 local starterUid = intro.RewardUidPrefix .. tostring(intro.Version)
 local args = { plugin = "RestartTest", castLineOnboarding = true }
 local devPlace = 84106335829275
-local function loadProfile(isStudio, placeId, testArgs, forceMock, loadCount, initialStage, storedData)
+local function loadProfile(isStudio, placeId, testArgs, forceMock, loadCount, initialStage, storedData, interruption)
 	local loadedFrom
+	local deadline, service
+	local connected, kicks, releases = true, 0, 0
+	local player
 	local data = { Wins = 200, Items = {}, PlotPlacements = {}, EquippedRodId = "Rod_101", Training = { Level = 1 } }
 	if initialStage then
 		data.FishingOnboarding = { Stage = initialStage }
@@ -24,10 +27,20 @@ local function loadProfile(isStudio, placeId, testArgs, forceMock, loadCount, in
 	local profile = {
 		MetaData = { SessionLoadCount = loadCount or 1 }, Data = data,
 		AddUserId = function() end, Reconcile = function() end, ListenToRelease = function() end,
+		IsActive = function() return releases == 0 end,
+		Release = function() releases += 1 end,
 	}
 	local function store(name)
-		return { LoadProfileAsync = function()
+		return { LoadProfileAsync = function(_, key, _, shouldCancel)
+			assert(key == "Player_123")
 			loadedFrom = name
+			if interruption == "timeout" then
+				deadline()
+			elseif interruption == "leave" then
+				connected = false
+				service:_ReleasePlayerProfile(player)
+			end
+			assert(shouldCancel() == (interruption ~= nil))
 			return profile
 		end }
 	end
@@ -35,9 +48,10 @@ local function loadProfile(isStudio, placeId, testArgs, forceMock, loadCount, in
 	profileStore.Mock = store("mock")
 	local players = {}
 	local attributes = {}
-	local player = {
-		UserId = 123, IsDescendantOf = function(_, instance) return instance == players end,
+	player = {
+		UserId = 123, IsDescendantOf = function(_, instance) return connected and instance == players end,
 		SetAttribute = function(_, name, value) attributes[name] = value end,
+		Kick = function() kicks += 1 end,
 	}
 	local function newSignal()
 		return { Fire = function() end }
@@ -83,30 +97,46 @@ local function loadProfile(isStudio, placeId, testArgs, forceMock, loadCount, in
 				PlotUpgradeData = { NormalizeLevel = function() return 0 end },
 			PlotPlacementUtil = {
 				GetCapacity = function() return 4 end,
-				CoerceNumericKeys = function(value) return value end,
-				GetItemUid = function(placements, slot) return placements[slot] end,
+				Reconcile = function(placements) return placements end,
 				IsPlaced = function(placements, uid) return table.find(placements, uid) ~= nil end,
 			},
 				PlotFishIncome = { PrepareOffline = function() return {} end },
 			},
 		},
 	}
-	local service = readModule("ServerScriptService/Services/PlayerDataService", {
+	service = readModule("ServerScriptService/Services/PlayerDataService", {
 		game = { PlaceId = placeId, GetService = function(_, name)
 			assert(name ~= "StudioTestService" or isStudio and placeId == devPlace, "Test args belong to Studio CL_DEV only")
 			return assert(services[name], name)
 		end },
 		workspace = { GetAttribute = function() return forceMock end },
 		require = function(value) return value end,
+		warn = noop,
+		task = { delay = function(seconds, callback, reason)
+			assert(seconds == 90)
+			deadline = function() callback(reason) end
+		end },
 	})
 	service._FrameworkReady = true
 	service.CreateLeaderstats = noop
 	service:LoadProfile(player)
+	if interruption then
+		assert(service:GetProfile(player) == nil and service._PendingProfiles[player] == nil)
+		assert(attributes.PlayerProfileReady == nil, "A late load must never reach gameplay")
+		assert(releases == 1, "The late profile must release its session exactly once")
+		assert(kicks == (if interruption == "timeout" then 1 else 0))
+		return
+	end
+	deadline()
+	assert(kicks == 0, "A successful load must disarm its timeout")
 	assert(service:IsStudioOnboardingTest() == (isStudio and placeId == devPlace and testArgs == args), "Unexpected mode")
 	assert(service:IsUsingMockProfiles() == (loadedFrom == "mock"), "Mock flag must match the actual store")
 	assert(service:GetProfile(player) == profile, "The loaded profile must be available to gameplay services")
 	return loadedFrom, attributes[onboarding.StageAttribute], attributes[onboarding.FishAttribute], data
 end
+
+loadProfile(true, devPlace, nil, false, 2, nil, nil, "timeout")
+loadProfile(true, devPlace, nil, false, 2, nil, nil, "leave")
 
 local source, stage, target, data = loadProfile(true, devPlace, args)
 assert(source == "mock" and stage == "PlaceFish" and target == starterUid,

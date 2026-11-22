@@ -18,6 +18,15 @@ local function new()
 		ready = true,
 		footZ = 0,
 	}
+	local delayed, encoded = {}, {}
+	local deferredThreads = {}
+	local function schedule(seconds, callback)
+		table.insert(delayed, { at = h.now + seconds, callback = callback })
+	end
+	local function resume(thread, ...)
+		local ok, message = coroutine.resume(thread, ...)
+		assert(ok, message)
+	end
 	local function signal()
 		local callbacks = {}
 		return {
@@ -29,6 +38,18 @@ local function new()
 				for callback in pairs(callbacks) do
 					callback(...)
 				end
+			end,
+			Wait = function(self)
+				local thread = coroutine.running()
+				local connection
+				connection = self:Connect(function(...)
+					connection:Disconnect()
+					resume(thread, ...)
+				end)
+				return coroutine.yield()
+			end,
+			Destroy = function()
+				table.clear(callbacks)
 			end,
 		}
 	end
@@ -73,7 +94,9 @@ local function new()
 		GetNetworkPing = function() return h.networkPing or 0 end,
 		Character = instance("Model", { HumanoidRootPart = rootPart, Humanoid = h.humanoid }),
 		CharacterRemoving = signal(),
-		GetAttribute = function(self, name) return self[name] end,
+		GetAttribute = function(self, name)
+			return self[name]
+		end,
 		SetAttribute = function(self, name, value)
 			self[name] = value
 		end,
@@ -149,6 +172,7 @@ local function new()
 		end,
 	}
 	local modules = {
+		Constants = { GAMEPASS = { MEGA_LUCK = "MegaLuck" } },
 		TrainingProgress = loadSource(root .. "TrainingProgress.lua"),
 		FishingOnboarding = loadSource(root .. "FishingOnboarding.lua"),
 		FishingConfig = config,
@@ -204,7 +228,6 @@ local function new()
 	local function recordAnalytics(kind, ...)
 		table.insert(h.analytics, { kind, ... })
 	end
-	local delayed, encoded = {}, {}
 	local services = {
 		MarketplaceService = {
 			PromptProductPurchase = function(_, player, productId)
@@ -248,6 +271,7 @@ local function new()
 		ReplicatedStorage = {
 			Modules = modules,
 			Packages = {
+				Signal = { new = signal },
 				Knit = {
 					CreateSignal = signal,
 					CreateService = function(v)
@@ -276,7 +300,11 @@ local function new()
 							}
 						end
 						if name == "FishingIntroService" then
-							return { IsActive = function() return h.introActive == true end }
+							return {
+								IsActive = function()
+									return h.introActive == true
+								end,
+							}
 						end
 						return {
 							GetLuckMultiplier = function()
@@ -308,13 +336,29 @@ local function new()
 		os = { clock = function() return h.now end },
 		task = {
 			wait = function(seconds)
+				local thread = coroutine.running()
+				if deferredThreads[thread] then
+					schedule(seconds, function()
+						resume(thread)
+					end)
+					return coroutine.yield()
+				end
 				h.now += seconds
 				if h.onWait then
 					h.onWait()
 				end
 			end,
-			delay = function(seconds, callback)
-				table.insert(delayed, { at = h.now + seconds, callback = callback })
+			delay = schedule,
+			defer = function(callback, ...)
+				local args = table.pack(...)
+				local thread = coroutine.create(function()
+					callback(table.unpack(args, 1, args.n))
+					deferredThreads[coroutine.running()] = nil
+				end)
+				deferredThreads[thread] = true
+				schedule(0, function()
+					resume(thread)
+				end)
 			end,
 		},
 		warn = function() end,
@@ -323,6 +367,9 @@ local function new()
 				PlayerDataService = h.playerData,
 				PaidItemPolicy = {
 					Get = function()
+						return if h.noPolicy then nil else { ArePaidRandomItemsRestricted = h.restrictPaid == true }
+					end,
+					GetCached = function()
 						return if h.noPolicy then nil else { ArePaidRandomItemsRestricted = h.restrictPaid == true }
 					end,
 				},
@@ -368,6 +415,15 @@ local function new()
 	modules.FishingObserverState = loadSource(root .. "FishingObserverState.lua", h.env)
 	h.env.script.Parent.PurchasePersistence =
 		require("./helpers/PurchasePersistenceMock")(h.env.os.clock, h.env.task.wait)
+	h.player.Parent = services.Players
+	h.checkout = require("./helpers/PurchaseCheckoutFixture")(services.Players, services.MarketplaceService, {
+		defer = h.env.task.defer,
+		delay = function(seconds, callback, ...)
+			local args = table.pack(...)
+			schedule(seconds, function() callback(table.unpack(args, 1, args.n)) end)
+		end,
+	}, function() return math.floor(h.now) end)
+	h.env.script.Parent.PurchaseCheckout = h.checkout.Load()
 	h.purchases = loadSource("src/ServerScriptService/Services/FishingBaitPurchases.lua", h.env)
 	h.env.script.Parent.FishingBaitPurchases = h.purchases
 	function h.reload()
@@ -386,12 +442,21 @@ local function new()
 		return modules.FishingObserverState.Decode(h.player.Character:GetAttribute(modules.FishingObserverState.Attribute))
 	end
 	function h.advance(seconds)
-		h.now += seconds
-		for index = #delayed, 1, -1 do
-			if delayed[index].at <= h.now then
-				table.remove(delayed, index).callback()
+		local target = h.now + seconds
+		while true do
+			local nextIndex, nextTime
+			for index, job in ipairs(delayed) do
+				if job.at <= target and (not nextTime or job.at < nextTime) then
+					nextIndex, nextTime = index, job.at
+				end
 			end
+			if not nextIndex then
+				break
+			end
+			h.now = math.max(h.now, nextTime)
+			table.remove(delayed, nextIndex).callback()
 		end
+		h.now = math.max(h.now, target)
 	end
 	h.reload()
 	function h.begin(bait)
@@ -416,7 +481,7 @@ local function new()
 	end
 	function h.cast()
 		assert(h.castAt(1).ok)
-		h.now += 5
+		h.advance(5)
 		local timerCount = #delayed
 		local r = h.client:NextRound(h.player, h.token, 0)
 		local biteTimer = delayed[timerCount + 1]

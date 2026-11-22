@@ -171,15 +171,20 @@ function FishingRigUtil.Create(template: Model, character: Model, rodTemplate: T
 	return rig
 end
 
-function FishingRigUtil.PlaceAtFishingSpot(rig: Model, part: BasePart)
-	local root = assert(rig.PrimaryPart, "FishingRig.PrimaryPart is missing")
-	local humanoid = assert(rig:FindFirstChildOfClass("Humanoid"), "FishingRig.Humanoid is missing")
+function FishingRigUtil.GetSpotRootCFrame(part: BasePart, root: BasePart, humanoid: Humanoid): (CFrame, Vector3, number)
 	local forward = part.CFrame.LookVector * Vector3.new(1, 0, 1)
 	assert(forward.Magnitude >= 0.001, "FishingStartPart must face horizontally")
 	local ground = part.Position + part.CFrame.UpVector * part.Size.Y / 2
 	local position = ground + Vector3.yAxis * (humanoid.HipHeight + root.Size.Y / 2)
-	rig:PivotTo(CFrame.lookAt(position, position + forward))
-	return position, forward.Unit, ground.Y
+	return CFrame.lookAt(position, position + forward), forward.Unit, ground.Y
+end
+
+function FishingRigUtil.PlaceAtFishingSpot(rig: Model, part: BasePart)
+	local root = assert(rig.PrimaryPart, "FishingRig.PrimaryPart is missing")
+	local humanoid = assert(rig:FindFirstChildOfClass("Humanoid"), "FishingRig.Humanoid is missing")
+	local target, forward, groundY = FishingRigUtil.GetSpotRootCFrame(part, root, humanoid)
+	rig:PivotTo(target)
+	return target.Position, forward, groundY
 end
 
 function FishingRigUtil.ApplyReadyPose(rig: Model)
@@ -194,6 +199,20 @@ function FishingRigUtil.ApplyReadyPose(rig: Model)
 			local offset = if name == "RightShoulder"
 				then CFrame.Angles(math.rad(45), 0, math.rad(8))
 				else CFrame.Angles(math.rad(35), 0, 0)
+			joint.C0 = original * offset
+		end
+	end
+end
+
+function FishingRigUtil.ApplyCastWindup(rig: Model, progress: number)
+	local blend = progress * progress * (3 - 2 * progress)
+	for _, name in ipairs({ "RightShoulder", "RightElbow" }) do
+		local joint = rig:FindFirstChild(name, true)
+		local original = joint and joint:GetAttribute("FishingReadyC0")
+		if typeof(original) == "CFrame" then
+			local offset = if name == "RightShoulder"
+				then CFrame.Angles(math.rad(45 + 22 * blend), 0, math.rad(8 + 5 * blend))
+				else CFrame.Angles(math.rad(35 + 13 * blend), 0, 0)
 			joint.C0 = original * offset
 		end
 	end

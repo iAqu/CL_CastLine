@@ -108,18 +108,43 @@ h.cancel()
 assert(progress.Credits.Rod_101 == 1, "Leaving before a cast keeps the paid use")
 h.begin(premiumBaitId)
 h.pauseSave = true
-assert(not h.castAt(1).ok and progress.Credits.Rod_101 == 1)
-h.pauseSave = false
-h.profile:Save()
 local wins = h.profile.Data.Wins
-h.cast()
-assert(progress.Credits.Rod_101 == 0 and h.profile.Data.Wins == wins)
-assert(not client:Cast(player, h.token, 1).ok, "Repeating Cast cannot consume again")
+local savesBeforeCast = h.saveCalls
+local cast = h.castAt(0.65)
+assert(cast.ok and math.abs(cast.castProgress - 0.65) < 0.00001,
+	"The first cast response uses the click time even when saves are paused")
+assert(h.presentation().phase == "Cast" and h.saveCalls == savesBeforeCast,
+	"Cast must publish its presentation without waiting for a save")
+assert(progress.Credits.Rod_101 == 0 and not client:Cast(player, h.token).ok,
+	"An accepted cast reserves its credit immediately and cannot repeat")
+assert(not client:NextRound(player, h.token, 0).ok, "The landing gate still applies")
+h.advance(5)
+local result
+local firstRound = coroutine.create(function()
+	result = client:NextRound(player, h.token, 0)
+end)
+assert(coroutine.resume(firstRound))
+assert(coroutine.status(firstRound) == "suspended" and result == nil,
+	"A landed bait cannot get a fish round until the spend is saved")
+assert(not client:NextRound(player, h.token, 0).ok and not client:Hook(player, h.token, 1).ok,
+	"A waiting first round rejects duplicates and cannot be hooked")
+h.pauseSave = false
+local persistedAt = h.now
+h.profile:Save()
+h.advance(0.2)
+assert(result and result.ok and result.round == 1 and result.startedAt > persistedAt,
+	"The confirmed first round uses a fresh clock")
+assert(not client:NextRound(player, h.token, 0).ok, "A completed first round cannot replay")
+h.round = result
+assert(progress.Credits.Rod_101 == 0 and h.profile.Data.Wins == wins,
+	"Only the paid bait use is spent when the first round opens")
 
 -- A missed round preserves the paid effect for the next bite in the same session.
 h.now = h.round.retryAt + 0.1
+h.sample = 0.99
 local retry = client:NextRound(player, h.token, h.round.round)
-assert(retry.ok and retry.fishId == h.round.fishId)
+assert(retry.ok and retry.fishId ~= h.round.fishId and progress.Credits.Rod_101 == 0,
+	"Roll a fresh fish and do not spend another credit")
 h.round = retry
 h.failGrant = true
 assert(not h.hook().ok)
@@ -147,3 +172,88 @@ assert(requestPurchase().ok and progress.PendingBaitPurchase.SessionToken == h.t
 purchases.OnPromptFinished(player, productId, false)
 h.advance(3)
 assert(not progress.PendingBaitPurchase, "Canceled orders expire and are cleaned up")
+
+local function pendingCast()
+	local fixture = new()
+	local fishingProgress = fixture.progression.Ensure(fixture.profile.Data)
+	fishingProgress.Credits.Rod_101 = 1
+	fixture.begin(premiumBaitId)
+	fixture.pauseSave = true
+	assert(fixture.castAt(0.65).ok, "Storage latency must not stop the cast")
+	fixture.advance(5)
+	local round
+	local waiting = coroutine.create(function()
+		round = fixture.client:NextRound(fixture.player, fixture.token, 0)
+	end)
+	assert(coroutine.resume(waiting))
+	assert(coroutine.status(waiting) == "suspended", "The first round still needs storage confirmation")
+	local function getRound()
+		return round
+	end
+	return fixture, fishingProgress, getRound
+end
+
+local slow, slowProgress, slowRound = pendingCast()
+slow.advance(4.8)
+assert(slowRound() == nil and slowProgress.Credits.Rod_101 == 0, "Keep the credit committed while waiting")
+slow.advance(0.4)
+assert(not slowRound().ok and slowRound().message == "Could not use the Rainbow bait. Please try again.",
+	"Storage timeout reports the paid bait failure")
+assert(slowProgress.Credits.Rod_101 == 1 and not slow.client:NextRound(slow.player, slow.token, 0).ok,
+	"Timeout restores one use and does not award a round")
+
+local canceledCast, canceledProgress, canceledRound = pendingCast()
+local oldToken = canceledCast.token
+canceledCast.cancel()
+canceledCast.begin("NONE")
+canceledCast.pauseSave = false
+canceledCast.profile:Save()
+canceledCast.advance(0.2)
+assert(not canceledRound().ok and not canceledCast.client:NextRound(canceledCast.player, oldToken, 0).ok,
+	"The canceled session cannot open a round after storage confirms")
+assert(canceledProgress.Credits.Rod_101 == 0 and canceledCast.presentation().phase == "Preparing",
+	"Canceling preserves a completed spend without opening a round on either session")
+
+local released, releasedProgress, releasedRound = pendingCast()
+released.ready = false
+released.advance(0.2)
+assert(not releasedRound().ok and releasedProgress.Credits.Rod_101 == 0,
+	"Profile release prevents a round and leaves the released profile untouched")
+
+local fast = new()
+local fastProgress = fast.progression.Ensure(fast.profile.Data)
+fastProgress.Credits.Rod_101 = 1
+fast.begin(premiumBaitId)
+assert(fast.cast().ok and fastProgress.Credits.Rod_101 == 0,
+	"A spend saved during flight allows the first round to return immediately")
+
+
+local dedicated = new()
+dedicated.checkout.Enabled = true
+dedicated.begin()
+local dedicatedBait = dedicated.rods.Rod_101.BaitsSelect[4]
+local dedicatedProduct = dedicated.purchaseData.PremiumBait.ProductId
+local dedicatedProgress = dedicated.progression.Ensure(dedicated.profile.Data)
+local staleBait = { PlayerId = dedicated.player.UserId, ProductId = dedicatedProduct, PurchaseId = "old-unmatched" }
+assert(not dedicated.purchases.Process(dedicated.player, staleBait))
+dedicated.pauseSave = true
+local beforeClick = dedicated.now
+local function openDedicated()
+	return dedicated.client:RequestBaitPurchase(dedicated.player, dedicated.token, dedicatedBait)
+end
+assert(openDedicated().ok and dedicated.now == beforeClick and #dedicated.prompts == 1)
+assert(not dedicatedProgress.PendingBaitPurchase)
+assert(not dedicated.purchases.Process(dedicated.player, staleBait))
+assert(not openDedicated().ok and #dedicated.prompts == 1)
+dedicated.purchases.OnPromptFinished(dedicated.player, dedicatedProduct, false)
+assert(openDedicated().ok and #dedicated.prompts == 2)
+dedicated.purchases.OnPromptFinished(dedicated.player, dedicatedProduct, true)
+dedicated.cancel()
+dedicated.profile.Data.EquippedRodId = "Rod_102"
+local paid = { PlayerId = dedicated.player.UserId, ProductId = dedicatedProduct, PurchaseId = "dedicated-bait" }
+assert(not dedicated.purchases.Process(dedicated.player, paid))
+assert(dedicated.purchases.GetCredits(dedicated.profile, dedicatedProgress, "Rod_101") == 0)
+dedicated.pauseSave = false
+assert(dedicated.purchases.Process(dedicated.player, paid))
+assert(dedicated.purchases.Process(dedicated.player, paid))
+assert(dedicatedProgress.Credits.Rod_101 == 1 and not dedicatedProgress.Credits.Rod_102)

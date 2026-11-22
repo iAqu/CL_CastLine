@@ -24,9 +24,6 @@ if airWalls then
     end
 end
 
-local water = areas and areas:FindFirstChild("Water")
-hideAuxiliaryPart(water and water:FindFirstChild("Surface"), "Workspace.Areas.Water.Surface")
-
 local Knit = require(ReplicatedStorage.Packages.Knit)
 local LogHelper = require(ReplicatedStorage.Modules.LogHelper)
 local PlayerDataService = require(ServerScriptService.Services.PlayerDataService)

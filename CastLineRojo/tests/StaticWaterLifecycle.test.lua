@@ -11,6 +11,7 @@ for _, path in ipairs({
 	"src/ServerScriptService/Services/TideService.lua",
 	"src/ServerScriptService/TideDebug.server.lua",
 	"src/StarterPlayer/StarterPlayerScripts/Controllers/TideController.lua",
+	"src/StarterPlayer/StarterPlayerScripts/Controllers/FootprintController.lua",
 	"src/StarterPlayer/StarterPlayerScripts/Controllers/GUI/PositionBarController.lua",
 	"src/StarterPlayer/StarterPlayerScripts/TideDebugPanel.client.lua",
 }) do
@@ -21,7 +22,6 @@ for _, path in ipairs({
 	"src/ServerScriptService/KnitServer.server.lua",
 	"src/StarterPlayer/StarterPlayerScripts/KnitClient.client.lua",
 	"src/StarterPlayer/StarterPlayerScripts/Controllers/MusicController.lua",
-	"src/StarterPlayer/StarterPlayerScripts/Controllers/FootprintController.lua",
 	"src/ServerScriptService/Services/DrownDropService.lua",
 	"src/StarterPlayer/StarterPlayerScripts/TestDebugPanel.client.lua",
 }) do
@@ -34,7 +34,5 @@ end
 local debugPanel = read("src/StarterPlayer/StarterPlayerScripts/TestDebugPanel.client.lua")
 assert(debugPanel:find("CharacterUtil.TeleportTo(character, spawnLocation.CFrame * HOME_SPAWN_OFFSET)", 1, true), "The home button must keep using the character teleport utility")
 assert(debugPanel:find("setPanelCollapsed(frame.Visible)", 1, true), "The remaining test panel must still collapse")
-local footprintController = read("src/StarterPlayer/StarterPlayerScripts/Controllers/FootprintController.lua")
-assert(footprintController:find('zone.Name:match("^Zone_%d+$")', 1, true), "Footprints must discover authored zones without a tide configuration")
 
 print("StaticWaterLifecycle.test.lua passed")

@@ -642,7 +642,7 @@ local ok, result = xpcall(function()
 		end
 		peakScale = math.max(peakScale, owner.bite.scale)
 		if at - liftingAt > owner.bite:GetLiftTiming().landAt then
-			bounceHeight = math.max(bounceHeight, body.Position.Y - target.Y - settings.ShowcaseHeight)
+			bounceHeight = math.max(bounceHeight, body.Position.Y - target.Y - owner.bite:GetShowcaseHeight())
 		end
 		if index == 20 then
 			assert((camera.Focus.Position - owner.bite.showcasePosition).Magnitude > 0.01,

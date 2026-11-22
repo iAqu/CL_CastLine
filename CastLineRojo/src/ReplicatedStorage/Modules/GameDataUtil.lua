@@ -19,10 +19,6 @@ end
 function GameDataUtil.CalculateWinsBoost(playerData: Template.PlayerData): number
     local totalBoost = 1
 
-    if playerData.GamePasses[Constants.GAMEPASS.DOUBLE_WINS] then
-        totalBoost *= 2
-    end
-
     local achievementBoost = AchievementsDataHelper.GetBoostValue(playerData, AchievementsDataHelper.ACHIEVEMENT_TYPE.WINS)
     totalBoost *= (1 + achievementBoost)
 
@@ -33,7 +29,10 @@ function GameDataUtil.CalculateWinsBoost(playerData: Template.PlayerData): numbe
 end
 
 function GameDataUtil.IsTradeSystemLocked(playerData): boolean
-    if not playerData then warn("playerData is nil!") return end
+    if not playerData then
+        warn("playerData is nil!")
+        return
+    end
 
     if playerData.Rebirths >= 3 then
         return false

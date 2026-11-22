@@ -17,7 +17,7 @@ function FishingAudio.PreloadLuckSounds()
 	task.spawn(function()
 		local sounds, seen = {}, {}
 		local meterTickCache
-		for _, name in { "MeterTick", "LuckTick", "LuckWhole", "ButtonClick", "Perfect" } do
+		for _, name in { "MeterTick", "LuckTick", "LuckWhole", "ButtonClick", "Perfect", "CatchRevealImpact", "CatchRevealBurst" } do
 			local id = Config.Sounds[name].Id
 			if not seen[id] then
 				seen[id] = true

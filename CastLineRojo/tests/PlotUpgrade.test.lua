@@ -10,14 +10,14 @@ local function loadSource(path, env)
 	return assert(load(read(path), path, "t", setmetatable(env or {}, { __index = getfenv() })))()
 end
 local placements = loadSource("src/ReplicatedStorage/Modules/PlotPlacementUtil.lua", helper.environment)
-for level = 0, 5 do
-	assert(upgrades.Get(level).Capacity == 10 + level * 2)
+for level = 0, 10 do
+	assert(upgrades.Get(level).Capacity == 10 + level)
 	assert(placements.GetCapacity({ PlotUpgradeLevel = level }) == upgrades.Get(level).Capacity)
 end
-assert(upgrades.Get(0).Width == 60 and upgrades.Get(1).Width == 80 and upgrades.Get(2).Width == 100)
-assert(upgrades.Get(5).Width == 100 and upgrades.Get(5).Depth == 56)
+assert(upgrades.Get(0).Width == 60 and upgrades.Get(1).Width == 70 and upgrades.Get(2).Width == 80)
+assert(upgrades.Get(10).Width == 130 and upgrades.Get(10).Depth == 56)
 assert(upgrades.NormalizeLevel(nil) == 0 and upgrades.NormalizeLevel(0 / 0) == 0)
-assert(upgrades.NormalizeLevel(999) == 5 and upgrades.GetNext(5) == nil)
+assert(upgrades.NormalizeLevel(999) == 10 and upgrades.GetNext(10) == nil)
 -- Run the actual profile migration with stringified high slots, duplicates and invalid keys.
 local source = read("src/ServerScriptService/Services/PlayerDataService.lua")
 local first = assert(source:find("local function migratePlotHome", 1, true))
@@ -37,7 +37,20 @@ local migrate = assert(load(
 local saved =
 	{ PlotUpgradeLevel = 5, Items = { a = {}, b = {} }, PlotPlacements = { ["11"] = "a", ["20"] = "b", ["21"] = "a" } }
 migrate(saved)
-assert(saved.PlotPlacements[11] == "a" and saved.PlotPlacements[20] == "b" and saved.PlotPlacements[21] == nil)
+assert(saved.PlotPlacements[11] == "a" and saved.PlotPlacements[1] == "b")
+assert(saved.PlotPlacements[20] == nil and saved.PlotPlacements[21] == nil)
+local full = { PlotUpgradeLevel = 5, Items = {}, PlotPlacements = {} }
+for slot = 1, 20 do
+	local uid = "fish" .. slot
+	full.Items[uid] = { Weight = slot }
+	full.PlotPlacements[tostring(slot)] = uid
+end
+migrate(full)
+for slot = 1, 20 do
+	local uid = "fish" .. slot
+	assert(full.Items[uid].Weight == slot)
+	assert(full.PlotPlacements[slot] == (if slot <= 15 then uid else nil))
+end
 local legacy = { Items = { a = {} }, PlotPlacements = { ["10"] = "a" } }
 migrate(legacy)
 assert(legacy.PlotUpgradeLevel == 0 and legacy.PlotPlacements[10] == "a")
@@ -49,7 +62,7 @@ local function position(x)
 		end,
 	})
 end
-local data = { Wins = 2e11, PlotUpgradeLevel = 0 }
+local data = { Wins = 2e15, PlotUpgradeLevel = 0 }
 local profile = { Data = data }
 local players = {}
 local transitionEvents = {}
@@ -309,14 +322,14 @@ end
 nested = function()
 	assert(not service:RequestUpgrade(player, 0).ok, "Reentrant upgrade must be locked")
 end
-for level = 1, 5 do
+for level = 1, 10 do
 	local old = data.Wins
 	assert(service:RequestUpgrade(player, level - 1).ok)
 	assert(data.Wins == old - upgrades.Get(level).Price and data.PlotUpgradeLevel == level)
 	assert(attributes.PlotCapacity == upgrades.Get(level).Capacity and currentLevel == level)
 	assert(not service:RequestUpgrade(player, level - 1).ok, "A duplicate expected level cannot buy twice")
 end
-assert(refreshes == 5 and not service:RequestUpgrade(player, 5).ok)
+assert(refreshes == 10 and not service:RequestUpgrade(player, 10).ok)
 local appliedCount = 0
 for index, event in transitionEvents do
 	if event.phase == "Applied" then
@@ -325,7 +338,7 @@ for index, event in transitionEvents do
 		assert(begin.phase == "Begin" and begin.id == event.id and begin.plot == event.plot)
 	end
 end
-assert(appliedCount == 5, "Only successful purchases publish Applied")
+assert(appliedCount == 10, "Only successful purchases publish Applied")
 service:ResetPlot(plot)
 assert(currentLevel == 0)
 -- A queued release callback must not reset a plot already claimed by a new owner.

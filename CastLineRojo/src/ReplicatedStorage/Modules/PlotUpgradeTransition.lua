@@ -43,7 +43,11 @@ local function snapshot(fence)
 			item:Destroy()
 		elseif item:IsA("BasePart") then
 			-- Original parts may already be locally hidden during the handoff.
-			item.LocalTransparencyModifier = 0
+			if item.Transparency == 1 then
+				item:Destroy()
+			else
+				item.LocalTransparencyModifier = 0
+			end
 		end
 	end
 	local overlay = WhiteFlash.Create(proxy)

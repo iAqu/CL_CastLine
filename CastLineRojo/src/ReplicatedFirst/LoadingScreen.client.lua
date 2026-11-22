@@ -19,12 +19,9 @@ local LOADING_FOV = 45
 local MENU_DISTANCE = 16
 local ENTRY_FADE_DURATION_SECONDS = 0.4
 local ENTRY_CAMERA_DURATION_SECONDS = 1.25
-local ENTRY_CAMERA_HANDOFF_SECONDS = 0.2
 local ENTRY_CAMERA_DISTANCE = 25
 local ENTRY_CAMERA_BINDING_NAME = "SeaDigLoadingEntryCamera"
 local ENTRY_CAMERA_DEFAULT_STATE_BINDING_NAME = "SeaDigLoadingEntryCameraDefaultState"
-local ENTRY_CAMERA_TARGET_SAMPLE_BINDING_NAME = "SeaDigLoadingEntryCameraTargetSample"
-local ENTRY_CAMERA_TARGET_SAMPLE_FRAMES = 2
 local ENTRY_CAMERA_MIN_ARC_HEIGHT = 4
 local ENTRY_CAMERA_MAX_ARC_HEIGHT = 10
 local ENTRY_CAMERA_SCALE = 0.96
@@ -304,85 +301,69 @@ local function fadeLoadingPresentation(): Tween?
 	return completionTween
 end
 
-local function sampleEntryCameraTarget(
+local function animateEntryCamera(
 	camera: Camera,
 	humanoid: Humanoid,
 	seedCFrame: CFrame,
-	seedFocus: Vector3,
-	startCFrame: CFrame,
-	startFocus: CFrame,
+	seedFocus: CFrame,
 	targetFieldOfView: number
-): (CFrame, CFrame, number)
-	local sampledCFrame = seedCFrame
-	local sampledFocus = CFrame.new(seedFocus)
-	local sampledFieldOfView = targetFieldOfView
-	local sampleCount = 0
+)
+	local startCFrame = camera.CFrame
+	local startPosition = startCFrame.Position
+	local startRotation = startCFrame.Rotation
+	local startFocus = camera.Focus
+	local startFieldOfView = camera.FieldOfView
+	local defaultCFrame = seedCFrame
+	local defaultFocus = seedFocus
+	local defaultFieldOfView = targetFieldOfView
 	local priority = Enum.RenderPriority.Camera.Value
-
-	-- The temporary view is only live around PlayerModule's update within each render step.
-	RunService:BindToRenderStep(ENTRY_CAMERA_DEFAULT_STATE_BINDING_NAME, priority - 1, function()
-		camera.CFrame = sampledCFrame
-		camera.Focus = sampledFocus
-		camera.FieldOfView = sampledFieldOfView
-	end)
-	RunService:BindToRenderStep(ENTRY_CAMERA_TARGET_SAMPLE_BINDING_NAME, priority + 1, function()
-		sampledCFrame = camera.CFrame
-		sampledFocus = camera.Focus
-		sampledFieldOfView = camera.FieldOfView
-		camera.CFrame = startCFrame
-		camera.Focus = startFocus
-		camera.FieldOfView = LOADING_FOV
-
-		sampleCount += 1
-		if sampleCount >= ENTRY_CAMERA_TARGET_SAMPLE_FRAMES then
-			camera.CameraType = Enum.CameraType.Scriptable
-			RunService:UnbindFromRenderStep(ENTRY_CAMERA_DEFAULT_STATE_BINDING_NAME)
-			RunService:UnbindFromRenderStep(ENTRY_CAMERA_TARGET_SAMPLE_BINDING_NAME)
-		end
-	end)
-
-	camera.CameraSubject = humanoid
-	camera.CameraType = Enum.CameraType.Custom
-	while sampleCount < ENTRY_CAMERA_TARGET_SAMPLE_FRAMES do
-		RunService.RenderStepped:Wait()
-	end
-
-	return sampledCFrame, sampledFocus, sampledFieldOfView
-end
-
-local function handoffEntryCamera(camera: Camera, targetCFrame: CFrame, targetFocus: CFrame)
-	local priority = Enum.RenderPriority.Camera.Value
-	local defaultCFrame = targetCFrame
-	local defaultFocus = targetFocus
 	local elapsed = 0
 	local completed = false
-	local function isCurrentCustomCamera()
+
+	local function isCurrentCustomCamera(): boolean
 		return Workspace.CurrentCamera == camera and camera.CameraType == Enum.CameraType.Custom
 	end
 
-	-- PlayerModule reads the previous CFrame for look input. Give it its own last output before it updates.
+	-- Give PlayerModule its own previous result before each update, rather than the rendered entry view.
 	RunService:BindToRenderStep(ENTRY_CAMERA_DEFAULT_STATE_BINDING_NAME, priority - 1, function()
 		if not completed and isCurrentCustomCamera() then
 			camera.CFrame = defaultCFrame
 			camera.Focus = defaultFocus
+			camera.FieldOfView = defaultFieldOfView
 		end
 	end)
 	RunService:BindToRenderStep(ENTRY_CAMERA_BINDING_NAME, priority + 1, function(deltaTime)
-		if not isCurrentCustomCamera() or elapsed >= ENTRY_CAMERA_HANDOFF_SECONDS then
+		if completed or not isCurrentCustomCamera() then
 			completed = true
 			return
 		end
-		defaultCFrame, defaultFocus = camera.CFrame, camera.Focus
+
+		defaultCFrame = camera.CFrame
+		defaultFocus = camera.Focus
+		defaultFieldOfView = camera.FieldOfView
+		elapsed += deltaTime
+		if elapsed >= ENTRY_CAMERA_DURATION_SECONDS then
+			-- PlayerModule's current output is already the final visible frame.
+			completed = true
+			return
+		end
+
 		local alpha = TweenService:GetValue(
-			elapsed / ENTRY_CAMERA_HANDOFF_SECONDS,
+			elapsed / ENTRY_CAMERA_DURATION_SECONDS,
 			Enum.EasingStyle.Sine,
 			Enum.EasingDirection.InOut
 		)
-		camera.CFrame = targetCFrame:Lerp(defaultCFrame, alpha)
-		camera.Focus = targetFocus:Lerp(defaultFocus, alpha)
-		elapsed += deltaTime
+		local targetPosition = defaultCFrame.Position
+		local offset = Vector3.new(targetPosition.X - startPosition.X, 0, targetPosition.Z - startPosition.Z)
+		local arcHeight = math.clamp(offset.Magnitude * 0.08, ENTRY_CAMERA_MIN_ARC_HEIGHT, ENTRY_CAMERA_MAX_ARC_HEIGHT)
+		local cameraPosition = startPosition:Lerp(targetPosition, alpha) + Vector3.yAxis * (2 * alpha * (1 - alpha) * arcHeight)
+		-- Loading's focus is at the camera position, so preserve its starting rotation directly.
+		camera.CFrame = CFrame.new(cameraPosition) * startRotation:Lerp(defaultCFrame.Rotation, alpha)
+		camera.Focus = startFocus:Lerp(defaultFocus, alpha)
+		camera.FieldOfView = startFieldOfView + (defaultFieldOfView - startFieldOfView) * alpha
 	end)
 
+	camera.CameraSubject = humanoid
 	camera.CameraType = Enum.CameraType.Custom
 	while not completed do
 		RunService.RenderStepped:Wait()
@@ -412,69 +393,24 @@ local function playEntryCamera(): boolean
 		task.wait(ENTRY_FADE_DURATION_SECONDS)
 	end
 
-	-- UI 和模糊完全淡出后，才释放 loading 相机并准备入场镜头。
+	-- UI 和模糊完全淡出后，才释放 Loading 相机并开始入场镜头。
 	disconnectConnections()
-	local startCFrame = camera.CFrame
-	local startFocus = camera.Focus
-
-	-- 在每一帧渲染前恢复 loading 视角，避免默认相机取样过程被玩家看见。
 	local seedFocus = root.Position + Vector3.new(0, math.max(2.25, root.Size.Y * 1.25), 0)
 	local seedPosition = seedFocus - root.CFrame.LookVector * entryZoomDistance
 		+ Vector3.new(0, math.max(1.5, entryZoomDistance * 0.18), 0)
-	local targetCFrame, targetFocus, targetFieldOfView = sampleEntryCameraTarget(
-		camera,
-		humanoid,
-		CFrame.lookAt(seedPosition, seedFocus),
-		seedFocus,
-		startCFrame,
-		startFocus,
-		originalFieldOfView or camera.FieldOfView
-	)
 
 	local whoosh = SoundService:FindFirstChild("Whoosh", true)
 	if whoosh and whoosh:IsA("Sound") then
 		whoosh:Play()
 	end
 
-	local startPosition = startCFrame.Position
-	local targetPosition = targetCFrame.Position
-	local startRotation = startCFrame.Rotation
-	local targetRotation = targetCFrame.Rotation
-	local horizontalDistance = Vector3.new(targetPosition.X - startPosition.X, 0, targetPosition.Z - startPosition.Z).Magnitude
-	local arcHeight = math.clamp(horizontalDistance * 0.08, ENTRY_CAMERA_MIN_ARC_HEIGHT, ENTRY_CAMERA_MAX_ARC_HEIGHT)
-	local controlPosition = (startPosition + targetPosition) * 0.5 + Vector3.new(0, arcHeight, 0)
-	local elapsed = 0
-	local completed = false
-	RunService:BindToRenderStep(ENTRY_CAMERA_BINDING_NAME, Enum.RenderPriority.Camera.Value + 1, function(deltaTime)
-		elapsed = math.min(elapsed + deltaTime, ENTRY_CAMERA_DURATION_SECONDS)
-		if elapsed >= ENTRY_CAMERA_DURATION_SECONDS then
-			camera.CFrame = targetCFrame
-			camera.Focus = targetFocus
-			camera.FieldOfView = targetFieldOfView
-			completed = true
-			return
-		end
-
-		local alpha = TweenService:GetValue(
-			elapsed / ENTRY_CAMERA_DURATION_SECONDS,
-			Enum.EasingStyle.Sine,
-			Enum.EasingDirection.InOut
-		)
-		local inverseAlpha = 1 - alpha
-		local cameraPosition = inverseAlpha * inverseAlpha * startPosition
-			+ 2 * inverseAlpha * alpha * controlPosition
-			+ alpha * alpha * targetPosition
-		-- Loading 的 Focus 与相机同位，不能用它重建过渡起点的朝向。
-		camera.CFrame = CFrame.new(cameraPosition) * startRotation:Lerp(targetRotation, alpha)
-		camera.Focus = startFocus:Lerp(targetFocus, alpha)
-		camera.FieldOfView = LOADING_FOV + (targetFieldOfView - LOADING_FOV) * alpha
-	end)
-
-	while not completed do
-		RunService.RenderStepped:Wait()
-	end
-	RunService:UnbindFromRenderStep(ENTRY_CAMERA_BINDING_NAME)
-	handoffEntryCamera(camera, targetCFrame, targetFocus)
+	animateEntryCamera(
+		camera,
+		humanoid,
+		CFrame.lookAt(seedPosition, seedFocus),
+		CFrame.new(seedFocus),
+		originalFieldOfView or camera.FieldOfView
+	)
 	localPlayer.CameraMinZoomDistance = originalMinZoomDistance
 	localPlayer.CameraMaxZoomDistance = originalMaxZoomDistance
 	-- Let the settled gameplay camera render once before revealing the scene UI.

@@ -2,10 +2,22 @@ local Progress = assert(loadstring(assert(io.open("src/ReplicatedStorage/Modules
 local Items = assert(loadstring(assert(io.open("src/ReplicatedFirst/Data/TrainingData.lua")):read("*a")))()
 local Levels = assert(loadstring(assert(io.open("src/ReplicatedFirst/Data/TrainingLevelsData.lua")):read("*a")))()
 local Fishes = assert(loadstring(assert(io.open("src/ReplicatedFirst/Data/FishesData.lua")):read("*a")))()
+local xpTo1000 = Progress.GetLevel(Levels, 999).XpToNextLevel
+local atBoundary = { Level = 999, Xp = xpTo1000 - 2 }
+assert(Progress.Advance(atBoundary, 1, Levels) == 0 and atBoundary.Level == 999)
+assert(
+	Progress.Advance(atBoundary, 1, Levels) == 1 and atBoundary.Level == 1000 and atBoundary.Xp == 0,
+	"Reaching the XP threshold must advance level 999 to 1000"
+)
+assert(Progress.GetLevel(Levels, atBoundary.Level).MaxCatchWeight == 1000)
+local stuckProfile = { Training = { Level = 999, Xp = xpTo1000 + 3 } }
+local recovered = Progress.Ensure(stuckProfile, Items, Levels)
+assert(recovered.Level == 1000 and recovered.Xp == 3, "Apply banked XP from players who were stuck at level 999")
+
 assert(Progress.GetMaxLevel(Levels) == 1500)
 for level = 1, 1500 do
 	local row = Progress.GetLevel(Levels, level)
-	assert(row.Level == level and row.MaxCatchWeight == 10 * level)
+	assert(row.Level == level and row.MaxCatchWeight == level)
 	local expectedXp = if level == 1500 then 0 else math.floor(5 + 0.006 * (level - 1) ^ 2.1 + 0.5)
 	assert(row.XpToNextLevel == expectedXp)
 end

@@ -14,6 +14,7 @@ local GameplayInputGate = require(Modules.GameplayInputGate)
 local GuiAnimation = require(Modules.GuiAnimation)
 local GuiUtil = require(Modules.GuiUtil)
 local IndexItemViewport = require(Modules.IndexItemViewport)
+local ShopInventoryStatus = require(Modules.ShopInventoryStatus)
 local NotificationClient = require(Modules.NotificationClient)
 local NumberUtil = require(Modules.NumberUtil)
 local WeightFormat = require(Modules.WeightFormat)
@@ -95,11 +96,13 @@ function RodShopGuiController:KnitStart()
 		return
 	end
 
+	local showInventoryStatus = ShopInventoryStatus.Bind(list, template.NameLabel)
 	local service = Knit.GetService("RodShopService")
 	local cards = {}
 	local inventory
 	local cash: NumberValue?
 	local snapshots = RodShopClientState.new()
+	local inventoryReady = false
 	local actionPending = false
 	local closing = false
 	local visit
@@ -139,9 +142,10 @@ function RodShopGuiController:KnitStart()
 			buyButton.Visible = not owned
 			card.EquipButton.Visible = owned and not equipped
 			card.EquipedButton.Visible = equipped
-			buyButton.Interactable = not actionPending and not trainingLocked
-			buyButton.Selectable = not trainingLocked
-			card.EquipButton.Interactable = not actionPending
+			buyButton.Interactable = inventoryReady and not actionPending and not trainingLocked
+			buyButton.Selectable = buyButton.Interactable
+			card.EquipButton.Interactable = inventoryReady and not actionPending
+			card.EquipButton.Selectable = card.EquipButton.Interactable
 		end
 	end
 	localPlayer:GetAttributeChangedSignal(Onboarding.StageAttribute):Connect(render)
@@ -157,6 +161,9 @@ function RodShopGuiController:KnitStart()
 	self.GetOnboardingTarget = function()
 		if not gui.Enabled then
 			return nil
+		end
+		if not inventoryReady then
+			return closeButton
 		end
 		local card = cards[Onboarding.RewardRodId]
 		if not card or not isTrainingReward(Onboarding.RewardRodId) then
@@ -174,7 +181,7 @@ function RodShopGuiController:KnitStart()
 	end)
 
 	local function act(id: string, buy: boolean)
-		if actionPending or closing or not gui.Enabled then
+		if not inventoryReady or actionPending or closing or not gui.Enabled then
 			return
 		end
 		actionPending = true
@@ -265,6 +272,8 @@ function RodShopGuiController:KnitStart()
 	local function close()
 		requestToken = nil
 		opening = false
+		inventoryReady = false
+		render()
 		if gui.Enabled and not closing then
 			closing = true
 			GuiAnimation.CloseGui(gui)
@@ -317,17 +326,38 @@ function RodShopGuiController:KnitStart()
 			end
 			return Promise.resolve(false)
 		end
-		local token = { anchor = anchor, character = character, teleported = not teleport }
+		if teleport then
+			local destination = RodShopZone.GetEntryCFrame(anchor, character, localShop)
+			local root = character:FindFirstChild("HumanoidRootPart")
+			if not destination or not root or not Workspace.CurrentCamera then
+				NotificationClient.RedNotify("Could not travel to the rod shop")
+				return Promise.resolve(false)
+			end
+			CharacterUtil.TeleportTo(character, destination * root.CFrame:ToObjectSpace(character:GetPivot()))
+		end
+		if not RodShopZone.Contains(anchor, character, RodShopZone.ExitMargin) then
+			return Promise.resolve(false)
+		end
+
+		local token = {}
 		requestToken = token
 		visit = token
 		opening = true
+		inventoryReady = false
+		render()
+		showInventoryStatus("Loading...")
+		GuiAnimation.ResetNavigationFocus(gui, closeButton)
+		GuiAnimation.OpenGui(gui)
+
 		local snapshotToken = snapshots:BeginRequest()
 		local function current()
 			return requestToken == token
+				and gui.Enabled
+				and not closing
 				and localPlayer.Character == character
 				and getOwnAnchor() == anchor
 				and humanoid.Health > 0
-				and (not token.teleported or RodShopZone.Contains(anchor, character, RodShopZone.ExitMargin))
+				and RodShopZone.Contains(anchor, character, RodShopZone.ExitMargin)
 		end
 		local function focus()
 			local card = targetId and cards[targetId]
@@ -352,50 +382,40 @@ function RodShopGuiController:KnitStart()
 				)
 			end
 		end
+		if not current() then
+			if requestToken == token then
+				opening = false
+			end
+			return Promise.resolve(false)
+		end
 		return service
 			:GetState()
+			:timeout(8)
 			:andThen(function(result)
-				if not current() or not canOpen() then
+				if not current() then
 					return false
 				end
-				if not result or not result.ok then
-					NotificationClient.RedNotify((result and result.message) or "Could not open rod shop")
+				if not result or not result.ok or typeof(result.ownedRods) ~= "table" then
+					showInventoryStatus((result and result.message) or "Could not load rod inventory.")
 					return false
 				end
 				snapshots:ApplyResponse(snapshotToken, result)
 				inventory = snapshots.data
-				if teleport then
-					local destination = RodShopZone.GetEntryCFrame(anchor, character, localShop)
-					local root = character:FindFirstChild("HumanoidRootPart")
-					if not destination or not root or not Workspace.CurrentCamera then
-						NotificationClient.RedNotify("Could not travel to the rod shop")
-						return false
-					end
-					CharacterUtil.TeleportTo(character, destination * root.CFrame:ToObjectSpace(character:GetPivot()))
-					token.teleported = true
-				end
-				if not current() then
-					return false
-				end
 				if not next(cards) then
 					buildCards()
 				end
+				inventoryReady = true
+				showInventoryStatus(nil)
 				render()
 				local card = targetId and cards[targetId]
-				local selected = card
-					and (
-						if card.BuyButton.Visible
-							then card.BuyButton
-							elseif card.EquipButton.Visible then card.EquipButton
-							else closeButton
-					)
-				GuiAnimation.SetNavigationOptions(gui, selected, close)
-				GuiAnimation.OpenGui(gui)
+				local selected = if card and card.BuyButton.Visible and card.BuyButton.Interactable
+					then card.BuyButton
+					elseif card and card.EquipButton.Visible and card.EquipButton.Interactable then card.EquipButton
+					else closeButton
+				GuiAnimation.ResetNavigationFocus(gui, selected)
+				GuiAnimation.RefreshNavigationFocus(gui)
 				if localPlayer:GetAttribute(Onboarding.StageAttribute) == "RodReward" then
 					Knit.GetService("OnboardingAnalyticsService").GuidePresentation:Fire("RodShopOpened")
-				end
-				if not current() then
-					return false
 				end
 				if targetId then
 					task.spawn(function()
@@ -404,11 +424,11 @@ function RodShopGuiController:KnitStart()
 					end)
 					task.delay(0.2, focus)
 				end
-				return gui.Enabled
+				return true
 			end)
 			:catch(function()
 				if current() then
-					NotificationClient.RedNotify("Could not open rod shop")
+					showInventoryStatus("Could not load rod inventory.")
 				end
 				return false
 			end)
@@ -438,6 +458,7 @@ function RodShopGuiController:KnitStart()
 			closing = false
 			requestToken = nil
 			opening = false
+			inventoryReady = false
 		end
 	end)
 
@@ -449,13 +470,6 @@ function RodShopGuiController:KnitStart()
 		end
 		elapsed = 0
 		local anchor, character = refreshContext()
-		if opening and requestToken and not requestToken.teleported then
-			if not canOpen() then
-				visit = nil
-				close()
-			end
-			return
-		end
 		if not localShop or not anchor or not RodShopZone.Contains(anchor, character, RodShopZone.ExitMargin) then
 			visit = nil
 			close()

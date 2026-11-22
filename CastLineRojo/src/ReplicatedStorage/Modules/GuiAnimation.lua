@@ -29,6 +29,7 @@ local guiCloseSpeed = 0.1
 type NavigationEntry = {
     gui: ScreenGui,
     previousSelection: GuiObject?,
+    canGoBack: (() -> boolean)?,
 }
 
 local GAMEPAD_BACK_ACTION = "AFPopupBack"
@@ -78,6 +79,7 @@ local function isSelectable(guiObject: GuiObject?, gui: ScreenGui): boolean
         and guiObject.Parent ~= nil
         and guiObject.Active
         and guiObject.Selectable
+        and guiObject.Interactable
         and isVisibleWithin(guiObject, gui)
 end
 
@@ -184,7 +186,12 @@ local function focusTopGui()
     revealSelection(target)
 end
 
-local function pushNavigation(gui: ScreenGui, initialFocus: GuiObject?, backHandler: (() -> ())?)
+local function pushNavigation(
+    gui: ScreenGui,
+    initialFocus: GuiObject?,
+    backHandler: (() -> ())?,
+    canGoBack: (() -> boolean)?
+)
     local previousSelection = GuiService.SelectedObject
     for index = #navigationStack, 1, -1 do
         if navigationStack[index].gui == gui then
@@ -203,6 +210,7 @@ local function pushNavigation(gui: ScreenGui, initialFocus: GuiObject?, backHand
     table.insert(navigationStack, {
         gui = gui,
         previousSelection = previousSelection,
+        canGoBack = canGoBack,
     })
     GameplayInputGate.SetActive("Popup", gui, true)
     task.defer(focusTopGui)
@@ -232,8 +240,12 @@ local function popNavigation(gui: ScreenGui)
 
     if topNavigationEntry() then
         task.defer(focusTopGui)
-    elseif isUsingGamepad() and removed and removed.previousSelection and removed.previousSelection.Parent then
-        GuiService.SelectedObject = removed.previousSelection
+    elseif isUsingGamepad() and not GuiService.MenuIsOpen and removed then
+        local previous = removed.previousSelection
+        local previousGui = previous and previous:FindFirstAncestorWhichIsA("ScreenGui")
+        if previousGui and previousGui:IsDescendantOf(PlayerGui) and isSelectable(previous, previousGui) then
+            GuiService.SelectedObject = previous
+        end
     end
 end
 
@@ -255,8 +267,20 @@ function GuiAnimation.ResetNavigationFocus(gui: ScreenGui, initialFocus: GuiObje
     initialFocuses[gui] = initialFocus
 end
 
-function GuiAnimation.PushModal(gui: ScreenGui, initialFocus: GuiObject?, backHandler: (() -> ())?)
-    pushNavigation(gui, initialFocus, backHandler)
+function GuiAnimation.RefreshNavigationFocus(gui: ScreenGui)
+    local entry = topNavigationEntry()
+    if entry and entry.gui == gui then
+        task.defer(focusTopGui)
+    end
+end
+
+function GuiAnimation.PushModal(
+    gui: ScreenGui,
+    initialFocus: GuiObject?,
+    backHandler: (() -> ())?,
+    canGoBack: (() -> boolean)?
+)
+    pushNavigation(gui, initialFocus, backHandler, canGoBack)
 end
 
 function GuiAnimation.PopModal(gui: ScreenGui)
@@ -268,12 +292,12 @@ local function onGamepadBack(
     inputState: Enum.UserInputState,
     _inputObject: InputObject
 ): Enum.ContextActionResult
-    if inputState ~= Enum.UserInputState.Begin or not isUsingGamepad() then
+    if inputState ~= Enum.UserInputState.Begin or not isUsingGamepad() or GuiService.MenuIsOpen then
         return Enum.ContextActionResult.Pass
     end
 
     local entry = topNavigationEntry()
-    if not entry then
+    if not entry or (entry.canGoBack and not entry.canGoBack()) then
         return Enum.ContextActionResult.Pass
     end
 
@@ -283,14 +307,17 @@ local function onGamepadBack(
         return Enum.ContextActionResult.Sink
     end
 
-    local handler = backHandlers[entry.gui]
-    if handler then
-        task.defer(handler)
-    else
-        task.defer(function()
+    task.defer(function()
+        if GuiService.MenuIsOpen or topNavigationEntry() ~= entry then
+            return
+        end
+        local handler = backHandlers[entry.gui]
+        if handler then
+            handler()
+        else
             GuiAnimation.CloseGui(entry.gui)
-        end)
-    end
+        end
+    end)
     return Enum.ContextActionResult.Sink
 end
 

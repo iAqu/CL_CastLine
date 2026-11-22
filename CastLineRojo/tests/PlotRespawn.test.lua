@@ -55,8 +55,12 @@ for slot = 1, 2 do
 end
 
 local resumeFrame
+local profile = { Data = {} }
+local profileReady = true
 local knit = { CreateService = function(spec) return spec end, CreateSignal = signal, GetService = function()
-	return { ApplyForPlayer = function() end, ConsumeResumeSpawn = function() return resumeFrame end }
+	return { ApplyForPlayer = function() end, ConsumeResumeSpawn = function()
+		return if profileReady then resumeFrame else nil
+	end }
 end }
 local storage = { Packages = { Knit = knit, Signal = { new = signal } }, Modules = {
 	PlotWorkspaceUtil = {
@@ -65,7 +69,7 @@ local storage = { Packages = { Knit = knit, Signal = { new = signal } }, Modules
 	},
 } }
 local services = { Players = players, ReplicatedStorage = storage, ServerScriptService = {
-	Services = { PlayerDataService = { GetProfile = function() return nil end } },
+	Services = { PlayerDataService = { GetProfile = function() return if profileReady then profile else nil end } },
 } }
 local zero = {}
 local env = setmetatable({
@@ -186,6 +190,15 @@ assert(#warnings == 2, "Missing and invalid spawns must warn")
 ownPlot.spawn = savedSpawn
 
 resumeFrame = { training = true }
+local earlyCharacter = character(true)
+profileReady = false
+respawn(first, earlyCharacter)
+step()
+assert(earlyCharacter.moves == 0, "A ready character must wait to choose its spawn until training progress is loaded")
+profileReady = true
+step()
+assert(earlyCharacter.destination == resumeFrame and earlyCharacter.moves == 1, "Late profile load must restore the training spawn once")
+
 respawn(first, character(true))
 step()
 assert(first.Character.destination == resumeFrame and first.Character.moves == 1, "Resume must replace normal home teleport, not add a second teleport")

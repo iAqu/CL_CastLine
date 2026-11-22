@@ -4,7 +4,7 @@
 -- Backpack Version 5.1
 -- OnlyTwentyCharacters, SolarCrane
 
--- NOTICE (Apache-2.0 section 4b): This file is a modified copy of ryanlua/purse@1.1.6.
+-- NOTICE (Apache-2.0 section 4b): This file is a modified copy of ryanlua/purse@1.2.1.
 -- Changes by AnimalFarm: custom backpack behavior and styling. See LICENSE.md.
 
 local GuiService = game:GetService("GuiService") -- ROBLOX deviation: use GuiService instead of UserGameSettings
@@ -107,7 +107,6 @@ local SEARCH_BACKGROUND_FADE_DEFAULT = 0.15
 local searchBackgroundFade = SEARCH_BACKGROUND_FADE_DEFAULT * GuiService.PreferredTransparency -- ROBLOX deviation: use GuiService instead of UserGameSettings
 
 local ZERO_KEY_VALUE = Enum.KeyCode.Zero.Value
-local DROP_HOTKEY_VALUE = Enum.KeyCode.Backspace.Value
 
 local GAMEPAD_INPUT_TYPES = {
 	[Enum.UserInputType.Gamepad1] = true,
@@ -202,7 +201,6 @@ local SlotsByTool = {} -- Map of Tools to their assigned Slots
 local HotkeyFns = {} -- Map of KeyCode values to their assigned behaviors
 local Dragging = {} -- Only used to check if anything is being dragged, to disable other input
 local FullHotbarSlots = 0 -- Now being used to also determine whether or not LB and RB on the gamepad are enabled.
-local ActiveHopper = nil -- NOTE: HopperBin
 local StarterToolFound = false -- Special handling is required for the gear currently equipped on the site
 local WholeThingEnabled = true -- ROBLOX deviation: always emulate being enabled
 local TextBoxFocused = false -- ANY TextBox, not just the search box
@@ -547,44 +545,23 @@ local function CheckBounds(guiObject, x, y)
 	return (x > pos.X and x <= pos.X + size.X and y > pos.Y and y <= pos.Y + size.Y)
 end
 
-local function DisableActiveHopper() --NOTE: HopperBin
-	-- ROBLOX deviation START: remove HopperBin support (RobloxScriptSecurity)
-	warn(`[Purse] Cannot deselect active hopper. HopperBin is deprecated and not supported.`)
-	-- ActiveHopper:ToggleSelect()
-	-- SlotsByTool[ActiveHopper]:UpdateEquipView()
-	-- ActiveHopper = nil
-	-- ROBLOX deviation END
-end
-
-local function UnequipAllTools() --NOTE: HopperBin
+local function UnequipAllTools()
 	if Humanoid then
 		Humanoid:UnequipTools()
-		if ActiveHopper then
-			DisableActiveHopper()
-		end
 	end
 end
 
-local function EquipNewTool(tool) --NOTE: HopperBin
+local function EquipNewTool(tool)
 	if GameplayInputGate.IsActive("Training") then
 		return
 	end
 	UnequipAllTools()
-	if tool:IsA("HopperBin") then
-		-- ROBLOX deviation START: remove HopperBin support (RobloxScriptSecurity)
-		warn(`[Purse] Cannot select '{tool}' hopper. HopperBin is deprecated and not supported.`)
-		-- tool:ToggleSelect()
-		-- SlotsByTool[tool]:UpdateEquipView()
-		-- ActiveHopper = tool
-		-- ROBLOX deviation END
-	else
-		--Humanoid:EquipTool(tool) --NOTE: This would also unequip current Tool
-		tool.Parent = Character --TODO: Switch back to above line after EquipTool is fixed!
-	end
+	--Humanoid:EquipTool(tool) --NOTE: This would also unequip current Tool
+	tool.Parent = Character --TODO: Switch back to above line after EquipTool is fixed!
 end
 
 local function IsEquipped(tool)
-	return tool and ((tool:IsA("HopperBin") and tool.Active) or tool.Parent == Character) --NOTE: HopperBin
+	return tool and tool.Parent == Character
 end
 
 local function MakeSlot(parent, index)
@@ -1014,7 +991,11 @@ local function updateResponsiveLayout()
 end
 
 local function OnChildAdded(child) -- To Character or Backpack
-	if not child:IsA("Tool") and not child:IsA("HopperBin") then --NOTE: HopperBin
+	if child:IsA("HopperBin") then
+		warn(`[Purse] Ignoring '{child}' hopper in backpack. HopperBin is deprecated and not supported.`)
+		return
+	end
+	if not child:IsA("Tool") then
 		if child:IsA("Humanoid") and child.Parent == Character then
 			Humanoid = child
 		end
@@ -1024,10 +1005,6 @@ local function OnChildAdded(child) -- To Character or Backpack
 
 	if tool.Parent == Character then
 		TimeOfLastToolChange = tick()
-	end
-
-	if ActiveHopper and tool.Parent == Character then --NOTE: HopperBin
-		DisableActiveHopper()
 	end
 
 	--TODO: Optimize / refactor / do something else
@@ -1069,12 +1046,6 @@ local function OnChildAdded(child) -- To Character or Backpack
 		if slot.Index <= NumberOfHotbarSlots and not InventoryFrame.Visible then
 			AdjustHotbarFrames()
 		end
-		if tool:IsA("HopperBin") then --NOTE: HopperBin
-			if tool.Active then
-				UnequipAllTools()
-				ActiveHopper = tool
-			end
-		end
 	end
 
 	AdjustHotbarFrames()
@@ -1083,7 +1054,7 @@ local function OnChildAdded(child) -- To Character or Backpack
 end
 
 local function OnChildRemoved(child) -- From Character or Backpack
-	if not child:IsA("Tool") and not child:IsA("HopperBin") then --NOTE: HopperBin
+	if not child:IsA("Tool") then
 		return
 	end
 	local tool = child
@@ -1104,10 +1075,6 @@ local function OnChildRemoved(child) -- From Character or Backpack
 		elseif not InventoryFrame.Visible then
 			AdjustHotbarFrames()
 		end
-	end
-
-	if tool == ActiveHopper then --NOTE: HopperBin
-		ActiveHopper = nil
 	end
 
 	AdjustHotbarFrames()
@@ -1132,7 +1099,6 @@ local function OnCharacterAdded(character)
 			slot:Delete()
 		end
 	end
-	ActiveHopper = nil --NOTE: HopperBin
 
 	-- And any old connections
 	for _, conn in pairs(CharConns) do
@@ -1164,12 +1130,8 @@ local function OnInputBegan(input, isProcessed)
 	if GameplayInputGate.IsActive("Fishing") or GameplayInputGate.IsActive("Training") then
 		return
 	end
-	-- Pass through keyboard hotkeys when not typing into a TextBox and not disabled (except for the Drop key)
-	if
-		input.UserInputType == Enum.UserInputType.Keyboard
-		and not TextBoxFocused
-		and (WholeThingEnabled or input.KeyCode.Value == DROP_HOTKEY_VALUE)
-	then
+	-- Pass through keyboard hotkeys when the backpack is enabled and no TextBox has focus.
+	if input.UserInputType == Enum.UserInputType.Keyboard and not TextBoxFocused and WholeThingEnabled then
 		local hotkeyBehavior = HotkeyFns[input.KeyCode.Value]
 		if hotkeyBehavior then
 			hotkeyBehavior(isProcessed)
@@ -2253,13 +2215,6 @@ do -- Hotkey stuff
 	UserInputService.TextBoxFocusReleased:connect(function()
 		TextBoxFocused = false
 	end)
-
-	-- Manual unequip for HopperBins on drop button pressed
-	HotkeyFns[DROP_HOTKEY_VALUE] = function() --NOTE: HopperBin
-		if ActiveHopper then
-			UnequipAllTools()
-		end
-	end
 
 	-- Listen to keyboard status, for showing/hiding hotkey labels
 	UserInputService.Changed:connect(OnUISChanged)

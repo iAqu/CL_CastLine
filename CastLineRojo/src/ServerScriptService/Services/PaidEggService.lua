@@ -14,6 +14,7 @@ local PlayerDataService = require(script.Parent.PlayerDataService)
 local ItemGrantUtil = require(script.Parent.ItemGrantUtil)
 local Policy = require(script.Parent.PaidItemPolicy)
 local Persistence = require(script.Parent.PurchasePersistence)
+local Checkout = require(script.Parent.PurchaseCheckout)
 
 local Service = Knit.CreateService({
 	Name = "PaidEggService",
@@ -29,6 +30,7 @@ local promptBusy, receiptBusy = {}, {}
 local openPrompts, canceledPrompts, preparing = {}, {}, {}
 local staged, watchers = {}, {}
 local REOPEN_WINDOW = 3
+local checkoutKind = "Egg"
 
 function Service:IsProduct(productId)
 	return Config.FindProduct(productId, PurchaseData) ~= nil
@@ -109,12 +111,27 @@ function Service:_prompt(player, purchaseId, forSelf)
 		return false, "Your previous paid egg purchase is still processing."
 	end
 
+	local function isCurrent()
+		return PlayerDataService:GetProfile(player) == profile and profile:IsActive()
+			and PlayerDataService:GetProfile(recipient) == recipientProfile and recipientProfile:IsActive()
+			and (forSelf or recipientFor(player) == recipient)
+	end
+	local useCheckout = not intent and Checkout.WritesEnabled(checkoutKind)
+	if not useCheckout then
+		local legacyAllowed, reason = Checkout.CanUseLegacy(checkoutKind, player)
+		if not legacyAllowed or not isCurrent() then
+			return false, reason or "Player data is unavailable."
+		end
+		canceled = canceledPrompts[player]
+		intent = state.Intent
+	end
 	local maxWeight = Knit.GetService("TrainingService"):GetMaxCatchWeight(recipient)
-	local reopening = intent and os.clock() < canceled.Expires and intent.PurchaseId == purchaseId
-		and intent.ProductId == row.ProductId and intent.RecipientUserId == recipient.UserId
-		and intent.Quantity == quantity and intent.Price == row.Price and matchesSnapshot(intent, maxWeight)
-	canceledPrompts[player] = nil
-	if not reopening then
+	local function matches(previous)
+		return previous.PurchaseId == purchaseId and previous.ProductId == row.ProductId
+			and previous.RecipientUserId == recipient.UserId and previous.Quantity == quantity
+			and previous.Price == row.Price and matchesSnapshot(previous, maxWeight)
+	end
+	local function snapshotIntent()
 		local snapshot = { Fish = {}, Mutations = {} }
 		local fishData = {}
 		for _, entry in ipairs(Config.Fish) do
@@ -124,7 +141,7 @@ function Service:_prompt(player, purchaseId, forSelf)
 		for _, entry in ipairs(Config.Mutations) do
 			table.insert(snapshot.Mutations, table.clone(entry))
 		end
-		intent = {
+		return {
 			Token = HttpService:GenerateGUID(false),
 			PurchaseId = purchaseId,
 			ProductId = row.ProductId,
@@ -137,6 +154,17 @@ function Service:_prompt(player, purchaseId, forSelf)
 			FishData = fishData,
 			CreatedAt = os.time(),
 		}
+	end
+	local function promptPrepared()
+		self.Client.PromptPrepared:Fire(player, row.ProductId, quantity, recipient == player)
+	end
+	if useCheckout then
+		return Checkout.Open(checkoutKind, player, snapshotIntent(), isCurrent, matches, promptPrepared)
+	end
+	local reopening = intent and canceled and os.clock() < canceled.Expires and matches(intent)
+	canceledPrompts[player] = nil
+	if not reopening then
+		intent = snapshotIntent()
 		state.Intent = intent
 		preparing[player] = intent
 		local saved = PlayerDataService:SavePaidEggProfile(player)
@@ -149,7 +177,7 @@ function Service:_prompt(player, purchaseId, forSelf)
 		return false
 	end
 	-- The target and training snapshot are immutable after this point, including when the shop closes.
-	self.Client.PromptPrepared:Fire(player, row.ProductId, quantity, recipient == player)
+	promptPrepared()
 	openPrompts[player] = intent
 	MarketplaceService:PromptProductPurchase(player, row.ProductId)
 	return true
@@ -186,6 +214,7 @@ function Service:_clearCanceledPrompt(player, profile)
 end
 
 function Service:CancelPrompt(player, productId, purchased)
+	Checkout.Finish(checkoutKind, player, productId, purchased)
 	local intent = openPrompts[player]
 	if not intent or intent.ProductId ~= productId then
 		return
@@ -214,8 +243,14 @@ function Service:_processReceipt(player, receipt)
 	end
 	local key = tostring(receipt.PlayerId) .. ":" .. tostring(receipt.PurchaseId)
 	local order = orders:GetAsync(key)
+	if PlayerDataService:GetProfile(player) ~= profile or not profile:IsActive() then
+		return false
+	end
 	local state = Delivery.Ensure(profile.Data)
 	if not order then
+		if state.CheckoutReview and state.CheckoutReview[receipt.PurchaseId] then
+			return false
+		end
 		local intent = state.Intent
 		local canceled = canceledPrompts[player]
 		if (canceled and canceled.Intent == intent) or (intent and preparing[player] == intent) then
@@ -224,7 +259,19 @@ function Service:_processReceipt(player, receipt)
 		if receipt.ProductPurchaseChannel == Enum.ProductPurchaseChannel.ExperienceDetailsPage then
 			return false, "Receipt originated outside the paid egg shop"
 		end
+		local checkout
+		if not intent then
+			local available
+			checkout, available = Checkout.Bind(checkoutKind, player, receipt)
+			if not available or PlayerDataService:GetProfile(player) ~= profile or not profile:IsActive() then
+				return false
+			end
+			intent = checkout and checkout.Snapshot
+		end
 		if not intent or intent.ProductId ~= receipt.ProductId then
+			state.CheckoutReview = state.CheckoutReview or {}
+			state.CheckoutReview[receipt.PurchaseId] = receipt.ProductId
+			Persistence.Request(profile)
 			return false, "Receipt has no durable matching purchase intent"
 		end
 		local rewards = Config.Roll(
@@ -247,6 +294,7 @@ function Service:_processReceipt(player, receipt)
 			SenderName = player.DisplayName,
 			RecipientUserId = intent.RecipientUserId,
 			IntentToken = intent.Token,
+			CheckoutId = checkout and checkout.Id,
 			Price = intent.Price,
 			Version = intent.Version,
 			MaxWeight = intent.MaxWeight,
@@ -294,7 +342,7 @@ function Service:_processReceipt(player, receipt)
 		end
 		state.Intent = false
 	end
-	if not PlayerDataService:SavePaidEggProfile(player) then
+	if not PlayerDataService:SavePaidEggProfile(player) or not Checkout.Complete(checkoutKind, receipt, order.CheckoutId) then
 		return false
 	end
 	self.Client.PurchaseCompleted:Fire(player, {

@@ -8,6 +8,60 @@ local function data(name)
 	return assert(loadstring(s))()
 end
 local fishes, rods = data("FishesData"), data("RodsData")
+local function closeTo(actual, expected)
+	assert(math.abs(actual - expected) < 1e-9, tostring(actual) .. " differs from " .. tostring(expected))
+end
+
+do
+	local sample = { NextNumber = function() return 0.85 end }
+	local pool, pity = P.BuildPool(fishes, rods.Rod_101, rods, function() return true end)
+	local progress = P.Ensure({ FishingIntroVersion = 1 })
+	assert(P.Choose(pool, progress, "Rod_101", pity, sample).band == 2)
+	assert(P.Choose(pool, progress, "Rod_101", pity, sample, 2).band == 3)
+	local state = P.GetRod(progress, "Rod_101")
+	state.MissHigh = pity - 1
+	local candidates = P.GetCandidates(pool, progress, "Rod_101", pity)
+	local base, baseTotal = P.GetWeights(candidates)
+	local boosted, boostedTotal = P.GetWeights(candidates, 2)
+	for index, entry in ipairs(candidates) do
+		assert(entry.band == 3)
+		closeTo(base[index] / baseTotal, boosted[index] / boostedTotal)
+	end
+	assert(state.MissHigh == pity - 1, "Previewing odds must not advance pity")
+end
+
+for _, mode in ipairs({ "owned", "restricted", "unknown", "midCast" }) do
+	local fisher = new()
+	fisher.profile.Data.FishingIntroVersion = 1
+	fisher.profile.Data.GamePasses = { MegaLuck = mode ~= "midCast" }
+	fisher.restrictPaid, fisher.noPolicy = mode == "restricted", mode == "unknown"
+	fisher.sample = 0.85
+	local preview = fisher.service:GetUltraLuckOdds(fisher.player)
+	assert(preview.ok and #preview.grades == 4)
+	fisher.begin("NONE")
+	local cast = fisher.castAt(1)
+	assert(cast.ok and cast.odds.boosted == (mode == "owned"))
+	fisher.profile.Data.GamePasses.MegaLuck = true
+	fisher.advance(5)
+	local first = fisher.client:NextRound(fisher.player, fisher.token, 0)
+	assert(first.ok and first.odds.boosted == cast.odds.boosted)
+	local total = 0
+	for index, row in ipairs(first.odds.rows) do
+		total += row.chance
+		local comparison = preview.grades[4].rows[index]
+		closeTo(row.chance, if mode == "owned" then comparison.boostedChance else comparison.chance)
+	end
+	closeTo(total, 1)
+	assert((fisher.fishes[first.fishId].Index >= 7) == (mode == "owned"), mode .. " drew " .. first.fishId)
+	fisher.now = first.retryAt + 0.1
+	local retry = fisher.client:NextRound(fisher.player, fisher.token, first.round)
+	assert(retry.ok and retry.fishId == first.fishId and retry.odds.boosted == first.odds.boosted)
+	if mode == "midCast" then
+		fisher.cancel()
+		fisher.begin("NONE")
+		assert(fisher.castAt(1).odds.boosted, "An in-session grant starts on the next cast")
+	end
+end
 for _, rod in pairs(rods) do
 	local pool, pity = P.BuildPool(fishes, rod, rods, function()
 		return true
@@ -139,12 +193,13 @@ assert(P.RollMutation(0, C, ranges, {
 	end,
 }) == nil)
 local p = P.Ensure({})
+local expectedCashMultipliers = { 0.15, 2, 25 }
 for _, rod in pairs(rods) do
 	for tier, baitId in ipairs(rod.BaitsSelect) do
 		local q = P.Quote(rod, baitId, C)
 		assert(q.tier == tier)
 		if tier < 4 then
-			assert(q.price == math.round(rod.Price * C.CashMultipliers[tier]))
+			assert(q.price == math.round(rod.Price * expectedCashMultipliers[tier]))
 		else
 			assert(not q.available)
 		end

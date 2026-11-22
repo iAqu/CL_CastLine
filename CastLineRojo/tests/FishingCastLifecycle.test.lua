@@ -24,13 +24,16 @@ local modules = {
 local workspace = {}
 modules.feedback = feedbackHarness.feedback
 local tweenService = {}
+local inputService = { PreferredInput = "KeyboardAndMouse" }
 local function vector(x, y, z)
 	return setmetatable({ X = x, Y = y, Z = z }, {
 		__add = function(a, b) return vector(a.X + b.X, a.Y + b.Y, a.Z + b.Z) end,
+		__sub = function(a, b) return vector(a.X - b.X, a.Y - b.Y, a.Z - b.Z) end,
 		__mul = function(a, scale) return vector(a.X * scale, a.Y * scale, a.Z * scale) end,
 	})
 end
 local environment = setmetatable({
+	Enum = { PreferredInput = { Gamepad = "Gamepad" } },
 	Vector3 = { new = vector },
 	script = {
 		Parent = {
@@ -53,6 +56,7 @@ local environment = setmetatable({
 	game = {
 		GetService = function(_, name)
 			if name == "TweenService" then return tweenService end
+			if name == "UserInputService" then return inputService end
 			return if name == "Workspace" then workspace else {}
 		end,
 	},
@@ -211,18 +215,28 @@ do
 	end
 end
 
-for _, discoveryFlag in { true, false, "missing" } do
-	local weight
-	local bite
-	bite = {
+for _, result in ipairs({
+	{ ok = true, weight = 3.375, catchChanceDenominator = 391, mutationId = "Golden", isNewDiscovery = true },
+	{ ok = true, weight = 3.375 },
+	{ ok = false, message = "Missed the bite" },
+	{ ok = false, message = "Could not store your catch" },
+}) do
+	local submitCount, predictCount = 0, 0
+	local resolve, reportedError, confirmed, escaped
+	local bite = {
 		timeline = { Advance = function() return "Bite" end },
-		SetCaughtWeight = function(_, grantedWeight)
-			weight = grantedWeight
+		TryHook = function(_, now, mutationId, awaitingHook)
+			assert(now == 11 and mutationId == nil and awaitingHook)
+			predictCount += 1
+			return true
 		end,
-		TryHook = function()
-			assert(weight == 3.375, "Set the server-granted weight before starting the catch")
-			assert(bite.isNewDiscovery == (discoveryFlag == true), "Set the server discovery flag before starting the catch")
+		ConfirmHook = function(_, _, value)
+			confirmed = value
 		end,
+		RejectHook = function()
+			escaped = true
+		end,
+		CanReturn = function() return false end,
 	}
 	local probe = setmetatable({
 		bite = bite,
@@ -230,20 +244,156 @@ for _, discoveryFlag in { true, false, "missing" } do
 		serverRoundStart = 100,
 		localRoundStart = 10,
 		options = {
-			hook = function()
+			hook = function(round, pressedAt)
+				assert(round == 1 and pressedAt == 101, "Map the click against its own scheduled round")
+				assert(predictCount == 1, "The fish must struggle before the remote starts")
+				submitCount += 1
 				return {
 					andThen = function(promise, callback)
-						callback({ ok = true, weight = 3.375,
-							isNewDiscovery = if discoveryFlag == "missing" then nil else discoveryFlag })
+						resolve = callback
+						return promise
+					end,
+					catch = function() end,
+				}
+			end,
+			onFailure = function(message) reportedError = message end,
+		},
+	}, Sequence)
+	assert(probe:TryHook(11) and probe.hookPending)
+	assert(not probe:TryHook(11.1) and not probe:CanReturn(15) and submitCount == 1)
+	assert(not escaped and not confirmed and not reportedError)
+	resolve(result)
+	assert(not probe.hookPending and predictCount == 1)
+	if result.ok then
+		assert(confirmed == result and not escaped and not reportedError)
+	elseif result.message == "Missed the bite" then
+		assert(escaped and not confirmed and not reportedError)
+	else
+		assert(escaped and not confirmed and not reportedError and probe.hookExit.message == result.message,
+			"Play the escape before reporting a failed grant")
+	end
+end
+
+for _, lookupStatus in ipairs({ "Succeeded", "Rejected", "Unknown" }) do
+	local now, lookups, submissions, confirms, escapes, reels = 10, 0, 0, 0, 0, 0
+	local originalOs = environment.os
+	environment.os = { clock = function() return now end }
+	local remote = {}
+	function remote:andThen(callback)
+		self.resolve = callback
+		return self
+	end
+	function remote:catch(callback)
+		self.reject = callback
+		return self
+	end
+	local bite = {
+		timeline = { Advance = function() return "Bite" end },
+		TryHook = function(_, _, _, awaiting)
+			if awaiting then return true end
+			reels += 1
+		end,
+		ConfirmHook = function(_, _, result)
+			assert(result.weight == 4)
+			confirms += 1
+		end,
+		RejectHook = function() escapes += 1 end,
+	}
+	local probe = setmetatable({
+		bite = bite,
+		round = 1,
+		localRoundStart = 9,
+		serverRoundStart = 99,
+		options = {
+			hook = function()
+				submissions += 1
+				return remote
+			end,
+			getHookResult = function(round)
+				assert(round == 1)
+				lookups += 1
+				return {
+					timeout = function(self) return self end,
+					andThen = function(self, callback)
+						if lookups == 1 then
+							callback({ status = "Pending" })
+						else
+							local result = if lookupStatus == "Succeeded" then { ok = true, weight = 4 }
+								elseif lookupStatus == "Rejected" then { ok = false, message = "Missed the bite" } else nil
+							callback({ status = lookupStatus, result = result })
+						end
+						return self
+					end,
+					catch = function(self) return self end,
+					finally = function(self, callback)
+						callback()
+						return self
+					end,
+				}
+			end,
+		},
+	}, Sequence)
+	assert(probe:TryHook(now))
+	probe:_updateHookConfirmation(now)
+	assert(lookups == 0 and submissions == 1)
+	now = 11.5
+	probe:_updateHookConfirmation(now)
+	probe:_updateHookConfirmation(now)
+	assert(lookups == 1 and probe.hookPending and confirms == 0 and escapes == 0)
+	now = 12
+	probe:_updateHookConfirmation(now)
+	assert(lookups == 2 and submissions == 1)
+	if lookupStatus == "Unknown" then
+		assert(probe.hookPending and escapes == 0)
+		now = 18
+		probe:_updateHookConfirmation(now)
+		assert(not probe.hookPending and escapes == 1 and reels == 1 and probe.hookExit.message)
+	else
+		assert(not probe.hookPending and reels == 0)
+		assert(confirms == (if lookupStatus == "Succeeded" then 1 else 0))
+		assert(escapes == (if lookupStatus == "Rejected" then 1 else 0))
+	end
+	local previousConfirms = confirms
+	remote.resolve({ ok = true, weight = 4 })
+	assert(confirms == previousConfirms, "Old Hook RPC must not resolve the presentation again")
+	assert(not probe:TryHook(now) and submissions == 1)
+	environment.os = originalOs
+end
+
+do
+	local round = { ok = true, sentAt = 99.75, startedAt = 100, readyAt = 100.5, retryAt = 104 }
+	local now, sends = 9, 0
+	local originalOs, originalGetServerTimeNow = environment.os, workspace.GetServerTimeNow
+	environment.os = { clock = function() return now end }
+	workspace.GetServerTimeNow = function() error("An asymmetric connection can lead the server clock") end
+	local probe = setmetatable({
+		readyAt = 10,
+		options = {
+			requestRound = function()
+				sends += 1
+				return {
+					andThen = function(promise, callback)
+						callback(if sends == 1 then { ok = false, code = "RoundNotReady", retryAfter = 1 } else round)
 						return promise
 					end,
 					catch = function() end,
 				}
 			end,
 		},
+		_startBiteRound = function(self, startAt, readyAt, packet)
+			assert(self.serverRoundStart == 100 and startAt == 10.25 and readyAt == 10.75 and packet == round)
+		end,
 	}, Sequence)
-	probe:TryHook(11)
-	assert(weight == 3.375 and probe.hookPendingAt == nil, "Apply the weight from the successful catch response")
+	probe:_requestBiteRound()
+	assert(probe.roundRetryAt == 10 and not probe.roundPending)
+	now = 9.999
+	probe:_requestBiteRound()
+	assert(sends == 1, "Early landing must wait for the local retry deadline")
+	now = 10
+	probe:_requestBiteRound()
+	assert(sends == 2 and not probe.roundRetryAt, "Retry starts exactly once")
+	assert(not probe.roundPending and probe.readyAt == 10.75 and probe.serverRetryAt == 104)
+	environment.os, workspace.GetServerTimeNow = originalOs, originalGetServerTimeNow
 end
 
 -- 声音与角色特效跟随实际动画起播，前挥触发不能提前或重复。
@@ -346,6 +496,9 @@ local fixed = setmetatable({
 	fixedCast = true,
 	fullLuck = 10,
 	info = {
+		SetCastProgress = function(self, progress)
+			self.colorProgress = progress
+		end,
 		SetLuck = function(self, value, _, immediate)
 			assert(immediate, "Preparing luck must follow the meter without tween lag")
 			self.shown = value
@@ -376,11 +529,17 @@ local fixed = setmetatable({
 
 }, Sequence)
 feedbackHarness.attach(fixed)
+fixed.meter.prompt.Text = "TAP TO CAST!"
 fixed:_bindCastMeter(fixed.meter)
 assert(fixed.meter.gui.Enabled and fixed.meter.holder.Visible and fixed.meter.bar.Visible)
 assert(fixed.meter.marker.Visible and fixed.meter.prompt.Visible and not fixed.meter.label.Visible)
 local startY = fixed.meter.marker.Position.Y
+inputService.PreferredInput = "Gamepad"
 fixed:_updatePresentation(fixed.meterStarted + 0.5, 0.5)
+assert(fixed.meter.prompt.Text == "PRESS A TO CAST!", "The controller hint must use the A button")
+inputService.PreferredInput = "Touch"
+fixed:_updatePresentation(fixed.meterStarted + 0.5, 0)
+assert(fixed.meter.prompt.Text == "TAP TO CAST!", "Switching away from gamepad must restore the authored text")
 local movingY = fixed.meter.marker.Position.Y
 assert(movingY < startY and movingY > 0, "The fixed-distance meter must animate before casting")
 fixed.meterProgress, fixed.meterDirection = 0, 1
@@ -388,6 +547,7 @@ for _, sample in { { 0, 0, 1 }, { 0.5 / 0.55, 0.5, 5.5 }, { 1, 1, 10 }, { 0.5 / 
 	fixed:_updatePresentation(fixed.meterStarted + 10, sample[1])
 	assert(math.abs(fixed.meterProgress - sample[2]) < 1e-6, "Incorrect meter progress on the up/down sweep")
 	assert(math.abs(fixed.info.shown - sample[3]) < 1e-6, "Luck must match the visible meter progress")
+	assert(fixed.info.colorProgress == fixed.meterProgress, "Luck color must follow the visible progress")
 	assert(math.abs(fixed.meter.marker.Position.Y - (1 - fixed.meterProgress)) < 1e-6, "Marker and luck are out of sync")
 end
 fixed:_updatePresentation(fixed.meterStarted + 11, 0.5 / 0.55)
@@ -397,7 +557,8 @@ assert(#fixedClicks == 1 and fixedClicks[1].volume == 0.8
 	and math.abs(fixedClicks[1].pitch - 1.15) < 1e-6, "Play the click immediately when locking the meter")
 fixed:_updatePresentation(fixed.meterStarted + 12, 1)
 assert(fixed:LockCastMeter() == locked and fixed.meter.marker.Position.Y == 0.5
-	and fixed.info.shown == 5.5, "Keep the indicator and luck locked while the request is pending")
+	and fixed.info.shown == 5.5 and fixed.info.colorProgress == locked,
+	"Keep the indicator, luck value and color locked while the request is pending")
 fixed:Cast(locked, 30, 5.5)
 assert(#fixedClicks == 1, "Server confirmation must not play a second click")
 assert(fixed.phase == "Casting" and fixed.distance == 30 and not fixed.meter.gui.Enabled)
@@ -411,12 +572,37 @@ assert(fixed.meter.marker.Position.Y == 1, "Cleanup must restore the authored ma
 local pending = setmetatable({
 	phase = "Preparing", fixedCast = true, options = {meterStartsAt = 100},
 	meterProgress = 0.5, _sound = function() end, _impulse = function() end,
+	folder = sequence.folder, meter = { gui = {}, marker = {} },
+	info = {
+		SetCastProgress = function(self, progress) self.colorProgress = progress end,
+		SetLuck = function(self, value) self.shown = value end,
+		Update = function() end,
+	},
 }, Sequence)
 feedbackHarness.attach(pending)
-assert(pending:LockCastMeter() == 0.5)
+pending.bait = { Position = vector(1, 1, 1) }
+pending.tip = { WorldPosition = vector(0, 0, 0) }
+local hold
+modules.rig.ApplyCastWindup = function(_, progress) hold = progress end
+local oldClock = environment.os
+local castTime = 100.2
+environment.os = { clock = function() return castTime end }
+assert(pending:BeginCast(castTime) and not pending:BeginCast(castTime))
+pending:_updateAction(100.3)
+assert(hold > 0 and hold < 1 and not pending.actionStarted)
+pending:_updateAction(101)
+assert(hold == 1 and not pending.actionStarted, "Hold windup if acknowledgement comes after the lead time")
 assert(pending.meterLockedAt == nil and pending.popupOrigin == nil,
 	"Wait for the confirmed grade before enabling the feedback animation")
 feedbackHarness.feedback.Update(pending, 101)
+castTime = 101
+pending:Cast(0.7, 30, 9137.5)
+assert(pending.castClickedAt == 100.2 and not pending.castWindupPending, "Confirmation must preserve the input clock")
+environment.os = oldClock
+assert(pending.info.colorProgress == 0.7 and pending.info.shown == 9137.5,
+	"Use the confirmed progress for color and the confirmed multiplier for the number")
+pending:_updatePresentation(pending.castClickedAt + 1, 1)
+assert(pending.info.colorProgress == 0.7, "Keep the confirmed color after the cast")
 
 for _, ceiling in { 1.3, 10, 100 } do
 	for _, fps in { 30, 60, 144 } do
@@ -428,6 +614,7 @@ for _, ceiling in { 1.3, 10, 100 } do
 			meterProgress = 0, meterDirection = 1,
 			meter = { marker = {} },
 			info = {
+				SetCastProgress = function() end,
 				SetLuck = function(self, value) self.shown = value end,
 				Update = function() end,
 			},

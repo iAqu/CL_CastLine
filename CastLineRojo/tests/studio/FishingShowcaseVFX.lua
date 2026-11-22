@@ -9,7 +9,8 @@ local Presentation = require(modules.RarityPresentation)
 local Config = require(modules.FishingConfig)
 local Mutations = require(modules.MutationDataUtil)
 local target = Vector3.new(0, 5000, 0)
-local apex = Config.Bite.FishLift.RiseTime
+local motion = require(modules.FishingLiftMotion)
+local landing = motion.Timing(Config.Bite, false).landAt
 local owners, guis = {}, {}
 local report = { cases = 0, sizes = {}, integration = true, cleanup = true }
 
@@ -62,9 +63,9 @@ local ok, err = xpcall(function()
 		{ "Common", false, "Invalid", false },
 	} do
 		local owner, bite = create("GreenSeahorse", case[1], case[2], case[3])
-		frame(owner, apex - 0.01)
+		frame(owner, landing - 0.01)
 		assert(not bite.showcaseVFX and not bite.showcasePending, "Effect preceded fish-name reveal")
-		frame(owner, apex + 0.01)
+		frame(owner, landing + 0.01)
 		local effect = assert(bite.showcaseVFX, "Reveal did not create colored outline")
 		assert(owner.gui.RevealInfo.Visible and owner.gui:FindFirstChild("ConfettiLayer"), "Existing reveal celebration disappeared")
 		assert(bite.highlight.OutlineColor == Presentation.GetColor(case[1]), "Wrong outline color")
@@ -79,18 +80,17 @@ local ok, err = xpcall(function()
 			assert(emitter.Texture == Config.ShowcaseVFX.Texture and not emitter.LockedToPart and not emitter.Enabled,
 				"Stars must use the reference texture and world-space burst")
 		end
-		frame(owner, apex + 0.02)
+		frame(owner, landing + 0.02)
 		assert(bite.showcaseVFX == effect, "Repeated frame restarted effect")
-		frame(owner, apex + 0.01 + Config.ShowcaseVFX.OutlineDuration)
-		assert(bite.highlight.OutlineColor == Color3.new(0, 0, 0), "Outline did not recover after 1.2 seconds")
 		frame(owner, bite:GetLiftTiming().duration + 0.01)
-		assert(if case[4] then bite.showcaseVFX == effect else bite.showcaseVFX == nil,
-			"Caught lost active star tail")
+		assert(bite.showcaseVFX == effect, "Caught restarted or removed the active showcase effect")
 		if storage.VFX.AnimalRoller:FindFirstChild(case[1]) then
 			assert(#(bite.rarityEffects or {}) > 0, "Caught lost existing rarity particles")
 		end
 		local part = effect.part
-		frame(owner, apex + 0.01 + Config.ShowcaseVFX.CleanupTime)
+		frame(owner, landing + 0.01 + Config.ShowcaseVFX.OutlineDuration)
+		assert(bite.highlight.OutlineColor == Color3.new(0, 0, 0), "Outline did not recover after 1.2 seconds")
+		frame(owner, landing + 0.01 + Config.ShowcaseVFX.CleanupTime)
 		assert(not bite.showcaseVFX and (not part or not part.Parent), "Expired star anchor survived")
 		owner.info.revealedBite, owner.celebratedBite = nil, nil
 		frame(owner, 10)
@@ -102,7 +102,7 @@ local ok, err = xpcall(function()
 	for _, name in { "GreenSeahorse", "AttackingWhale", "AncientMegalodon" } do
 		local owner, bite = create(name, "Epic", true)
 		bite:SetCaughtWeight(8)
-		frame(owner, apex + 0.01)
+		frame(owner, landing + 0.01)
 		local effect = assert(bite.showcaseVFX, "Missing scaled showcase")
 		local part = assert(effect.part, "Missing scaled star anchor")
 		local center, size = bite.fish:GetBoundingBox()
@@ -110,7 +110,7 @@ local ok, err = xpcall(function()
 		near(part.Stars.Size.Keypoints[2].Value, math.clamp(size.Magnitude * 0.12, 0.8, 4))
 		table.insert(report.sizes, { model = name, peak = part.Stars.Size.Keypoints[2].Value })
 		local position = part.Position
-		frame(owner, apex + 0.1)
+		frame(owner, landing + 0.1)
 		assert(part.Position == position, "Star anchor followed fish motion")
 		owner:Destroy()
 		owner:Destroy()
@@ -118,7 +118,7 @@ local ok, err = xpcall(function()
 		bite:Present()
 	end
 	local owner, bite = create("GreenSeahorse", "Legendary", true, "Rainbow", true)
-	frame(owner, apex + 0.01)
+	frame(owner, motion.Timing(Config.Bite, true).riseEnd + 0.01)
 	assert(not bite.showcaseVFX and not bite.showcasePending and not VFX.ShouldBurst(bite), "Egg received fish effects")
 	owner:Destroy()
 	owner, bite = create("GreenSeahorse", "Rare", true)

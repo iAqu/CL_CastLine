@@ -28,12 +28,13 @@
 	Thank you for supporting Purse.
 ]]
 
--- Modified copy of ryanlua/purse@1.1.6 (const -> local for tooling). See LICENSE.md.
+-- Modified copy of ryanlua/purse@1.2.1 (const -> local for tooling). See LICENSE.md.
 
 local MarketplaceService = game:GetService("MarketplaceService")
 local RunService = game:GetService("RunService")
 
-local VERSION = "1.1.6"
+local VERSION = "1.2.1"
+local ASSET_ID = 112061170330936
 
 -- Print attribution. Do not modify without reading above
 if not RunService:IsStudio() and RunService:IsClient() then
@@ -44,15 +45,26 @@ end
 local latestVersion: string?
 
 local success, result = pcall(function()
-	return MarketplaceService:GetProductInfoAsync(112061170330936)
+	return MarketplaceService:GetProductInfoAsync(ASSET_ID)
 end)
 
 if success then
 	latestVersion = string.match(result.Name, "v(%d+%.%d+%.%d+)")
 end
 
-if latestVersion and latestVersion ~= VERSION then
+local function isNewerVersion(latest: string, current: string): boolean
+	local latestParts, currentParts = latest:split("."), current:split(".")
+	for index = 1, 3 do
+		local latestPart, currentPart = tonumber(latestParts[index]) or 0, tonumber(currentParts[index]) or 0
+		if latestPart ~= currentPart then
+			return latestPart > currentPart
+		end
+	end
+	return false
+end
+
+if latestVersion and isNewerVersion(latestVersion, VERSION) then
 	warn(
-		`A new version of Purse (v{VERSION} -> v{latestVersion}) is available: https://create.roblox.com/store/asset/112061170330936`
+		`A new version of Purse (v{VERSION} -> v{latestVersion}) is available: https://create.roblox.com/store/asset/{ASSET_ID}`
 	)
 end

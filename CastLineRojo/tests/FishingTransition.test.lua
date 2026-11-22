@@ -10,6 +10,9 @@ local source = read("src/StarterPlayer/StarterPlayerScripts/Controllers/FishingC
 local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: boolean?, lesson: string?)
 	local now, render, locked, movement = 0, nil, false, false
 	local created, warnings = {}, {}
+	local boundActions = {}
+	local uiBlocking = false
+	local guiService = {}
 	local requests, cancellations, notices = {}, {}, {}
 	local eventRequests = {}
 	local castReplies = {}
@@ -52,6 +55,9 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 		return vec(a.X - b.X, a.Y - b.Y, a.Z - b.Z)
 	end
 	vm.__mul = function(a, b)
+		if type(b) == "table" then
+			return vec(a.X * b.X, a.Y * b.Y, a.Z * b.Z)
+		end
 		return vec(a.X * b, a.Y * b, a.Z * b)
 	end
 	vm.__div = function(a, b)
@@ -60,6 +66,8 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 	vm.__index = function(a, key)
 		if key == "Magnitude" then
 			return math.sqrt(a.X * a.X + a.Y * a.Y + a.Z * a.Z)
+		elseif key == "Unit" then
+			return a / a.Magnitude
 		end
 	end
 	local fm = {}
@@ -206,7 +214,7 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 	end
 	local spawn = object("Part")
 	spawn.CFrame, spawn.Size = frame(vec(100, 0, 0)), vec(10, 1, 10)
-	local camera = { CFrame = frame(), Focus = frame(), FieldOfView = 70 }
+	local camera = { CameraType = "Custom", CFrame = frame(), Focus = frame(), FieldOfView = 70 }
 	local plot = object("Model", { FishingStartPart = start, AreaSpawnPoint = spawn })
 	plot.Name, plot.owner = "Plot_1", player.UserId
 	function plot:GetAttribute() return self.owner end
@@ -236,6 +244,7 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 	local chooseBait
 	local function resolved(result)
 		return {
+			timeout = function(self) return self end,
 			andThen = function(self, callback)
 				callback(result)
 				return self
@@ -293,6 +302,7 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 			assert(sequence.clickSounds == 1, "Local click feedback must occur before the server request")
 			if deferCast then
 				return {
+					timeout = function(self) return self end,
 					andThen = function(self, callback)
 						table.insert(castReplies, callback)
 						return self
@@ -346,6 +356,7 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 		EggsData = {},
 		NotificationClient = { RedNotify = function(message) table.insert(notices, message) end },
 		FishingAssets = { GetBait = function() return object("Part") end },
+		UltraLuckDetails = { FishingGuiName = "FishingOddsGui" },
 		FishingBaitSelect = { Bind = function(gui, _, _, choose)
 			chooseBait = choose
 			return {
@@ -378,7 +389,7 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 				locked = active
 			end,
 			IsUiBlockingWorld = function()
-				return false
+				return uiBlocking
 			end,
 			IsWorldActionAllowed = function()
 				return not locked
@@ -429,7 +440,8 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 						self.destroyCount = (self.destroyCount or 0) + 1
 					end,
 					options = {meterStartsAt = 0},
-					LockCastMeter = function(self)
+					BeginCast = function(self)
+						self.phase = "Casting"
 						self.meterLocks = (self.meterLocks or 0) + 1
 						self.clickSounds = (self.clickSounds or 0) + 1
 						return 0.5
@@ -456,7 +468,9 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 		},
 	}
 	local storage = object("ReplicatedStorage", {
-		Character = object("Folder", { PoseDefaultCharacter = object("Model") }),
+		Character = object("Folder", {
+			PoseDefaultCharacter = object("Model", { HumanoidRootPart = root, Humanoid = humanoid }),
+		}),
 		Models = object("Folder", {
 			FishRod = object("Folder", { ["Alien Antenna"] = object("Tool") }),
 			FishBait = object("Folder", { ["1"] = object("Folder", { ["1"] = object("Part") }) }),
@@ -475,6 +489,7 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 		FishingConfig = "Config",
 		FishingAssets = "FishingAssets",
 		FishingBaitSelect = "FishingBaitSelect",
+		UltraLuckDetails = "UltraLuckDetails",
 		FishingBaitConfig = "FishingBaitConfig",
 		FishingSpotUtil = "FishingSpotUtil",
 		PlotWorkspaceUtil = "PlotWorkspaceUtil",
@@ -501,11 +516,19 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 		Workspace = workspace,
 		ProximityPromptService = object("ProximityPromptService"),
 		ContextActionService = {
-			BindActionAtPriority = function()
-				movement = true
+			BindActionAtPriority = function(_, name, callback, _, _, binding)
+				if binding == "ButtonA" then
+					boundActions[name] = callback
+				else
+					movement = true
+				end
 			end,
-			UnbindAction = function()
-				movement = false
+			UnbindAction = function(_, name)
+				if boundActions[name] then
+					boundActions[name] = nil
+				elseif name == "CastLineFishingMovement" then
+					movement = false
+				end
 			end,
 		},
 		RunService = {
@@ -523,6 +546,7 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 			end,
 			SetCoreGuiEnabled = function() end,
 		},
+		GuiService = guiService,
 		UserInputService = { InputBegan = input },
 	}
 	local env = setmetatable({
@@ -573,10 +597,11 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 		},
 		Enum = {
 			HumanoidRigType = { R6 = "R6" },
-			CameraType = { Custom = "Custom" },
+			CameraType = { Custom = "Custom", Scriptable = "Scriptable" },
 			CoreGuiType = { Backpack = "Backpack" },
 			ContextActionPriority = { High = { Value = 2000 } },
-			ContextActionResult = { Sink = "Sink" },
+			ContextActionResult = { Sink = "Sink", Pass = "Pass" },
+			UserInputState = { Begin = "Begin", End = "End" },
 			KeyCode = { ButtonA = "ButtonA" },
 			PlayerActions = {
 				GetEnumItems = function()
@@ -593,6 +618,8 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 	for _, name in ipairs({ "FishingSpotUtil", "PlotWorkspaceUtil" }) do
 		modules[name] = assert(load(read("src/ReplicatedStorage/Modules/" .. name .. ".lua"), name, "t", env))()
 	end
+	local rigSource = read("src/ReplicatedStorage/Modules/FishingRigUtil.lua")
+	modules.FishingRigUtil.GetSpotRootCFrame = assert(load(rigSource, "FishingRigUtil", "t", env))().GetSpotRootCFrame
 	local controller = assert(load(source, "FishingController", "t", env))()
 	controller:KnitInit()
 	assert(effectAudio.preloads == 1, "Preload UI feedback sounds during client initialization")
@@ -648,6 +675,21 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 				render(dt)
 			end
 			heartbeat:Fire()
+		end,
+		gamepadA = function(inputState)
+			local event = { KeyCode = "ButtonA", UserInputType = "Gamepad1" }
+			for name, callback in boundActions do
+				if callback(name, inputState or "Begin", event) == "Sink" then
+					return true
+				end
+			end
+			return false
+		end,
+		setUiBlocking = function(blocked)
+			uiBlocking = blocked
+		end,
+		setUiSelection = function(selected)
+			guiService.SelectedObject = selected
 		end,
 		tap = function()
 			input:Fire({ UserInputType = "MouseButton1", Position = vec(20, 20, 0) }, false)
@@ -727,6 +769,35 @@ do
 	end
 end
 
+do
+	local fishing = fixture(false, false, true)
+	revealPicker(fishing)
+	assert(not fishing.gamepadA(), "The picker owns A until a bait is chosen")
+	fishing.choose()
+	fishing.setUiBlocking(true)
+	assert(not fishing.gamepadA(), "Pass A to an open menu, popup or text box")
+	fishing.setUiBlocking(false)
+	fishing.setUiSelection({})
+	assert(not fishing.gamepadA(), "Pass A to a selected UI control")
+	fishing.setUiSelection(nil)
+	assert(#fishing.castReplies == 0, "UI input must not reach fishing")
+	fishing.gamepadA("End")
+	assert(#fishing.castReplies == 0, "A release cannot cast")
+	assert(fishing.gamepadA() and #fishing.castReplies == 1, "A must cast in ordinary fishing")
+	assert(fishing.gamepadA() and #fishing.castReplies == 1, "A must not repeat a pending cast")
+	fishing.castReplies[1]({ ok = true, distance = 30, luck = 3.9875, castProgress = 0.55 })
+
+	local sequence = fishing.sequence()
+	sequence.phase = "Bite"
+	assert(fishing.gamepadA() and sequence.hooks == 1, "A must hook the fish")
+	sequence.phase, sequence.readyAt = "Caught", 0
+	assert(fishing.gamepadA(), "A must dismiss the catch")
+	fishing.advance(0.15)
+	fishing.advance(0.16)
+	fishing.advance(0.36)
+	assert(not fishing.controller:IsPreparing() and not fishing.gamepadA(), "Restore A when fishing ends")
+end
+
 local exitPicker = fixture(false, false, false, "FinalCatch")
 exitPicker.advance(0.121)
 local entering, enteringHint, enteringTarget = exitPicker.controller:GetOnboardingHint()
@@ -734,6 +805,8 @@ assert(entering and not enteringHint and not enteringTarget, "Keep the spotlight
 exitPicker.advance(0.101)
 assert(select(3, exitPicker.controller:GetOnboardingHint()) == exitPicker.guideButton)
 exitPicker.controller:ReturnToSpawn()
+exitPicker.choose("Bait_102")
+assert(#exitPicker.selections == 0, "A must not select a bait after closing the picker")
 local returningLesson, returnHint, returnTarget = exitPicker.controller:GetOnboardingHint()
 assert(returningLesson and not returnHint and not returnTarget, "Clear the spotlight when the picker starts closing")
 exitPicker.abort()
@@ -886,7 +959,7 @@ delayedCast.advance(0.5)
 delayedCast.tap()
 assert(#delayedCast.castReplies == 1 and delayedCast.sequence().meterLocks == 1,
 	"Repeated input must not relock the meter or submit another pending cast")
-assert(delayedCast.sequence().phase == "Preparing", "Wait for server confirmation before casting")
+assert(delayedCast.sequence().phase == "Casting", "Windup begins before cast confirmation")
 delayedCast.castReplies[1]({ ok = true, distance = 30, luck = 3.9875, castProgress = 0.55 })
 assert(delayedCast.sequence().casts == 1 and delayedCast.sequence().phase == "Casting",
 	"The pending cast must complete once with its original meter snapshot")
@@ -1004,33 +1077,77 @@ assert(displaced.locked() and displaced.root.Anchored, "A 20 stud displacement m
 displaced.move(20.01)
 assert(not displaced.locked() and not displaced.root.Anchored and displaced.cancellations[1] == "test")
 
+local outsideSpot = { ok = false, code = "OutsideFishingSpot", message = "Stand at your fishing spot to start fishing" }
 local loading = { ok = false, code = "ProfileNotReady", message = "Your fishing data is still loading" }
 local entering = fixture(true)
-assert(#entering.requests == 1 and not entering.root.Anchored and not entering.locked())
+assert(#entering.requests == 1 and entering.locked() and not entering.root.Anchored,
+	"Start the local entry while leaving character position replication active")
 entering.advance(0.05)
-assert(#entering.requests == 1, "Only one Begin request may be in flight")
-entering.requests[1](loading)
-assert(not entering.root.Anchored and #entering.notices == 0 and entering.covered() == 0)
+assert(entering.covered() > 0 and #entering.requests == 1, "Fade in while the first Begin request is in flight")
+entering.requests[1](outsideSpot)
+assert(not entering.root.Anchored and #entering.notices == 0)
 entering.advance(0.051)
 assert(#entering.requests == 2)
-entering.requests[2]({ ok = true, token = "confirmed", rodId = "Rod_101" })
-assert(entering.root.Anchored and entering.locked())
-revealPicker(entering)
-assert(entering.baitVisible() and #entering.requests == 2, "Opening the picker must not call Begin again")
+entering.advance(0.021)
+assert(entering.camera.CameraType == "Scriptable" and entering.covered() == 1)
+local previewFrame = entering.camera.CFrame
+entering.requests[2](loading)
+entering.advance(0.101)
+entering.tap()
+assert(entering.covered() == 0 and entering.camera.CameraType == "Scriptable" and not entering.root.Anchored,
+	"Show the fishing camera before server confirmation")
+assert(not entering.baitVisible() and entering.pickerShows() == 0 and #entering.selections == 0 and #entering.notices == 0)
+assert(#entering.requests == 3, "Retry when the profile is still loading")
+entering.requests[3]({ ok = true, token = "confirmed", rodId = "Rod_101" })
+assert(entering.root.Anchored and entering.locked() and entering.camera.CFrame == previewFrame)
+assert(entering.baitVisible() and entering.pickerShows() == 1 and #entering.requests == 3,
+	"Show the confirmed picker once, with the same camera and no second transition")
+entering.advance(0.25)
+assert(entering.pickerShows() == 1)
+
+local earlyReply = fixture(true)
+earlyReply.requests[1]({ ok = true, token = "early", rodId = "Rod_101" })
+assert(earlyReply.root.Anchored and not earlyReply.baitVisible())
+revealPicker(earlyReply)
+assert(earlyReply.baitVisible() and earlyReply.pickerShows() == 1)
+
+local rejected = fixture(true)
+revealPicker(rejected)
+rejected.requests[1]({ ok = false, message = "Fishing rod unavailable" })
+assert(rejected.camera.CameraType == "Custom" and not rejected.locked() and not rejected.root.Anchored)
+assert(rejected.camera.CFrame.Position.Magnitude == 0 and rejected.camera.FieldOfView == 70)
+assert(rejected.notices[1] == "Fishing rod unavailable" and rejected.pickerShows() == 0)
+rejected.advance(0.1)
+assert(#rejected.requests == 1, "A rejected entry requires leaving the spot before retrying")
+rejected.leave()
+rejected.move(0)
+assert(#rejected.requests == 2)
 
 for _, invalidate in ipairs({ "leave", "die", "abort" }) do
 	local abandoned = fixture(true)
+	revealPicker(abandoned)
 	abandoned[invalidate]()
+	assert(abandoned.camera.CameraType == "Custom" and not abandoned.locked())
 	abandoned.advance(0.2)
 	abandoned.requests[1]({ ok = true, token = "stale" })
 	assert(abandoned.cancellations[1] == "stale" and #abandoned.cancellations == 1)
 	assert(not abandoned.root.Anchored and not abandoned.baitVisible() and #abandoned.notices == 0)
 end
 
+local missingDuringPreview = fixture(true)
+revealPicker(missingDuringPreview)
+missingDuringPreview.plot.children.FishingStartPart = nil
+missingDuringPreview.advance(0.02)
+missingDuringPreview.requests[1]({ ok = true, token = "removed-spot", rodId = "Rod_101" })
+assert(missingDuringPreview.camera.CameraType == "Custom" and not missingDuringPreview.locked())
+assert(missingDuringPreview.cancellations[1] == "removed-spot" and missingDuringPreview.pickerShows() == 0)
+
 local timedOut = fixture(true)
+revealPicker(timedOut)
 timedOut.advance(1.01)
 timedOut.advance(0.5)
-assert(#timedOut.requests == 1 and #timedOut.notices == 1 and not timedOut.root.Anchored)
+assert(#timedOut.requests == 1 and #timedOut.notices == 1 and not timedOut.root.Anchored and not timedOut.locked())
+assert(timedOut.camera.CameraType == "Custom" and not timedOut.baitVisible())
 timedOut.requests[1]({ ok = true, token = "late" })
 timedOut.advance(0.5)
 assert(timedOut.cancellations[1] == "late" and #timedOut.notices == 1)
@@ -1040,20 +1157,29 @@ local eventJoined
 local function onEventComplete(joined)
 	eventJoined = joined
 end
-assert(event.controller:JoinEvent(-7, onEventComplete))
-assert(not event.controller:JoinEvent(-7, onEventComplete))
-assert(#event.eventRequests == 1 and event.eventRequests[1].slotId == -7)
+assert(event.controller:JoinEvent(-7, onEventComplete), "Start an event entry from outside the trigger")
+assert(not event.controller:JoinEvent(-7, onEventComplete), "Ignore another click while the join is pending")
+assert(#event.eventRequests == 1 and event.eventRequests[1].slotId == -7, "Send the requested slot once")
 event.eventRequests[1].resolve({ ok = true, token = "event", rodId = "Rod_101" })
 assert(eventJoined == nil and not event.locked(), "Wait for the teleport when the response arrives first")
 event.move(0)
 revealPicker(event)
-assert(eventJoined and event.baitVisible() and #event.requests == 0)
+assert(eventJoined and event.baitVisible() and #event.requests == 0, "Open the picker without sending a second Begin")
 
 local replaced = fixture(true, true)
-assert(replaced.controller:JoinEvent(-7, onEventComplete))
+assert(replaced.controller:JoinEvent(-7, onEventComplete), "Start a join before the character changes")
 replaced.abort()
 replaced.eventRequests[1].resolve({ ok = true, token = "departed", rodId = "Rod_101" })
-assert(eventJoined == false and replaced.cancellations[1] == "departed" and not replaced.locked())
+assert(eventJoined == false and replaced.cancellations[1] == "departed" and not replaced.locked(),
+	"Cancel a late token for a character that has left")
+
+local lostSpot = fixture(true, true)
+assert(lostSpot.controller:JoinEvent(-7, onEventComplete), "Start a join while the spot exists")
+lostSpot.plot.children.FishingStartPart = nil
+lostSpot.advance(0.1)
+lostSpot.eventRequests[1].resolve({ ok = true, token = "lost-spot", rodId = "Rod_101" })
+assert(lostSpot.notices[1] == "Your fishing spot is unavailable." and lostSpot.cancellations[1] == "lost-spot",
+	"Report a spot lost during a join and cancel the late token")
 
 do
 	local Visibility = dofile("src/ReplicatedStorage/Modules/FishingVisibility.lua")

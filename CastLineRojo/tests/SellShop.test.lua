@@ -52,11 +52,14 @@ modules.SellShopZone = {
 		return atShop
 	end,
 }
-modules.GamePassEffectUtil = {
-	GetSaleMultiplier = function()
-		return multiplier
-	end,
-}
+modules.Constants = { GAMEPASS = { VIP = "VIP", DOUBLE_WINS = "DoubleWins" } }
+local saleEffects = loadSource("src/ReplicatedStorage/Modules/GamePassEffectUtil.lua", {
+	game = { GetService = function() return { Modules = modules } end },
+	require = function(value) return value end,
+})
+modules.GamePassEffectUtil = { GetSaleMultiplier = function(data)
+	return multiplier or saleEffects.GetSaleMultiplier(data)
+end }
 modules.ItemToolUtil = {
 	IsItemTool = function(tool)
 		return tool.uid ~= nil
@@ -142,9 +145,10 @@ local function reset()
 		Data = {
 			Items = { a = record(), b = record(), placed = record("Rare"), gold = record("Rare", "Golden") },
 			PlotPlacements = { "placed" },
+			GamePasses = { VIP = true },
 		},
 	}
-	atShop, multiplier, allowPayment, onCredit = true, 1.2, true, nil
+	atShop, multiplier, allowPayment, onCredit = true, nil, true, nil
 	refreshes, removed, credits, payments = 0, nil, 0, 0
 	backpack.tools, character.tools = {}, {}
 	tool("a", backpack)
@@ -167,7 +171,7 @@ assert(
 	rounding.totalPrice ~= rounding.items[1].price + rounding.items[2].price + rounding.items[3].price,
 	"Bulk rounding must happen after summing base prices, matching existing sales"
 )
-multiplier = 1.2
+multiplier = nil
 local carried, held = backpack.tools[1], character.tools[1]
 local result = service.Client:RequestSellItems(player, { "a" }, 13)
 assert(result.success and result.soldCount == 1 and result.earnedCash == 13)
@@ -180,6 +184,15 @@ assert(
 		and not held.destroyed
 )
 assert(not service:SellItems(player, { "a" }, 13).success and payments == 1, "A repeated sale cannot pay twice")
+
+for _, hasVIP in { false, true } do
+	reset()
+	profile.Data.GamePasses = { DoubleWins = true, VIP = hasVIP }
+	local expected = if hasVIP then 13 else 11
+	assert(service:GetSellInventory(player).items[1].price == expected)
+	assert(service:SellItems(player, { "a" }, expected).earnedCash == expected and credits == expected,
+		"DoubleWins must not increase sale quotes or credits")
+end
 
 reset()
 for _, ids in { { "a", "a" }, { "a", "missing" }, { "a", "placed" }, { [2] = "a" }, { a = "a" }, {} } do

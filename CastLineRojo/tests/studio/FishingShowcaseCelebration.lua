@@ -49,7 +49,8 @@ local function dispose()
 	gui:Destroy()
 	owner, gui = nil, nil
 end
-local apex = config.Bite.FishLift.RiseTime
+local motion = require(storage.Modules.FishingLiftMotion)
+local landing = motion.Timing(config.Bite, false).landAt
 local ok, err = xpcall(function()
 	create()
 	for _, rarity in rarities.List do
@@ -57,14 +58,14 @@ local ok, err = xpcall(function()
 		owner.bite = fish
 		owner:_setPhase("Lifting")
 		Confetti.clear(gui)
-		owner.info:Update(apex - 0.01, fish)
+		owner.info:Update(landing - 0.01, fish)
 		local before = report.sounds.FishSuccess or 0
 		assert(not gui:FindFirstChild("ConfettiLayer"), "Celebrated before the reveal")
-		owner.info:Update(apex + 0.01, fish)
+		owner.info:Update(landing + 0.01, fish)
 		assert(gui.RevealInfo.Visible and gui:FindFirstChild("ConfettiLayer"), "Reveal did not create the layer")
 		assert(report.sounds.FishSuccess == before + 1 and report.sounds.Gui_Fuse_Success == before + 1,
 			"Reveal must synchronously start both sounds")
-		owner.info:Update(apex + 0.02, fish)
+		owner.info:Update(landing + 0.02, fish)
 		fish.timeline.phase = "Caught"
 		owner:_setPhase("Caught")
 		owner.info:Update(config.Bite.LiftTime + 0.01, fish)
@@ -96,12 +97,12 @@ local ok, err = xpcall(function()
 	local before = report.sounds.FishSuccess
 	local fish = bite("Common")
 	owner.bite = fish
-	owner.info:Update(apex + 0.01, fish)
+	owner.info:Update(landing + 0.01, fish)
 	assert(gui:FindFirstChild("ConfettiLayer") and report.sounds.FishSuccess == before,
 		"Muted fishing must retain confetti and skip audio")
 	enabled = true
 	owner:RefreshSoundSetting()
-	owner.info:Update(apex + 0.02, fish)
+	owner.info:Update(landing + 0.02, fish)
 	assert(report.sounds.FishSuccess == before and report.sounds.Gui_Fuse_Success == before,
 		"Unmuting replayed consumed showcase sounds")
 	dispose()
@@ -110,7 +111,7 @@ local ok, err = xpcall(function()
 	create()
 	local egg = bite("Rare", true)
 	owner.bite = egg
-	owner.info:Update(apex + 0.01, egg)
+	owner.info:Update(motion.Timing(config.Bite, true).riseEnd, egg)
 	assert(not gui:FindFirstChild("ConfettiLayer"), "Egg received fish confetti")
 	owner:_setPhase("Caught")
 	owner:_setPhase("Caught")

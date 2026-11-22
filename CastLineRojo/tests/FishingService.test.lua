@@ -61,43 +61,66 @@ h.assets.GetFish = function()
 end
 assert(not h.client:SelectBait(h.player, h.token, "Bait_102").ok)
 h.assets.GetFish = getFish
-h.profile.Data.Wins = 4
+h.profile.Data.Wins = 1
 assert(not h.client:SelectBait(h.player, h.token, "Bait_102").ok)
 h.profile.Data.Wins = 100
 assert(h.client:SelectBait(h.player, h.token, "Bait_102").ok)
 assert(h.profile.Data.Wins == 100, "Only a successful grant consumes payment")
 assert(not h.client:SelectBait(h.player, h.token, "Bait_102").ok)
 assert(h.castAt(0.65).distance == 30)
-assert(not h.client:NextRound(h.player, h.token, 0).ok, "No catch before landing")
+local earlyRound = h.client:NextRound(h.player, h.token, 0)
+assert(earlyRound.code == "RoundNotReady" and earlyRound.retryAfter > 0, "Only an early valid round is retryable")
+assert(h.client:NextRound(h.player, h.token, 9).code ~= "RoundNotReady", "A wrong round is still rejected")
 h.now += 5
-h.round = h.client:NextRound(h.player, h.token, 0)
-local fishId = h.round.fishId
-assert(h.round.ok and h.fishes[fishId].Rarity == "Common")
+h.sample = 0
+local firstRound = h.client:NextRound(h.player, h.token, 0)
+assert(firstRound.ok and h.fishes[firstRound.fishId].Rarity == "Common", "Open the first round with the selected rod")
 assert(not h.client:Hook(h.player, h.token, 1, h.now).ok, "No early hook")
+assert(h.client:GetHookResult(h.player, h.token, 1).status == "Rejected")
 assert(not h.client:NextRound(h.player, h.token, 1).ok, "No early next round")
-h.failGrant = true
-local initialCatch
-h.onGrant = function(options)
-	initialCatch = options
-end
-assert(not h.hook().ok and h.grants == 0 and h.profile.Data.Wins == 100)
-assert(initialCatch.MutationId == "Golden")
-h.now = h.round.retryAt + 0.1
+h.now = firstRound.retryAt
 h.sample = 0.99
-h.round = h.client:NextRound(h.player, h.token, 1)
-assert(h.round.fishId == fishId, "Escape cannot reroll species within a session")
+h.fishes.Fish_110.DisplayChance = 100
+h.round = h.client:NextRound(h.player, h.token, firstRound.round)
+assert(h.round.ok and h.round.round == 2 and h.round.fishId == "Fish_110" and h.round.fishId ~= firstRound.fishId,
+	"Missing the first bite must roll a fresh fish from the same rod pool")
+assert(h.round.weight == 10 and h.round.mutationId == nil, "Present the new fish's weight and conceal its mutation")
+assert(h.round.castRating == firstRound.castRating and h.round.luck == firstRound.luck, "Reuse the cast settings")
+local progress = h.profile.Data.FishingProgress
+assert(progress.Count == 0 and progress.Rods.Rod_101.MissHigh == 0 and h.profile.Data.Wins == 100,
+	"A missed bite does not progress pity or spend cash")
+assert(not h.client:NextRound(h.player, h.token, firstRound.round).ok, "Reject a replayed round request")
+h.now = h.round.readyAt + 1.1
+assert(not h.client:Hook(h.player, h.token, firstRound.round).ok, "An old hook cannot claim a new fish")
+
+h.failGrant = true
+local failedCatch
+h.onGrant = function(options)
+	failedCatch = options
+end
+assert(not h.hook().ok and h.grants == 0 and h.profile.Data.Wins == 100, "Failed grants do not spend cash")
+assert(failedCatch.MutationId == "Rainbow", "The new round must roll the bait mutation again")
 h.failGrant = false
+h.sample = 0
 h.onGrant = function(options)
 	assert(
-		options.InstanceId == initialCatch.InstanceId and options.MutationId == initialCatch.MutationId,
-		"Escape and grant failure preserve the catch and mutation within a session"
+		options.InstanceId == failedCatch.InstanceId and options.MutationId == failedCatch.MutationId,
+		"Grant failure preserves the catch and mutation within the same round"
 	)
+	assert(h.client:GetHookResult(h.player, h.token, h.round.round).status == "Pending")
 	assert(not h.client:Hook(h.player, h.token, h.round.round, h.now).ok, "Reentrant hook cannot grant twice")
 	assert(not h.client:Begin(h.player).ok, "An active claim still owns the fishing session")
 end
-assert(h.hook().ok and h.grants == 1 and h.profile.Data.Wins == 95)
-assert(h.profile.Data.FishingProgress.Count == 1)
+local caught = h.hook()
+assert(caught.ok and caught.catchId == h.round.fishId and h.lastFish == h.round.fishId, "Grant the fish on screen")
+assert(caught.weight == h.round.weight and caught.mutationId == "Rainbow" and caught.catchChanceDenominator == 1600,
+	"Use the new round's weight, mutation, and catch chance")
+assert(h.grants == 1 and h.profile.Data.Wins == 98 and progress.Count == 1, "Charge and record one successful catch")
+assert(progress.Seen[h.round.fishId] and not progress.Seen[firstRound.fishId], "Only record the fish actually caught")
 assert(not h.hook().ok and h.grants == 1)
+local confirmed = h.client:GetHookResult(h.player, h.token, h.round.round)
+assert(confirmed.status == "Succeeded" and confirmed.result.weight == caught.weight and h.grants == 1)
+assert(h.client:GetHookResult(h.player, h.token, firstRound.round).status == "Unknown")
 h.onGrant = nil
 h.cancel()
 h.profile.Data.EquippedRodId = "Rod_103"
@@ -118,7 +141,8 @@ local eventSession = secret.begin()
 assert(eventSession.eventFish.FishId == secret.activeEvent.FishID)
 assert(eventSession.eventFish.SlotId == 1 and eventSession.eventFish.EndsAt == endsAt)
 secret.now = endsAt
-assert(secret.client:SelectBait(secret.player, secret.token, "NONE").ok)
+assert(secret.client:SelectBait(secret.player, secret.token, "Bait_102").ok)
+secret.sample = 0
 local eventRound = secret.cast()
 assert(eventRound.fishId == secret.activeEvent.FishID, "A cast after expiry must use the event locked on entry")
 secret.fishes.EventB = table.clone(secret.fishes.Event)
@@ -126,10 +150,12 @@ secret.fishes.EventB.FishID = "EventB"
 secret.activeEvent = secret.fishes.EventB
 secret.eventWindow = { SlotId = 2, StartsAt = secret.now, EndsAt = secret.now + 15 }
 secret.now = eventRound.retryAt
+secret.sample = 0.99
 secret.round = secret.client:NextRound(secret.player, secret.token, eventRound.round)
 assert(secret.round.ok and secret.round.fishId == eventRound.fishId, "A replacement event must not change this cast")
 local secretCatch = secret.hook()
 assert(secretCatch.ok and secretCatch.catchId == eventRound.fishId and secret.profile.Data.FishingProgress.Count == 0)
+assert(secretCatch.mutationId == "Rainbow", "A missed event fish lets the bait mutation roll again")
 secret.cancel()
 assert(secret.begin().eventFish.FishId == "EventB", "The next entry may participate in the replacement event")
 secret.cancel()
@@ -154,33 +180,38 @@ character.PivotTo = function(_, target)
 	teleports += 1
 end
 rootPart.CFrame = { ToObjectSpace = function(_, value)
-	assert(value == pivot)
+	assert(value == pivot, "Use the live character pivot")
 	return pivot
 end }
 setmetatable(destination, { __mul = function(_, offset)
-	assert(offset == pivot)
+	assert(offset == pivot, "Apply the character pivot offset")
 	return landed
 end })
 join.fishingSpot.GetEntryRootCFrame = function(spot, root, humanoid)
-	assert(spot == join.plot:FindFirstChild("FishingStartPart") and root == rootPart and humanoid == join.humanoid)
+	assert(spot == join.plot:FindFirstChild("FishingStartPart") and root == rootPart and humanoid == join.humanoid,
+		"Resolve the landing from the player's own plot and character")
 	return destination
 end
-assert(join.client:JoinEvent(join.player, slot + 1).code == "EventExpired")
+assert(join.client:JoinEvent(join.player, slot + 1).code == "EventExpired", "Reject a different event slot")
 join.plot.OwnerUserId = 123
-assert(join.client:JoinEvent(join.player, slot).code == "MissingFishingSpot")
+assert(join.client:JoinEvent(join.player, slot).code == "MissingFishingSpot", "Reject an unowned fishing spot")
 join.plot.OwnerUserId = join.player.UserId
 join.player.IsTraining = true
-assert(join.client:JoinEvent(join.player, slot).code == "FishingBusy")
+assert(join.client:JoinEvent(join.player, slot).code == "FishingBusy", "Protect active training")
 join.player.IsTraining = nil
+join.introActive = true
+assert(join.client:JoinEvent(join.player, slot).code == "FishingBusy", "Protect the opening sequence")
+join.introActive = false
 assert(teleports == 0, "Rejected joins must leave the player in place")
-assert(join.client:Begin(join.player).code == "OutsideFishingSpot")
+assert(join.client:Begin(join.player).code == "OutsideFishingSpot", "Regular entry still requires the trigger")
 local joined = join.client:JoinEvent(join.player, slot)
-assert(joined.ok and joined.eventFish.SlotId == slot and joined.baitQuotes.Bait_102)
-assert(not join.client:JoinEvent(join.player, slot).ok and teleports == 1)
+assert(joined.ok and joined.eventFish.SlotId == slot and joined.baitQuotes.Bait_102,
+	"Join opens standard bait selection for the requested event")
+assert(not join.client:JoinEvent(join.player, slot).ok and teleports == 1, "Do not teleport twice during one session")
 join.now = join.eventWindow.EndsAt
-assert(join.client:SelectBait(join.player, joined.token, "NONE").ok)
+assert(join.client:SelectBait(join.player, joined.token, "NONE").ok, "Honor a session started before the deadline")
 join.client:Cancel(join.player, joined.token)
-assert(join.client:JoinEvent(join.player, slot).code == "EventExpired" and teleports == 1)
+assert(join.client:JoinEvent(join.player, slot).code == "EventExpired" and teleports == 1, "Reject joins at the deadline")
 
 -- A presentation failure after the profile commit must never duplicate payment or grants.
 local broken = new()
@@ -213,7 +244,7 @@ assert(#lesson.equippedCatches == 1 and lesson.equippedCatches[1] == lesson.last
 lessonData.FishingOnboarding.Stage = "FinalCatch"
 lessonData.EquippedRodId = "Rod_102"
 local secondEntry = lesson.begin()
-assert(secondEntry.guideBaitId == "Bait_102" and secondEntry.baitQuotes.Bait_102.price == 100)
+assert(secondEntry.guideBaitId == "Bait_102" and secondEntry.baitQuotes.Bait_102.price == 30)
 for index, baitId in ipairs(lesson.rods.Rod_102.BaitsSelect) do
 	assert(secondEntry.baitQuotes[baitId].tier == index)
 end
@@ -248,11 +279,11 @@ assert(finalLessonRound.weight == trainingProgress.CalculateFishWeight(lesson.fi
 lesson.failGrant = true
 assert(not lesson.hook().ok and lessonData.Wins == 200)
 lesson.failGrant = false
-lessonData.Wins = 99
-assert(not lesson.hook().ok and lessonData.Wins == 99 and lessonData.FishingOnboarding.Stage == "FinalCatch")
+lessonData.Wins = 29
+assert(not lesson.hook().ok and lessonData.Wins == 29 and lessonData.FishingOnboarding.Stage == "FinalCatch")
 lessonData.Wins = 200
 assert(finalLessonRound.mutationId == "Golden" and lesson.hook().ok)
-assert(lessonData.FishingOnboarding.Stage == "Complete" and lessonData.Wins == 100 and lesson.grants == 3)
+assert(lessonData.FishingOnboarding.Stage == "Complete" and lessonData.Wins == 170 and lesson.grants == 3)
 assert(lessonData.FishingProgress.Count == 1 and not lesson.hook().ok)
 lesson.client:Cancel(lesson.player, lesson.token, true)
 assert(#lesson.equippedCatches == 2 and lesson.equippedCatches[2] == lesson.lastOptions.InstanceId)
@@ -322,7 +353,7 @@ completed.afterGrant = function()
 	completed.begin("Bait_104")
 end
 assert(completed.hook().ok, "An exit after commit must preserve the completed catch")
-assert(completed.grants == 1 and completed.profile.Data.Wins == startingCash - 5)
+assert(completed.grants == 1 and completed.profile.Data.Wins == startingCash - 2)
 assert(completed.profile.Data.FishingProgress.Count == 1)
 assert(not completed.client:Hook(completed.player, settledToken, settledRound.round, completed.now).ok)
 assert(

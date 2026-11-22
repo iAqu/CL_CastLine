@@ -48,7 +48,8 @@ assert(visualUtil:find("for _, descendant in target:GetDescendants()", 1, true),
 
 assert(toolUtil:find("MutationVisualUtil.Apply", 1, true), "Held tools must keep their Mutation particles")
 assert(drownController:find("MutationTitleUtil.Show", 1, true), "Drowned item titles must retain the Mutation label")
-assert(plotFishController:find("FishTitleUtil.Create(titleGui, item, mutationId, owner, weight)", 1, true), "Roaming fish titles must include weight")
+assert(plotFishController:find("FishTitleUtil.Create(titleGui, item, mutationId, owner, weight, true)", 1, true),
+	"Roaming fish titles must include weight and reflect the plot boost")
 assert(plotFishController:find("MutationVisualUtil.Apply", 1, true), "Roaming fish must keep their Mutation particles")
 
 local function loadSource(path, globals)
@@ -118,5 +119,34 @@ assertFishTitle("Rainbow", "Rainbow", "$50/s")
 assertFishTitle("Mint", nil, "$5/s")
 assertFishTitle("Unknown", nil, "$5/s")
 assert(fishTitle.Create(nil, item, nil) == nil, "Missing templates must allow the caller to fall back")
+
+local buildTitle = template.Clone
+local changed, destroy, disconnected
+function template:Clone()
+	local title = buildTitle(self)
+	title.Destroying = { Once = function(_, callback) destroy = callback end }
+	return title
+end
+local owner = { multiplier = 1 }
+function owner:GetAttribute(name)
+	return if name == income.MULTIPLIER_ATTRIBUTE then self.multiplier else nil
+end
+function owner:GetAttributeChangedSignal(name)
+	assert(name == income.MULTIPLIER_ATTRIBUTE)
+	return { Connect = function(_, callback)
+		changed = callback
+		return { Disconnect = function() disconnected = true end }
+	end }
+end
+local placedTitle = fishTitle.Create(titleGui, item, "Golden", owner, nil, true)
+local placedCash = placedTitle:FindFirstChild("Frame"):FindFirstChild("CpsLabel")
+assert(placedCash.Text == "$10/s")
+owner.multiplier = 2
+changed()
+assert(placedCash.Text == "$20/s", "Placed fish titles must update when the owner's multiplier changes")
+local heldTitle = fishTitle.Create(titleGui, item, "Golden", owner)
+assert(heldTitle:FindFirstChild("Frame"):FindFirstChild("CpsLabel").Text == "$10/s")
+destroy()
+assert(disconnected, "Destroying a placed title disconnects its multiplier listener")
 
 print("MutationLifecycle.test.lua passed")

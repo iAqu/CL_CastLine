@@ -24,8 +24,9 @@ assert(
 	"server bootstrap must hide the reset volume"
 )
 assert(
-	serverBootstrap:find('hideAuxiliaryPart(water and water:FindFirstChild("Surface"), "Workspace.Areas.Water.Surface")', 1, true),
-	"server bootstrap must hide the water surface helper"
+	not serverBootstrap:find('FindFirstChild("Surface")', 1, true)
+		and not serverBootstrap:find("Workspace.Areas.Water.Surface", 1, true),
+	"server bootstrap must not look up the retired water surface helper"
 )
 assert(
 	serverBootstrap:find("instance.Transparency = 1", auxiliaryVisibilitySetup, true),

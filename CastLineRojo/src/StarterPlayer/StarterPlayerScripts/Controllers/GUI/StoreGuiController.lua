@@ -1,3 +1,4 @@
+local MarketplaceService = game:GetService("MarketplaceService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ReplicatedFirst = game:GetService("ReplicatedFirst")
 local StarterPlayer = game:GetService("StarterPlayer")
@@ -15,7 +16,10 @@ local PlayerDataController = require(StarterPlayer.StarterPlayerScripts.Controll
 local NotificationClient = require(ReplicatedStorage.Modules.NotificationClient)
 local AreasWorkspace = require(ReplicatedStorage.Modules.AreasWorkspace)
 local NumberUtil = require(ReplicatedStorage.Modules.NumberUtil)
+local CashPack = require(ReplicatedStorage.Modules.CashPack)
+local PlotFishIncome = require(ReplicatedStorage.Modules.PlotFishIncome)
 local PaidEggStoreView = require(ReplicatedStorage.Modules.PaidEggStoreView)
+local UltraLuckDetails = require(ReplicatedStorage.Modules.UltraLuckDetails)
 
 local localPlayer = Players.LocalPlayer
 -- local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
@@ -131,6 +135,9 @@ function StoreGuiController:SetGiftingState(isGiftingState: boolean, giftedPlaye
         GiftButton.Cancel.Visible = false
         GiftedPlayerLabel.Visible = false
     end
+    if self._cashPackCards then
+        self:SetCashPackRecipient(if isGifting then giftedPlayer else localPlayer)
+    end
     if self._paidEggView then
         task.defer(function()
             self._paidEggView:Refresh()
@@ -186,18 +193,32 @@ function StoreGuiController:GenerateGamePassList()
         button.NameLabel.Text = purchaseData.Name
         button.GamePassImage.Image = formatAssetId(purchaseData.IconId)
         button.Frame.BuyButton.PriceLabel.Text = tostring(purchaseData.Price)
-        button.DescriptionLabel.Text = purchaseData.Description
+        button.DescriptionLabel.Text = if purchaseId == UltraLuckDetails.PurchaseId
+            then UltraLuckDetails.Description .. "\nView Details" else purchaseData.Description
         ButtonAnimation.SetUp(button)
         self:UpdateGamePass(purchaseId)
 
         button.Activated:Connect(function()
             local playerData = PlayerDataController:GetData()
             if not playerData then return end
-            if not isGifting and playerData.GamePasses[purchaseId] then
+            if purchaseId == UltraLuckDetails.PurchaseId then
+                UltraLuckDetails.OpenPurchase(not isGifting)
+            elseif isGifting then
+                Knit.GetService("PurchaseService").PromptPurchase:Fire(purchaseId)
+            elseif playerData.GamePasses[purchaseId] then
                 NotificationClient.Notify(Constants.NOTIFICATION.ALREADY_OWN_GAME_PASS)
-                return
+            else
+                local productId = purchaseData.ProductId
+                if type(productId) ~= "number" or productId <= 0 then
+                    NotificationClient.RedNotify("Purchase unavailable.")
+                    return
+                end
+                local opened, reason = pcall(MarketplaceService.PromptGamePassPurchase, MarketplaceService, localPlayer, productId)
+                if not opened then
+                    warn("Game pass prompt failed", purchaseId, reason)
+                    NotificationClient.RedNotify("Could not open this purchase. Please try again.")
+                end
             end
-            Knit.GetService("PurchaseService").PromptPurchase:Fire(purchaseId)
         end)
     end
 end
@@ -231,6 +252,7 @@ function StoreGuiController:UpdateGamePass(purchaseId)
 end
 
 function StoreGuiController:GenerateWinsList()
+    self._cashPackCards = {}
     local winsData = PurchaseDataHelper.GetWinsData()
     local purchaseIds = {}
     for purchaseId in pairs(winsData) do
@@ -240,52 +262,65 @@ function StoreGuiController:GenerateWinsList()
         return winsData[left].Index < winsData[right].Index
     end)
 
+    local purchaseService = Knit.GetService("PurchaseService")
     for _, purchaseId in ipairs(purchaseIds) do
         local purchaseData = winsData[purchaseId]
         local clone = WinsTemplate:Clone()
         clone.Name = purchaseId
         clone:SetAttribute(GENERATED_WINS_ATTRIBUTE, true)
-        clone.Visible = true
-        clone.Parent = WinsTemplate.Parent
         clone.LayoutOrder = purchaseData.Index
-        clone.WinsButton.WinsImage.Image = formatAssetId(purchaseData.IconId)
-        clone.WinsButton.Frame.BuyButton.PriceLabel.Text = tostring(purchaseData.Price)
-        clone.WinsButton.PackLabel.Text = purchaseData.Name
-        -- clone.WinsButton.BuyNumLabel.Text = PurchaseDataHelper.GetBuyNum(purchaseId)
+        local button = clone.WinsButton
+        button.WinsImage.Image = formatAssetId(purchaseData.IconId)
+        button.Frame.BuyButton.PriceLabel.Text = tostring(purchaseData.Price)
+        button.PackLabel.Text = purchaseData.Name
 
-        ButtonAnimation.SetUp(clone.WinsButton, 1.05)
-        clone.WinsButton.Activated:Connect(function()
-            Knit.GetService("PurchaseService").PromptPurchase:Fire(purchaseId)
-        end)
+        if CashPack.Offers[purchaseId] then
+            button.Interactable = false
+            button.BuyNumLabel.Text = "Loading..."
+            local card = { Button = button }
+            self._cashPackCards[purchaseId] = card
+            button.Activated:Connect(function()
+                local recipient = self._cashPackRecipient
+                if card.Amount and recipient and recipient.Parent == Players then
+                    purchaseService.PromptPurchase:Fire(purchaseId, not isGifting, recipient.UserId, card.Amount)
+                end
+            end)
+        else
+            button.BuyNumLabel.Text = "+" .. NumberUtil.FormatWinsAmount(purchaseData.BuyNum)
+            button.Activated:Connect(function()
+                purchaseService.PromptPurchase:Fire(purchaseId)
+            end)
+        end
+        clone.Parent = WinsTemplate.Parent
+        clone.Visible = true
+        ButtonAnimation.SetUp(button, 1.05)
     end
-    self:UpdateWins()
 end
 
-function StoreGuiController:UpdateWins()
-    local playerdata = PlayerDataController:GetData()
-    if not playerdata then warn("No player data found!") return end
-
-    for _, frame in pairs(WinsContainer:GetChildren()) do
-        if frame:IsA("Frame") then
-            local purchaseId = frame.Name
-            if not PurchaseDataHelper.GetData(purchaseId) then continue end
-
-            -- local lastAreaId = AreasDataHelper.GetLastAreaId(playerdata)
-            -- local areaIndex = AreasDataHelper.GetIndex(lastAreaId)
-            -- local multiple = 1000 ^ (areaIndex - 1)
-            -- local buyNum = NumberUtil.FormatNumberStartMWithDecimal(PurchaseDataHelper.GetBuyNum(purchaseId) * multiple)
-            -- local buyNum = NumberUtil.FormatNumberStartKWithDecimal(GameDataUtil.CalculateWinTierCount(playerdata, purchaseId))
-            local buyNum = NumberUtil.FormatWinsAmount(PurchaseDataHelper.GetBuyNum(purchaseId))
-            -- if playerdata.LimitedPurchaseHistory[purchaseId] then
-            --     frame.WinsButton.FirstPurchaseFrame.Visible = false
-            -- else
-            --     frame.WinsButton.FirstPurchaseFrame.Visible = true
-            --     frame.WinsButton.FirstPurchaseFrame.MoreCountLabel.Text = "+" .. buyNum
-            -- end
-
-            frame.WinsButton.BuyNumLabel.Text = "+" .. buyNum
-        end
+function StoreGuiController:RefreshCashPacks()
+    local recipient = self._cashPackRecipient
+    local baseRate = recipient and recipient:GetAttribute(PlotFishIncome.BASE_RATE_ATTRIBUTE)
+    for purchaseId, card in self._cashPackCards do
+        local amount = CashPack.GetAmount(purchaseId, baseRate)
+        card.Amount = amount
+        card.Button.Interactable = amount ~= nil
+        card.Button.BuyNumLabel.Text = if amount then "+" .. NumberUtil.FormatWinsAmount(amount)
+            elseif recipient then "Loading..." else "Unavailable"
     end
+end
+
+function StoreGuiController:SetCashPackRecipient(recipient: Player?)
+    if self._cashPackRateConnection then
+        self._cashPackRateConnection:Disconnect()
+        self._cashPackRateConnection = nil
+    end
+    self._cashPackRecipient = if recipient and recipient.Parent == Players then recipient else nil
+    if self._cashPackRecipient then
+        self._cashPackRateConnection = recipient:GetAttributeChangedSignal(PlotFishIncome.BASE_RATE_ATTRIBUTE):Connect(function()
+            self:RefreshCashPacks()
+        end)
+    end
+    self:RefreshCashPacks()
 end
 
 function StoreGuiController:ScrollingToPosition(targetUiElement)
@@ -433,14 +468,6 @@ function StoreGuiController:KnitStart()
         end
     end)
 
-    PurchaseService.PurchaseLimitSuccess:Connect(function(purchaseId: string)
-        task.delay(0, function()
-            if PurchaseDataHelper.GetTypeByPurchaseId(purchaseId) == Constants.PURCHASE_TYPE.WINS then
-                self:UpdateWins()
-            end
-        end)
-    end)
-
     local GamePassService = Knit.GetService("GamePassService")
     GamePassService.GiveGamePass:Connect(function(gamePassId: string)
         self:UpdateGamePass(gamePassId)
@@ -453,23 +480,16 @@ function StoreGuiController:KnitStart()
         end
     end)
 
-    local PlayerDataService = Knit.GetService("PlayerDataService")
-    -- PlayerDataService.TokensChanged:Connect(function()
-    --     task.delay(0, function()
-    --         self:UpdateTokensLabel()
-    --     end)
-    -- end)
-
-    PlayerDataService.SuperRebirthsChanged:Connect(function()
-        task.delay(0, function()
-            self:UpdateWins()
-        end)
-    end)
-
     self:Init()
     initShopModels()
     self:GenerateGamePassList()
     self:GenerateWinsList()
+    self:SetCashPackRecipient(localPlayer)
+    Players.PlayerRemoving:Connect(function(player)
+        if player == self._cashPackRecipient then
+            self:SetCashPackRecipient(nil)
+        end
+    end)
     for _, frameName in ipairs({ "StarterPackFrame", "PotionFrame", "PacksFrame", "LimitedPetFrame" }) do
         local frame = ScrollingFrame:FindFirstChild(frameName)
         if frame and frame:IsA("GuiObject") then

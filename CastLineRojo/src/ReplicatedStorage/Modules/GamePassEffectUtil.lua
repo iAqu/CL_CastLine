@@ -15,9 +15,6 @@ function GamePassEffectUtil.GetSaleMultiplier(playerData): number
 	if ownsGamePass(playerData, Constants.GAMEPASS.VIP) then
 		bonus += 0.2
 	end
-	if ownsGamePass(playerData, Constants.GAMEPASS.DOUBLE_WINS) then
-		bonus += 1
-	end
 	return 1 + bonus
 end
 

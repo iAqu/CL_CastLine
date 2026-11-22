@@ -51,7 +51,7 @@ local ok,err=xpcall(function()
    if progress==.950001 then
     task.wait(math.max(0,r.retryAt-workspace:GetServerTimeNow()+.05))
     local retry=service:NextRound(player,token,r.round)
-    assert(retry.ok and retry.fishId==r.fishId and retry.castRating==r.castRating)
+    assert(retry.ok and retry.round==r.round+1 and retry.castRating==r.castRating)
    end
   end
   table.insert(checks,{progress=progress,rating=response.castRating})

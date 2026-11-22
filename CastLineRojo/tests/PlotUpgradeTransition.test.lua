@@ -197,6 +197,7 @@ local white = {
 		for _, part in proxy:GetDescendants() do
 			assert(not part:IsA("Highlight"), "A snapshot cannot inherit permanent white highlights")
 			if part:IsA("BasePart") then
+				assert(part.Transparency ~= 1, "Hidden layout anchors must not appear in white snapshots")
 				assert(part.LocalTransparencyModifier == 0, "Hidden originals must produce visible snapshots")
 			end
 		end
@@ -252,6 +253,8 @@ local function plot()
 		part.Color = "original"
 	end
 	local part = fence:GetChildren()[1]:GetChildren()[1]
+	local anchor = node("Part", fence:GetChildren()[1])
+	anchor.Transparency = 1
 	part.LocalTransparencyModifier = 0.2
 	local emitter = node("ParticleEmitter", part)
 	local disabled = node("ParticleEmitter", part)
@@ -280,7 +283,7 @@ transition:Handle("Applied", home, "one", 1)
 step(0.1)
 assert(transition:IsPlaying(home), "Applied must wait for the replicated level and dimensions")
 home:SetAttribute("PlotUpgradeLevel", 1)
-home:SetAttribute("PlotWidth", 80)
+home:SetAttribute("PlotWidth", root.PlotUpgradeData.Get(1).Width)
 step(1.1)
 assert(not transition:IsPlaying(home))
 assert(part.LocalTransparencyModifier == 0.2 and added.LocalTransparencyModifier == 0)

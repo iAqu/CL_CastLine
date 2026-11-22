@@ -15,6 +15,7 @@ local GuiAnimationUtil = require(Modules.GuiAnimationUtil)
 local GuiUtil = require(Modules.GuiUtil)
 local Knit = require(ReplicatedStorage.Packages.Knit)
 local LoadingAttributes = require(ReplicatedFirst.LoadingAttributes)
+local ShopInventoryStatus = require(Modules.ShopInventoryStatus)
 local NotificationClient = require(Modules.NotificationClient)
 local NumberUtil = require(Modules.NumberUtil)
 local SellShopZone = require(Modules.SellShopZone)
@@ -112,6 +113,7 @@ function SellShopController:KnitStart()
 	local titleGui = playerGui:WaitForChild("TitleGui")
 	local titleTemplate = titleGui:FindFirstChild("FishTitleTemplate")
 	local titleFrame = titleTemplate and titleTemplate:FindFirstChild("Frame")
+	local showInventoryStatus = ShopInventoryStatus.Bind(list, template.NameLabel)
 	local service = Knit.GetService("SellService")
 	local rows = {}
 	local inventory, visit, currentAnchor, currentCharacter
@@ -180,12 +182,12 @@ function SellShopController:KnitStart()
 		task.defer(function()
 			refreshQueued = false
 			if gui.Enabled and not closing and not requestPending then
-				refresh(false)
+				refresh()
 			end
 		end)
 	end
 	local function requestSale(ids, total)
-		if requestPending or closing or not gui.Enabled or not SellShopZone.CanSell(localPlayer) then
+		if requestPending or loading or not inventory or closing or not gui.Enabled or not SellShopZone.CanSell(localPlayer) then
 			return
 		end
 		requestPending = true
@@ -269,41 +271,46 @@ function SellShopController:KnitStart()
 		sellAll.PriceLabel.Text = priceText(result.totalPrice)
 		updateButtons()
 	end
-	refresh = function(openAfter: boolean)
+	refresh = function()
 		fetchSerial += 1
 		local serial, ticket = fetchSerial, visit
+		local function current()
+			return serial == fetchSerial and gui.Enabled and not closing and stillHere(ticket)
+		end
+		local function fail(message)
+			loading, inventory = false, nil
+			clearConfirmation(false)
+			for _, row in rows do
+				row.frame.Visible = false
+			end
+			showInventoryStatus(message)
+			updateButtons()
+		end
+
 		loading = true
+		if not inventory then
+			showInventoryStatus("Loading...")
+		end
 		updateButtons()
 		service
 			:GetSellInventory()
+			:timeout(8)
 			:andThen(function(result)
-				if serial ~= fetchSerial or not stillHere(ticket) or closing then
+				if not current() then
+					return
+				end
+				if not result or not result.success then
+					fail((result and result.errorMessage) or "Could not load fish inventory.")
 					return
 				end
 				loading = false
-				if not result or not result.success then
-					NotificationClient.RedNotify((result and result.errorMessage) or "Could not load the sell shop.")
-					updateButtons()
-					return
-				end
-				if
-					openAfter
-					and (not GameplayInputGate.IsWorldActionAllowed() or not GuiAnimation.IsAllPopupGuisClosed())
-				then
-					visit = nil
-					return
-				end
+				showInventoryStatus(nil)
 				render(result)
-				if openAfter then
-					GuiAnimation.OpenGui(gui)
-				end
 			end)
 			:catch(function(err)
-				if serial == fetchSerial and stillHere(ticket) then
-					loading = false
-					updateButtons()
+				if current() then
 					warn("SellShopController: inventory request failed", err)
-					NotificationClient.RedNotify("Could not load the sell shop. Please try again.")
+					fail("Could not load fish inventory.")
 				end
 			end)
 	end
@@ -432,7 +439,13 @@ function SellShopController:KnitStart()
 			return
 		end
 		visit = {}
-		refresh(true)
+		showInventoryStatus("Loading...")
+		updateButtons()
+		GuiAnimation.ResetNavigationFocus(gui, closeButton)
+		GuiAnimation.OpenGui(gui)
+		if gui.Enabled then
+			refresh()
+		end
 	end)
 	localPlayer.CharacterRemoving:Connect(function()
 		visit = nil

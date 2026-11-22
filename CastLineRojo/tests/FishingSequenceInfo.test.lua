@@ -56,15 +56,24 @@ local income = assert(load(read(prefix .. "PlotFishIncome.lua"), "PlotFishIncome
 	require = function(value) return value end,
 }, { __index = getfenv() })))()
 local config = assert(loadstring(read(prefix .. "FishingConfig.lua")))()
+local liftMotion = assert(loadstring(read(prefix .. "FishingLiftMotion.lua")))()
 local modules = {
 	FishingConfig = config,
+	FishingLiftMotion = liftMotion,
+	FishInventoryData = {},
 	GuiUtil = harness.load("GuiUtil"),
 	ItemStatUtil = stats,
 	MutationDataUtil = mutationUtil,
-	NumberUtil = { FormatItemPriceCompact = tostring },
+	NumberUtil = { FormatItemPriceCompact = tostring, FormatNumberWithComma = tostring },
 	PlotFishIncome = income,
+	RarityConfig = harness.load("RarityConfig"),
 	RarityPresentation = harness.load("RarityPresentation"),
 }
+local Chance = assert(load(read(prefix .. "FishingChanceReveal.lua"), "FishingChanceReveal", "t", setmetatable({
+	script = { Parent = modules },
+	require = function(value) return value end,
+}, { __index = getfenv() })))()
+modules.FishingChanceReveal = Chance
 local dimensions = {}
 dimensions.__index = dimensions
 local function size(x, y)
@@ -93,7 +102,7 @@ local Info = assert(load(read(prefix .. "FishingSequenceInfo.lua"), "FishingSequ
 
 local function node(name, class, children)
 	local object = { Name = name, Visible = true, children = children or {}, Color = "original gradient", Scale = 1 }
-	object.Text, object.TextColor3 = "original text", "original color"
+	object.Text, object.TextColor3, object.TextTransparency = "original text", "original color", 0
 	object.Size, object.BackgroundTransparency = size(0.9, 1.1), 0.9
 	function object:IsA(expected)
 		return expected == class or expected == "GuiObject" and (class == "Frame" or class == "TextLabel")
@@ -114,6 +123,15 @@ local function node(name, class, children)
 		child.Parent = object
 	end
 	return object
+end
+function Chance.new(luck)
+	local root = node("CatchChance", "Frame")
+	root.Visible, root.Parent = false, luck.Parent
+	local value = { AbsoluteSize = size(200, 80), TextBounds = size(160, 60), UIGradient = {} }
+	return setmetatable({ root = root, value = value, scale = { Scale = 1 } }, Chance)
+end
+function Chance:_burst()
+	self.maxRevealScale = math.huge
 end
 local function row(name)
 	return node(name, "Frame", { Label = node("Label", "TextLabel") })
@@ -166,6 +184,7 @@ local function fixture(reuseScale, rarityVisible, tutorial)
 			Name = name, Rarity = row("Rarity"), Mutation = mutation, Income = row("Income"), Weight = row("Weight"),
 		}),
 	})
+	gui.AbsoluteSize = size(1920, 1080)
 	local owner = { originals = {}, createdScales = {}, sounds = {}, attempts = {}, enabled = true, phase = "Preparing" }
 	owner.options = { tutorial = tutorial }
 	owner.celebrations = {}
@@ -230,6 +249,44 @@ do
 	assert(info.newBadge.Position.X == 0.9, "Restore the placement of the catch badge")
 end
 
+do
+	local info = fixture()
+	local colors = {
+		{ "FFFFFF", "CDD2E1" },
+		{ "8CB4FF", "325AEB" },
+		{ "AAFF96", "32DC50" },
+		{ "D296FF", "8C32EB" },
+		{ "FFC86E", "FF821E" },
+		{ "FFFFFF", "FFD73C" },
+	}
+	local function checkColors(expected)
+		local gradient = info.valueGradient.Color
+		assert(info.glowGradient.Color == gradient, "Luck digits and glow must share their gradient")
+		assert(gradient[1] == harness.colors.fromHex(colors[expected][1])
+			and gradient[2] == harness.colors.fromHex(colors[expected][2]), "Unexpected cast progress gradient")
+	end
+
+	checkColors(1)
+	for tier = 2, #colors do
+		local threshold = (tier - 1) / #colors
+		info:SetCastProgress(threshold - 1e-6)
+		checkColors(tier - 1)
+		info:SetCastProgress(threshold)
+		checkColors(tier)
+	end
+	info:SetCastProgress(1)
+	checkColors(6)
+	info:SetCastProgress(0.4)
+	checkColors(3)
+	info:SetLuck(5000.25, 11, true)
+	assert(info.value.Text == "5000.25X", "Display the actual high multiplier")
+	checkColors(3)
+	info:SetLuck(12000.5, 11)
+	info:Update(12)
+	assert(info.value.Text == "12000.50X", "Display the later round multiplier")
+	checkColors(3)
+end
+
 for _, reuseScale in { false, true } do
 	local info, owner = fixture(reuseScale, reuseScale)
 	local authoredGradient = info.name:FindFirstChild("AuthoredGradient")
@@ -249,7 +306,7 @@ for _, reuseScale in { false, true } do
 	assert(info.from == previous, "Retarget from the displayed luck")
 	info:Update(11)
 	assert(info.shown == 5 and info.value.Text == "5.00X" and info.lastWhole == 5, "Reach the exact server luck after a frame gap")
-	assert(info.pulseAt == 11 and info.valueGradient.Color == info.glowGradient.Color, "Apply only the current integer's gradient and punch")
+	assert(info.pulseAt == 11 and info.valueGradient.Color == info.glowGradient.Color, "Pulse at the new integer and keep the digit and glow gradients in sync")
 	info:Update(11.6)
 	assert(info.scale.Scale == info.baseScale and info.glow.BackgroundTransparency == info.glowTransparency, "Finish the punch without leaving scale changes")
 	info:SetLuck(1000, 12)
@@ -270,18 +327,20 @@ for _, reuseScale in { false, true } do
 	info:SetLuck(8, 15.3, true)
 	assert(info.shown == 8, "Immediate updates must settle even when the animated target is unchanged")
 
-	local apex = config.Bite.FishLift.RiseTime
+	local timing = liftMotion.Timing(config.Bite, false)
 	local bite = { fishConfig = item, catchWeight = 33.75, mutationId = "Golden",
 		isNewDiscovery = true,
 		timeline = { phase = "Lifting", startedAt = 20 } }
-	info:Update(20 + apex - 0.01, bite)
-	assert(info.luck.Visible and not info.reveal.Visible, "Keep luck visible before the fish fully surfaces")
-	assert(#owner.celebrations == 0, "Do not celebrate before the fish reaches the reveal apex")
-	info:Update(20 + apex + 0.01, bite)
-	assert(#owner.celebrations == 1 and owner.celebrations[1] == bite, "Celebrate the revealed fish immediately")
-	info:Update(20 + apex + 0.02, bite)
+	for _, elapsed in { timing.riseEnd, timing.fallStart, timing.landAt - 0.01 } do
+		info:Update(20 + elapsed, bite)
+		assert(info.luck.Visible and not info.reveal.Visible, "Keep the catch card hidden while the fish is airborne")
+		assert(#owner.celebrations == 0, "Do not celebrate before the fish lands")
+	end
+	info:Update(20 + timing.landAt + 0.001, bite)
+	assert(#owner.celebrations == 1 and owner.celebrations[1] == bite, "Celebrate on the landing frame")
+	info:Update(20 + timing.landAt + 0.02, bite)
 	assert(#owner.celebrations == 1, "Repeated reveal frames must not repeat the celebration")
-	assert(not info.luck.Visible and info.reveal.Visible, "Switch the card at the exit apex")
+	assert(not info.luck.Visible and info.reveal.Visible, "Switch the card on landing")
 	assert(info.newBadge.Visible, "Show NEW for a server-confirmed first index discovery")
 	local weightRow = info.reveal.children.Weight
 	assert(info.name.Text == "TestFish", "Put the size title on the weight row")
@@ -497,4 +556,88 @@ do
 	assert(#owner.sounds == 1 and owner.sounds[1].name == "LuckWhole", "Resume luck-value cues after the throw")
 	info:Destroy()
 	for _, scale in owner.createdScales do scale:Destroy() end
+end
+
+do
+	local info, owner = fixture()
+	owner.phase = "Approaching"
+	local timing = { riseEnd = 0.4, fallStart = 0.5, landAt = 1.5, duration = 1.8 }
+	local bite = { wasVisible = true, appearanceFade = 1, fishConfig = item, catchWeight = 10,
+		timeline = { phase = "Approaching", startedAt = 11, struggleTime = 3, liftTiming = timing } }
+	info:Update(11, bite)
+	assert(info.luck.Visible and not info.chance, "Keep luck until the shadow becomes visible")
+	bite.appearanceFade = 0.99
+	info:Update(11.1, bite)
+	assert(not info.luck.Visible and info.chance and info.chance.root.Visible and info.chance.value.Text == "Rarity Score 1",
+		"Show Rarity Score 1 in the first visible shadow frame")
+	for index, phase in { "Holding", "Nibbling", "Bite" } do
+		bite.timeline.phase, bite.timeline.startedAt = phase, 11 + index
+		info:Update(11 + index, bite)
+		assert(info.chance.root.Visible and info.chance.value.Text == "Rarity Score 1", "Hold at Rarity Score 1 while waiting for the hook")
+	end
+	local priorSounds = #owner.sounds
+	bite.catchChanceDenominator = 999
+	bite.timeline.phase, bite.timeline.startedAt = "Struggling", 14.5
+	info:Update(14.5, bite)
+	assert(info.chance.value.Text == "Rarity Score 1", "Begin the confirmed roll at Rarity Score 1")
+	info:Update(15.5, bite)
+	local rolling = tonumber(info.chance.value.Text:match("^Rarity Score (%d+)$"))
+	assert(rolling and rolling > 1 and rolling < 999 and #owner.sounds == priorSounds + 1
+		and owner.sounds[#owner.sounds].name == "LuckTick", "Roll and tick after the confirmed hook")
+	bite.timeline.phase, bite.timeline.startedAt = "Lifting", 17.5
+	info:Update(19, bite)
+	assert(info.reveal.Visible and info.chance.root.Visible and info.chance.value.Text == "Rarity Score 999",
+		"Show the confirmed rarity score when the fish lands")
+	info:Update(20, { timeline = { phase = "Waiting", startedAt = 20 } })
+	assert(info.luck.Visible and not info.chance.root.Visible, "Start the next bite with luck restored")
+	info:Update(21, { wasVisible = true, appearanceFade = 0.99,
+		timeline = { phase = "Approaching", startedAt = 21 } })
+	assert(info.chance.value.Text == "Rarity Score 1", "Start a new shadow at Rarity Score 1")
+	info:Destroy()
+end
+
+for _, phase in { "Escaped", "Reeling", "Struggling" } do
+	local info = fixture()
+	local bite = { wasVisible = true, appearanceFade = 0, timeline = { phase = "Approaching", startedAt = 11 } }
+	info:Update(11, bite)
+	bite.timeline.phase, bite.timeline.startedAt = phase, 11.05
+	info:Update(11.05, bite)
+	assert(not info.chance.root.Visible and not info.luck.Visible, "Hide chance on " .. phase .. " without a confirmed catch")
+	info:Destroy()
+end
+
+do
+	local info = fixture()
+	local bite = { isEgg = true, wasVisible = true, appearanceFade = 0,
+		timeline = { phase = "Approaching", startedAt = 11 } }
+	info:Update(11, bite)
+	assert(info.luck.Visible and not info.chance, "Eggs keep their original display while approaching")
+	info:Destroy()
+end
+
+do
+	local info, owner = fixture()
+	local timing = { riseEnd = 0.4, fallStart = 0.5, landAt = 1.5, duration = 1.8 }
+	local bite = { fishConfig = item, catchWeight = 10,
+		timeline = { phase = "Lifting", startedAt = 20, liftTiming = timing } }
+	info:Update(20 + timing.landAt - 0.01, bite)
+	assert(not info.reveal.Visible and #owner.celebrations == 0, "Respect the bite's own landing time")
+	bite.timeline.phase, bite.timeline.startedAt = "Caught", 20 + timing.duration
+	info:Update(22, bite)
+	assert(info.reveal.Visible and #owner.celebrations == 1, "A skipped landing frame must still reveal")
+	info:Update(22.1, bite)
+	assert(#owner.celebrations == 1, "The Caught fallback must not repeat")
+	info:Destroy()
+end
+
+do
+	local info = fixture()
+	local timing = liftMotion.Timing(config.Bite, true)
+	local egg = { isEgg = true, fishConfig = item, catchWeight = 10,
+		timeline = { phase = "Lifting", startedAt = 20, liftTiming = timing } }
+	info:Update(20 + timing.riseEnd - 0.01, egg)
+	assert(not info.reveal.Visible, "Keep the egg card hidden before its reveal")
+	info:Update(20 + timing.riseEnd + 0.001, egg)
+	assert(info.reveal.Visible, "The egg keeps its rise-end reveal")
+	info:Destroy()
 end

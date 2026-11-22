@@ -101,6 +101,9 @@ for _, mirror in ipairs({ -1, 1 }) do
 		"Late entry replayed old cycles"
 	)
 	assert(not sampler:Sample("Struggling", 0, 3, mirror), "Expired struggle replayed")
+	local extended = sampler:Sample("Struggling", 0, 5.15, mirror, nil, nil, nil, nil, true)
+	assert(extended.token == 0 and math.abs(extended.position - 5.15 % cycle * struggleSpeed) < 1e-6,
+		"A pending catch must keep playing the same struggle track past the nominal lift")
 end
 assert(sampler:Sample("Lifting", 10, 11).name == "LiftFlop")
 assert(not sampler:Sample("Lifting", 10, 13), "Late entry played an expired lift")

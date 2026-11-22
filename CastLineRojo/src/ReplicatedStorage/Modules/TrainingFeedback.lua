@@ -1,4 +1,5 @@
 -- Presentation-only deltas. Rewards remain entirely server-owned.
+local Progress = require(script.Parent.TrainingProgress)
 local Feedback = {}
 
 function Feedback.GetChanges(previous, current, levels)
@@ -11,7 +12,7 @@ function Feedback.GetChanges(previous, current, levels)
 	end
 	local earned = current.xp - previous.xp
 	for level = previous.level, current.level - 1 do
-		local row = levels[tostring(level)] or levels[level]
+		local row = Progress.GetLevel(levels, level)
 		if not row then
 			return result
 		end

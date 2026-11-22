@@ -142,9 +142,12 @@ function Service.Client:NextRound(player, token, previousRound)
 		not state
 		or state.phase ~= "Waiting"
 		or previousRound ~= state.round
-		or now < math.max(state.landingAt, state.nextRoundAt or 0)
 	then
 		return failure("Opening round unavailable")
+	end
+	local nextRoundAt = math.max(state.landingAt, state.nextRoundAt or 0)
+	if now < nextRoundAt then
+		return { ok = false, code = "RoundNotReady", retryAfter = nextRoundAt - now }
 	end
 	-- Repeating a request cannot skip the server's scheduled bite or mint more rewards.
 	state.nextRoundAt = now + 0.8
@@ -172,6 +175,7 @@ function Service.Client:NextRound(player, token, previousRound)
 		state.weight
 	)
 	state.round += 1
+	state.hookResult = nil
 	state.biteAt, state.biteEndsAt = biteAt, biteEndsAt
 	if not state.preview and Analytics:IsNewPlayer(player) then
 		Analytics:Step(player, "IntroLanded")
@@ -191,36 +195,29 @@ function Service.Client:NextRound(player, token, previousRound)
 		weight = state.weight,
 		startedAt = startedAt,
 		readyAt = readyAt,
+		biteAt = biteAt,
+		biteEndsAt = biteEndsAt,
 		seed = seed,
 		motionSeed = motionSeed,
 		retryAt = math.huge,
 		luck = 1,
+		sentAt = Workspace:GetServerTimeNow(),
 	}
 end
 
-function Service.Client:Hook(player, token, round)
-	local state = current(player, token)
-	local now = Workspace:GetServerTimeNow()
-	if
-		not state
-		or state.phase ~= "Waiting"
-		or state.round == 0
-		or state.round ~= round
-		or not FishingConfig.GetHookTime(now, state.biteAt, state.biteEndsAt, FishingConfig.GetFishingInputDelay(player))
-	then
-		return failure("Missed the bite")
-	end
-	state.phase = "Claiming" -- Claim before ItemGrantUtil, which may yield.
+local function claimHook(player, state)
 	if not state.preview then
 		Analytics:Step(player, "IntroBite")
 	end
 	local fish = Fishes[Config.StarterFishId]
 	local profile = PlayerDataService:GetProfile(player)
 	if not profile then
+		state.phase = "Waiting"
 		return failure("Opening data unavailable")
 	end
 	if not state.preview then
 		if (profile.Data.FishingIntroVersion or 0) >= Config.Version then
+			state.phase = "Waiting"
 			return failure("Opening reward already received")
 		end
 		claiming[player] = true
@@ -265,6 +262,42 @@ function Service.Client:Hook(player, token, round)
 	end
 	state.phase = "Caught"
 	return { ok = true, weight = state.weight, catchId = fish.FishID, catchKind = "Fish", isNewDiscovery = true }
+end
+
+function Service.Client:Hook(player, token, round, pressedAt)
+	local state = current(player, token)
+	local now = Workspace:GetServerTimeNow()
+	if
+		not state
+		or state.phase ~= "Waiting"
+		or state.round == 0
+		or state.round ~= round
+	then
+		return failure("Missed the bite")
+	end
+	if not FishingConfig.GetHookTime(now, pressedAt, state.biteAt, state.biteEndsAt, player:GetNetworkPing()) then
+		local result = failure("Missed the bite")
+		state.hookResult = result
+		return result
+	end
+
+	-- A duplicate request cannot grant again while this call is waiting for the backpack.
+	state.hookResult = nil
+	state.phase = "Claiming"
+	local result = claimHook(player, state)
+	state.hookResult = result
+	return result
+end
+
+function Service.Client:GetHookResult(player, token, round)
+	local state = current(player, token)
+	if not state or state.round == 0 or state.round ~= round then
+		return { status = "Unknown" }
+	end
+	if state.hookResult then
+		return { status = if state.hookResult.ok then "Succeeded" else "Rejected", result = state.hookResult }
+	end
+	return { status = if state.phase == "Claiming" then "Pending" else "Unknown" }
 end
 
 function Service.Client:Cancel(player, token, continued)

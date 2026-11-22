@@ -144,7 +144,6 @@ local function acquireFrame(layer)
 		corner.CornerRadius = UDim.new(0, 2)
 		corner.Parent = frame
 
-		frame.ZIndex = layer.zIndex
 		frame.Parent = layer.container
 	end
 
@@ -176,6 +175,7 @@ local function syncParticleFrame(layer, particle)
 		transparency = (progress - 0.8) / 0.2
 	end
 
+	frame.ZIndex = layer.zIndex
 	frame.Position = UDim2.fromScale(particle.position.X, particle.position.Y)
 	frame.Size = UDim2.fromOffset(particle.size.X, particle.size.Y)
 	frame.Rotation = particle.rotation
@@ -353,7 +353,7 @@ function UiConfettiUtil.clear(parentGui)
 	table.clear(layer.framePool)
 end
 
-function UiConfettiUtil.play(parentGui, preset)
+function UiConfettiUtil.play(parentGui, preset, options)
 	if not parentGui then
 		return
 	end
@@ -361,6 +361,9 @@ function UiConfettiUtil.play(parentGui, preset)
 	preset = preset or "celebration"
 
 	local layer = getOrCreateLayer(parentGui)
+	local startDelay = options and options.startDelay or 0
+	layer.zIndex = options and options.zIndex or DEFAULT_ZINDEX
+	layer.container.ZIndex = layer.zIndex
 	if preset == "sideCannons" then
 		layer.gravity = SIDE_CANNONS_GRAVITY
 	else
@@ -369,13 +372,21 @@ function UiConfettiUtil.play(parentGui, preset)
 	layer.sequenceToken = layer.sequenceToken + 1
 	local sequenceToken = layer.sequenceToken
 
-	task.defer(function()
+	local function playSequence()
+		if layer.sequenceToken ~= sequenceToken then
+			return
+		end
 		if preset == "sideCannons" then
 			playSideCannonsSequence(layer, sequenceToken)
 		else
 			playCelebrationSequence(layer, sequenceToken)
 		end
-	end)
+	end
+	if startDelay > 0 then
+		task.delay(startDelay, playSequence)
+	else
+		task.defer(playSequence)
+	end
 end
 
 return UiConfettiUtil

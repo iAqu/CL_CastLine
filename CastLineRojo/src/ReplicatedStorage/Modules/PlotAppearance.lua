@@ -1,3 +1,5 @@
+local FenceGeometry = require(script.Parent.PlotFenceGeometry)
+
 local PlotAppearance = {}
 local GROUPS = { "Entrance", "FrontLeft", "FrontRight", "Back", "Left", "Right" }
 
@@ -14,7 +16,7 @@ function PlotAppearance.Preflight(plot: Instance, config)
 		end
 	end
 	for _, part in fence:GetDescendants() do
-		if part:IsA("BasePart") and not part:GetAttribute("ExtensionPost") then
+		if part:IsA("BasePart") and not part:GetAttribute("ExtensionPost") and not FenceGeometry.IsGenerated(part) then
 			if
 				typeof(part:GetAttribute("BaseLocalCFrame")) ~= "CFrame"
 				or typeof(part:GetAttribute("BaseSize")) ~= "Vector3"
@@ -23,8 +25,14 @@ function PlotAppearance.Preflight(plot: Instance, config)
 			end
 		end
 	end
-	if not config.PostColor:match("^#%x%x%x%x%x%x$") or not config.RailColor:match("^#%x%x%x%x%x%x$") then
+	local function validColor(value)
+		return typeof(value) == "string" and value:match("^#%x%x%x%x%x%x$") ~= nil
+	end
+	if not validColor(config.PostColor) or not validColor(config.RailColor) then
 		return false, "Fence colors are invalid."
+	end
+	if not FenceGeometry.HasStyle(config.FenceStyle) then
+		return false, "Your fence style is unavailable."
 	end
 	return true
 end
@@ -48,7 +56,7 @@ function PlotAppearance.ApplyLayout(plot: Instance, config)
 	end
 	local corners = {}
 	for _, part in fence:GetDescendants() do
-		if not part:IsA("BasePart") then
+		if not part:IsA("BasePart") or FenceGeometry.IsGenerated(part) then
 			continue
 		end
 		local base = part:GetAttribute("BaseLocalCFrame")
@@ -66,7 +74,8 @@ function PlotAppearance.ApplyLayout(plot: Instance, config)
 		elseif mode == "BackRail" then
 			extra = growth * 2
 		end
-		part.CFrame = ground.CFrame * CFrame.new(dx, 0, 0) * base
+		local elevation = ground.CFrame:PointToObjectSpace(part.CFrame.Position).Y
+		part.CFrame = ground.CFrame * CFrame.new(dx, elevation - base.Y, 0) * base
 		part.Size = size + Vector3.new(extra, 0, 0)
 		if part:GetAttribute("FenceCorner") then
 			table.insert(corners, part)
@@ -80,7 +89,7 @@ function PlotAppearance.ApplyLayout(plot: Instance, config)
 			added:SetAttribute("ExtensionPost", true)
 			added:SetAttribute("FenceCorner", nil)
 			clearSparkles(added)
-			added.CFrame = ground.CFrame * CFrame.new(sign * index * 10, 0, 0) * corner:GetAttribute("BaseLocalCFrame")
+			added.CFrame = corner.CFrame + ground.CFrame.RightVector * (sign * (index * 10 - growth))
 			added.Parent = corner.Parent
 		end
 	end
@@ -105,14 +114,19 @@ function PlotAppearance.ApplyLayout(plot: Instance, config)
 end
 
 function PlotAppearance.ApplyStyle(plot: Instance, config)
+	local geometry = FenceGeometry.Build(plot, config.FenceStyle)
+	FenceGeometry.Apply(plot, config.FenceStyle, geometry)
 	for _, part in plot.Fence:GetDescendants() do
 		if not part:IsA("BasePart") then
+			continue
+		end
+		clearSparkles(part)
+		if part.Transparency >= 1 then
 			continue
 		end
 		part.Color =
 			Color3.fromHex(if part:GetAttribute("FenceRole") == "Rail" then config.RailColor else config.PostColor)
 		part.Reflectance = config.Reflectance
-		clearSparkles(part)
 		if part:GetAttribute("FenceCorner") and config.SparkleColorA and config.SparkleColorB then
 			local emitter = Instance.new("ParticleEmitter")
 			emitter.Name = "FenceSparkles"
@@ -132,8 +146,13 @@ end
 function PlotAppearance.Apply(plot: Instance, config)
 	local ok, message = PlotAppearance.Preflight(plot, config)
 	assert(ok, message)
-	-- Changing only the skin must not rebuild posts or touch fish boundaries.
-	if plot:GetAttribute("PlotWidth") ~= config.Width or plot:GetAttribute("PlotDepth") ~= config.Depth then
+	local ground = plot.Ground
+	if
+		ground.Size.X ~= config.Width
+		or ground.Size.Z ~= config.Depth
+		or plot:GetAttribute("PlotWidth") ~= config.Width
+		or plot:GetAttribute("PlotDepth") ~= config.Depth
+	then
 		PlotAppearance.ApplyLayout(plot, config)
 	end
 	PlotAppearance.ApplyStyle(plot, config)

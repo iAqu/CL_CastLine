@@ -23,7 +23,7 @@ local function findLabel(frame: Instance, name: string): TextLabel?
 	return if label and label:IsA("TextLabel") then label else nil
 end
 
-function FishTitleUtil.Create(titleGui: Instance?, item: FishTitleItem, mutationId: unknown, owner: Player?, actualWeight: number?): BillboardGui?
+function FishTitleUtil.Create(titleGui: Instance?, item: FishTitleItem, mutationId: unknown, owner: Player?, actualWeight: number?, inPlot: boolean?): BillboardGui?
 	local template = titleGui and titleGui:FindFirstChild("FishTitleTemplate")
 	if not template or not template:IsA("BillboardGui") then
 		return nil
@@ -57,13 +57,24 @@ function FishTitleUtil.Create(titleGui: Instance?, item: FishTitleItem, mutation
 		local function refreshIncome()
 			local base = owner and owner:GetAttribute(PlotFishIncome.BEST_CPS_ATTRIBUTE)
 			local cpsPrice = PlotFishIncome.GetCpsPrice(item, MutationDataUtil.GetEarnCashRate(normalizedId), base, actualWeight)
+			if inPlot and owner then
+				cpsPrice *= owner:GetAttribute(PlotFishIncome.MULTIPLIER_ATTRIBUTE) or 1
+			end
 			cpsLabel.Text = "$" .. NumberUtil.FormatItemPriceCompact(cpsPrice) .. "/s" .. ratioText
 		end
 		refreshIncome()
-		if usesPercentageCps and owner then
-			local changed = owner:GetAttributeChangedSignal(PlotFishIncome.BEST_CPS_ATTRIBUTE):Connect(refreshIncome)
+		if owner and (usesPercentageCps or inPlot) then
+			local baseChanged = if usesPercentageCps
+				then owner:GetAttributeChangedSignal(PlotFishIncome.BEST_CPS_ATTRIBUTE):Connect(refreshIncome) else nil
+			local multiplierChanged = if inPlot
+				then owner:GetAttributeChangedSignal(PlotFishIncome.MULTIPLIER_ATTRIBUTE):Connect(refreshIncome) else nil
 			title.Destroying:Once(function()
-				changed:Disconnect()
+				if baseChanged then
+					baseChanged:Disconnect()
+				end
+				if multiplierChanged then
+					multiplierChanged:Disconnect()
+				end
 			end)
 		end
 		cpsLabel.Visible = true

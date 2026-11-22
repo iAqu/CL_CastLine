@@ -5,14 +5,18 @@ local RunService = game:GetService("RunService")
 
 local Config = require(ReplicatedStorage.Modules.FishingBaitConfig)
 local Progression = require(ReplicatedStorage.Modules.FishingProgression)
+local Signal = require(ReplicatedStorage.Packages.Signal)
 local PurchaseData = require(ReplicatedFirst.Data.PurchaseData)
 local PlayerDataService = require(script.Parent.PlayerDataService)
 local Policy = require(script.Parent.PaidItemPolicy)
 local Persistence = require(script.Parent.PurchasePersistence)
+local Checkout = require(script.Parent.PurchaseCheckout)
 
 local Purchases = {}
 local opening = {}
 local preparing = {}
+local receiptBusy = {}
+local checkoutKind = "Bait"
 -- Only locally opened prompts may clear a persisted intent on cancellation.
 local openPrompts = setmetatable({}, { __mode = "k" })
 local canceledPrompts = setmetatable({}, { __mode = "k" })
@@ -82,6 +86,12 @@ local function pendingIntent(player, profile, progress)
 	return intent, nil
 end
 
+function Purchases.PrewarmPolicy(player, rod)
+	if Purchases.GetProductId() and rod.BaitsSelect[Config.PaidTier] then
+		task.defer(Policy.Get, player)
+	end
+end
+
 local function preparePrompt(player, rodId, token, isCurrent)
 	local productId = Purchases.GetProductId()
 	local profile = getProfile(player)
@@ -115,13 +125,33 @@ local function preparePrompt(player, rodId, token, isCurrent)
 	if Purchases.GetCredits(profile, progress, rodId) > 0 then
 		return false, "Bait ready. Select it again to use it."
 	end
+	local snapshot = { ProductId = productId, RodId = rodId, SessionToken = token }
+	local function selectionIsCurrent()
+		return getProfile(player) == profile and isCurrent()
+	end
+	if not progress.PendingBaitPurchase and Checkout.WritesEnabled() then
+		return Checkout.Open(checkoutKind, player, snapshot, selectionIsCurrent, function(previous)
+			return previous.ProductId == productId and previous.RodId == rodId and previous.SessionToken == token
+		end)
+	end
+	local legacyAllowed, reason = Checkout.CanUseLegacy(checkoutKind, player)
+	if not legacyAllowed or not selectionIsCurrent() then
+		return false, reason or "Fishing selection unavailable."
+	end
+	unresolved, canceled = pendingIntent(player, profile, progress)
+	if unresolved or getSavedRevision(profile) < (progress.ReceiptRevision or 0) then
+		return false, PROCESSING_MESSAGE
+	end
+	if Purchases.GetCredits(profile, progress, rodId) > 0 then
+		return false, "Bait ready. Select it again to use it."
+	end
 	local intent = canceled and canceled.Intent
 	local reopening = intent and os.clock() < canceled.Expires and intent.ProductId == productId
 		and intent.RodId == rodId and intent.SessionToken == token
 	canceledPrompts[player] = nil
 	local saved = true
 	if not reopening then
-		intent = { ProductId = productId, RodId = rodId, SessionToken = token }
+		intent = snapshot
 		progress.PendingBaitPurchase = intent
 		preparing[player] = intent
 		saved = saveThrough(profile, markChanged(profile, progress))
@@ -158,6 +188,7 @@ function Purchases.Prompt(player, rodId, token, isCurrent)
 end
 
 function Purchases.OnPromptFinished(player, productId, purchased)
+	Checkout.Finish(checkoutKind, player, productId, purchased)
 	local intent = player and openPrompts[player]
 	if not intent or intent.ProductId ~= productId then
 		return
@@ -192,7 +223,7 @@ function Purchases.ClearCanceledPrompt(player, profile)
 	return true
 end
 
-function Purchases.Process(player, receipt)
+local function processReceipt(player, receipt)
 	local profile = getProfile(player)
 	if not profile or player.UserId ~= receipt.PlayerId or not Purchases.IsProduct(receipt.ProductId) then
 		return false
@@ -200,6 +231,9 @@ function Purchases.Process(player, receipt)
 	local progress = Progression.Ensure(profile.Data)
 	local added = false
 	if not progress.Receipts[receipt.PurchaseId] then
+		if progress.CheckoutReview and progress.CheckoutReview[receipt.PurchaseId] then
+			return false
+		end
 		if receipt.ProductPurchaseChannel == Enum.ProductPurchaseChannel.ExperienceDetailsPage then
 			warn("Fishing bait receipt originated outside the fishing picker: " .. tostring(receipt.PurchaseId))
 			return false
@@ -209,7 +243,19 @@ function Purchases.Process(player, receipt)
 		if (canceled and canceled.Intent == intent) or (intent and preparing[player] == intent) then
 			return false
 		end
+		local checkout
+		if not intent then
+			local available
+			checkout, available = Checkout.Bind(checkoutKind, player, receipt)
+			if not available or getProfile(player) ~= profile then
+				return false
+			end
+			intent = checkout and checkout.Snapshot
+		end
 		if not intent or intent.ProductId ~= receipt.ProductId then
+			progress.CheckoutReview = progress.CheckoutReview or {}
+			progress.CheckoutReview[receipt.PurchaseId] = receipt.ProductId
+			requestSave(profile)
 			warn("Fishing bait receipt has no matching purchase intent: " .. tostring(receipt.PurchaseId))
 			return false
 		end
@@ -217,34 +263,66 @@ function Purchases.Process(player, receipt)
 		if openPrompts[player] == intent then
 			openPrompts[player] = nil
 		end
-		progress.PendingBaitPurchase = nil
+		if checkout then
+			progress.ReceiptCheckout = { PurchaseId = receipt.PurchaseId, Id = checkout.Id }
+		else
+			progress.PendingBaitPurchase = nil
+		end
 		progress.BaitCreditRevisions = progress.BaitCreditRevisions or {}
 		progress.BaitCreditRevisions[intent.RodId] = markChanged(profile, progress)
 	end
 	if not saveThrough(profile, progress.ReceiptRevision or 0) then
 		return false
 	end
+	local checkout = progress.ReceiptCheckout
+	if checkout and checkout.PurchaseId == receipt.PurchaseId and not Checkout.Complete(checkoutKind, receipt, checkout.Id) then
+		return false
+	end
 	return true, added
 end
 
-function Purchases.Consume(profile, rodId)
-	if not profile:IsActive() then
+function Purchases.Process(player, receipt)
+	if not player or receiptBusy[player] then
 		return false
+	end
+	receiptBusy[player] = true
+	local ok, granted, added = pcall(processReceipt, player, receipt)
+	receiptBusy[player] = nil
+	if not ok then
+		warn("Fishing bait receipt failed", receipt.PurchaseId, granted)
+		return false
+	end
+	return granted, added
+end
+
+function Purchases.BeginConsume(profile, rodId)
+	if not profile:IsActive() then
+		return nil
 	end
 	local progress = Progression.Ensure(profile.Data)
 	if Purchases.GetCredits(profile, progress, rodId) < 1 then
-		return false
+		return nil
 	end
 	progress.Credits[rodId] -= 1
-	if saveThrough(profile, markChanged(profile, progress)) then
-		return true
+	local revision = markChanged(profile, progress)
+	local completed = Signal.new()
+	local saved
+	task.defer(function()
+		saved = saveThrough(profile, revision)
+		if not saved and profile:IsActive() then
+			progress.Credits[rodId] += 1
+			markChanged(profile, progress)
+			requestSave(profile)
+		end
+		completed:Fire()
+		completed:Destroy()
+	end)
+	return function()
+		if saved == nil then
+			completed:Wait()
+		end
+		return if saved and profile:IsActive() then profile else nil
 	end
-	if profile:IsActive() then
-		progress.Credits[rodId] += 1
-		markChanged(profile, progress)
-		requestSave(profile)
-	end
-	return false
 end
 
 return Purchases

@@ -1,6 +1,8 @@
 local Config = require(script.Parent.FishingConfig)
+local FishingChanceReveal = require(script.Parent.FishingChanceReveal)
 local GuiUtil = require(script.Parent.GuiUtil)
 local ItemStatUtil = require(script.Parent.ItemStatUtil)
+local LiftMotion = require(script.Parent.FishingLiftMotion)
 local MutationDataUtil = require(script.Parent.MutationDataUtil)
 local NumberUtil = require(script.Parent.NumberUtil)
 local PlotFishIncome = require(script.Parent.PlotFishIncome)
@@ -10,48 +12,12 @@ local FishingSequenceInfo = {}
 FishingSequenceInfo.__index = FishingSequenceInfo
 local MUTATION_LABEL_IDS = { "Diamond", "Golden", "Mint", "Rainbow" }
 
--- Throw Food 的整数幸运值渐变档位。
 local LUCK_COLORS = {
 	{ "FFFFFF", "CDD2E1" },
-	{ "FFF58C", "FFCD28" },
-	{ "FFC86E", "FF821E" },
-	{ "FF8282", "EB2828" },
-	{ "FF96E6", "EB32BE" },
-	{ "D296FF", "8C32EB" },
 	{ "8CB4FF", "325AEB" },
-	{ "96FFFF", "28D2E6" },
 	{ "AAFF96", "32DC50" },
-	{ "FFFFFF", "141419" },
-	{ "468CFF", "A028E6" },
-	{ "FFE63C", "E6281E" },
-	{ "3CE678", "1EC8E6" },
-	{ "FF78C8", "FF9628" },
-	{ "FFD750", "FFFFFF" },
-	{ "BE5AFF", "190A28" },
-	{ "B4FAFF", "5A96FF" },
-	{ "B4FF50", "FFBE28" },
-	{ "FF5A3C", "280F0F" },
-	{ "3CD2BE", "143282" },
-	{ "FF50DC", "3C64FF" },
-	{ "FFA03C", "6E3C1E" },
-	{ "E6EBF5", "5A78C8" },
-	{ "FFFA78", "3CC85A" },
-	{ "DC1E46", "FFAAD2" },
-	{ "9646FF", "3CE6FF" },
-	{ "FFFFFF", "FF5050" },
-	{ "28E6A0", "FFF05A" },
-	{ "5A64FF", "FFFFFF" },
-	{ "FF8C28", "141419" },
-	{ "FFC8F0", "822878" },
-	{ "78FF3C", "143C1E" },
-	{ "3CF0FF", "FF3CC8" },
-	{ "FFF0C8", "B46E28" },
-	{ "1E1E78", "FFDC50" },
-	{ "FF6428", "3CDCFF" },
-	{ "C8FFC8", "2878FF" },
-	{ "FF3C3C", "FFE63C" },
-	{ "E6C8FF", "280A3C" },
-	{ "FFFADC", "FFA0DC" },
+	{ "D296FF", "8C32EB" },
+	{ "FFC86E", "FF821E" },
 	{ "FFFFFF", "FFD73C" },
 }
 
@@ -127,14 +93,19 @@ function FishingSequenceInfo.new(gui, owner, initialLuck, now)
 	end
 	luck.Visible, reveal.Visible = self.showLuck, false
 	self.value.TextColor3 = Color3.new(1, 1, 1)
-	self:_applyWhole(1)
+	self:SetCastProgress(0)
 	self.value.Text = "1.00X"
 	self:SetLuck(initialLuck or 1, now)
 	return self
 end
 
-function FishingSequenceInfo:_applyWhole(whole)
-	local colors = LUCK_COLORS[math.clamp(whole, 1, #LUCK_COLORS)]
+function FishingSequenceInfo:SetCastProgress(progress: number)
+	local tier = math.min(math.floor(math.clamp(progress, 0, 1) * #LUCK_COLORS) + 1, #LUCK_COLORS)
+	if tier == self.castColorTier then
+		return
+	end
+	self.castColorTier = tier
+	local colors = LUCK_COLORS[tier]
 	local gradient = ColorSequence.new(Color3.fromHex(colors[1]), Color3.fromHex(colors[2]))
 	self.valueGradient.Color, self.glowGradient.Color = gradient, gradient
 end
@@ -171,7 +142,6 @@ function FishingSequenceInfo:_updateLuck(now)
 	self.lastWhole, self.lastStep = whole, step
 	if wholeChanged then
 		self.pulseAt = now
-		self:_applyWhole(whole)
 	end
 	if self.audioReady and self.luck.Visible and self.owner.phase ~= "Preparing" and (wholeChanged or stepChanged) then
 		-- 每次采样只提示当前档位，整数优先；静音时也消费变化，不延迟补播。
@@ -228,7 +198,7 @@ function FishingSequenceInfo.FillReveal(reveal, item, weight, mutation, isNew)
 	child(incomeRow, "Label", "TextLabel").Text = "$" .. NumberUtil.FormatItemPriceCompact(income) .. "/s"
 end
 
-function FishingSequenceInfo:_showCatch(bite)
+function FishingSequenceInfo:_showCatch(bite, confettiOptions)
 	if self.revealedBite == bite then
 		return
 	end
@@ -245,7 +215,7 @@ function FishingSequenceInfo:_showCatch(bite)
 	end
 	GuiUtil.SetRarityGradient(self.name, item.Rarity or "Common")
 	self.revealedBite = bite
-	self.owner:_celebrateCatch(bite)
+	self.owner:_celebrateCatch(bite, confettiOptions)
 end
 
 function FishingSequenceInfo:Update(now, bite)
@@ -253,15 +223,39 @@ function FishingSequenceInfo:Update(now, bite)
 		return
 	end
 	local timeline = bite and bite.timeline
-	local revealAt = if timeline and timeline.liftTiming then timeline.liftTiming.riseEnd
-		else (if bite and bite.isEgg then Config.Bite.LiftTime * Config.Bite.LiftRiseEnd else Config.Bite.FishLift.RiseTime)
-	local revealed = timeline and (timeline.phase == "Caught"
-		or (timeline.phase == "Lifting" and now - timeline.startedAt >= revealAt))
-	self.luck.Visible, self.reveal.Visible = self.showLuck and not revealed, revealed == true
+	local phase = timeline and timeline.phase
+	local timing = timeline and (timeline.liftTiming or LiftMotion.Timing(Config.Bite, bite.isEgg))
+	local revealAt = if timing then (if bite.isEgg then timing.riseEnd else timing.landAt) else 0
+	local revealed = phase == "Caught" or (phase == "Lifting" and now - timeline.startedAt >= revealAt)
+	if self.shadowBite ~= bite then
+		self.shadowBite, self.shadowSeen = bite, false
+	end
+	if bite and not bite.isEgg and bite.wasVisible and (bite.appearanceFade or 0) < 1 then
+		self.shadowSeen = true
+	end
+	local target = FishingChanceReveal.GetTarget(bite, revealed)
+	local preview = self.shadowSeen
+		and (phase == "Approaching" or phase == "Holding" or phase == "Nibbling" or phase == "Bite")
+	self.luck.Visible, self.reveal.Visible = self.showLuck and not revealed and not target and not self.shadowSeen, revealed
 	self:_updateLuck(now)
+	if preview or target then
+		self.chance = self.chance or FishingChanceReveal.new(self.luck)
+		local tickProgress, revealStrength, strongReveal = self.chance:Update(now, bite, target, revealed, revealAt)
+		if tickProgress then
+			self.owner:_sound("LuckTick", 0.22 + 0.12 * tickProgress, 0.92 + 0.8 * tickProgress)
+		elseif revealStrength then
+			local impact = Config.Sounds.CatchRevealImpact
+			self.owner:_sound("CatchRevealImpact", impact.Volume + 0.34 * revealStrength, impact.Pitch - 0.28 * revealStrength)
+			if strongReveal then
+				self.owner:_sound("CatchRevealBurst", Config.Sounds.CatchRevealBurst.Volume + 0.15 * revealStrength)
+			end
+		end
+	elseif self.chance then
+		self.chance:Hide()
+	end
 	self.audioReady = true
 	if revealed then
-		self:_showCatch(bite)
+		self:_showCatch(bite, if target then self.chance.confettiOptions else nil)
 	else
 		self.revealedBite = nil
 		if self.newBadge then
@@ -271,6 +265,10 @@ function FishingSequenceInfo:Update(now, bite)
 end
 
 function FishingSequenceInfo:Destroy()
+	if self.chance then
+		self.chance:Destroy()
+		self.chance = nil
+	end
 	if self.originalNameGradients then
 		GuiUtil.ClearGradeint(self.name)
 		for _, gradient in self.originalNameGradients do

@@ -4,13 +4,18 @@ local Policy = {}
 local cache = {}
 local pending = {}
 
+function Policy.GetCached(player)
+	local entry = cache[player]
+	return if entry and entry.Expires > os.clock() then entry.Value else nil
+end
+
 function Policy.Get(player)
 	if not player or player.Parent ~= Players then
 		return nil
 	end
-	local entry = cache[player]
-	if entry and entry.Expires > os.clock() then
-		return entry.Value
+	local cached = Policy.GetCached(player)
+	if cached then
+		return cached
 	end
 	local waiters = pending[player]
 	if waiters then
@@ -33,14 +38,14 @@ function Policy.Get(player)
 	return value
 end
 
-function Policy.CanPurchase(buyer, recipient)
+function Policy.CanPurchase(buyer, recipient, unavailableMessage: string?)
 	local buyerPolicy = Policy.Get(buyer)
 	local recipientPolicy = if buyer == recipient then buyerPolicy else Policy.Get(recipient)
 	if not buyerPolicy or not recipientPolicy then
 		return false, "Purchase availability could not be checked. Please try again.", true
 	end
 	if buyerPolicy.ArePaidRandomItemsRestricted ~= false or recipientPolicy.ArePaidRandomItemsRestricted ~= false then
-		return false, "Paid eggs are unavailable for this player."
+		return false, unavailableMessage or "Paid eggs are unavailable for this player."
 	end
 	if
 		buyer ~= recipient

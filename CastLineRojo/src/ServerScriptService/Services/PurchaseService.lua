@@ -12,8 +12,12 @@ local LogHelper = require(ReplicatedStorage.Modules.LogHelper)
 local PotionFeatureHelper = require(ReplicatedStorage.Modules.PotionFeatureHelper)
 local FishingBaitPurchases = require(script.Parent.FishingBaitPurchases)
 local ProductPurchases = require(script.Parent.ProductPurchases)
+local Checkout = require(script.Parent.PurchaseCheckout)
 local PaidItemPolicy = require(script.Parent.PaidItemPolicy)
 local PaidEggConfig = require(ReplicatedStorage.Modules.PaidEggConfig)
+local CashPack = require(ReplicatedStorage.Modules.CashPack)
+local PlotFishIncome = require(ReplicatedStorage.Modules.PlotFishIncome)
+local ULTRA_LUCK_ID = "MegaLuck"
 
 type Receipt = {PlayerId: number, PlaceIdWherePurchased: number, ProductId: number,
     PurchaseId: string, CurrencySpent: number, CurrencyType: Enum.CurrencyType}
@@ -40,6 +44,7 @@ local PurchaseService = Knit.CreateService {
     PurchaseSuccess = Signal.new(),
 
     _PlayerGifted = {},     -- {player userId: gifted player userId}
+    _UltraLuckPreview = {},
 }
 
 function PurchaseService.Client:SelectGiftedPlayer(player: Player, giftedPlayer: Player)
@@ -115,7 +120,52 @@ function PurchaseService:GetPolicyCache(player: Player) : {[string]: any}
     return PaidItemPolicy.Get(player) or {}
 end
 
-function PurchaseService:PromptPurchase(player: Player, purchaseId: string, forSelf: boolean?)
+local function getRecipient(service, player, forSelf)
+    local recipientId = if forSelf == true then nil else service._PlayerGifted[player.UserId]
+    if recipientId and recipientId ~= player.UserId then
+        return Players:GetPlayerByUserId(recipientId)
+    end
+    return player
+end
+
+local function getUltraLuckRecipient(service, player, forSelf)
+    local recipient = getRecipient(service, player, forSelf)
+    return if forSelf == true or recipient ~= player then recipient else nil
+end
+
+function PurchaseService.Client:GetUltraLuckOdds(player: Player, forSelf: boolean?)
+    local service = self.Server
+    service._UltraLuckPreview[player] = nil
+    local recipient = getUltraLuckRecipient(service, player, forSelf)
+    if not recipient then
+        return { ok = false, message = "Player not found!" }
+    end
+    local allowed, message = PaidItemPolicy.CanPurchase(player, recipient, "Ultra Luck is unavailable for this player.")
+    if getUltraLuckRecipient(service, player, forSelf) ~= recipient then
+        return { ok = false, message = "Gift recipient changed. Reopen the details." }
+    end
+    local result = Knit.GetService("FishingService"):GetUltraLuckOdds(recipient)
+    local profile = PlayerDataService:GetProfile(recipient)
+    if result.ok and profile then
+        local owned = profile.Data.GamePasses[ULTRA_LUCK_ID] == true
+        result.recipientId = recipient.UserId
+        result.recipient = if recipient ~= player then recipient.DisplayName else nil
+        result.canBuy = allowed and not owned
+        result.message = message or (if owned then "Already owned." else nil)
+        if result.canBuy then
+            service._UltraLuckPreview[player] = recipient
+        end
+    end
+    return result
+end
+
+function PurchaseService:PromptPurchase(
+    player: Player,
+    purchaseId: string,
+    forSelf: boolean?,
+    disclosedRecipientId: number?,
+    displayedAmount: number?
+)
     if type(purchaseId) ~= "string" then return end
     if FishingBaitPurchases.IsPurchaseId(purchaseId) then
         self.Client.PromptPurchaseFail:Fire(player, "Select the bait while fishing to buy it.")
@@ -142,10 +192,19 @@ function PurchaseService:PromptPurchase(player: Player, purchaseId: string, forS
         return
     end
 
-    local recipient = player
-    local recipientId = if forSelf == true then nil else self._PlayerGifted[player.UserId]
-    if recipientId and recipientId ~= player.UserId then
-        recipient = Players:GetPlayerByUserId(recipientId)
+    local recipient = getRecipient(self, player, forSelf)
+    if purchaseId == ULTRA_LUCK_ID then
+        recipient = getUltraLuckRecipient(self, player, forSelf)
+        if not recipient or disclosedRecipientId ~= recipient.UserId or self._UltraLuckPreview[player] ~= recipient then
+            self.Client.PromptPurchaseFail:Fire(player, "Open Ultra Luck Details before buying.")
+            return
+        end
+        self._UltraLuckPreview[player] = nil
+        local allowed, message = PaidItemPolicy.CanPurchase(player, recipient, "Ultra Luck is unavailable for this player.")
+        if not allowed or getUltraLuckRecipient(self, player, forSelf) ~= recipient then
+            self.Client.PromptPurchaseFail:Fire(player, message or "Gift recipient changed. Reopen the details.")
+            return
+        end
     end
     local data = recipient and PlayerDataService:GetAllData(recipient)
     if not data then
@@ -166,7 +225,16 @@ function PurchaseService:PromptPurchase(player: Player, purchaseId: string, forS
         MarketplaceService:PromptGamePassPurchase(player, productId)
         return
     end
-    local ok, message = ProductPurchases.Prompt(player, purchaseId, row, productId, recipient)
+    local amount
+    if CashPack.Offers[purchaseId] then
+        amount = CashPack.GetAmount(purchaseId, PlotFishIncome.GetBaseRate(data))
+        if not amount or disclosedRecipientId ~= recipient.UserId or displayedAmount ~= amount then
+            self.Client.PromptPurchaseFail:Fire(player, "Cash pack amount or recipient changed. Check the store and try again.")
+            return
+        end
+    end
+
+    local ok, message = ProductPurchases.Prompt(player, purchaseId, row, productId, recipient, amount)
     if not ok then
         self.Client.PromptPurchaseFail:Fire(player, message)
     end
@@ -177,11 +245,12 @@ function PurchaseService:KnitInit()
 
     Players.PlayerRemoving:Connect(function(player)
         self._PlayerGifted[player.UserId] = nil
+        self._UltraLuckPreview[player] = nil
         ProductPurchases.Remove(player)
     end)
 
-    self.Client.PromptPurchase:Connect(function(player: Player, purchaseId: string, forSelf: boolean?)
-        self:PromptPurchase(player, purchaseId, forSelf)
+    self.Client.PromptPurchase:Connect(function(player, purchaseId, forSelf, disclosedRecipientId, displayedAmount)
+        self:PromptPurchase(player, purchaseId, forSelf, disclosedRecipientId, displayedAmount)
     end)
 end
 
@@ -195,6 +264,8 @@ function PurchaseService:KnitStart()
             FishingBaitPurchases.ClearCanceledPrompt(player, profile)
         end
     end)
+
+    Checkout.Start()
 
     -- handle developer product purchase
     MarketplaceService.ProcessReceipt = function(...)

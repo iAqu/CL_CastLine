@@ -49,7 +49,6 @@
 				}
 			profile_template      [table] -- Profiles will default to given table (hard-copy) when no data was saved previously
 
-		ProfileService.IsLive() --> [bool] -- (CAN YIELD!!!)
 			-- Returns true if ProfileService is connected to live Roblox DataStores
 				
 	Members [ProfileStore]:
@@ -58,7 +57,8 @@
 		
 	Methods [ProfileStore]:
 	
-		ProfileStore:LoadProfileAsync(profile_key, not_released_handler) --> [Profile] or nil -- not_released_handler(place_id, game_job_id)
+		ProfileStore:LoadProfileAsync(profile_key, not_released_handler, should_cancel) --> [Profile] or nil
+			should_cancel() -- Optional non-yielding predicate that stops loading and retrying.
 			profile_key            [string] -- DataStore key
 			not_released_handler   nil or []: -- Defaults to "ForceLoad"
 				[string] "ForceLoad" -- Force loads profile on first call
@@ -400,10 +400,7 @@ local ProfileService = {
 	_critical_state_start = 0, -- [number] 0 = no critical state / os.clock() = critical state start
 
 	-- Debug:
-	_mock_data_store = {},
 	_user_mock_data_store = {},
-
-	_use_mock_data_store = false,
 
 }
 
@@ -465,12 +462,6 @@ local ActiveProfileLoadJobs = 0 -- Number of active threads that are loading in 
 local ActiveProfileSaveJobs = 0 -- Number of active threads that are saving profiles
 
 local CriticalStateStart = 0 -- os.clock()
-
-local IsStudio = RunService:IsStudio()
-local IsLiveCheckActive = false
-
-local UseMockDataStore = false
-local MockDataStore = ProfileService._mock_data_store -- Mock data store used when API access is disabled
 
 local UserMockDataStore = ProfileService._user_mock_data_store -- Separate mock data store accessed via ProfileStore.Mock
 local UseMockTag = {}
@@ -610,16 +601,17 @@ local function IsCustomWriteQueueEmptyFor(store, key) --> is_empty [bool]
 	return true
 end
 
-local function WaitForLiveAccessCheck() -- This function was created to prevent the ProfileService module yielding execution when required
-	while IsLiveCheckActive == true do
-		task.wait()
+local function GetDataStore(profile_store)
+	if profile_store._global_data_store == nil then
+		local options = Instance.new("DataStoreOptions")
+		options:SetExperimentalFeatures({v2 = true})
+		profile_store._global_data_store = DataStoreService:GetDataStore(
+			profile_store._profile_store_name,
+			profile_store._profile_store_scope,
+			options
+		)
 	end
-end
-
-local function WaitForPendingProfileStore(profile_store)
-	while profile_store._is_pending == true do
-		task.wait()
-	end
+	return profile_store._global_data_store
 end
 
 local function RegisterIssue(error_message, store_name, store_scope, profile_key) -- Called when a DataStore API call errors
@@ -718,8 +710,17 @@ update_settings = {
 --]]
 local function StandardProfileUpdateAsyncDataStore(profile_store, profile_key, update_settings, is_user_mock, is_get_call, version) --> loaded_data, key_info
 	local loaded_data, key_info
+	local cancelled = false
+	local should_cancel = update_settings.ShouldCancel
+	local function is_cancelled()
+		cancelled = should_cancel ~= nil and should_cancel()
+		return cancelled
+	end
 	local success, error_message = pcall(function()
 		local transform_function = function(latest_data)
+			if is_cancelled() then
+				return nil
+			end
 
 			local missing_profile = false
 			local data_corrupted = false
@@ -784,28 +785,29 @@ local function StandardProfileUpdateAsyncDataStore(profile_store, profile_key, u
 		if is_user_mock == true then -- Used when the profile is accessed through ProfileStore.Mock
 			loaded_data, key_info = MockUpdateAsync(UserMockDataStore, profile_store._profile_store_lookup, profile_key, transform_function, is_get_call)
 			task.wait() -- Simulate API call yield
-		elseif UseMockDataStore == true then -- Used when API access is disabled
-			loaded_data, key_info = MockUpdateAsync(MockDataStore, profile_store._profile_store_lookup, profile_key, transform_function, is_get_call)
-			task.wait() -- Simulate API call yield
 		else
 			loaded_data, key_info = CustomWriteQueueAsync(
 				function() -- Callback
+					if is_cancelled() then
+						return nil
+					end
+					local data_store = GetDataStore(profile_store)
 					if is_get_call == true then
 						local get_data, get_key_info
 						if version ~= nil then
 							local success, error_message = pcall(function()
-								get_data, get_key_info = profile_store._global_data_store:GetVersionAsync(profile_key, version)
+								get_data, get_key_info = data_store:GetVersionAsync(profile_key, version)
 							end)
 							if success == false and type(error_message) == "string" and string.find(error_message, "not valid") ~= nil then
 								warn("[ProfileService]: Passed version argument is not valid; Traceback:\n" .. debug.traceback())
 							end
 						else
-							get_data, get_key_info = profile_store._global_data_store:GetAsync(profile_key)
+							get_data, get_key_info = data_store:GetAsync(profile_key)
 						end
 						get_data = transform_function(get_data)
 						return get_data, get_key_info
 					else
-						return profile_store._global_data_store:UpdateAsync(profile_key, transform_function)
+						return data_store:UpdateAsync(profile_key, transform_function)
 					end
 				end,
 				profile_store._profile_store_lookup, -- Store
@@ -824,7 +826,7 @@ local function StandardProfileUpdateAsyncDataStore(profile_store, profile_key, u
 		end
 		-- Return loaded_data:
 		return loaded_data, key_info
-	else
+	elseif not cancelled then
 		RegisterIssue(
 			(error_message ~= nil) and error_message or "Undefined error",
 			profile_store._profile_store_name,
@@ -1487,7 +1489,7 @@ function Profile:AddUserId(user_id) -- Associates user_id with profile (GDPR com
 		return
 	end
 
-	if user_id < 0 and self._is_user_mock ~= true and UseMockDataStore ~= true then
+	if user_id < 0 and self._is_user_mock ~= true then
 		return -- Avoid giving real Roblox APIs negative UserId's
 	end
 
@@ -1604,7 +1606,7 @@ function ProfileVersionQuery:NextAsync(_is_stacking) --> [Profile] or nil
 			end)
 			
 			local list_success, error_message = pcall(function()
-				self._query_pages = self._profile_store._global_data_store:ListVersionsAsync(
+				self._query_pages = GetDataStore(self._profile_store):ListVersionsAsync(
 					self._profile_key,
 					self._sort_direction,
 					self._min_date,
@@ -1709,7 +1711,7 @@ local ProfileStore = {
 }
 ProfileStore.__index = ProfileStore
 
-function ProfileStore:LoadProfileAsync(profile_key, not_released_handler, _use_mock) --> [Profile / nil] not_released_handler(place_id, game_job_id)
+function ProfileStore:LoadProfileAsync(profile_key, not_released_handler, should_cancel, _use_mock) --> [Profile / nil]
 
 	not_released_handler = not_released_handler or "ForceLoad"
 
@@ -1728,8 +1730,6 @@ function ProfileStore:LoadProfileAsync(profile_key, not_released_handler, _use_m
 	if ProfileService.ServiceLocked == true then
 		return nil
 	end
-
-	WaitForPendingProfileStore(self)
 
 	local is_user_mock = _use_mock == UseMockTag
 
@@ -1750,7 +1750,7 @@ function ProfileStore:LoadProfileAsync(profile_key, not_released_handler, _use_m
 	local request_force_load = force_load -- First step of ForceLoad
 	local steal_session = false -- Second step of ForceLoad
 	local aggressive_steal = not_released_handler == "Steal" -- Developer invoked steal
-	while ProfileService.ServiceLocked == false do
+	while ProfileService.ServiceLocked == false and (should_cancel == nil or not should_cancel()) do
 		-- Load profile:
 		-- SPECIAL CASE - If LoadProfileAsync is called for the same key before another LoadProfileAsync finishes,
 		-- yoink the DataStore return for the new call. The older call will return nil. This would prevent very rare
@@ -1779,6 +1779,7 @@ function ProfileStore:LoadProfileAsync(profile_key, not_released_handler, _use_m
 				self,
 				profile_key,
 				{
+					ShouldCancel = should_cancel,
 					ExistingProfileHandle = function(latest_data)
 						if ProfileService.ServiceLocked == false then
 							local active_session = latest_data.MetaData.ActiveSession
@@ -1980,8 +1981,6 @@ function ProfileStore:GlobalUpdateProfileAsync(profile_key, update_handler, _use
 		return nil
 	end
 
-	WaitForPendingProfileStore(self)
-
 	while ProfileService.ServiceLocked == false do
 		-- Updating profile:
 		local loaded_data = StandardProfileUpdateAsyncDataStore(
@@ -2027,9 +2026,7 @@ function ProfileStore:ViewProfileAsync(profile_key, version, _use_mock) --> [Pro
 		return nil
 	end
 
-	WaitForPendingProfileStore(self)
-
-	if version ~= nil and (_use_mock == UseMockTag or UseMockDataStore == true) then
+	if version ~= nil and _use_mock == UseMockTag then
 		return nil -- No version support in mock mode
 	end
 
@@ -2107,9 +2104,7 @@ function ProfileStore:ProfileVersionQuery(profile_key, sort_direction, min_date,
 		return setmetatable({}, ProfileVersionQuery) -- Silently fail :Next() requests
 	end
 
-	WaitForPendingProfileStore(self)
-
-	if _use_mock == UseMockTag or UseMockDataStore == true then
+	if _use_mock == UseMockTag then
 		error("[ProfileService]: :ProfileVersionQuery() is not supported in mock mode")
 	end
 
@@ -2159,8 +2154,6 @@ function ProfileStore:WipeProfileAsync(profile_key, _use_mock) --> is_wipe_succe
 		return false
 	end
 
-	WaitForPendingProfileStore(self)
-
 	local wipe_status = false
 
 	if _use_mock == UseMockTag then -- Used when the profile is accessed through ProfileStore.Mock
@@ -2170,16 +2163,9 @@ function ProfileStore:WipeProfileAsync(profile_key, _use_mock) --> is_wipe_succe
 		end
 		wipe_status = true
 		task.wait() -- Simulate API call yield
-	elseif UseMockDataStore == true then -- Used when API access is disabled
-		local mock_data_store = MockDataStore[self._profile_store_lookup]
-		if mock_data_store ~= nil then
-			mock_data_store[profile_key] = nil
-		end
-		wipe_status = true
-		task.wait() -- Simulate API call yield
 	else
 		wipe_status = pcall(function()
-			self._global_data_store:RemoveAsync(profile_key)
+			GetDataStore(self):RemoveAsync(profile_key)
 		end)
 	end
 
@@ -2225,8 +2211,8 @@ function ProfileService.GetProfileStore(profile_store_index, profile_template) -
 	local profile_store
 	profile_store = {
 		Mock = {
-			LoadProfileAsync = function(_, profile_key, not_released_handler)
-				return profile_store:LoadProfileAsync(profile_key, not_released_handler, UseMockTag)
+			LoadProfileAsync = function(_, profile_key, not_released_handler, should_cancel)
+				return profile_store:LoadProfileAsync(profile_key, not_released_handler, should_cancel, UseMockTag)
 			end,
 			GlobalUpdateProfileAsync = function(_, profile_key, update_handler)
 				return profile_store:GlobalUpdateProfileAsync(profile_key, update_handler, UseMockTag)
@@ -2252,65 +2238,10 @@ function ProfileService.GetProfileStore(profile_store_index, profile_template) -
 		_profile_load_jobs = {},
 		_mock_loaded_profiles = {},
 		_mock_profile_load_jobs = {},
-		_is_pending = false,
 	}
 	setmetatable(profile_store, ProfileStore)
 
-	local options = Instance.new("DataStoreOptions")
-	options:SetExperimentalFeatures({v2 = true})
-
-	if IsLiveCheckActive == true then
-		profile_store._is_pending = true
-		task.spawn(function()
-			WaitForLiveAccessCheck()
-			if UseMockDataStore == false then
-				profile_store._global_data_store = DataStoreService:GetDataStore(profile_store_name, profile_store_scope, options)
-			end
-			profile_store._is_pending = false
-		end)
-	else
-		if UseMockDataStore == false then
-			profile_store._global_data_store = DataStoreService:GetDataStore(profile_store_name, profile_store_scope, options)
-		end
-	end
-
 	return profile_store
-end
-
-function ProfileService.IsLive() --> [bool] -- (CAN YIELD!!!)
-
-	WaitForLiveAccessCheck()
-
-	return UseMockDataStore == false
-
-end
-
------ Initialize -----
-
-if IsStudio == true then
-	IsLiveCheckActive = true
-	task.spawn(function()
-		local status, message = pcall(function()
-			-- This will error if current instance has no Studio API access:
-			DataStoreService:GetDataStore("____PS"):SetAsync("____PS", os.time())
-		end)
-		local no_internet_access = status == false and string.find(message, "ConnectFail", 1, true) ~= nil
-		if no_internet_access == true then
-			warn("[ProfileService]: No internet access - check your network connection")
-		end
-		if status == false and
-			(string.find(message, "403", 1, true) ~= nil or -- Cannot write to DataStore from studio if API access is not enabled
-				string.find(message, "must publish", 1, true) ~= nil or -- Game must be published to access live keys
-				no_internet_access == true) then -- No internet access
-
-			UseMockDataStore = true
-			ProfileService._use_mock_data_store = true
-			print("[ProfileService]: Roblox API services unavailable - data will not be saved")
-		else
-			print("[ProfileService]: Roblox API services available - data will be saved")
-		end
-		IsLiveCheckActive = false
-	end)
 end
 
 ----- Connections -----
@@ -2386,7 +2317,6 @@ end)
 
 -- Release all loaded profiles when the server is shutting down:
 task.spawn(function()
-	WaitForLiveAccessCheck()
 	Madwork.ConnectToOnClose(
 		function()
 			ProfileService.ServiceLocked = true
@@ -2413,7 +2343,7 @@ task.spawn(function()
 			end
 			return -- We're done!
 		end,
-		UseMockDataStore == false -- Always run this OnClose task if using Roblox API services
+		true -- Studio also uses the persistent store during ordinary playtests
 	)
 end)
 

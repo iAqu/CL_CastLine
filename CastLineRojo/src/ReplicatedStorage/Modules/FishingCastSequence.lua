@@ -1,5 +1,6 @@
 local TweenService = game:GetService("TweenService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
 
 local Config = require(script.Parent.FishingConfig)
@@ -15,6 +16,11 @@ local FishingRoll = require(script.Parent.FishingRoll)
 local FishingVignette = require(script.Parent.FishingVignette)
 local FishingCharacterVFX = require(script.Parent.FishingCharacterVFX)
 local UiConfettiUtil = require(script.Parent.UiConfettiUtil)
+
+local HOOK_CONFIRM_TIMEOUT = 8
+local HOOK_LOOKUP_DELAY = 1.25
+local HOOK_LOOKUP_INTERVAL = 0.35
+local HOOK_LOOKUP_TIMEOUT = 1.5
 
 local FishingCastSequence = {}
 FishingCastSequence.__index = FishingCastSequence
@@ -56,7 +62,7 @@ function FishingCastSequence:_setPhase(phase)
 	end
 end
 
-function FishingCastSequence:_celebrateCatch(bite)
+function FishingCastSequence:_celebrateCatch(bite, confettiOptions)
 	if self.destroyed or bite.isEgg or self.celebratedBite == bite then
 		return
 	end
@@ -65,7 +71,7 @@ function FishingCastSequence:_celebrateCatch(bite)
 		-- Present 在鱼体本帧定位完成后消费，和信息揭晓、音效同帧出现。
 		bite.showcasePending = true
 	end
-	UiConfettiUtil.play(self.gui, "sideCannons")
+	UiConfettiUtil.play(self.gui, "sideCannons", confettiOptions)
 	if self.fishAudio then
 		self.fishAudio:PlayShowcase()
 	end
@@ -228,7 +234,8 @@ function FishingCastSequence:_bindCastMeter(meter)
 		self.castFeedback = require(script.Parent.FishingCastFeedback)
 		self.castFeedback.Bind(self)
 		self:_save(meter.label, { "Visible" })
-		self:_save(meter.prompt, { "Visible" })
+		self:_save(meter.prompt, { "Text", "Visible" })
+		self.castPromptText = meter.prompt.Text
 		meter.bar.Visible, meter.marker.Visible, meter.prompt.Visible = true, true, true
 		meter.label.Visible = false
 		meter.marker.Position = UDim2.fromScale(0.5, 1)
@@ -471,8 +478,23 @@ function FishingCastSequence:LockCastMeter(): number
 	return self.lockedMeterProgress
 end
 
-function FishingCastSequence:Cast(value: number, distance: number?, luck: number?, castRating: string?)
+function FishingCastSequence:BeginCast(now: number)
 	if self.phase ~= "Preparing" then
+		return false
+	end
+	self:LockCastMeter()
+	self.castClickedAt = now
+	self.castWindupPending = true
+	self.castWindup = true
+	self.castFromScale = self.baitVisualScale
+	self.castFromOffset = self.bait.Position - (self.tip.WorldPosition - Vector3.new(0, 1.5, 0))
+	self:_stopBaitAppear()
+	self:_setPhase("Casting")
+	return true
+end
+
+function FishingCastSequence:Cast(value: number, distance: number?, luck: number?, castRating: string?)
+	if self.phase ~= "Preparing" and not self.castWindupPending then
 		return
 	end
 	if self.fixedCast then
@@ -483,6 +505,8 @@ function FishingCastSequence:Cast(value: number, distance: number?, luck: number
 			self:_castFeedback(value, os.clock(), true)
 		end
 	end
+	local now = os.clock()
+	self.castWindupPending = nil
 	self.distance = distance or (if self.fixedCast then Config.FixedCastDistance else ProjectileMath.Distance(value))
 	self.folder:SetAttribute("Distance", self.distance)
 	self.folder:SetAttribute("CastRating", castRating or self.castRating)
@@ -490,10 +514,14 @@ function FishingCastSequence:Cast(value: number, distance: number?, luck: number
 	if self.castProfile.Id == "Godlike" then
 		self.characterVFX:Configure(self.castProfile, self.tip)
 	end
-	self.castClickedAt = os.clock()
-	if self.info and luck then
-		self.info:SetLuck(luck, self.castClickedAt, true)
+	self.castClickedAt = if self.castWindup then self.castClickedAt else now
+	if self.info then
+		self.info:SetCastProgress(value)
+		if luck then
+			self.info:SetLuck(luck, now, true)
+		end
 	end
+	self.castBlendAt = now
 	self.castFromScale = self.baitVisualScale
 	local heldLength = if self.castProfile.Id == "Godlike" then 0.4 else 1.5
 	self.castFromOffset = self.bait and self.bait.Position - (self.tip.WorldPosition - Vector3.new(0, heldLength, 0))
@@ -667,7 +695,7 @@ end
 
 function FishingCastSequence:TryHook(now)
 	local bite = self.bite
-	if not bite or self.hookPendingAt then
+	if not bite or self.hookPending or self.hookExit then
 		return false
 	end
 	if self.options.tutorial and bite.timeline:Advance(now) ~= "Bite" then
@@ -688,32 +716,80 @@ function FishingCastSequence:TryHook(now)
 		end
 		return hooked
 	end
-	self.hookPendingAt = now
-	self.options.hook(self.round):andThen(function(result)
-		if self.destroyed or self.bite ~= bite then
-			return
-		end
-		self.hookPendingAt = nil
-		if result.ok then
-			if result.weight then
-				bite:SetCaughtWeight(result.weight)
-			end
-			bite.isNewDiscovery = result.isNewDiscovery == true
-			bite:TryHook(now, result.mutationId)
-		elseif result.message ~= "Missed the bite" then
-			self.options.onFailure(result.message)
-		end
+	if self.hookRound == self.round then
+		return false
+	end
+	local pressedAt = self.serverRoundStart + (now - self.localRoundStart)
+	if not bite:TryHook(now, nil, true) then
+		return false
+	end
+	local attempt = {
+		bite = bite,
+		round = self.round,
+		lookupAt = now + HOOK_LOOKUP_DELAY,
+		deadline = now + HOOK_CONFIRM_TIMEOUT,
+	}
+	self.hookRound = self.round
+	self.hookPending = attempt
+	self.options.hook(self.round, pressedAt):andThen(function(result)
+		self:_resolveHook(attempt, result, os.clock())
 	end):catch(function()
-		if not self.destroyed then
-			self.hookPendingAt = nil
-			self.options.onFailure("Could not confirm the catch")
+		if self.hookPending == attempt then
+			attempt.lookupAt = os.clock()
 		end
 	end)
-	return false
+	return true
+end
+
+function FishingCastSequence:_resolveHook(attempt, result, now)
+	if self.destroyed or self.hookPending ~= attempt then
+		return
+	end
+	self.hookPending = nil
+	if result.ok then
+		attempt.bite:ConfirmHook(now, result)
+		return
+	end
+
+	attempt.bite:RejectHook(now)
+	if result.message == "Missed the bite" then
+		if self.options.tutorial then
+			self.serverRetryAt = Workspace:GetServerTimeNow() + Config.Bite.EscapeTime
+		end
+	else
+		self.hookExit = { at = now + Config.Bite.EscapeTime, message = result.message }
+	end
+end
+
+function FishingCastSequence:_updateHookConfirmation(now)
+	local attempt = self.hookPending
+	if not attempt then
+		return
+	end
+	if now >= attempt.deadline then
+		self.hookPending = nil
+		attempt.bite:RejectHook(now)
+		attempt.bite:TryHook(now)
+		self.hookExit = { message = "Could not confirm the catch." }
+		return
+	end
+	if attempt.lookupPending or now < attempt.lookupAt then
+		return
+	end
+
+	attempt.lookupPending = true
+	self.options.getHookResult(attempt.round):timeout(HOOK_LOOKUP_TIMEOUT):andThen(function(reply)
+		if reply.status == "Succeeded" or reply.status == "Rejected" then
+			self:_resolveHook(attempt, reply.result, os.clock())
+		end
+	end):catch(function() end):finally(function()
+		attempt.lookupPending = false
+		attempt.lookupAt = os.clock() + HOOK_LOOKUP_INTERVAL
+	end)
 end
 
 function FishingCastSequence:CanReturn(now)
-	return not self.hookPendingAt and self.bite ~= nil and self.bite:CanReturn(now)
+	return not self.hookPending and not self.hookExit and self.bite ~= nil and self.bite:CanReturn(now)
 end
 
 function FishingCastSequence:_setBaitVisible(visible)
@@ -794,6 +870,9 @@ function FishingCastSequence:_startBiteRound(now, readyAt, round)
 		self.bite = FishingBiteSequence.new(
 			self, now, readyAt, Random.new(round.seed), Random.new(round.motionSeed), template, fish, round.catchKind, self.options.tutorial, round.weight
 		)
+		local timeline = self.bite.timeline
+		timeline.scheduledBiteAt = now + (round.biteAt - round.startedAt)
+		timeline.scheduledBiteEndsAt = now + (round.biteEndsAt - round.startedAt)
 		if round.mutationId then
 			self.bite:PreviewMutation(round.mutationId)
 		end
@@ -815,7 +894,7 @@ function FishingCastSequence:_startBiteRound(now, readyAt, round)
 end
 
 function FishingCastSequence:_requestBiteRound()
-	if self.roundPending then
+	if self.roundPending or (self.roundRetryAt and os.clock() < self.roundRetryAt) then
 		return
 	end
 	self.roundPending = true
@@ -824,16 +903,24 @@ function FishingCastSequence:_requestBiteRound()
 			return
 		end
 		self.roundPending = false
+		if round.code == "RoundNotReady" then
+			self.roundRetryAt = os.clock() + math.max(0.05, round.retryAfter)
+			return
+		end
+		self.roundRetryAt = nil
 		if not round.ok then
 			self.options.onFailure(round.message)
 			return
 		end
-		local offset = os.clock() - Workspace:GetServerTimeNow()
+		-- Anchor the round to the server's send time. A clock estimate that leads
+		-- the server on an asymmetric connection can make an on-time click look future-dated.
+		local receivedAt = os.clock()
 		self.serverRoundStart = round.startedAt
 		self.serverRetryAt = round.retryAt
-		self.localRoundStart = round.startedAt + offset
-		self.readyAt = math.max(self.readyAt, round.readyAt + offset)
-		self:_startBiteRound(self.localRoundStart, round.readyAt + offset, round)
+		self.localRoundStart = receivedAt + (round.startedAt - round.sentAt)
+		local localReadyAt = self.localRoundStart + (round.readyAt - round.startedAt)
+		self.readyAt = math.max(self.readyAt, localReadyAt)
+		self:_startBiteRound(self.localRoundStart, localReadyAt, round)
 	end):catch(function(err)
 		if not self.destroyed then
 			warn("FishingCastSequence: " .. tostring(err))
@@ -878,12 +965,14 @@ function FishingCastSequence:_updateAction(now)
 	local profile = self.castProfile or Config.CastProfiles.Normal
 	if not self.actionStarted then
 		self.castProfile = profile
-		if not CastPresentation.Ready(self, now) then
+		local elapsed = now - self.castClickedAt
+		if self.castWindup then
+			RigUtil.ApplyCastWindup(self.rig, math.clamp(elapsed / profile.LeadTime, 0, 1))
+		end
+		if self.castWindupPending or elapsed < profile.LeadTime or not CastPresentation.Ready(self, now) then
 			return
 		end
-		if now - self.castClickedAt < profile.LeadTime then
-			return
-		end
+		self.castWindup = nil
 		self.actionStarted = now
 		RigUtil.RestoreReadyPose(self.rig)
 		CastPresentation.Play(self)
@@ -972,7 +1061,7 @@ function FishingCastSequence:_updateBait(now, dt)
 			- Vector3.new(0, heldLength, 0)
 			+ Vector3.yAxis * BaitElasticMotion.BaseSize(self).Y * offset
 		if self.phase == "Casting" then
-			local alpha = math.clamp((now - self.castClickedAt) / Config.BaitElastic.BlendTime, 0, 1)
+			local alpha = math.clamp((now - (self.castBlendAt or self.castClickedAt)) / Config.BaitElastic.BlendTime, 0, 1)
 			alpha = alpha * alpha * (3 - 2 * alpha)
 			position += (self.castFromOffset or Vector3.zero) * (1 - alpha)
 			scale = (self.castFromScale or Vector3.one):Lerp(scale, alpha)
@@ -1009,9 +1098,12 @@ function FishingCastSequence:_updateBait(now, dt)
 		if elapsed > 0.3 then
 			self.wind:Stop()
 		end
+		if self.roundRetryAt then
+			self:_requestBiteRound()
+		end
 		if self.bite then
 			self.bite:Update(now, true)
-			if self.bite:CanRetry(now) then
+			if not self.hookPending and not self.hookExit and self.bite:CanRetry(now) then
 				if self.options.requestRound then
 					if Workspace:GetServerTimeNow() >= self.serverRetryAt + 0.05 then
 						self:_requestBiteRound()
@@ -1431,6 +1523,11 @@ end
 function FishingCastSequence:_updatePresentation(now, dt)
 	local meter, settings = self.meter, Config.Meter
 	if self.fixedCast and self.phase == "Preparing" then
+		if self.castPromptText and meter.prompt.Visible then
+			meter.prompt.Text = if UserInputService.PreferredInput == Enum.PreferredInput.Gamepad
+				then "PRESS A TO CAST!"
+				else self.castPromptText
+		end
 		if self.lockedMeterProgress == nil then
 			local startsAt = self.options and self.options.meterStartsAt
 			if startsAt then
@@ -1456,6 +1553,7 @@ function FishingCastSequence:_updatePresentation(now, dt)
 			end
 		end
 		if self.info then
+			self.info:SetCastProgress(self.meterProgress)
 			self.info:SetLuck(self.fullLuck * FishingRoll.GetCastLuckMultiplier(self.meterProgress), now, true)
 		end
 	end
@@ -1513,7 +1611,6 @@ function FishingCastSequence:_updatePresentation(now, dt)
 end
 
 function FishingCastSequence:Update(now: number, dt: number)
-	now = self.hookPendingAt or now
 	assert(
 		self.bait.Parent
 			and self.line.Parent
@@ -1525,6 +1622,7 @@ function FishingCastSequence:Update(now: number, dt: number)
 			and self.gui.Parent,
 		"Fishing sequence resource disappeared"
 	)
+	self:_updateHookConfirmation(now)
 	local before = self.phase
 	if
 		self.castProfile
@@ -1535,6 +1633,11 @@ function FishingCastSequence:Update(now: number, dt: number)
 		CastPresentation.GroundClearance(self)
 	end
 	self:_updateBait(now, dt)
+	local exit = self.hookExit
+	if exit and (if exit.at then now >= exit.at else self.bite:CanReturn(now)) then
+		self.options.onFailure(exit.message)
+		return
+	end
 	self.characterVFX:Update(now)
 	if before ~= "Waiting" and self.phase == "Waiting" then
 		self.landingPosition = self:_waterTarget()

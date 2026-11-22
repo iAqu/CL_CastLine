@@ -47,6 +47,39 @@ function PlotPlacementUtil.GetItemUid(placements, slot)
 	return nil
 end
 
+function PlotPlacementUtil.Reconcile(placements, items, capacity)
+	local numbered = PlotPlacementUtil.CoerceNumericKeys(placements)
+	local slots = {}
+	for slot in numbered do
+		if slot >= 1 then
+			table.insert(slots, slot)
+		end
+	end
+	table.sort(slots)
+
+	local result, seen = {}, {}
+	local firstFree = 1
+	for _, slot in slots do
+		local uid = PlotPlacementUtil.GetItemUid(numbered, slot)
+		if not uid or seen[uid] or typeof(items[uid]) ~= "table" then
+			continue
+		end
+		local target = slot
+		if slot > capacity then
+			while firstFree <= capacity and result[firstFree] do
+				firstFree += 1
+			end
+			if firstFree > capacity then
+				break
+			end
+			target = firstFree
+		end
+		result[target] = uid
+		seen[uid] = true
+	end
+	return result
+end
+
 function PlotPlacementUtil.SetItemUid(placements, slot, itemUid)
 	if typeof(placements) ~= "table" then
 		return

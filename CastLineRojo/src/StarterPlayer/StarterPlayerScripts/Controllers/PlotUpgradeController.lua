@@ -5,8 +5,10 @@ local PlotUpgradeData = require(ReplicatedStorage.Modules.PlotUpgradeData)
 local PlotWorkspaceUtil = require(ReplicatedStorage.Modules.PlotWorkspaceUtil)
 local NumberUtil = require(ReplicatedStorage.Modules.NumberUtil)
 local NotificationClient = require(ReplicatedStorage.Modules.NotificationClient)
+local UpgradeSignButtonUtil = require(ReplicatedStorage.Modules.UpgradeSignButtonUtil)
 local PlotUpgradeController = Knit.CreateController({ Name = "PlotUpgradeController" })
 local player = Players.LocalPlayer
+local GREY_BUTTON_COLOR = Color3.fromRGB(145, 145, 145)
 
 function PlotUpgradeController:KnitStart()
 	local service = Knit.GetService("PlotUpgradeService")
@@ -15,8 +17,14 @@ function PlotUpgradeController:KnitStart()
 	local stats = player:WaitForChild("leaderstats")
 	local cash = stats:WaitForChild("💵Cash")
 	local gui, connection
+	local gradient, greyGradient
+	local defaultImageColor, defaultBackgroundColor, defaultGradientEnabled
 	local pending = false
 	local boundPlot
+
+	local function canInteract(nextConfig)
+		return nextConfig ~= nil and not pending and not transitions:IsPlaying(boundPlot)
+	end
 
 	local function refresh()
 		if not gui then
@@ -25,20 +33,27 @@ function PlotUpgradeController:KnitStart()
 		local config = PlotUpgradeData.Get(player:GetAttribute("PlotUpgradeLevel"))
 		local nextConfig = PlotUpgradeData.GetNext(config.Level)
 		local button = gui.UpgradeButton
-		local available = nextConfig ~= nil
-			and cash.Value >= nextConfig.Price
-			and not pending
-			and not transitions:IsPlaying(boundPlot)
+		local affordable = nextConfig ~= nil and cash.Value >= nextConfig.Price
+		local interactable = canInteract(nextConfig)
+		local useNormalStyle = affordable and interactable
 		gui.LevelLabel.Text = if nextConfig
 			then `{config.Capacity} > {nextConfig.Capacity}`
 			else `{config.Capacity} MAX`
 		button.PriceLabel.Text = if nextConfig
 			then "$" .. NumberUtil.FormatItemPriceCompact(nextConfig.Price)
 			else "MAX"
-		button.Active = available
-		button.Selectable = available
-		button.AutoButtonColor = available
-		button.ImageColor3 = if available then Color3.new(1, 1, 1) else Color3.fromRGB(145, 145, 145)
+		button.Active = interactable
+		button.Selectable = interactable
+		button.AutoButtonColor = useNormalStyle
+		UpgradeSignButtonUtil.SetAffordable(button, gradient, greyGradient, affordable, interactable)
+		if not (gradient and greyGradient) then
+			local templateGradient = gradient or greyGradient
+			if templateGradient then
+				templateGradient.Enabled = useNormalStyle and defaultGradientEnabled
+			end
+			button.ImageColor3 = if useNormalStyle then defaultImageColor else GREY_BUTTON_COLOR
+			button.BackgroundColor3 = if useNormalStyle then defaultBackgroundColor else GREY_BUTTON_COLOR
+		end
 	end
 
 	local function bind()
@@ -84,15 +99,26 @@ function PlotUpgradeController:KnitStart()
 		gui.ResetOnSpawn = false
 		gui.MaxDistance = 100
 		gui.Parent = playerGui
-		local activeGui = gui
-		connection = gui.UpgradeButton.Activated:Connect(function()
-			if pending then
+		local button = gui.UpgradeButton
+		defaultImageColor = button.ImageColor3
+		defaultBackgroundColor = button.BackgroundColor3
+		gradient, greyGradient = UpgradeSignButtonUtil.Prepare(button)
+		local templateGradient = gradient or greyGradient
+		defaultGradientEnabled = templateGradient ~= nil and templateGradient.Enabled
+		connection = button.Activated:Connect(function()
+			local level = player:GetAttribute("PlotUpgradeLevel") or 0
+			local nextConfig = PlotUpgradeData.GetNext(level)
+			if not canInteract(nextConfig) then
+				return
+			end
+			if not (cash.Value >= nextConfig.Price) then
+				NotificationClient.RedNotify("Not enough money.")
 				return
 			end
 			pending = true
 			refresh()
 			service
-				:RequestUpgrade(player:GetAttribute("PlotUpgradeLevel") or 0)
+				:RequestUpgrade(level)
 				:andThen(function(response)
 					if response and response.ok then
 						NotificationClient.GreenNotify(`Plot upgraded! {response.capacity} fish slots`)
@@ -105,9 +131,7 @@ function PlotUpgradeController:KnitStart()
 				end)
 				:finally(function()
 					pending = false
-					if gui == activeGui then
-						refresh()
-					end
+					refresh()
 				end)
 		end)
 		refresh()

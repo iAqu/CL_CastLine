@@ -28,6 +28,7 @@ if useMockProfiles then
 end
 
 local KICK_MESSAGE = "Data issue, try again shortly. If issue persists, contact us!"
+local LOAD_PROFILE_TIMEOUT = 90
 local LOAD_PROFILE_MAX_ATTEMPTS = 5
 local LOAD_PROFILE_RETRY_BASE_DELAY = 1.5
 local EARLY_DATA_REMOTE_NAME = "RequestPlayerDataEarly"
@@ -252,23 +253,8 @@ local function migratePlotHome(playerData)
     if playerData.LastPlotSlotId == nil and typeof(playerData.LastFarmSlotId) == "number" then
         playerData.LastPlotSlotId = playerData.LastFarmSlotId
     end
-    local placements = PlotPlacementUtil.CoerceNumericKeys(playerData.PlotPlacements)
-    for slot in pairs(placements) do
-        if slot < 1 or slot > capacity then
-            placements[slot] = nil
-        end
-    end
     local items = if typeof(playerData.Items) == "table" then playerData.Items else {}
-    local seen = {}
-    for slot = 1, capacity do
-        local uid = PlotPlacementUtil.GetItemUid(placements, slot)
-        if not uid or seen[uid] or typeof(items[uid]) ~= "table" then
-            placements[slot] = nil
-        else
-            seen[uid] = true
-        end
-    end
-    playerData.PlotPlacements = placements
+    playerData.PlotPlacements = PlotPlacementUtil.Reconcile(playerData.PlotPlacements, items, capacity)
 end
 
 local function reconcileFishingOnboarding(data, seedStudioOnboarding)
@@ -608,7 +594,7 @@ function PlayerDataService:_WaitForEarlyData(player: Player)
 		waiter:Destroy()
 		profile = self._Profiles[player] or self._PendingProfiles[player]
 	end
-	if profile and player:IsDescendantOf(Players) then
+	if profile and profile:IsActive() and player:IsDescendantOf(Players) then
 		earlySent[player] = true
 		return { Wins = profile.Data.Wins, Trophy = profile.Data.Trophy }
 	end
@@ -746,20 +732,38 @@ function PlayerDataService:LoadProfile(player: Player)
         return
     end
 
-    self._LoadingProfiles[player] = true
-    local profile
     local profileKey = "Player_" .. player.UserId
+    local loading = { failed = false }
+    self._LoadingProfiles[player] = loading
+    local function shouldCancel()
+        return loading.failed or self._LoadingProfiles[player] ~= loading or not player:IsDescendantOf(Players)
+    end
+    local function failLoad(reason)
+        if shouldCancel() then
+            return
+        end
+        loading.failed = true
+        warn(("[PlayerDataService] Could not load %s from %s: %s"):format(profileKey, DATA_BASE_NAME, reason))
+        player:Kick(KICK_MESSAGE)
+    end
+    task.delay(LOAD_PROFILE_TIMEOUT, failLoad, "timed out waiting for player data")
 
+    local profile
     for attempt = 1, LOAD_PROFILE_MAX_ATTEMPTS do
-        if not player:IsDescendantOf(Players) then
-            self._LoadingProfiles[player] = nil
+        if shouldCancel() then
             return
         end
 
         local success, result = pcall(function()
-            return ProfileStore:LoadProfileAsync(profileKey)
+            return ProfileStore:LoadProfileAsync(profileKey, nil, shouldCancel)
         end)
 
+        if shouldCancel() then
+            if success and result then
+                result:Release()
+            end
+            return
+        end
         if success and result then
             profile = result
             break
@@ -779,8 +783,7 @@ function PlayerDataService:LoadProfile(player: Player)
     end
 
     if not profile then
-        self._LoadingProfiles[player] = nil
-        player:Kick(KICK_MESSAGE)
+        failLoad("all load attempts failed")
         return
     end
 
@@ -805,20 +808,19 @@ function PlayerDataService:LoadProfile(player: Player)
 
     sanitizeIndexLogs(profile.Data)
     sanitizeNewItemTagSeenLog(profile.Data)
-    profile:ListenToRelease(function()
-		if player:IsDescendantOf(Players) then
-			player:Kick(KICK_MESSAGE)
-		end
-    end)
-
-	if not player:IsDescendantOf(Players) then
-		self._LoadingProfiles[player] = nil
+	-- Reprice before either the early snapshot or the regular loaded-inventory event.
+	require(ReplicatedStorage.Modules.ItemPriceMigration)(profile.Data)
+	if shouldCancel() or not profile:IsActive() then
+		failLoad("profile session ended before it was ready")
 		profile:Release()
 		return
 	end
+	profile:ListenToRelease(function()
+		if player:IsDescendantOf(Players) then
+			player:Kick(KICK_MESSAGE)
+		end
+	end)
 
-	-- Reprice before either the early snapshot or the regular loaded-inventory event.
-	require(ReplicatedStorage.Modules.ItemPriceMigration)(profile.Data)
 	-- 数据已经可以先返回客户端；业务 Service 的 ProfileLoaded 广播等待 Knit 就绪。
 	self._PendingProfiles[player] = profile
 	self._LoadingProfiles[player] = nil
@@ -830,7 +832,7 @@ function PlayerDataService:LoadProfile(player: Player)
 		task.wait()
 	end
 
-	if not player:IsDescendantOf(Players) or self._PendingProfiles[player] ~= profile then
+	if not player:IsDescendantOf(Players) or self._PendingProfiles[player] ~= profile or not profile:IsActive() then
 		if self._PendingProfiles[player] == profile then
 			self._PendingProfiles[player] = nil
 			profile:Release()
@@ -867,14 +869,10 @@ function PlayerDataService:KnitStart()
         end
     end)
 
-    task.spawn(function()
-        local isLive = ProfileService.IsLive()
-        if isLive and not useMockProfiles then
-            LogHelper.Print("[PlayerDataService] ProfileService is live. Data will persist.")
-        else
-            warn("[PlayerDataService] ProfileService is using mock store. Data will NOT persist across Studio restarts.")
-        end
-    end)
+    if useMockProfiles then
+        local reason = if studioOnboardingTest then "RestartTest onboarding" else "StudioUseMockProfiles"
+        warn(("[PlayerDataService] Explicit temporary profiles enabled by %s. Progress lasts for this Studio session."):format(reason))
+    end
 
     self.Client.UpdateLoginDate:Connect(function(player: Player, localDate: number)
         if type(localDate) ~= "number" or localDate % 1 ~= 0 or math.abs(TimeUtil.GetUniversalDate() - localDate) > 1 then

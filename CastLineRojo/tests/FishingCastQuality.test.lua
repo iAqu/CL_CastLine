@@ -27,8 +27,10 @@ for _, case in ipairs(cases) do
 	local r = h.client:NextRound(h.player, h.token, 0)
 	assert(r.ok and r.castRating == case[2])
 	h.now = r.retryAt + 0.1
+	h.sample = 0.99
 	local retry = h.client:NextRound(h.player, h.token, 1)
-	assert(retry.ok and retry.fishId == r.fishId and retry.castRating == r.castRating)
+	assert(retry.ok and retry.fishId ~= r.fishId and retry.castRating == r.castRating,
+		"Roll a fresh fish without changing the cast rating")
 end
 local receiving = new()
 receiving.begin("NONE")
@@ -191,6 +193,27 @@ assert(cast.castRating == "GOOD" and math.abs(cast.castProgress - 0.7) < 1e-8)
 latency.now += 5
 local round = latency.client:NextRound(latency.player, latency.token, 0)
 latency.now = round.readyAt + 0.99
-assert(not latency.client:Hook(latency.player, latency.token, round.round).ok, "The bite has not started")
+assert(not latency.client:Hook(latency.player, latency.token, round.round, latency.now).ok, "The bite has not started")
 latency.now = round.readyAt + 2.12
-assert(latency.client:Hook(latency.player, latency.token, round.round).ok, "Allow bounded measured network delay")
+assert(latency.client:Hook(latency.player, latency.token, round.round, round.biteEndsAt - 0.001).ok,
+	"Accept the in-window press even when it arrives after the bite")
+assert(latency.grants == 1 and not latency.client:Hook(latency.player, latency.token, round.round, round.biteEndsAt - 0.001).ok)
+
+-- Check the shared rule against the shortest fish window with epoch-valued clocks.
+local startAt = 1_795_269_000
+local endAt = startAt + 0.55
+local pressedAt = endAt - 0.001
+assert(C.GetHookTime(startAt, startAt, startAt, endAt, 0) == startAt)
+assert(C.GetHookTime(pressedAt + 0.25, pressedAt, startAt, endAt, 0) == pressedAt)
+assert(not C.GetHookTime(pressedAt + 0.251, pressedAt, startAt, endAt, 0))
+assert(C.GetHookTime(pressedAt + 0.63, pressedAt, startAt, endAt, 0.32) == pressedAt)
+assert(not C.GetHookTime(pressedAt + 0.631, pressedAt, startAt, endAt, 0.32))
+assert(C.GetHookTime(pressedAt + 1.25, pressedAt, startAt, endAt, 2) == pressedAt)
+assert(not C.GetHookTime(pressedAt + 1.251, pressedAt, startAt, endAt, 2))
+assert(C.GetHookTime(pressedAt - 0.045, pressedAt, startAt, endAt, 0) == pressedAt)
+assert(not C.GetHookTime(pressedAt - 0.051, pressedAt, startAt, endAt, 0))
+assert(not C.GetHookTime(endAt, endAt, startAt, endAt, 0.32))
+assert(not C.GetHookTime(endAt, nil, startAt, endAt, 0.32))
+for _, invalid in ipairs({ "invalid", {}, 0 / 0, math.huge, -math.huge, startAt - 0.001 }) do
+	assert(not C.GetHookTime(endAt, invalid, startAt, endAt, 2))
+end

@@ -131,6 +131,7 @@ end
 local function getEquippedFish(player: Player, data)
 	local fish = {}
 	local bestBaseCps = PlotFishIncome.GetBestOwnedBaseCps(data)
+	local multiplier = PlotFishIncome.GetMultiplier(data)
 	local seen = {}
 	for slot = 1, PlotPlacementUtil.GetCapacity(data) do
 		local uid = PlotPlacementUtil.GetItemUid(data.PlotPlacements, slot)
@@ -143,7 +144,7 @@ local function getEquippedFish(player: Player, data)
 					itemId = item.ItemID,
 					weight = record.Weight,
 					mutationId = record.MutationId,
-					income = getIncome(item, record, bestBaseCps),
+					income = getIncome(item, record, bestBaseCps) * multiplier,
 				})
 			end
 		end
@@ -178,8 +179,12 @@ local function settle(player: Player, data, now: number)
 end
 
 local function rosterChanged(player: Player, data, state)
-	state.rate = PlotFishIncome.GetRate(data)
+	local baseRate = PlotFishIncome.GetBaseRate(data)
+	local multiplier = PlotFishIncome.GetMultiplier(data)
+	state.rate = baseRate * multiplier
+	player:SetAttribute(PlotFishIncome.BASE_RATE_ATTRIBUTE, baseRate)
 	player:SetAttribute(PlotFishIncome.BEST_CPS_ATTRIBUTE, PlotFishIncome.GetBestOwnedBaseCps(data))
+	player:SetAttribute(PlotFishIncome.MULTIPLIER_ATTRIBUTE, multiplier)
 	Knit.GetService("PlayerLuckService"):RefreshPlayerLuck(player)
 	rosterRevisions[player] = (rosterRevisions[player] or 0) + 1
 	PlotFishService.Client.EquippedFishChanged:Fire(player, getEquippedFish(player, data))

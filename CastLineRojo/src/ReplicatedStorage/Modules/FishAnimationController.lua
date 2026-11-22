@@ -32,7 +32,7 @@ function FishAnimationController.NewState(startedAt, random, struggleTime, appro
 end
 
 -- 这里只选择固定动画、权重和播放时间；骨骼姿势由 Animator 的关键帧插值产生。
-function State:Sample(phase, phaseStartedAt, now, mirror, swimWeight, nibbleSpeed, nibbleAttackTime, liftDuration)
+function State:Sample(phase, phaseStartedAt, now, mirror, swimWeight, nibbleSpeed, nibbleAttackTime, liftDuration, awaitingHook)
 	local elapsed = math.max(0, now - phaseStartedAt)
 	local clips = AnimationSettings.Clips
 	liftDuration = liftDuration or (Settings.FishLift.RiseTime + Settings.FishLift.PeakHold + Settings.FishLift.FallTime + Settings.FishLift.SettleTime)
@@ -64,15 +64,13 @@ function State:Sample(phase, phaseStartedAt, now, mirror, swimWeight, nibbleSpee
 		if swimWeight ~= nil then
 			weight = swimWeight
 		end
-	elseif phase == "Struggling" then
-		if elapsed < self.struggleTime then
-			local cycle = Settings.Struggle.AnimationCycle
-			name = if (mirror or 1) > 0 then "StruggleLeft" else "StruggleRight"
-			-- 同一轨道连续循环，避免每个周期重播时淡入造成鱼身回直。
-			token = phaseStartedAt
-			speed = clips[name].Duration / cycle
-			position, weight = (elapsed % cycle) * speed, 1
-		end
+	elseif phase == "Struggling" and (awaitingHook or elapsed < self.struggleTime) then
+		local cycle = Settings.Struggle.AnimationCycle
+		name = if (mirror or 1) > 0 then "StruggleLeft" else "StruggleRight"
+		-- 同一轨道连续循环，避免每个周期重播时淡入造成鱼身回直。
+		token = phaseStartedAt
+		speed = clips[name].Duration / cycle
+		position, weight = (elapsed % cycle) * speed, 1
 	elseif phase == "Lifting" and elapsed < liftDuration then
 		name, token = "LiftFlop", phaseStartedAt
 		speed = clips.LiftFlop.Duration / liftDuration
@@ -209,11 +207,15 @@ function FishAnimationController:_stop(fade)
 	end
 end
 
-function FishAnimationController:Update(phase, phaseStartedAt, now, mirror, swimWeight, nibbleSpeed, nibbleAttackTime, liftDuration)
+function FishAnimationController:Update(
+	phase, phaseStartedAt, now, mirror, swimWeight, nibbleSpeed, nibbleAttackTime, liftDuration, awaitingHook
+)
 	if self.destroyed then
 		return
 	end
-	local request = self.state:Sample(phase, phaseStartedAt, now, mirror, swimWeight, nibbleSpeed, nibbleAttackTime, liftDuration)
+	local request = self.state:Sample(
+		phase, phaseStartedAt, now, mirror, swimWeight, nibbleSpeed, nibbleAttackTime, liftDuration, awaitingHook
+	)
 	if self.loading or self.failed then
 		return request
 	end

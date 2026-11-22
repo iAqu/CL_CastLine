@@ -16,6 +16,7 @@ local function deferred()
 	local success, failure, done = {}, {}, {}
 	local status, value = "Pending", nil
 	local promise = {}
+	function promise:timeout() return self end
 	function promise:andThen(callback)
 		if status == "Resolved" then callback(value) else table.insert(success, callback) end
 		return self
@@ -182,7 +183,14 @@ return function(initialCash)
 			OpenGui = function() gui.Enabled = true end,
 			CloseGui = function() gui.Enabled = false end,
 			SetNavigationOptions = function() end,
+			ResetNavigationFocus = function(_, focus) h.focus = focus end,
+			RefreshNavigationFocus = function() end,
 		},
+		ShopInventoryStatus = { Bind = function(list)
+			return function(message)
+				h.status, list.Visible = message, message == nil
+			end
+		end },
 		GuiUtil = { SetRarityGradient = function() end },
 		IndexItemViewport = {},
 		NotificationClient = { RedNotify = function(message) h.error = message end, GreenNotify = function() end },

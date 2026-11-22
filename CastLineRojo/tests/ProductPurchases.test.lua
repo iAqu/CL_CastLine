@@ -20,7 +20,9 @@ local buyer = {UserId = 1, DisplayName = "Buyer"}
 local recipient = {UserId = 2, DisplayName = "Recipient"}
 local other = {UserId = 3, DisplayName = "Other"}
 local Data = {}
+local stores, checkoutFixture
 local function join(player)
+	player.Parent = stores.Players
 	local snapshot = disk[player.UserId]
 	local profile = {active = true, MetaData = {MetaTags = {}, MetaTagsLatest = {}}}
 	profile.Data = if snapshot then copy(snapshot.data) else {
@@ -75,7 +77,7 @@ function Data:ClearPaidDelivery(player, _, id)
 	mail[player.UserId][id] = nil
 end
 
-local stores = {
+stores = {
 	Players = {GetPlayerByUserId = function(_, id) return live[id] end},
 	ReplicatedStorage = {Packages = {Knit = {
 		GetService = function(name)
@@ -99,11 +101,21 @@ local stores = {
 	end},
 	MarketplaceService = {PromptProductPurchase = function()
 		promptCount += 1
-		assert(disk[buyer.UserId].data.ProductPurchases.Intent, "Intent must be saved before prompting")
+		if checkoutFixture.Enabled then
+			assert(checkoutFixture.Records["Product:1"].Snapshot, "Dedicated context must be saved before prompting")
+		else
+			assert(disk[buyer.UserId].data.ProductPurchases.Intent, "Intent must be saved before prompting")
+		end
 	end},
 }
 
+checkoutFixture = require("./helpers/PurchaseCheckoutFixture")(stores.Players, stores.MarketplaceService, {
+	defer = function(callback, ...) callback(...) end,
+	delay = function(_, callback, ...) callback(...) end,
+}, function() return math.floor(now) end)
+
 local function loadProducts()
+	stores.ServerScriptService.Services.PurchaseCheckout = checkoutFixture.Load()
 	local function wait(seconds)
 		now += seconds
 		if yieldOnWait then
@@ -156,7 +168,8 @@ assert(products.Process(receipt("cash")) and products.Process(receipt("cash")))
 assert(profile.Data.Wins == 50000 and profile.Data.RobuxSpent == 19 and legacy["1_cash"])
 
 join(recipient)
-assert(products.Prompt(buyer, "Cash", row, 101, recipient))
+local offlineGiftAmount = 2_500_000
+assert(products.Prompt(buyer, "Cash", row, 101, recipient, offlineGiftAmount))
 products.OnPromptFinished(buyer, 101, true)
 leave(recipient)
 leave(buyer)
@@ -168,13 +181,13 @@ assert(next(mail[2]) and not mail[3], "Offline delivery uses the original recipi
 local giftId, queued = next(mail[2])
 local receivingProfile = join(recipient)
 products.Watch(recipient, function(player) assert(player == recipient) end)
-assert(receivingProfile.Data.Wins == 50000 and disk[2].data.Wins == 50000 and next(mail[2]) == nil)
+assert(receivingProfile.Data.Wins == offlineGiftAmount and disk[2].data.Wins == offlineGiftAmount and next(mail[2]) == nil)
 mail[2][giftId] = queued
 leave(recipient)
 receivingProfile = join(recipient)
 products = loadProducts()
 products.Watch(recipient, function() end)
-assert(receivingProfile.Data.Wins == 50000 and next(mail[2]) == nil, "Duplicate mailbox delivery is idempotent")
+assert(receivingProfile.Data.Wins == offlineGiftAmount and next(mail[2]) == nil, "Duplicate mailbox delivery is idempotent")
 
 assert(products.Prompt(buyer, "DoubleTrain", {Type = "GamePass", BuyNum = 1, Price = 19}, 102, recipient))
 products.OnPromptFinished(buyer, 102, true)
@@ -258,3 +271,69 @@ assert(ok and granted and profile.Data.Wins == queuedBalance + row.BuyNum)
 yieldOnWait = false
 
 print("Shared SKU reopening, safe recipient change, same-session save retry and join replay passed")
+
+
+-- The dedicated path must call Roblox even when the player profile is unable to save.
+checkoutFixture.Enabled = true
+paused = true
+local promptStarted, savedAtStart, shownAtStart = now, saveCalls, promptCount
+assert(products.Prompt(buyer, "Cash", row, 105, buyer))
+assert(now == promptStarted and saveCalls == savedAtStart and promptCount == shownAtStart + 1)
+assert(not profile.Data.ProductPurchases.Intent, "Dedicated checkout must not write the profile intent")
+products.OnPromptFinished(buyer, 105, false)
+local dedicatedGiftAmount = 8_000_000
+assert(products.Prompt(buyer, "Cash", row, 105, other, dedicatedGiftAmount))
+products.OnPromptFinished(buyer, 105, true)
+assert(not products.Process(receipt("dedicated-gift", 105)), "Keep the checkout until delivery is saved")
+assert(checkoutFixture.Records["Product:1"].ReceiptId == "dedicated-gift")
+paused = false
+profile:Save()
+leave(buyer)
+profile = join(buyer)
+products = loadProducts()
+checkoutFixture.Enabled = false
+assert(not products.Prompt(buyer, "Cash", row, 105, buyer), "Rollback must guard pending dedicated checkouts")
+assert(products.Process(receipt("dedicated-gift", 105)) and products.Process(receipt("dedicated-gift", 105)))
+assert(checkoutFixture.Records["Product:1"].Status == "Complete")
+local count = 0
+for _, order in mail[other.UserId] do
+	if order.OrderId == "1_dedicated-gift" then
+		count += 1
+		assert(order.RecipientUserId == other.UserId and order.Amount == dedicatedGiftAmount)
+	end
+end
+assert(count == 1, "Replay delivers the shared SKU once to the frozen recipient")
+
+checkoutFixture.Enabled = true
+local balanceBeforeDedicated = profile.Data.Wins
+local selfReceipt = receipt("dedicated-self", 105)
+assert(products.Prompt(buyer, "Cash", row, 105, buyer))
+assert(products.Process(selfReceipt) and products.Process(selfReceipt))
+assert(profile.Data.Wins == balanceBeforeDedicated + row.BuyNum)
+assert(not products.Prompt(buyer, "Cash", row, 105, buyer), "Wait for the real window to close even when payment is already saved")
+products.OnPromptFinished(buyer, 105, true)
+assert(products.Prompt(buyer, "DoubleTrain", { Type = "GamePass", BuyNum = 1, Price = 19 }, 106, recipient))
+products.OnPromptFinished(buyer, 106, true)
+assert(products.Process(receipt("dedicated-pass-gift", 106)))
+local grantedGift
+for _, order in mail[recipient.UserId] do
+	if order.OrderId == "1_dedicated-pass-gift" then
+		grantedGift = order
+	end
+end
+assert(grantedGift and grantedGift.PurchaseId == "DoubleTrain" and grantedGift.RecipientUserId == recipient.UserId)
+
+for _, dedicated in { false, true } do
+	checkoutFixture.Enabled = dedicated
+	local sku = if dedicated then 108 else 107
+	local cashBefore = profile.Data.Wins
+	assert(products.Prompt(buyer, "WinsTier1", row, sku, buyer, 100_000))
+	products.OnPromptFinished(buyer, sku, false)
+	assert(products.Prompt(buyer, "WinsTier1", row, sku, buyer, 2_500_000))
+	local snapshot = if dedicated then checkoutFixture.Records["Product:1"].Snapshot else profile.Data.ProductPurchases.Intent
+	assert(snapshot.Amount == 2_500_000, "A changed quote must replace a canceled snapshot")
+	products.OnPromptFinished(buyer, sku, true)
+	local dynamicReceipt = receipt("dynamic-" .. sku, sku)
+	assert(products.Process(dynamicReceipt) and products.Process(dynamicReceipt))
+	assert(profile.Data.Wins == cashBefore + 2_500_000, "Receipt and replay must use the frozen quote")
+end

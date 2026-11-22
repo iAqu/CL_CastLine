@@ -387,17 +387,20 @@ hold("base", backpack, "Small", "Golden")
 plotService:RefreshInventoryIncome(player)
 assert(player:GetAttribute("BestOwnedFishBaseCps") == 4, "Use base CPS, not the strongest fish's mutation")
 assert(plotService:RequestPlace(player, "event").rate == 6)
+assert(player:GetAttribute("PlotFishBaseCashPerSecond") == 6)
 local eventBalance = data.Wins
 now += 2
 local stronger = hold("new-best", backpack, "Large", "Normal")
 plotService:RefreshInventoryIncome(player)
 assert(data.Wins == eventBalance + 12 and player:GetAttribute("BestOwnedFishBaseCps") == 20)
 assert(client:GetEquippedFish(player).fish[1].income == 30)
+assert(player:GetAttribute("PlotFishBaseCashPerSecond") == 30)
 now += 1
 data.Items["new-best"] = nil
 stronger:Destroy()
 plotService:RefreshInventoryIncome(player)
 assert(data.Wins == eventBalance + 42 and client:GetEquippedFish(player).fish[1].income == 6)
+assert(player:GetAttribute("PlotFishBaseCashPerSecond") == 6)
 -- A failed payout must retain the old credit while switching to the new rate.
 now += 1
 payoutAvailable = false
@@ -415,7 +418,7 @@ local eventRoster = client:GetEquippedFish(player).fish
 assert(eventRoster[1].uid == "event" and eventRoster[1].income == 30 and eventRoster[2].income == 20)
 
 -- Upgraded capacity must reach placement, best-equip, snapshots and income.
-data.PlotUpgradeLevel = 5
+data.PlotUpgradeLevel = 10
 for index = 1, 20 do hold("upgraded-" .. index, backpack, "Large", "Normal") end
 assert(plotService:RequestEquipBest(player).ok)
 local upgradedRoster = client:GetEquippedFish(player)
@@ -458,4 +461,38 @@ assert(restored.fish[1].uid == "missing-model" and restored.revision == updated.
 	"Equip the previously skipped fish once its model is available")
 assert(not unavailable.Parent and data.Items["missing-model"].PaidOrigin == "test-order",
 	"Consume the tool and preserve the equipped fish's paid origin")
+
+-- The real grant path must settle the old rate and immediately refresh online income.
+local cashPass = "DoubleWins"
+data.GamePasses = {}
+services.ReplicatedStorage.Modules.Constants = { GAMEPASS = {
+	DOUBLE_WINS = cashPass, SUPER_LUCK = "SuperLuck", MEGA_LUCK = "MegaLuck",
+} }
+services.ReplicatedFirst.DataHelpers = { PurchaseDataHelper = {
+	GetData = function() return { Type = "GamePass" } end,
+	IsRetired = function() return false end,
+} }
+services.PlotFishService = plotService
+local gamePassService = loadSource("src/ServerScriptService/Services/GamePassService.lua", {
+	game = { GetService = function(_, name) return services[name] end },
+	require = function(value) return value end,
+})
+local baseRate = income.GetRate(data)
+local cashBeforeGrant = data.Wins
+now += 1
+gamePassService:GiveGamePass(player, cashPass)
+assert(data.Wins == cashBeforeGrant + baseRate, "Settle pre-grant time at the old rate")
+assert(income.GetRate(data) == baseRate * 2 and player:GetAttribute(income.MULTIPLIER_ATTRIBUTE) == 2)
+local boosted = client:GetEquippedFish(player)
+assert(boosted.revision == restored.revision + 1 and boosted.fish[1].income == restored.fish[1].income * 2)
+gamePassService:GiveGamePass(player, cashPass)
+assert(client:GetEquippedFish(player).revision == boosted.revision, "A repeated grant must not reapply the effect")
+now += 1
+plotService:RefreshInventoryIncome(player)
+assert(data.Wins == cashBeforeGrant + baseRate * 3, "Online payout uses the boosted rate after the grant")
+
+data.LastOnlineTime, data.PendingPlotOfflineCash = 100, 17
+income.PrepareOffline(data, 109)
+assert(data.PendingPlotOfflineCash == 17 + income.ComputeOfflineCash(baseRate, 9) * 2,
+	"Double only newly earned offline cash after applying the existing rounding rule")
 print("PlotFishService.test.lua passed")

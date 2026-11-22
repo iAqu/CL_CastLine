@@ -12,7 +12,19 @@ local services = {
 		end,
 	},
 }
+local changed = {}
 local environment = setmetatable({
+	Instance = {
+		new = function(class)
+			assert(class == "BindableEvent", "Use an event for observers of input contexts")
+			return {
+				Event = {},
+				Fire = function(_, context)
+					table.insert(changed, context)
+				end,
+			}
+		end,
+	},
 	game = {
 		GetService = function(_, name)
 			return assert(services[name])
@@ -29,8 +41,10 @@ assert(not gate.IsUiBlockingWorld(), "Fishing itself must not block the screen t
 gate.SetActive("Fishing", anotherFishing, true)
 gate.SetActive("Fishing", fishing, false)
 assert(not gate.IsWorldActionAllowed(), "One cleanup must not release another active fishing context")
+assert(#changed == 1 and changed[1] == "Fishing", "Nested sources must not duplicate change events")
 gate.SetActive("Fishing", anotherFishing, false)
 assert(gate.IsWorldActionAllowed(), "Cleanup must restore gameplay")
+assert(#changed == 2 and changed[2] == "Fishing", "The last source must publish the release")
 
 gate.SetActive("Fishing", fishing, true)
 gate.SetActive("Popup", popup, true)

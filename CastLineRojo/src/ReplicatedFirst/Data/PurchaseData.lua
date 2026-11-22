@@ -25,7 +25,7 @@ local data: {[string]: PurchaseConfig} = {
 		ProductId = 2093792687,
 		GiftProductId = 3732742706,
 		IconId = "rbxassetid://138623259278633",
-		Description = "Double cash forom every animal",
+		Description = "Earn double cash from fish in your slots.",
 		Backup = "279",
 	},
 	DoubleTrain = {

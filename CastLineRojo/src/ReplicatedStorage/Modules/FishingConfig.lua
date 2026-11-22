@@ -16,6 +16,7 @@ local Config = {
 	ApexHeightMin = 12,
 	ApexHeightMax = 60,
 	CastLeadTime = 0.35,
+	CastConfirmationTimeout = 8,
 	FrontShotTime = 0.16,
 	OrbitShotTime = 1.39,
 	-- CastRod 在 0.85～1.8 秒后摆停顿；2.05 秒竿尖已前挥且仍高于角色。
@@ -371,6 +372,7 @@ local Config = {
 		},
 		RippleInterval = 0.22,
 		FishLift = {
+			MinShowcaseHeight = 5.4,
 			RiseTime = 0.40,
 			PeakHold = 0.08,
 			FallTime = 0.80,
@@ -424,6 +426,8 @@ local Config = {
 	},
 	Sounds = {
 		LuckTick = { Id = "rbxassetid://137872392480008", Volume = 0.3 },
+		CatchRevealImpact = { Id = "rbxassetid://139520673393967", Volume = 0.32, Pitch = 1.06 },
+		CatchRevealBurst = { Id = "rbxassetid://9118614058", Volume = 0.2, Pitch = 0.9 },
 		LuckWhole = { Id = "rbxassetid://113397864512278", Volume = 0.85 },
 		MeterTick = { Id = "rbxassetid://137872392480008", Volume = 0.25 },
 		ButtonClick = { Id = "rbxassetid://113397864512278", Volume = 0.8 },
@@ -522,11 +526,16 @@ function Config.GetFishingInputDelay(player: Player): number
 	return math.clamp(player:GetNetworkPing() / 2, 0, 0.2)
 end
 
-function Config.GetHookTime(receivedAt: number, biteAt: number, biteEndsAt: number, inputDelay: number): number?
-	if receivedAt < biteAt or receivedAt >= biteEndsAt + inputDelay + 0.08 then
+function Config.GetHookTime(receivedAt: number, pressedAt: unknown, biteAt: number, biteEndsAt: number, rtt: number): number?
+	if type(pressedAt) ~= "number" or not (pressedAt >= biteAt and pressedAt < biteEndsAt) then
 		return nil
 	end
-	return math.clamp(receivedAt - inputDelay, biteAt, biteEndsAt)
+	-- Reliable gameplay traffic can arrive later than the network-ping estimate.
+	local deliveryBudget = math.clamp(1.5 * rtt + 0.15, 0.25, 1.25)
+	if pressedAt > receivedAt + 0.05 or receivedAt > pressedAt + deliveryBudget then
+		return nil
+	end
+	return pressedAt
 end
 
 -- Pure shared classification. Internal compatibility callers omit progress to use the top curve.

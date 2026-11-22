@@ -22,6 +22,7 @@ local UiConfettiUtil = require(Modules.UiConfettiUtil)
 local Assets = require(Modules.FishingAssets)
 local Gate = require(Modules.GameplayInputGate)
 local GuiAnimation = require(Modules.GuiAnimation)
+local NotificationClient = require(Modules.NotificationClient)
 local PlotWorkspaceUtil = require(Modules.PlotWorkspaceUtil)
 local Loading = require(ReplicatedFirst.LoadingAttributes)
 local Constants = require(Modules.Constants)
@@ -174,6 +175,14 @@ local function failed(state, message)
 	Controller:Cancel()
 end
 
+local function failFishingAction(state, message)
+	if session == state then
+		failed(state, message)
+		NotificationClient.RedNotify(message)
+	end
+end
+
+
 local function prepareTeaching(state)
 	local fishingAnimations = ReplicatedStorage.Animation.Fishing
 	local animation = fishingAnimations.CastRod
@@ -203,11 +212,14 @@ local function prepareTeaching(state)
 		requestRound = function(previous)
 			return state.service:NextRound(state.token, previous)
 		end,
-		hook = function(round)
-			return state.service:Hook(state.token, round)
+		hook = function(round, pressedAt)
+			return state.service:Hook(state.token, round, pressedAt)
+		end,
+		getHookResult = function(round)
+			return state.service:GetHookResult(state.token, round)
 		end,
 		onFailure = function(message)
-			failed(state, message)
+			failFishingAction(state, message)
 		end,
 		onEarlyHook = function()
 			state.earlyUntil = os.clock() + 1.3
@@ -277,7 +289,7 @@ local function update(state, now, dt)
 		seq:Update(now, dt)
 		local phase = seq.phase
 		if state.biteGuide then
-			state.biteGuide.Visible = BITE_GUIDE_PHASES[phase] == true and not seq.hookPendingAt
+			state.biteGuide.Visible = BITE_GUIDE_PHASES[phase] == true and not seq.hookPending
 		end
 		seq.meter.prompt.Visible, seq.continueLabel.Visible = false, false
 		instruction(state, nil)
@@ -296,7 +308,7 @@ local function update(state, now, dt)
 			instruction(state, "Retry")
 		elseif phase == "Bite" then
 			instruction(state, "Hook")
-			if not seq.hookPendingAt then
+			if not seq.hookPending then
 				cuePhase, cueElapsed = phase, now - timeline.startedAt
 				Analytics.Report(state, "HookPrompt")
 			end
@@ -594,9 +606,10 @@ function Controller:HandleInput(input, processed)
 			return
 		end
 		state.castPending = true
-		sequence:LockCastMeter()
+		sequence:BeginCast(os.clock())
 		state.service
 			:Cast(state.token)
+			:timeout(FishingConfig.CastConfirmationTimeout)
 			:andThen(function(result)
 				if session ~= state then
 					return
@@ -605,18 +618,18 @@ function Controller:HandleInput(input, processed)
 				if result.ok then
 					sequence:Cast(result.castProgress, result.distance, result.luck, result.castRating)
 				else
-					failed(state, result.message)
+					failFishingAction(state, result.message)
 				end
 			end)
-			:catch(function(err)
-				failed(state, err)
+			:catch(function()
+				failFishingAction(state, "Could not confirm the cast.")
 			end)
 	elseif sequence.phase == "Caught" and state.caughtAt and os.clock() >= state.caughtAt + Config.SuccessHold then
 		-- Keep the gameplay input gate closed for the rest of this input dispatch.
 		state.exitRequested = true
 	elseif sequence.bite and os.clock() >= sequence.readyAt then
 		sequence:TryHook(os.clock())
-		if session == state and (sequence.hookPendingAt or sequence.bite.timeline.phase ~= "Bite") then
+		if session == state and (sequence.hookPending or sequence.bite.timeline.phase ~= "Bite") then
 			if state.biteGuide then
 				state.biteGuide.Visible = false
 			end

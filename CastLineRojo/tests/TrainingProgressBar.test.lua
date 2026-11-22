@@ -109,6 +109,10 @@ local start = assert(controller:find("\tlocal function apply(value)", 1, true))
 local finish = assert(controller:find("\tlocal function bindPlot()", start, true))
 local applyChunk =
 	assert(loadstring("local snapshot, feedbackPrevious\n" .. controller:sub(start, finish - 1) .. "\nreturn apply"))
+local progressPath = "../src/ReplicatedStorage/Modules/TrainingProgress"
+local Progress = require(progressPath)
+local feedbackChunk = assert(loadstring(read(modules .. "TrainingFeedback.lua")))
+setfenv(feedbackChunk, setmetatable({ script = { Parent = { TrainingProgress = progressPath } } }, { __index = getfenv() }))
 local levels = assert(loadstring(read("src/ReplicatedFirst/Data/TrainingLevelsData.lua")))()
 local firstThreshold = levels["19"].XpToNextLevel
 local nextThreshold = levels["20"].XpToNextLevel
@@ -123,7 +127,7 @@ setfenv(
 		xpBar = bar,
 		effects = effects,
 		NumberUtil = formats,
-		Feedback = assert(loadstring(read(modules .. "TrainingFeedback.lua")))(),
+		Feedback = feedbackChunk(),
 		Levels = levels,
 		player = {},
 		Gate = { SetActive = noop },
@@ -135,7 +139,7 @@ setfenv(
 local apply = applyChunk()
 
 local function send(revision, level, xp, active)
-	local row = levels[tostring(level)]
+	local row = Progress.GetLevel(levels, level)
 	apply({
 		revision = revision,
 		level = level,

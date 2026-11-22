@@ -1,6 +1,7 @@
 local Debris = game:GetService("Debris")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
 local Config = require(script.Parent.FishingConfig)
 local Settings = Config.Bite
 local DEFAULT_SWIM_SPEED = Settings.ApproachDistance / Settings.ApproachTime
@@ -138,6 +139,9 @@ function Timeline:Advance(now)
 				end
 			end
 			self:_enter("Holding", at, pause)
+			if self.nibbles == 0 and self.scheduledBiteAt then
+				self.endsAt = self.scheduledBiteAt
+			end
 		elseif phase == "Holding" then
 			if self.nibbles > 0 then
 				self.nibbles -= 1
@@ -145,11 +149,17 @@ function Timeline:Advance(now)
 				self:_enter("Nibbling", at, self:GetNibbleTiming().duration)
 			else
 				self:_enter("Bite", at, self.hookWindow)
+				self.endsAt = self.scheduledBiteEndsAt or self.endsAt
 			end
 		elseif phase == "Bite" then
 			self:_enter("Escaped", at)
 		elseif phase == "Struggling" then
-			self:_enter("Lifting", at, self.liftTiming.duration)
+			if self.awaitingHook then
+				break
+			end
+			local liftAt = if self.hookConfirmedAt and self.hookConfirmedAt > at then now else at
+			self.liftStruggleElapsed = if liftAt > at then liftAt - self.startedAt else self.struggleTime
+			self:_enter("Lifting", liftAt, self.liftTiming.duration)
 		elseif phase == "Lifting" then
 			self:_enter("Caught", at)
 		else
@@ -159,10 +169,11 @@ function Timeline:Advance(now)
 	return self.phase
 end
 
-function Timeline:TryHook(now)
+function Timeline:TryHook(now, awaitingHook)
 	self:Advance(now)
 	if self.phase == "Bite" then
 		self:_enter("Struggling", now, self.struggleTime)
+		self.awaitingHook = awaitingHook
 		return true
 	elseif
 		self.phase == "Waiting"
@@ -203,7 +214,7 @@ Motion.__index = Motion
 
 -- 解析积分平滑起步，之后匀角速绕行；半径先展开再收拢，水花独立采样。
 function Motion:SampleOrbit(elapsed)
-	local time = math.clamp(elapsed, 0, self.struggleTime)
+	local time = math.max(0, elapsed)
 	local blendTime = self.struggleBlendTime
 	local blend = math.clamp(time / blendTime, 0, 1)
 	local travel = time - blendTime * (blend - blend ^ 3 + 0.5 * blend ^ 4)
@@ -218,7 +229,7 @@ function Motion:SampleOrbit(elapsed)
 		radialVelocity = (peakRadius - 1) * 6 * blend * (1 - blend) / blendTime
 	else
 		local duration = self.struggleTime - blendTime
-		local progress = (time - blendTime) / duration
+		local progress = math.min(1, (time - blendTime) / duration)
 		radius = peakRadius - (peakRadius - orbit.endRadius) * smooth(progress)
 		radialVelocity = -(peakRadius - orbit.endRadius) * 6 * progress * (1 - progress) / duration
 	end
@@ -464,7 +475,7 @@ function FishingBiteSequence:_captureReelFish(target)
 	}
 end
 
-function FishingBiteSequence:TryHook(now, mutationId)
+function FishingBiteSequence:TryHook(now, mutationId, awaitingHook)
 	if self.destroyed then
 		return false
 	end
@@ -485,7 +496,7 @@ function FishingBiteSequence:TryHook(now, mutationId)
 		self:_trueBiteFeedback(now, target)
 	end
 	local previous = self.timeline.phase
-	local hooked = self.timeline:TryHook(now)
+	local hooked = self.timeline:TryHook(now, awaitingHook)
 	if hooked then
 		self.mutationId = mutationId
 	end
@@ -505,6 +516,26 @@ function FishingBiteSequence:TryHook(now, mutationId)
 	end
 	self.owner:_presentBait(self.timeline.phase, math.max(0, now - self.timeline.startedAt))
 	return hooked
+end
+
+function FishingBiteSequence:ConfirmHook(now, result)
+	if result.weight then
+		self:SetCaughtWeight(result.weight)
+	end
+	self.mutationId = result.mutationId
+	self.isNewDiscovery = result.isNewDiscovery == true
+	self.catchChanceDenominator = result.catchChanceDenominator
+	self.timeline.hookConfirmedAt = now
+	self.timeline.awaitingHook = nil
+end
+
+function FishingBiteSequence:RejectHook(now)
+	local timeline = self.timeline
+	local target = self.owner:_waterTarget()
+	local frame = self:_pose("Struggling", math.max(0, now - timeline.startedAt), target, now, nil, self.presentationCamera)
+	self.escapeFrame = CFrame.new(-target) * frame
+	timeline.awaitingHook = nil
+	timeline:_enter("Escaped", now)
 end
 
 function FishingBiteSequence:PreviewMutation(mutationId)
@@ -801,7 +832,8 @@ function FishingBiteSequence:GetShowcaseHeight()
 		local reach = radius * (1 + scaleOffset) - Settings.LiftBounceHeight * amplitude
 		clearance = math.max(clearance, reach)
 	end
-	return math.max(Settings.ShowcaseHeight, clearance + Settings.WaterClearance)
+	local minimum = if self.isEgg then Settings.ShowcaseHeight else Settings.FishLift.MinShowcaseHeight
+	return math.max(minimum, clearance + Settings.WaterClearance)
 end
 
 -- 从真实提竿姿态接入螺旋线；先展开大圈，再沿真实切线持续收小。
@@ -834,7 +866,7 @@ function FishingBiteSequence:_prepareLift(target)
 	if self.liftPlan then
 		return
 	end
-	local initial = self:_struggleFrame(self.timeline.struggleTime, target)
+	local initial = self:_struggleFrame(self.timeline.liftStruggleElapsed or self.timeline.struggleTime, target)
 	self.liftInitial = CFrame.new(-target) * initial
 	local diameter = 2 * self.presentationRadius * (self.catchScale or self.defaultScale or 1)
 	self.liftPlan =
@@ -1003,7 +1035,11 @@ function FishingBiteSequence:_basePose(phase, elapsed, target, cameraPosition)
 		local position = target
 			+ (self.escapeOffset or frame.Position - target)
 			+ self.spawnDirection * math.min(elapsed, Settings.EscapeTime) * 18
-		frame = CFrame.lookAt(position, position + self.spawnDirection)
+		local rotation = CFrame.lookAt(position, position + self.spawnDirection).Rotation
+		if self.escapeFrame then
+			rotation = self.escapeFrame.Rotation:Lerp(rotation, smooth(elapsed / Settings.Motion.Animation.FadeTime))
+		end
+		frame = CFrame.new(position) * rotation
 		fade = math.clamp(elapsed / Settings.EscapeTime, 0, 1)
 	end
 	if cameraPosition then
@@ -1350,7 +1386,7 @@ function FishingBiteSequence:Update(now, deferPresentation)
 	owner:_presentBait(phase, elapsed)
 	if phase ~= self.lastPhase or timeline.startedAt ~= self.lastStartedAt then
 		if phase == "Escaped" then
-			self.escapeOffset = self.lastPosition and self.lastPosition - target
+			self.escapeOffset = if self.escapeFrame then self.escapeFrame.Position else self.lastPosition and self.lastPosition - target
 		elseif phase == "Struggling" or (phase == "Lifting" and self.isEgg) then
 			owner:_waterFeedback(now, target, 0.8, false, phase == "Lifting")
 			if phase == "Lifting" then
@@ -1391,7 +1427,8 @@ function FishingBiteSequence:Update(now, deferPresentation)
 			swimWeight,
 			timing.nibbleSpeed,
 			timing.attackTime,
-			self:GetLiftTiming().duration
+			self:GetLiftTiming().duration,
+			timeline.awaitingHook
 		)
 		local frame, baitPosition, fade, _, baitContact, pathPosition =
 			self:_pose(phase, elapsed, target, now, request)
@@ -1459,10 +1496,14 @@ function FishingBiteSequence:Update(now, deferPresentation)
 	end
 	owner:_setPhase(if phase == "Settling" then "Waiting" else phase)
 	local text = Settings.Text
-	owner.continueLabel.Text = if phase == "Caught"
-		then owner.continueText or text.Return
-		elseif phase == "Bite" then text.Hook
-		else text.Waiting
+	local usingGamepad = UserInputService.PreferredInput == Enum.PreferredInput.Gamepad
+	if phase == "Caught" then
+		owner.continueLabel.Text = if usingGamepad then "press A to continue" else owner.continueText or text.Return
+	elseif phase == "Bite" then
+		owner.continueLabel.Text = if usingGamepad then "PRESS A TO HOOK!" else text.Hook
+	else
+		owner.continueLabel.Text = text.Waiting
+	end
 	owner.continueLabel.Visible = if phase == "Caught"
 		then timeline:CanReturn(now)
 		else phase ~= "Settling"

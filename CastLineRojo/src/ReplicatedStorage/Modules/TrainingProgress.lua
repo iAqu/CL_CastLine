@@ -1,27 +1,36 @@
 -- Pure training progression and deterministic fish weights; shared by server and tests.
 local Progress = {}
 local FISH_WEIGHT_PER_STEP = 1.2 ^ 3
-local maximumByLevels = setmetatable({}, { __mode = "k" })
+local levelIndexByConfig = setmetatable({}, { __mode = "k" })
 
 local function finite(value)
 	return type(value) == "number" and value == value and math.abs(value) < math.huge
 end
 
+local function getLevelIndex(levels)
+	local index = levelIndexByConfig[levels]
+	if index then
+		return index
+	end
+
+	-- Sheet exports can use formatted keys such as "1,000". Index by the row's numeric level.
+	local byNumber = {}
+	local maximum = 1
+	for _, row in pairs(levels) do
+		byNumber[row.Level] = row
+		maximum = math.max(maximum, row.Level)
+	end
+	index = { byNumber = byNumber, maximum = maximum }
+	levelIndexByConfig[levels] = index
+	return index
+end
+
 function Progress.GetLevel(levels, level)
-	return levels[tostring(level)] or levels[level]
+	return levels[tostring(level)] or levels[level] or getLevelIndex(levels).byNumber[level]
 end
 
 function Progress.GetMaxLevel(levels)
-	local cached = maximumByLevels[levels]
-	if cached then
-		return cached
-	end
-	local maximum = 1
-	for _, row in pairs(levels) do
-		maximum = math.max(maximum, row.Level)
-	end
-	maximumByLevels[levels] = maximum
-	return maximum
+	return getLevelIndex(levels).maximum
 end
 
 function Progress.GetEquipment(items)
@@ -100,12 +109,14 @@ function Progress.CalculateFishWeight(baseWeight, maximum)
 	assert(finite(baseWeight) and baseWeight > 0, "Fish base weight must be positive and finite")
 	assert(finite(maximum) and maximum > 0, "Maximum catch weight must be positive and finite")
 	local weight = baseWeight
+	local steps = 0
 	while true do
 		local nextWeight = weight * FISH_WEIGHT_PER_STEP
 		if nextWeight > maximum or nextWeight <= weight then
-			return weight
+			return weight, steps
 		end
 		weight = nextWeight
+		steps += 1
 	end
 end
 

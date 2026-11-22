@@ -174,6 +174,7 @@ local function fixture(preview, cancelDuringGrant, onboardingTest)
 							equips += 1
 						end,
 						Grant = function(_, id, options)
+							assert(client:GetHookResult(player, token, round).status == "Pending")
 							if grantFails then
 								return nil, "Backpack unavailable"
 							end
@@ -260,6 +261,9 @@ local function fixture(preview, cancelDuringGrant, onboardingTest)
 		hook = function(time, roundOverride)
 			return client:Hook(player, token, roundOverride or round, time)
 		end,
+		hookResult = function(roundOverride)
+			return client:GetHookResult(player, token, roundOverride or round)
+		end,
 		cancel = function(finished)
 			client:Cancel(player, token, finished)
 		end,
@@ -291,15 +295,20 @@ assert(not live.cast().ok,"Input before loading handoff must not start casting")
 assert(live.startPlayback().ok)
 live.time(120)
 assert(live.cast().ok)
-assert(not live.round(0).ok, "Cannot schedule fish before landing")
+local early = live.round(0)
+assert(early.code == "RoundNotReady" and early.retryAfter > 0, "Report how long remains until landing")
+assert(live.round(7).code ~= "RoundNotReady")
 live.time(124)
 local first = live.round(0)
 assert(first.ok and first.weight == 1 and not live.round(0).ok,"Tutorial round must use the configured default weight")
 assert(not live.hook(124).ok, "Cannot claim before a genuine bite")
-live.time(128)
-assert(not live.hook(128, 0).ok, "Wrong round must remain ineligible")
-assert(live.hook(128).ok and live.grants() == 1)
-assert(not live.hook(128).ok and live.grants() == 1)
+assert(live.hookResult().status == "Rejected" and live.hookResult(0).status == "Unknown")
+live.time(first.biteAt + 0.4)
+assert(not live.hook(first.biteAt + 0.2, 0).ok, "Wrong round must remain ineligible")
+assert(not live.hook(first.biteAt).ok, "Opening round must also enforce the delivery budget")
+assert(live.hook(first.biteAt + 0.2).ok and live.grants() == 1, "Opening round uses the mapped press")
+assert(not live.hook(first.biteAt + 0.2).ok and live.grants() == 1)
+assert(live.hookResult().status == "Succeeded" and live.hookResult().result.weight == 1 and live.grants() == 1)
 assert(live.profile.Data.FishingIntroVersion == config.Version)
 assert(live.profile.Data.FishingOnboarding.Stage == "PlaceFish" and live.profile.Data.FishingOnboarding.FishUid == openingUid)
 assert(live.profile.Data.FishingProgress.Count == 1, "Teaching fish counts once toward newcomer milestones")

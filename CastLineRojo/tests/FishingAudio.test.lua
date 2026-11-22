@@ -34,15 +34,16 @@ local preloadCalls, failPreload, failMeterLoad = 0, false, false
 local contentProvider = {
 	PreloadAsync = function(_, sounds)
 		preloadCalls += 1
-		assert(#sounds == 3, "Preload the three unique meter, click and perfect resources")
+		assert(#sounds == 5, "Preload each unique fishing UI cue once")
 		local ids = {}
 		for _, source in sounds do
 			assert(not ids[source.SoundId] and not source.plays, "Preloading must deduplicate assets and never play them")
 			ids[source.SoundId] = true
 		end
 		assert(ids[config.Sounds.MeterTick.Id] and ids[config.Sounds.LuckTick.Id]
-			and ids[config.Sounds.ButtonClick.Id] and ids[config.Sounds.Perfect.Id],
-			"Warm the light tick, shared integer/click sound and perfect confirmation")
+			and ids[config.Sounds.ButtonClick.Id] and ids[config.Sounds.Perfect.Id]
+			and ids[config.Sounds.CatchRevealImpact.Id] and ids[config.Sounds.CatchRevealBurst.Id],
+			"Warm the roll and reveal cues before the fishing animation")
 		if failPreload then error("Simulated loading failure") end
 		for _, source in sounds do
 			source.IsLoaded = not (failMeterLoad and source.SoundId == config.Sounds.MeterTick.Id)
@@ -384,7 +385,7 @@ assert(meterCache, "Preload must retain exactly the meter resource")
 create():Destroy()
 Audio.ClearTails()
 Audio.PreloadLuckSounds()
-assert(not meterCache.destroyed and meterCache.Parent == soundService and #preloadObjects == 3,
+assert(not meterCache.destroyed and meterCache.Parent == soundService and #preloadObjects == 5,
 	"Returning from fishing and fishing again must reuse the same resident meter resource")
 local failureAudio = assert(load(read("src/ReplicatedStorage/Modules/FishingAudio.lua"), "FishingAudio", "t", environment))()
 local beforeWarnings = warnings

@@ -23,6 +23,18 @@ local modules = {
 local income = loadSource(root .. "PlotFishIncome.lua", {
 	script = { Parent = modules }, require = function(value) return value end,
 })
+local cashPack = loadSource(root .. "CashPack.lua")
+for i, floor in {100_000, 1_000_000, 10_000_000} do
+	local id = "WinsTier" .. i
+	assert(cashPack.GetAmount(id, 0) == floor)
+	assert(cashPack.GetAmount(id, nil) == nil and cashPack.GetAmount(id, math.huge) == nil)
+end
+for i, amount in {2_500_000, 8_000_000, 20_000_000} do
+	assert(cashPack.GetAmount("WinsTier" .. i, 1_000) == amount)
+end
+local midpoint = 1e6 * math.sqrt(2 * 2.5) / cashPack.Offers.WinsTier1.Seconds
+assert(cashPack.GetAmount("WinsTier1", midpoint) == 2_000_000)
+assert(cashPack.GetAmount("WinsTier1", midpoint + 1) == 2_500_000)
 modules.PlotFishIncome = income
 local function near(actual, expected)
 	assert(math.abs(actual - expected) < 1e-9, tostring(actual) .. " ~= " .. tostring(expected))
@@ -70,6 +82,10 @@ migrate({ Items = false })
 assert(income.GetBestOwnedBaseCps(data) == 100, "A large mutated fish must not inflate the Event baseline")
 assert(income.GetCpsPrice(event, 2.5, 100, 6.75) == 1037, "Apply an Event fish's own weight exactly once")
 assert(income.GetRate(data) == 4649, "Online income must count placed fish once with their actual weights")
+data.GamePasses = { DoubleWins = true }
+assert(income.GetBaseRate(data) == 4649 and income.GetRate(data) == 9298,
+	"Cash Pack basis uses weighted, mutated, placed fish and excludes the x2 Cash pass")
+data.GamePasses = nil
 income.PrepareOffline(data, 110)
 assert(data.PendingPlotOfflineCash == 23245, "Offline income shares weighted CPS and the existing 50% rate")
 

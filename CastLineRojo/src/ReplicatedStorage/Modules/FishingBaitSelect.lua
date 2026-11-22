@@ -4,6 +4,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local NumberUtil = require(script.Parent.NumberUtil)
 local GuiUtil = require(script.Parent.GuiUtil)
+local GuiAnimation = require(script.Parent.GuiAnimation)
 local BaitConfig = require(script.Parent.FishingBaitConfig)
 
 local POPUP_TWEEN_INFO = TweenInfo.new(0.20, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
@@ -92,7 +93,8 @@ function FishingBaitSelect.Bind(
 	close,
 	quotes,
 	allowUnavailableClick: boolean?,
-	cash: NumberValue?
+	cash: NumberValue?,
+	preferredBaitId: string?
 )
 	local frame = gui:FindFirstChild("Frame")
 	local content = frame and frame:FindFirstChild("Content")
@@ -112,6 +114,13 @@ function FishingBaitSelect.Bind(
 	local baitButtons = {}
 	local cashPriceUpdates = {}
 	local unavailable, destroyed, busy = {}, false, false
+	local selectable = { [noneButton] = noneButton.Selectable, [exit] = exit.Selectable }
+	local function updateButton(button: GuiButton)
+		local available = not busy and not unavailable[button]
+		button.Interactable = available
+		button.Selectable = available and selectable[button]
+	end
+
 	template.Visible = false
 	local noneLabel = noneButton:FindFirstChild("Seed")
 	if noneLabel and noneLabel:IsA("TextLabel") then
@@ -135,6 +144,7 @@ function FishingBaitSelect.Bind(
 		table.insert(rows, row)
 		local button = row:FindFirstChild("Button")
 		assert(button and button:IsA("GuiButton"), "BaitSelectGui item button missing")
+		selectable[button] = button.Selectable
 		if quote and not quote.available and not allowUnavailableClick then
 			unavailable[button] = true
 		end
@@ -163,7 +173,7 @@ function FishingBaitSelect.Bind(
 				if quote.productId and quote.credits <= 0 then
 					if not allowUnavailableClick then
 						unavailable[button] = true
-						button.Interactable = false
+						updateButton(button)
 					end
 					getProductPrice(quote.productId, function(robux)
 						if destroyed then
@@ -172,7 +182,7 @@ function FishingBaitSelect.Bind(
 						if robux then
 							price.Text = "\u{E002} " .. tostring(robux)
 							unavailable[button] = nil
-							button.Interactable = not busy
+							updateButton(button)
 						else
 							price.Text = "UNAVAILABLE"
 						end
@@ -222,7 +232,10 @@ function FishingBaitSelect.Bind(
 	local function setBusy(isBusy: boolean)
 		busy = isBusy
 		for _, button in ipairs(buttons) do
-			button.Interactable = not busy and not unavailable[button]
+			updateButton(button)
+		end
+		if not busy then
+			GuiAnimation.RefreshNavigationFocus(gui)
 		end
 	end
 
@@ -233,16 +246,23 @@ function FishingBaitSelect.Bind(
 		Show = function()
 			setBusy(false)
 			gui.Enabled = true
+			local initialFocus = baitButtons[preferredBaitId] or noneButton
+			GuiAnimation.ResetNavigationFocus(gui, initialFocus)
+			GuiAnimation.PushModal(gui, initialFocus, close, function()
+				return not busy
+			end)
 			popupTween:Play()
 		end,
 		SetBusy = setBusy,
 		Destroy = function()
 			destroyed = true
+			GuiAnimation.PopModal(gui)
 			gui.Enabled = false
 			popupTween:Cancel()
 			popupTween:Destroy()
 			popupScale:Destroy()
 			noneButton.Interactable, exit.Interactable = true, true
+			noneButton.Selectable, exit.Selectable = selectable[noneButton], selectable[exit]
 			for _, connection in ipairs(connections) do
 				connection:Disconnect()
 			end

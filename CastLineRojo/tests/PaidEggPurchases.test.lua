@@ -277,6 +277,7 @@ local dependencies = {
 		end,
 	},
 }
+local checkoutFixture, checkout
 local api = {
 	Players = players,
 	ReplicatedFirst = { Data = { PurchaseData = purchases, FishesData = fishes } },
@@ -294,11 +295,24 @@ local api = {
 	},
 	MarketplaceService = {
 		PromptProductPurchase = function(_, player, productId)
-			assert(Delivery.Ensure(profiles[player].Data).Intent and saves > 0)
+			if checkout.WritesEnabled("Egg") then
+				assert(checkoutFixture.Records["Egg:" .. player.UserId].Snapshot)
+			else
+				assert(Delivery.Ensure(profiles[player].Data).Intent and saves > 0)
+			end
 			table.insert(prompts, productId)
 		end,
 	},
 }
+checkoutFixture = require("./helpers/PurchaseCheckoutFixture")(players, api.MarketplaceService, {
+	defer = function(callback, ...) callback(...) end,
+	delay = function(_, callback, ...) callback(...) end,
+}, function() return 1 end)
+checkoutFixture.Studio = true
+checkoutFixture.PlaceId = 84106335829275
+checkoutFixture.StudioPaidEggOverride = false
+checkout = checkoutFixture.Load()
+dependencies.PurchaseCheckout = checkout
 local service = loadSource("src/ServerScriptService/Services/PaidEggService.lua", {
 	game = {
 		GetService = function(_, name)
@@ -417,6 +431,61 @@ for _, reward in pairs(friendProfile.Data.Items) do
 end
 assert(not service:ProcessReceipt({ PlayerId = 1, PurchaseId = "unmatched", ProductId = purchases.Egg_R_1.ProductId }))
 assert(updates >= 2 and #prompts == 5)
+
+checkoutFixture.StudioPaidEggOverride = nil
+local staleEgg = { PlayerId = 1, PurchaseId = "old-unmatched", ProductId = receipt.ProductId }
+assert(not service:ProcessReceipt(staleEgg))
+saveSucceeds = false
+local beforeDedicated = saves
+purchaseService._PlayerGifted[1] = 2
+assert(service:Prompt(buyer, "Egg_R_1x3") and saves == beforeDedicated)
+assert(not buyerProfile.Data.PaidEgg.Intent)
+assert(not service:ProcessReceipt(staleEgg), "A known unmatched receipt cannot claim a later checkout")
+local dedicated = checkoutFixture.Records["Egg:1"]
+assert(dedicated.Snapshot.RecipientUserId == 2 and dedicated.Snapshot.MaxWeight == 1000)
+service:CancelPrompt(buyer, receipt.ProductId, true)
+purchaseService._PlayerGifted[1] = nil
+friend.Maximum = 1500
+local dedicatedReceipt = { PlayerId = 1, PurchaseId = "dedicated-egg", ProductId = receipt.ProductId, CurrencySpent = 199 }
+assert(not service:ProcessReceipt(dedicatedReceipt) and checkoutFixture.Records["Egg:1"].Status == "Open")
+saveSucceeds = true
+assert(service:ProcessReceipt(dedicatedReceipt) and service:ProcessReceipt(dedicatedReceipt))
+local dedicatedDelivery = mailbox[2]["1:dedicated-egg"]
+assert(dedicatedDelivery and dedicatedDelivery.MaxWeight == 1000 and buyerProfile.Data.RobuxSpent == 398)
+assert(checkoutFixture.Records["Egg:1"].Status == "Complete")
+
+-- Cloud configuration is absent. Only the actual Studio development path bypasses profile saves.
+local savePaidEggProfile = playerData.SavePaidEggProfile
+local elapsed = 0
+function playerData:SavePaidEggProfile(player)
+	elapsed += 7
+	return savePaidEggProfile(self, player)
+end
+checkoutFixture.StudioPaidEggOverride = false
+assert(service:Prompt(buyer, "Egg_R_1", true) and elapsed == 7)
+service:CancelPrompt(buyer, eggProduct, false)
+delayed[#delayed]()
+assert(not buyerProfile.Data.PaidEgg.Intent)
+checkoutFixture.StudioPaidEggOverride = nil
+
+for _, sku in Config.PurchaseOrder do
+	local row, quantity = Config.GetPurchase(sku, purchases)
+	local before = #prompts
+	checkoutFixture.OnUpdate = function()
+		assert(#prompts == before, "Roblox must wait for the dedicated write")
+		elapsed += 0.035
+	end
+	local started = elapsed
+	assert(service:Prompt(buyer, sku, true))
+	assert(math.abs(elapsed - started - 0.035) < 1e-8 and #prompts == before + 1)
+	assert(checkoutFixture.Records["Egg:1"].Snapshot.Quantity == quantity)
+	checkoutFixture.OnUpdate = nil
+	local snapshot = checkoutFixture.Records["Egg:1"].Snapshot
+	service:CancelPrompt(buyer, row.ProductId, false)
+	assert(service:Prompt(buyer, sku, true) and checkoutFixture.Records["Egg:1"].Snapshot == snapshot)
+	service:CancelPrompt(buyer, row.ProductId, false)
+end
+playerData.SavePaidEggProfile = savePaidEggProfile
 
 -- Policy reads fail closed; transfer checks both sides and cached entries expire.
 local policyRows, clock = {}, 0

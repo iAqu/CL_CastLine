@@ -17,7 +17,7 @@ assert(
 	"Offline leave hint must reuse CommonResultGui"
 )
 assert(
-	controller:find('local OFFLINE_HINT_TEXT = "Your items earn Cash while you\'re away!"', 1, true),
+	controller:find('local OFFLINE_HINT_TEXT = "Fish on your plot earn Cash while you\'re away!"', 1, true),
 	"Offline leave hint text is incorrect"
 )
 assert(

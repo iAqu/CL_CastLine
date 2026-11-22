@@ -185,7 +185,10 @@ assert(math.abs(eggLift:_scaleAt("Lifting", eggLift:GetLiftTiming().scaleTime * 
 	"Keep the egg lift animation on its own scale")
 
 local small = setmetatable({ presentationRadius = 1, mouthOffset = { Magnitude = 0.5 } }, Bite)
-assert(small:GetShowcaseHeight() == settings.ShowcaseHeight, "Keep the original height for small fish")
+assert(small:GetShowcaseHeight() == settings.FishLift.MinShowcaseHeight
+	and small:GetShowcaseHeight() > settings.ShowcaseHeight, "Lift small fish clear of the dock")
+small.isEgg = true
+assert(small:GetShowcaseHeight() == settings.ShowcaseHeight, "Keep the original egg showcase height")
 for _, shape in { { radius = 1, mouth = 0 }, { radius = 5, mouth = 4 } } do
 	caught.presentationRadius, caught.mouthOffset = shape.radius, { Magnitude = shape.mouth }
 	local height = caught:GetShowcaseHeight()
@@ -516,6 +519,30 @@ for _, offset in ipairs({ 0, 0.5, 0.599999 }) do
 	assert(state:CanReturn(caught + settings.ShowcaseHold))
 	assert(not state:CanRetry(caught + 100), "Caught fish must not automatically restart")
 	assert(not state:TryHook(caught + 10) and state.phase == "Caught")
+end
+
+for _, resolveDelay in ipairs({ 0.2, 4 }) do
+	local state = timeline(0)
+	local pressedAt = biteAt(0) + 0.1
+	assert(state:TryHook(pressedAt, true))
+	local nominalLift = state.endsAt
+	local confirmedAt = pressedAt + resolveDelay
+	assert(state:Advance(confirmedAt) == "Struggling" and state.startedAt == pressedAt)
+	assert(not state:CanReturn(confirmedAt) and not state:CanRetry(confirmedAt))
+	state.hookConfirmedAt, state.awaitingHook = confirmedAt, nil
+	local nextFrame = math.max(nominalLift, confirmedAt + 0.1)
+	assert(state:Advance(nextFrame) == "Lifting")
+	assert(state.startedAt == nextFrame)
+	assert(math.abs(state.endsAt - state.startedAt - state.liftTiming.duration) < 1e-6)
+	assert(math.abs(state.liftStruggleElapsed - (nextFrame - pressedAt)) < 1e-6)
+end
+
+do
+	local state = timeline(0)
+	state.scheduledBiteAt, state.scheduledBiteEndsAt = biteAt(0) + 0.007, biteAt(0) + 0.557
+	assert(state:Advance(state.scheduledBiteAt - 0.001) == "Holding")
+	assert(state:Advance(state.scheduledBiteAt) == "Bite")
+	assert(state:Advance(state.scheduledBiteEndsAt) == "Escaped")
 end
 
 for _, offset in ipairs({ 0.6, 0.600001, 20 }) do

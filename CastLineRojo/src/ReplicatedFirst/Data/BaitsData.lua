@@ -25,7 +25,7 @@ local data: {[string]: BaitConfig} = {
 		Rarity = "Common",
 		Icon = "rbxassetid://101323984361777",
 		LayoutOrder = 2,
-		LuckBoost = 5,
+		LuckBoost = 10,
 	},
 	Bait_103 = {
 		BaitID = "Bait_103",
@@ -34,7 +34,7 @@ local data: {[string]: BaitConfig} = {
 		Rarity = "Common",
 		Icon = "rbxassetid://74002202636525",
 		LayoutOrder = 3,
-		LuckBoost = 10,
+		LuckBoost = 20,
 	},
 	Bait_104 = {
 		BaitID = "Bait_104",
@@ -43,7 +43,7 @@ local data: {[string]: BaitConfig} = {
 		Rarity = "Uncommon",
 		Icon = "rbxassetid://119582100449753",
 		LayoutOrder = 4,
-		LuckBoost = 15,
+		LuckBoost = 30,
 	},
 	Bait_105 = {
 		BaitID = "Bait_105",
@@ -52,7 +52,7 @@ local data: {[string]: BaitConfig} = {
 		Rarity = "Uncommon",
 		Icon = "rbxassetid://108488333142482",
 		LayoutOrder = 5,
-		LuckBoost = 20,
+		LuckBoost = 40,
 	},
 	Bait_106 = {
 		BaitID = "Bait_106",
@@ -61,7 +61,7 @@ local data: {[string]: BaitConfig} = {
 		Rarity = "Rare",
 		Icon = "rbxassetid://133711485870057",
 		LayoutOrder = 6,
-		LuckBoost = 25,
+		LuckBoost = 50,
 	},
 	Bait_107 = {
 		BaitID = "Bait_107",
@@ -70,7 +70,7 @@ local data: {[string]: BaitConfig} = {
 		Rarity = "Rare",
 		Icon = "rbxassetid://77914670829519",
 		LayoutOrder = 7,
-		LuckBoost = 30,
+		LuckBoost = 60,
 	},
 	Bait_108 = {
 		BaitID = "Bait_108",
@@ -79,7 +79,7 @@ local data: {[string]: BaitConfig} = {
 		Rarity = "Epic",
 		Icon = "rbxassetid://99909634314247",
 		LayoutOrder = 8,
-		LuckBoost = 35,
+		LuckBoost = 70,
 	},
 	Bait_109 = {
 		BaitID = "Bait_109",
@@ -88,7 +88,7 @@ local data: {[string]: BaitConfig} = {
 		Rarity = "Epic",
 		Icon = "rbxassetid://121914092232072",
 		LayoutOrder = 9,
-		LuckBoost = 40,
+		LuckBoost = 80,
 	},
 	Bait_110 = {
 		BaitID = "Bait_110",
@@ -97,7 +97,7 @@ local data: {[string]: BaitConfig} = {
 		Rarity = "Legendary",
 		Icon = "rbxassetid://74482879540387",
 		LayoutOrder = 10,
-		LuckBoost = 45,
+		LuckBoost = 90,
 	},
 	Bait_111 = {
 		BaitID = "Bait_111",
@@ -106,7 +106,7 @@ local data: {[string]: BaitConfig} = {
 		Rarity = "Legendary",
 		Icon = "rbxassetid://95528314559023",
 		LayoutOrder = 11,
-		LuckBoost = 50,
+		LuckBoost = 100,
 	},
 	Bait_112 = {
 		BaitID = "Bait_112",
@@ -115,7 +115,7 @@ local data: {[string]: BaitConfig} = {
 		Rarity = "Mythic",
 		Icon = "rbxassetid://117916339195907",
 		LayoutOrder = 12,
-		LuckBoost = 55,
+		LuckBoost = 110,
 	},
 	Bait_113 = {
 		BaitID = "Bait_113",
@@ -124,7 +124,7 @@ local data: {[string]: BaitConfig} = {
 		Rarity = "Mythic",
 		Icon = "rbxassetid://113679978133750",
 		LayoutOrder = 13,
-		LuckBoost = 60,
+		LuckBoost = 120,
 	},
 	Bait_114 = {
 		BaitID = "Bait_114",
@@ -133,7 +133,7 @@ local data: {[string]: BaitConfig} = {
 		Rarity = "Secret",
 		Icon = "rbxassetid://75661079138820",
 		LayoutOrder = 14,
-		LuckBoost = 65,
+		LuckBoost = 130,
 	},
 	Bait_115 = {
 		BaitID = "Bait_115",
@@ -142,7 +142,7 @@ local data: {[string]: BaitConfig} = {
 		Rarity = "Secret",
 		Icon = "rbxassetid://125220512378752",
 		LayoutOrder = 15,
-		LuckBoost = 70,
+		LuckBoost = 140,
 	},
 	Bait_116 = {
 		BaitID = "Bait_116",
@@ -151,7 +151,7 @@ local data: {[string]: BaitConfig} = {
 		Rarity = "Divine",
 		Icon = "rbxassetid://82079436914725",
 		LayoutOrder = 16,
-		LuckBoost = 75,
+		LuckBoost = 150,
 	},
 	Bait_117 = {
 		BaitID = "Bait_117",
@@ -160,7 +160,7 @@ local data: {[string]: BaitConfig} = {
 		Rarity = "Divine",
 		Icon = "rbxassetid://91713683654495",
 		LayoutOrder = 17,
-		LuckBoost = 80,
+		LuckBoost = 160,
 	},
 	Bait_118 = {
 		BaitID = "Bait_118",
@@ -169,7 +169,7 @@ local data: {[string]: BaitConfig} = {
 		Rarity = "Celestial",
 		Icon = "rbxassetid://96955347963229",
 		LayoutOrder = 18,
-		LuckBoost = 85,
+		LuckBoost = 170,
 	},
 	Bait_119 = {
 		BaitID = "Bait_119",
@@ -178,7 +178,7 @@ local data: {[string]: BaitConfig} = {
 		Rarity = "Celestial",
 		Icon = "rbxassetid://96056414161039",
 		LayoutOrder = 19,
-		LuckBoost = 90,
+		LuckBoost = 180,
 	},
 	Bait_120 = {
 		BaitID = "Bait_120",
@@ -187,7 +187,7 @@ local data: {[string]: BaitConfig} = {
 		Rarity = "Eternal",
 		Icon = "rbxassetid://129550122979349",
 		LayoutOrder = 20,
-		LuckBoost = 95,
+		LuckBoost = 190,
 	},
 	Bait_121 = {
 		BaitID = "Bait_121",
@@ -196,7 +196,7 @@ local data: {[string]: BaitConfig} = {
 		Rarity = "Eternal",
 		Icon = "rbxassetid://134564836110765",
 		LayoutOrder = 21,
-		LuckBoost = 100,
+		LuckBoost = 200,
 	},
 }
 

@@ -19,6 +19,7 @@ local NotificationClient = require(ReplicatedStorage.Modules.NotificationClient)
 local PurchaseDataHelper = require(ReplicatedFirst.DataHelpers.PurchaseDataHelper)
 local AreasWorkspace = require(ReplicatedStorage.Modules.AreasWorkspace)
 local DistanceDetectUtil = require(ReplicatedStorage.Modules.DistanceDetectUtil)
+local UltraLuckDetails = require(ReplicatedStorage.Modules.UltraLuckDetails)
 
 local Players = game:GetService("Players")
 local localPlayer = Players.LocalPlayer
@@ -62,6 +63,12 @@ local function initPurchaseBoards()
             local button = model.SurfaceGui.Frame.RightFrame.BuyButton
             local row = PurchaseDataHelper.GetData(purchaseId)
             if not row or boundButtons[button] then continue end
+            if purchaseId == UltraLuckDetails.PurchaseId then
+                local description = model.SurfaceGui:FindFirstChild("DescriptionLabel", true)
+                if description and description:IsA("TextLabel") then
+                    description.Text = UltraLuckDetails.Description .. "\nView Details"
+                end
+            end
             boundButtons[button] = true
             button.Activated:Connect(function()
 
@@ -70,7 +77,9 @@ local function initPurchaseBoards()
                     return
                 end
 
-                if row.Type == "GamePass" then
+                if purchaseId == UltraLuckDetails.PurchaseId then
+                    UltraLuckDetails.OpenPurchase(true)
+                elseif row.Type == "GamePass" then
                     MarketplaceService:PromptGamePassPurchase(localPlayer, row.ProductId)
                 else
                     Knit.GetService("PurchaseService").PromptPurchase:Fire(purchaseId, true)

@@ -89,6 +89,7 @@ local function node(class, name)
 end
 local function promise()
 	local pending = {}
+	function pending:timeout() return self end
 	function pending:andThen(callback)
 		self.success = callback
 		return self
@@ -185,7 +186,7 @@ function shopTemplate.Clone()
 end
 local availableTemplates
 local shopWarnings = 0
-local navigationBack, navigationFocus
+local navigationBack, navigationFocus, inventoryStatus
 local guiService = { MenuIsOpen = false }
 local service = {
 	GetSellInventory = function()
@@ -200,6 +201,11 @@ local service = {
 	end,
 }
 local modules = {
+	ShopInventoryStatus = { Bind = function(list)
+		return function(message)
+			inventoryStatus, list.Visible = message, message == nil
+		end
+	end },
 	ButtonAnimation = { SetUp = function() end },
 	FishIconPresentation = {
 		ApplyMutation = function(icon, id)
@@ -375,9 +381,12 @@ assert(#fetches == 0)
 otherPopup = false
 availableTemplates = plotTemplates
 tick()
-assert(#fetches == 1 and not gui.Enabled)
+assert(#fetches == 1 and gui.Enabled and inventoryStatus == "Loading...")
+assert(not sellAll.SellButton.Interactable and navigationFocus == closeButton)
+sellAll.SellButton.Activated:Fire()
+assert(#sales == 0)
 fetches[1]:Resolve(inventory({ "a", "b" }))
-assert(gui.Enabled and list.Fish_a and list.Fish_b and list.Fish_a ~= list.Fish_b)
+assert(gui.Enabled and not inventoryStatus and list.Fish_a and list.Fish_b and list.Fish_a ~= list.Fish_b)
 assert(shopWarnings == 1 and not workspace.LocalPlotProps, "Missing template or primary part warns once without blocking sales")
 shopTemplate.PrimaryPart = primaryPart
 tick()
@@ -453,14 +462,23 @@ entry, exit = false, false
 tick()
 entry, exit = true, true
 tick()
-closeButton.Activated:Fire() -- loading request is still pending; leave instead
+assert(gui.Enabled and inventoryStatus == "Loading...")
+closeButton.Activated:Fire()
 entry, exit = false, false
 tick()
-fetches[8]:Resolve(inventory({ "late" }))
-assert(not gui.Enabled, "Late opening responses cannot reopen after leaving")
 entry, exit = true, true
 tick()
-fetches[9]:Resolve(inventory({ "final" }))
+fetches[8]:Resolve(inventory({ "late" }))
+assert(gui.Enabled and inventoryStatus == "Loading..." and not list.Fish_late,
+	"An old response cannot fill a new visit")
+fetches[9]:Resolve({ success = false, errorMessage = "Inventory unavailable" })
+assert(gui.Enabled and inventoryStatus == "Inventory unavailable" and not sellAll.SellButton.Interactable)
+entry, exit = false, false
+tick()
+entry, exit = true, true
+tick()
+fetches[10]:Resolve(inventory({ "final" }))
+assert(not inventoryStatus and list.Fish_final)
 sellAll.SellButton.Activated:Fire()
 player.CharacterRemoving:Fire()
 assert(not gui.Enabled and not confirmation.Visible)
@@ -470,7 +488,7 @@ assert(#sales == 2)
 player.Character = {}
 tick()
 assert(props.SellShop == firstShop and #props:GetChildren() == 1, "Respawn should keep the same shop")
-fetches[10]:Resolve(inventory({ "external" }))
+fetches[11]:Resolve(inventory({ "external" }))
 sellAll.SellButton.Activated:Fire()
 assert(confirmation.Visible)
 gui.Enabled = false

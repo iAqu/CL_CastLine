@@ -1,11 +1,15 @@
-local Feedback = assert(loadstring(assert(io.open("src/ReplicatedStorage/Modules/TrainingFeedback.lua")):read("*a")))()
+local progressPath = "../src/ReplicatedStorage/Modules/TrainingProgress"
+local Progress = require(progressPath)
+local feedbackChunk = assert(loadstring(assert(io.open("src/ReplicatedStorage/Modules/TrainingFeedback.lua")):read("*a")))
+setfenv(feedbackChunk, setmetatable({ script = { Parent = { TrainingProgress = progressPath } } }, { __index = getfenv() }))
+local Feedback = feedbackChunk()
 local Levels = assert(loadstring(assert(io.open("src/ReplicatedFirst/Data/TrainingLevelsData.lua")):read("*a")))()
 local function snapshot(revision, level, xp, active)
 	return {
 		revision = revision,
 		level = level,
 		xp = xp,
-		maxCatchWeight = Levels[tostring(level)].MaxCatchWeight,
+		maxCatchWeight = Progress.GetLevel(Levels, level).MaxCatchWeight,
 		active = active ~= false,
 	}
 end
@@ -18,14 +22,17 @@ assert(Feedback.GetChanges(start, snapshot(0, 1, 5), Levels).xp == 0, "Stale sna
 assert(Feedback.GetChanges(start, snapshot(2, 1, 0), Levels).xp == 0, "Equipment purchase alone")
 local old = snapshot(1, 1, Levels["1"].XpToNextLevel - 1)
 local change = Feedback.GetChanges(old, snapshot(2, 2, 1), Levels)
-assert(change.xp == 2 and change.levels == 1 and change.weight == 10, "Level-up carries XP")
+assert(change.xp == 2 and change.levels == 1 and change.weight == 1, "Level-up carries XP")
 change = Feedback.GetChanges(old, snapshot(2, 3, 3), Levels)
 assert(
-	change.xp == 9 and change.levels == 2 and change.weight == 20,
+	change.xp == 9 and change.levels == 2 and change.weight == 2,
 	"One combined multi-level celebration"
 )
+local before1001 = snapshot(1, 1000, Progress.GetLevel(Levels, 1000).XpToNextLevel - 1)
+change = Feedback.GetChanges(before1001, snapshot(2, 1001, 2), Levels)
+assert(change.xp == 3 and change.levels == 1 and change.weight == 1, "Level-up feedback supports four-digit levels")
 assert(Feedback.GetChanges(snapshot(1, 1500, 0), snapshot(2, 1500, 0), Levels).xp == 0, "No fictitious XP at MAX")
-change = Feedback.GetChanges(snapshot(1, 1499, Levels["1499"].XpToNextLevel - 1), snapshot(2, 1500, 0), Levels)
+change = Feedback.GetChanges(snapshot(1, 1499, Progress.GetLevel(Levels, 1499).XpToNextLevel - 1), snapshot(2, 1500, 0), Levels)
 assert(change.xp == 1 and change.levels == 1, "Last level only shows applied XP")
 assert(Feedback.GetChanges(start, snapshot(2, 1, 1, false), Levels).xp == 0, "Stop must not emit")
 assert(

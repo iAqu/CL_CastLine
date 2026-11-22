@@ -21,13 +21,17 @@ function GamePassService:GiveGamePass(player: Player, gamePassId: string)
     local profile = PlayerDataService:GetProfile(player)
     if not profile then return end
 
-    -- if profile.Data.GamePasses[gamePassId] == true then return end
-
+    local newlyOwned = profile.Data.GamePasses[gamePassId] ~= true
     profile.Data.GamePasses[gamePassId] = true
-	if gamePassId == "VIP" then player:SetAttribute("HasVIP", true) end
-	if gamePassId == Constants.GAMEPASS.SUPER_LUCK or gamePassId == Constants.GAMEPASS.MEGA_LUCK then
-		Knit.GetService("PlayerLuckService"):RefreshPlayerLuck(player)
-	end
+    if gamePassId == "VIP" then
+        player:SetAttribute("HasVIP", true)
+    end
+    if newlyOwned and gamePassId == Constants.GAMEPASS.DOUBLE_WINS then
+        Knit.GetService("PlotFishService"):RefreshInventoryIncome(player)
+    end
+    if gamePassId == Constants.GAMEPASS.SUPER_LUCK or gamePassId == Constants.GAMEPASS.MEGA_LUCK then
+        Knit.GetService("PlayerLuckService"):RefreshPlayerLuck(player)
+    end
 
     self.Client.GiveGamePass:Fire(player, gamePassId)
 end

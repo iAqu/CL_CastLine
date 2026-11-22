@@ -1,7 +1,8 @@
 local GuiService = game:GetService("GuiService")
 local UserInputService = game:GetService("UserInputService")
 
-local GameplayInputGate = {}
+local contextChanged = Instance.new("BindableEvent")
+local GameplayInputGate = { ContextChanged = contextChanged.Event }
 
 local activeSources: { [string]: { [any]: boolean } } = {}
 
@@ -18,10 +19,10 @@ function GameplayInputGate.SetActive(contextName: string, source: any, active: b
 	assert(source ~= nil, "GameplayInputGate source must not be nil")
 
 	local sources = getSources(contextName)
-	if active then
-		sources[source] = true
-	else
-		sources[source] = nil
+	local wasActive = next(sources) ~= nil
+	sources[source] = if active then true else nil
+	if wasActive ~= (next(sources) ~= nil) then
+		contextChanged:Fire(contextName)
 	end
 end
 

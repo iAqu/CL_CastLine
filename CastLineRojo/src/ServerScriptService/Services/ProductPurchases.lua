@@ -7,11 +7,13 @@ local MarketplaceService = game:GetService("MarketplaceService")
 local Knit = require(ReplicatedStorage.Packages.Knit)
 local Data = require(ServerScriptService.Services.PlayerDataService)
 local Persistence = require(ServerScriptService.Services.PurchasePersistence)
+local Checkout = require(ServerScriptService.Services.PurchaseCheckout)
 local PurchaseDataHelper = require(game:GetService("ReplicatedFirst").DataHelpers.PurchaseDataHelper)
 
 local Products = {}
 local history = DataStoreService:GetDataStore("PurchaseHistory")
 local deliveryKind = "PaidProductV1"
+local checkoutKind = "Product"
 local revisionTag = "ProductPurchaseRevision"
 local busy = {}
 local prompts = {}
@@ -62,7 +64,7 @@ local function applyReward(player, profile, order)
 	return false
 end
 
-function Products.Prompt(player, purchaseId, row, productId, recipient)
+function Products.Prompt(player, purchaseId, row, productId, recipient, amount)
 	local profile = activeProfile(player)
 	if not profile or busy[player] or prompts[player] or preparing[player] then
 		return false, "Please wait for the previous purchase."
@@ -78,19 +80,38 @@ function Products.Prompt(player, purchaseId, row, productId, recipient)
 		end
 	end
 
+	local snapshot = {
+		PurchaseId = purchaseId,
+		ProductId = productId,
+		Type = row.Type,
+		Amount = amount or row.BuyNum,
+		Price = row.Price,
+		RecipientUserId = recipient.UserId,
+		SenderName = player.DisplayName,
+	}
+	local function isCurrent()
+		return activeProfile(player) == profile and (recipient == player or Players:GetPlayerByUserId(recipient.UserId) == recipient)
+	end
+	if not state.Intent and Checkout.WritesEnabled() then
+		return Checkout.Open(checkoutKind, player, snapshot, isCurrent, function(previous)
+			return previous.PurchaseId == purchaseId and previous.ProductId == productId
+				and previous.RecipientUserId == recipient.UserId and previous.Amount == snapshot.Amount
+				and previous.Price == row.Price and previous.Type == row.Type
+		end)
+	end
+
+	preparing[player] = snapshot
+	local legacyAllowed, reason = Checkout.CanUseLegacy(checkoutKind, player)
+	preparing[player] = nil
+	if not legacyAllowed or not isCurrent() then
+		return false, reason or "Purchase is no longer available."
+	end
+	canceled = canceledPrompts[player]
 	local intent = canceled and canceled.Intent
 	local reopening = intent and os.clock() < canceled.Expires and state.Intent == intent and intent.ProductId == productId
-		and intent.PurchaseId == purchaseId and intent.RecipientUserId == recipient.UserId
+		and intent.PurchaseId == purchaseId and intent.RecipientUserId == recipient.UserId and intent.Amount == snapshot.Amount
 	if not reopening then
-		intent = {
-			PurchaseId = purchaseId,
-			ProductId = productId,
-			Type = row.Type,
-			Amount = row.BuyNum,
-			Price = row.Price,
-			RecipientUserId = recipient.UserId,
-			SenderName = player.DisplayName,
-		}
+		intent = snapshot
 		state.Intent = intent
 		markChanged(profile)
 	end
@@ -119,6 +140,7 @@ function Products.Prompt(player, purchaseId, row, productId, recipient)
 end
 
 function Products.OnPromptFinished(player, productId, purchased)
+	Checkout.Finish(checkoutKind, player, productId, purchased)
 	local intent = player and prompts[player]
 	if not intent or intent.ProductId ~= productId then
 		return
@@ -179,7 +201,7 @@ local function process(player, receipt)
 		if PurchaseDataHelper.IsRetired(PurchaseDataHelper.GetPurchaseId(receipt.ProductId)) then
 			return false
 		end
-		if activeProfile(player) ~= profile then
+		if activeProfile(player) ~= profile or state.Review[id] then
 			return false
 		end
 		local intent = state.Intent
@@ -187,17 +209,24 @@ local function process(player, receipt)
 		if (canceled and canceled.Intent == intent) or (intent and preparing[player] == intent) then
 			return false
 		end
-		if not intent or intent.ProductId ~= receipt.ProductId
-			or receipt.ProductPurchaseChannel == Enum.ProductPurchaseChannel.ExperienceDetailsPage
-		then
-			if not state.Review[id] then
-				state.Review[id] = receipt.ProductId
-				profile:Save()
-				warn("Paid product requires reconciliation", key, receipt.ProductId)
+		local external = receipt.ProductPurchaseChannel == Enum.ProductPurchaseChannel.ExperienceDetailsPage
+		local checkout
+		if not intent and not external then
+			local available
+			checkout, available = Checkout.Bind(checkoutKind, player, receipt)
+			if not available or activeProfile(player) ~= profile then
+				return false
 			end
+			intent = checkout and checkout.Snapshot
+		end
+		if not intent or intent.ProductId ~= receipt.ProductId or external then
+			state.Review[id] = receipt.ProductId
+			profile:Save()
+			warn("Paid product requires reconciliation", key, receipt.ProductId)
 			return false
 		end
 		record = table.clone(intent)
+		record.CheckoutId = checkout and checkout.Id
 		record.OrderId = key
 		record.Spent = receipt.CurrencySpent or intent.Price
 		if record.RecipientUserId == player.UserId then
@@ -208,7 +237,9 @@ local function process(player, receipt)
 			record.Delivered = true
 		end
 		state.Receipts[id] = record
-		state.Intent = false
+		if not checkout then
+			state.Intent = false
+		end
 		markChanged(profile)
 	end
 	if not save(profile, state.Revision, RECEIPT_SAVE_WAIT) then
@@ -233,6 +264,9 @@ local function process(player, receipt)
 	if not Data:IsUsingMockProfiles() and not record.LegacyRecorded then
 		history:SetAsync(key, true)
 		record.LegacyRecorded = true
+	end
+	if not Checkout.Complete(checkoutKind, receipt, record.CheckoutId) then
+		return false
 	end
 	return true, record
 end

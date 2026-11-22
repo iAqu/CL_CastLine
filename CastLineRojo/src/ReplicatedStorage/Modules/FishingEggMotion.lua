@@ -12,6 +12,14 @@ function Motion.Animator()
 	}
 end
 
+local function strugglePose(self, elapsed, target, yaw)
+	local position = target
+		+ Vector3.new(math.sin(elapsed * 8), -self.depth, math.sin(elapsed * 6))
+			* Vector3.new(Egg.StruggleRadius, 1, Egg.StruggleRadius)
+	local rock = math.sin(elapsed * 5) * math.rad(Egg.RockDegrees)
+	return position, CFrame.Angles(0, yaw + math.sin(elapsed * 7) * 0.2, rock)
+end
+
 function Motion.Pose(self, phase, elapsed, target)
 	self.showcasePosition = nil
 	local duration = self.timeline.endsAt - self.timeline.startedAt
@@ -35,10 +43,7 @@ function Motion.Pose(self, phase, elapsed, target)
 		baitPosition = target - Vector3.yAxis * self.biteDepth * progress
 		position = rest:Lerp(contact, progress) - Vector3.yAxis * self.biteDepth * progress
 	elseif phase == "Struggling" then
-		position = target
-			+ Vector3.new(math.sin(elapsed * 8), -self.depth, math.sin(elapsed * 6))
-				* Vector3.new(Egg.StruggleRadius, 1, Egg.StruggleRadius)
-		rotation = CFrame.Angles(0, yaw + math.sin(elapsed * 7) * 0.2, rock)
+		position, rotation = strugglePose(self, elapsed, target, yaw)
 		baitPosition = position + rotation:VectorToWorldSpace(self.mouthOffset * self.scale)
 	elseif phase == "Lifting" or phase == "Caught" then
 		local lift = if phase == "Caught" then 1 else alpha
@@ -47,11 +52,20 @@ function Motion.Pose(self, phase, elapsed, target)
 			+ Vector3.yAxis
 				* (-self.depth + (height + self.depth) * lift + math.sin(math.pi * lift) * Settings.LiftBounceHeight)
 		rotation = CFrame.Angles(0, yaw + 2 * math.pi * lift, rock * (1 - lift))
+		local struggleElapsed = self.timeline.liftStruggleElapsed
+		if phase == "Lifting" and struggleElapsed and struggleElapsed > self.timeline.struggleTime then
+			local initialPosition, initialRotation = strugglePose(self, struggleElapsed, target, yaw)
+			position += (initialPosition - target + Vector3.yAxis * self.depth) * (1 - lift)
+			rotation = initialRotation:Lerp(rotation, math.min(1, lift * 5))
+		end
 		self.showcasePosition = position
 		baitPosition = position + rotation:VectorToWorldSpace(self.mouthOffset * self.scale)
 	elseif phase == "Escaped" then
 		local escape = math.clamp(elapsed / Settings.EscapeTime, 0, 1)
 		position = target + (self.escapeOffset or rest - target) - Vector3.yAxis * Egg.SinkDistance * escape
+		if self.escapeFrame then
+			rotation = self.escapeFrame.Rotation:Lerp(rotation, math.min(1, escape * 5))
+		end
 		fade = escape
 	elseif phase == "Reeling" or phase == "Reeled" then
 		local fish = self.reelFish
