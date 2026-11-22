@@ -4,15 +4,36 @@ local source = file:read("*a")
 file:close()
 
 return function(players, marketplace, taskApi, clock)
-	local fixture = { Records = {}, Writes = 0, Warnings = {} }
+	local fixture = { Enabled = false, Records = {}, Writes = 0, Warnings = {} }
 	local guid = 0
-	local snapshot = {
-		GetValue = function(_, name)
-			assert(name == "DedicatedPurchaseCheckout")
-			return fixture.Enabled
-		end,
-		UpdateAvailable = { Connect = function() end },
-	}
+	local configListeners = {}
+	function fixture.SetConfigValue(value)
+		fixture.Enabled = value
+		for _, listener in configListeners do
+			listener()
+		end
+	end
+
+	local function getConfig()
+		local value = fixture.Enabled
+		return {
+			Error = fixture.ConfigError or "None",
+			GetValue = function(_, name)
+				assert(name == "DedicatedPurchaseCheckout")
+				return value
+			end,
+			Refresh = function(snapshot)
+				if fixture.RefreshThrows then
+					error("Config refresh unavailable")
+				end
+				snapshot.Error = fixture.ConfigError or "None"
+				value = fixture.Enabled
+			end,
+			UpdateAvailable = { Connect = function(_, listener)
+				table.insert(configListeners, listener)
+			end },
+		}
+	end
 	local store = {}
 	function store:UpdateAsync(key, apply)
 		if fixture.OnUpdate then
@@ -30,7 +51,7 @@ return function(players, marketplace, taskApi, clock)
 	end
 
 	local api = {
-		ConfigService = { GetConfigAsync = function() return snapshot end },
+		ConfigService = { GetConfigAsync = getConfig },
 		DataStoreService = { GetDataStore = function(_, name)
 			assert(name == "PurchaseCheckout_v1")
 			return store
@@ -50,6 +71,7 @@ return function(players, marketplace, taskApi, clock)
 				PlaceId = fixture.PlaceId,
 				GetService = function(_, name) return assert(api[name], name) end,
 			},
+			Enum = { ConfigSnapshotErrorState = { None = "None" } },
 			workspace = { GetAttribute = function(_, name)
 				assert(name == "StudioDedicatedPaidEggCheckout")
 				return fixture.StudioPaidEggOverride

@@ -44,7 +44,6 @@ local PurchaseService = Knit.CreateService {
     PurchaseSuccess = Signal.new(),
 
     _PlayerGifted = {},     -- {player userId: gifted player userId}
-    _UltraLuckPreview = {},
 }
 
 function PurchaseService.Client:SelectGiftedPlayer(player: Player, giftedPlayer: Player)
@@ -128,37 +127,6 @@ local function getRecipient(service, player, forSelf)
     return player
 end
 
-local function getUltraLuckRecipient(service, player, forSelf)
-    local recipient = getRecipient(service, player, forSelf)
-    return if forSelf == true or recipient ~= player then recipient else nil
-end
-
-function PurchaseService.Client:GetUltraLuckOdds(player: Player, forSelf: boolean?)
-    local service = self.Server
-    service._UltraLuckPreview[player] = nil
-    local recipient = getUltraLuckRecipient(service, player, forSelf)
-    if not recipient then
-        return { ok = false, message = "Player not found!" }
-    end
-    local allowed, message = PaidItemPolicy.CanPurchase(player, recipient, "Ultra Luck is unavailable for this player.")
-    if getUltraLuckRecipient(service, player, forSelf) ~= recipient then
-        return { ok = false, message = "Gift recipient changed. Reopen the details." }
-    end
-    local result = Knit.GetService("FishingService"):GetUltraLuckOdds(recipient)
-    local profile = PlayerDataService:GetProfile(recipient)
-    if result.ok and profile then
-        local owned = profile.Data.GamePasses[ULTRA_LUCK_ID] == true
-        result.recipientId = recipient.UserId
-        result.recipient = if recipient ~= player then recipient.DisplayName else nil
-        result.canBuy = allowed and not owned
-        result.message = message or (if owned then "Already owned." else nil)
-        if result.canBuy then
-            service._UltraLuckPreview[player] = recipient
-        end
-    end
-    return result
-end
-
 function PurchaseService:PromptPurchase(
     player: Player,
     purchaseId: string,
@@ -194,15 +162,14 @@ function PurchaseService:PromptPurchase(
 
     local recipient = getRecipient(self, player, forSelf)
     if purchaseId == ULTRA_LUCK_ID then
-        recipient = getUltraLuckRecipient(self, player, forSelf)
-        if not recipient or disclosedRecipientId ~= recipient.UserId or self._UltraLuckPreview[player] ~= recipient then
-            self.Client.PromptPurchaseFail:Fire(player, "Open Ultra Luck Details before buying.")
+        local recipientChanged = "Gift recipient changed. Select the recipient again."
+        if forSelf ~= true and (not recipient or recipient == player or disclosedRecipientId ~= recipient.UserId) then
+            self.Client.PromptPurchaseFail:Fire(player, recipientChanged)
             return
         end
-        self._UltraLuckPreview[player] = nil
         local allowed, message = PaidItemPolicy.CanPurchase(player, recipient, "Ultra Luck is unavailable for this player.")
-        if not allowed or getUltraLuckRecipient(self, player, forSelf) ~= recipient then
-            self.Client.PromptPurchaseFail:Fire(player, message or "Gift recipient changed. Reopen the details.")
+        if not allowed or getRecipient(self, player, forSelf) ~= recipient then
+            self.Client.PromptPurchaseFail:Fire(player, message or recipientChanged)
             return
         end
     end
@@ -245,7 +212,6 @@ function PurchaseService:KnitInit()
 
     Players.PlayerRemoving:Connect(function(player)
         self._PlayerGifted[player.UserId] = nil
-        self._UltraLuckPreview[player] = nil
         ProductPurchases.Remove(player)
     end)
 

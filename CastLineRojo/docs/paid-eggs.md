@@ -20,7 +20,7 @@
 
 ## 验证
 
-`#CL_DEV` 的 Studio Play 默认用独立购买意图存储。对照测试时在 Workspace 把布尔属性 `StudioDedicatedPaidEggCheckout` 设为 `false` 可使用旧路径。清除该属性可恢复默认值。线上继续读取 `DedicatedPurchaseCheckout`。
+`#CL_DEV` 的 Studio Play 默认用独立购买意图存储。对照测试时在 Workspace 把布尔属性 `StudioDedicatedPaidEggCheckout` 设为 `false` 可使用旧路径。清除该属性可恢复默认值。线上成功读取配置后也默认启用独立结算。将 `DedicatedPurchaseCheckout` 设为 `false` 可回退新订单，已保存的独立订单仍按原记录处理。
 
 运行 `python3 tools/run-tests.py PaidEggPurchases PaidEggMailbox`，覆盖概率边界、冻结订单、重复与并发回执、部分失败、明确取消、离线投递、邮箱隔离及持久化确认。品质相关回归还覆盖出售、摆放、幸运、工具恢复和赠送。
 

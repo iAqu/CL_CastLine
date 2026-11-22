@@ -5,6 +5,7 @@ local Player = require(storage.Modules.FishingRarityVFX)
 local Bite = require(storage.Modules.FishingBiteSequence)
 local Cast = require(storage.Modules.FishingCastSequence)
 local RarityConfig = require(storage.Modules.RarityConfig)
+local RarityPresentation = require(storage.Modules.RarityPresentation)
 local settings = require(storage.Modules.FishingConfig).RarityVFX
 local water = require(storage.Modules.WaterSurfaceUtil)
 local folder = Instance.new("Folder")
@@ -19,24 +20,83 @@ local function play(rarity, diameter, stage)
 	table.insert(active, effect)
 	return effect
 end
+local function assertColorSequence(actual, expected, name)
+	local actualPoints, expectedPoints = actual.Keypoints, expected.Keypoints
+	assert(#actualPoints == #expectedPoints, "Wrong gradient size: " .. name)
+	for index, point in ipairs(expectedPoints) do
+		near(actualPoints[index].Time, point.Time)
+		assert(actualPoints[index].Value == point.Value, "Wrong gradient color: " .. name)
+	end
+end
+
+local function assertEventTemplate(templates, template)
+	local gradient = storage.Gui.UIGradient.UIGradient_Event
+	local eventColor = RarityPresentation.GetColor("Event")
+	local sources = {}
+	for _, emitter in ipairs(templates.Secret:GetDescendants()) do
+		if emitter:IsA("ParticleEmitter") then
+			sources[emitter.Name] = emitter
+		end
+	end
+	assert(template:GetScale() == templates.Secret:GetScale(), "Event template scale differs from Secret")
+	assert(sources.SilverOuterRing, "Secret template lacks a silver ring")
+	local matches = 0
+	for _, child in ipairs(templates:GetChildren()) do
+		if child.Name == "Event" then
+			matches += 1
+		end
+	end
+	assert(matches == 1, "Expected one Event model")
+	for _, emitter in ipairs(template:GetDescendants()) do
+		if emitter:IsA("ParticleEmitter") then
+			local source = assert(sources[emitter.Name], "Unknown or duplicate Event layer: " .. emitter.Name)
+			sources[emitter.Name] = nil
+			for _, attribute in ipairs({ "EmitCount", "EmitDelay", "EmitDuration", "ExitEnabled" }) do
+				assert(emitter:GetAttribute(attribute) == source:GetAttribute(attribute), emitter.Name .. " " .. attribute)
+			end
+			local expected = gradient.Color
+			if emitter.Name == "SilverOuterRing" then
+				expected = ColorSequence.new(source.Color.Keypoints[1].Value, eventColor)
+			end
+			assertColorSequence(emitter.Color, expected, emitter.Name)
+		end
+	end
+	assert(next(sources) == nil, "Event particle layers differ from Secret")
+end
+
 local ok, result = xpcall(function()
 	local templates, textures, lastCount, lastLayers = storage.VFX.AnimalRoller, {}, 0, 0
 	local counts = {}
+	local standardTiers = 0
 	for _, rarity in ipairs(RarityConfig.List) do
 		local template = assert(templates:FindFirstChild(rarity.Name))
 		assert(template:IsA("Model") and template.PrimaryPart, "Expected Model: " .. rarity.Name)
 		local count, layers = 0, 0
 		for _, emitter in ipairs(template:GetDescendants()) do
 			if emitter:IsA("ParticleEmitter") then
-				assert(not emitter.Enabled and emitter.Rate == 0, "Template emitting continuously")
-				assert(emitter:GetAttribute("EmitDuration") == 0, "Unexpected continuous emission")
+				local duration = emitter:GetAttribute("EmitDuration")
+				assert(not emitter.Enabled and (duration or 0) == 0, "Template emitting continuously")
+				-- Common 使用独立制作的粒子；发射时长为零时，保留的 Rate 不会产生持续发射。
+				if rarity.Name ~= "Common" then
+					assert(emitter.Rate == 0 and duration == 0, "Unexpected continuous emission")
+				end
 				count += emitter:GetAttribute("EmitCount")
 				layers += 1
-				textures[emitter.Texture] = true
+				textures[emitter.Texture] = emitter
 			end
 		end
-		assert(count > lastCount and count <= 180 and layers > lastLayers, "Rarity progression changed")
-		lastCount, lastLayers = count, layers
+		assert(count > 0 and count <= 180, "Invalid particle budget: " .. rarity.Name)
+		if rarity.Name == "Event" then
+			assertEventTemplate(templates, template)
+		else
+			assert(count > lastCount, "Rarity particle budget progression changed")
+			if rarity.Name ~= "Common" then
+				assert(layers > lastLayers, "Rarity layer progression changed")
+				lastLayers = layers
+			end
+			lastCount = count
+			standardTiers += 1
+		end
 		counts[rarity.Name] = count
 		local exit = play(rarity.Name, 12, "Exit")
 		local showcase = play(rarity.Name, 12, "Showcase")
@@ -54,10 +114,11 @@ local ok, result = xpcall(function()
 		showcase:Destroy()
 		task.wait()
 	end
+	assert(standardTiers == 12 and counts.Event == counts.Secret, "Wrong standard tier count or Event budget")
 	local failed = {}
 	local assets = {}
-	for texture in pairs(textures) do
-		table.insert(assets, texture)
+	for _, emitter in pairs(textures) do
+		table.insert(assets, emitter)
 	end
 	ContentProvider:PreloadAsync(assets, function(id, status)
 		if status ~= Enum.AssetFetchStatus.Success then
@@ -118,6 +179,7 @@ local ok, result = xpcall(function()
 			_presentBait = function() end,
 			_waterFeedback = function() end,
 			_playWaterVFX = function() end,
+			_sound = function() end,
 			_impulse = function() end,
 			_setPhase = function() end,
 			_nibbleRipple = function() end,
@@ -203,7 +265,8 @@ local ok, result = xpcall(function()
 	hidden.Parent, hidden = templates, nil
 	return {
 		passed = true,
-		tiers = 12,
+		tiers = standardTiers,
+		event = true,
 		counts = counts,
 		loadedTextures = #assets,
 		twoStage = true,

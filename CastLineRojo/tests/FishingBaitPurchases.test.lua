@@ -229,7 +229,7 @@ assert(fast.cast().ok and fastProgress.Credits.Rod_101 == 0,
 
 
 local dedicated = new()
-dedicated.checkout.Enabled = true
+dedicated.checkout.SetConfigValue(nil)
 dedicated.begin()
 local dedicatedBait = dedicated.rods.Rod_101.BaitsSelect[4]
 local dedicatedProduct = dedicated.purchaseData.PremiumBait.ProductId
@@ -237,11 +237,13 @@ local dedicatedProgress = dedicated.progression.Ensure(dedicated.profile.Data)
 local staleBait = { PlayerId = dedicated.player.UserId, ProductId = dedicatedProduct, PurchaseId = "old-unmatched" }
 assert(not dedicated.purchases.Process(dedicated.player, staleBait))
 dedicated.pauseSave = true
-local beforeClick = dedicated.now
+local beforeClick, writesBeforeClick, savesBeforeClick = dedicated.now, dedicated.checkout.Writes, dedicated.saveCalls
 local function openDedicated()
 	return dedicated.client:RequestBaitPurchase(dedicated.player, dedicated.token, dedicatedBait)
 end
 assert(openDedicated().ok and dedicated.now == beforeClick and #dedicated.prompts == 1)
+assert(dedicated.checkout.Writes == writesBeforeClick + 1 and dedicated.saveCalls == savesBeforeClick,
+	"Default bait checkout opens after one order write while the profile save is unavailable")
 assert(not dedicatedProgress.PendingBaitPurchase)
 assert(not dedicated.purchases.Process(dedicated.player, staleBait))
 assert(not openDedicated().ok and #dedicated.prompts == 1)

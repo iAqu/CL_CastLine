@@ -194,6 +194,77 @@ function FishingCastSequence:_scale(object)
 	return scale
 end
 
+function FishingCastSequence:_bindWaitingPromptSize()
+	local label = self.continueLabel
+	local factor = 1.5
+	self.waitingPromptSizing = {}
+	self.continuePromptPosition = label.Position
+	self.waitingPromptPosition = label.Position
+	self:_save(label, { "Position" })
+	local function addSetting(instance, property, enlarged)
+		local setting = { instance = instance, property = property, value = instance[property], enlarged = enlarged }
+		table.insert(self.originals, setting)
+		table.insert(self.waitingPromptSizing, setting)
+	end
+	if label.TextScaled then
+		local size = label.Size
+		local enlargedSize =
+			UDim2.new(size.X.Scale * factor, size.X.Offset * factor, size.Y.Scale * factor, size.Y.Offset * factor)
+		addSetting(label, "Size", enlargedSize)
+
+		-- 以底边为锚点，触发最小尺寸时只向上扩展。
+		local anchor = label.AnchorPoint
+		local bottomOffset = 1 - anchor.Y
+		addSetting(label, "AnchorPoint", Vector2.new(anchor.X, 1))
+		self.waitingPromptPosition +=
+			UDim2.new(0, 0, enlargedSize.Y.Scale * bottomOffset, enlargedSize.Y.Offset * bottomOffset)
+		local minimum = Vector2.new(208, 24)
+		local bounds = label:FindFirstChildOfClass("UISizeConstraint")
+		if bounds then
+			local minSize, maxSize = bounds.MinSize, bounds.MaxSize
+			addSetting(
+				bounds,
+				"MinSize",
+				Vector2.new(
+					math.max(minSize.X, math.min(minimum.X, maxSize.X)),
+					math.max(minSize.Y, math.min(minimum.Y, maxSize.Y))
+				)
+			)
+		else
+			bounds = Instance.new("UISizeConstraint")
+			bounds.MinSize = minimum
+			self.waitingPromptBounds = bounds
+			addSetting(bounds, "Parent", label)
+		end
+		local constraint = label:FindFirstChildOfClass("UITextSizeConstraint")
+		if constraint then
+			addSetting(constraint, "MaxTextSize", math.round(constraint.MaxTextSize * factor))
+			addSetting(constraint, "MinTextSize", math.round(constraint.MinTextSize * factor))
+		end
+	else
+		addSetting(label, "TextSize", label.TextSize * factor)
+	end
+end
+
+function FishingCastSequence:_updateWaitingPromptSize()
+	local label = self.continueLabel
+	local waiting = label.Visible and label.Text == Config.Bite.Text.Waiting
+	local lift
+	if waiting then
+		lift = if self.gui.AbsoluteSize.Y <= 500 then 8 else 0
+	end
+	if self.waitingPromptLift == lift then
+		return
+	end
+	self.waitingPromptLift = lift
+	for _, setting in ipairs(self.waitingPromptSizing) do
+		setting.instance[setting.property] = if waiting then setting.enlarged else setting.value
+	end
+	label.Position = if lift ~= nil
+		then self.waitingPromptPosition - UDim2.fromOffset(0, lift)
+		else self.continuePromptPosition
+end
+
 function FishingCastSequence:_bindGui(playerGui)
 	self.gui = guiChild(playerGui, "FishingSequenceGui", "ScreenGui")
 	self.gui.Enabled = false
@@ -212,6 +283,7 @@ function FishingCastSequence:_bindGui(playerGui)
 		bar.Size = UDim2.fromScale(1, 0)
 	end
 	self:_save(self.continueLabel, { "Text", "Visible", "TextTransparency" })
+	self:_bindWaitingPromptSize()
 	self:_save(self.popup, { "Text", "TextColor3", "Visible", "Position", "TextTransparency" })
 	self:_save(self.popupStroke, { "Transparency" })
 	self:_save(self.popupScale, { "Scale" })
@@ -1633,6 +1705,7 @@ function FishingCastSequence:Update(now: number, dt: number)
 		CastPresentation.GroundClearance(self)
 	end
 	self:_updateBait(now, dt)
+	self:_updateWaitingPromptSize()
 	local exit = self.hookExit
 	if exit and (if exit.at then now >= exit.at else self.bite:CanReturn(now)) then
 		self.options.onFailure(exit.message)
@@ -1705,6 +1778,9 @@ function FishingCastSequence:Destroy(keepFail)
 				original.instance[original.property] = original.value
 			end)
 		end
+	end
+	if self.waitingPromptBounds then
+		self.waitingPromptBounds:Destroy()
 	end
 	for _, scale in ipairs(self.createdScales or {}) do
 		scale:Destroy()

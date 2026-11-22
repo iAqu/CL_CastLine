@@ -20,7 +20,7 @@ local Analytics = require(ReplicatedStorage.Modules.FishingAnalyticsPresentation
 local Config = require(ReplicatedStorage.Modules.FishingConfig)
 local FishingAssets = require(ReplicatedStorage.Modules.FishingAssets)
 local FishingBaitSelect = require(ReplicatedStorage.Modules.FishingBaitSelect)
-local UltraLuckDetails = require(ReplicatedStorage.Modules.UltraLuckDetails)
+local FishingOddsView = require(ReplicatedStorage.Modules.FishingOddsView)
 local BaitConfig = require(ReplicatedStorage.Modules.FishingBaitConfig)
 local FishingSpotUtil = require(ReplicatedStorage.Modules.FishingSpotUtil)
 local PlotWorkspaceUtil = require(ReplicatedStorage.Modules.PlotWorkspaceUtil)
@@ -297,6 +297,24 @@ local function startTransition(state, mode)
 	state.cover.BackgroundTransparency = 1
 end
 
+local function rollbackEntryPresentation(state)
+	local transition = state.transition
+	if not transition or transition.mode ~= "Entering" or not state.coverGui.Parent or not state.cover.Parent
+		or state.cover.BackgroundTransparency == 1
+	then
+		finish(false)
+		return
+	end
+	if state.restored then
+		return
+	end
+	-- Restore the world under the current cover, even if the fade in was interrupted.
+	restore(state, false)
+	cancelServerSession(state)
+	transition.revealFrom = state.cover.BackgroundTransparency
+	transition.revealedAt = os.clock()
+end
+
 local function showBaitSelection(state, now)
 	if session == state and not state.transition and state.onReady then
 		local onReady = state.onReady
@@ -317,8 +335,13 @@ local function updateTransition(state, now)
 		state.cover.BackgroundTransparency = 1 - alpha
 		if alpha == 1 then
 			if transition.mode == "Entering" then
-				state.prepare()
-				state.prepare = nil
+				if state.prepare then
+					state.prepare()
+					state.prepare = nil
+				end
+				if not state.onReady then
+					return
+				end
 			else
 				restore(state, true)
 			end
@@ -326,12 +349,13 @@ local function updateTransition(state, now)
 		end
 	else
 		local alpha = math.clamp((now - transition.revealedAt) / timing.Reveal, 0, 1)
-		state.cover.BackgroundTransparency = alpha
+		local revealFrom = transition.revealFrom or 0
+		state.cover.BackgroundTransparency = revealFrom + (1 - revealFrom) * alpha
 		if alpha == 1 then
 			state.transition = nil
 			state.coverGui.Enabled = false
 			if state.restored then
-				finish(false, true)
+				finish(false, transition.mode == "Returning")
 			else
 				showBaitSelection(state, now)
 			end
@@ -402,7 +426,7 @@ end
 function FishingController:ReturnToSpawn()
 	local state = session
 	if state and pendingEntry and pendingEntry.preview == state then
-		finish(false)
+		rollbackEntryPresentation(state)
 		return
 	end
 	local sequence = state and state.sequence
@@ -691,7 +715,6 @@ local function startEntryPresentation(entry)
 				if entry.lesson == "FinalCatch" then entry.guideBaitId else nil
 			)
 			local cashHome = bindBaitCash(state, playerGui, baitGui)
-			state.onReady = state.baitSelection.Show
 			-- 真实角色留在进入处，演出角色独立居中，避免多人在中心发生物理挤压。
 			for _, player in ipairs(Players:GetPlayers()) do
 				hidePlayer(state, player)
@@ -709,7 +732,7 @@ local function startEntryPresentation(entry)
 					gui:IsA("ScreenGui")
 					and gui ~= meter.gui
 					and gui.Name ~= "FishingSequenceGui"
-					and gui.Name ~= UltraLuckDetails.FishingGuiName
+					and gui.Name ~= FishingOddsView.GuiName
 					and gui.Name ~= "FishingVignetteGui"
 					and gui.Name ~= "FishingOnboardingGui"
 					and gui.Name ~= "NotificationGui"
@@ -736,6 +759,7 @@ local function startEntryPresentation(entry)
 			end)
 			state.fishingMusic = true
 			Knit.GetController("MusicController"):SetFishingActive(true)
+			state.onReady = state.baitSelection.Show
 		end
 		state.prepare = function()
 			local target = FishingRigUtil.GetSpotRootCFrame(part, templateRoot, templateHumanoid)
@@ -761,7 +785,6 @@ local function startEntryPresentation(entry)
 			root.AssemblyLinearVelocity, root.AssemblyAngularVelocity = Vector3.zero, Vector3.zero
 			if state.camera.changed then
 				prepareConfirmedScene()
-				showBaitSelection(state, os.clock())
 			end
 		end
 		startTransition(state, "Entering")
@@ -798,7 +821,7 @@ local function startEntryPresentation(entry)
 			end)
 			if not updated then
 				warnOnce(tostring(updateError))
-				finish(false)
+				rollbackEntryPresentation(state)
 			end
 		end)
 	end, debug.traceback)
@@ -836,7 +859,7 @@ local function abandonEntry(entry, message: string?)
 	if not entry.abandoned then
 		entry.abandoned = true
 		if entry.preview and session == entry.preview then
-			finish(false)
+			rollbackEntryPresentation(entry.preview)
 		end
 		if message then
 			NotificationClient.RedNotify(message)
@@ -851,14 +874,15 @@ local function canKeepEntry(entry): boolean
 	local character = localPlayer.Character
 	local allowed = if entry.eventSlotId ~= nil
 		then GameplayInputGate.IsPlacementActionAllowed()
-		else session == entry.preview and not GameplayInputGate.IsUiBlockingWorld()
+		else entry.preview ~= nil and session == entry.preview and not entry.preview.restored
+			and not GameplayInputGate.IsUiBlockingWorld()
 	return character == entry.character
 		and character:FindFirstChild("HumanoidRootPart") == entry.root
 		and character:FindFirstChildOfClass("Humanoid") == entry.humanoid
 		and entry.humanoid.Health > 0
 		and not entry.root.Anchored
 		and FishingSpotUtil.GetStartPart(getOwnPlot()) == entry.part
-		and (entry.eventSlotId ~= nil or FishingSpotUtil.Contains(entry.part, entry.root, entry.humanoid))
+		and (entry.eventSlotId ~= nil or FishingSpotUtil.Contains(entry.part, entry.root))
 		and allowed
 end
 
@@ -870,7 +894,7 @@ local function entryInterruption(entry): string?
 end
 
 local function completeEntry(entry)
-	if entry.eventSlotId ~= nil and not FishingSpotUtil.Contains(entry.part, entry.root, entry.humanoid) then
+	if entry.eventSlotId ~= nil and not FishingSpotUtil.Contains(entry.part, entry.root) then
 		return -- The teleport and the response can replicate in either order.
 	end
 	mustLeaveArea = true
@@ -879,9 +903,9 @@ local function completeEntry(entry)
 		local ok, err = xpcall(state.confirm, debug.traceback)
 		if not ok then
 			warnOnce(tostring(err))
-			finish(false)
+			rollbackEntryPresentation(state)
 		end
-		entry.started = session == state
+		entry.started = session == state and not state.restored
 	end
 	if entry.onComplete and not entry.started then
 		NotificationClient.RedNotify("Could not start fishing.")
@@ -1040,7 +1064,7 @@ function FishingController:HandleFishingInput(input, processed, fromGamepad)
 				if result.ok then
 					sequence:Cast(result.castProgress, result.distance, result.luck, result.castRating)
 					if result.odds and not state.restored then
-						state.oddsView = UltraLuckDetails.BindFishing(localPlayer:FindFirstChildOfClass("PlayerGui"))
+						state.oddsView = FishingOddsView.Bind(localPlayer:FindFirstChildOfClass("PlayerGui"))
 						state.oddsView.Update(result.odds)
 					end
 				else
@@ -1103,7 +1127,7 @@ function FishingController:KnitStart()
 		end
 		local alive = root and root:IsA("BasePart") and humanoid and humanoid.Health > 0
 		local part = if alive then FishingSpotUtil.GetStartPart(getOwnPlot()) else nil
-		local inside = part ~= nil and FishingSpotUtil.Contains(part, root, humanoid)
+		local inside = part ~= nil and FishingSpotUtil.Contains(part, root)
 		if not inside then
 			mustLeaveArea = false
 		end

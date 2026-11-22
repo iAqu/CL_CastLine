@@ -101,7 +101,7 @@ stores = {
 	end},
 	MarketplaceService = {PromptProductPurchase = function()
 		promptCount += 1
-		if checkoutFixture.Enabled then
+		if stores.ServerScriptService.Services.PurchaseCheckout.WritesEnabled() then
 			assert(checkoutFixture.Records["Product:1"].Snapshot, "Dedicated context must be saved before prompting")
 		else
 			assert(disk[buyer.UserId].data.ProductPurchases.Intent, "Intent must be saved before prompting")
@@ -274,11 +274,13 @@ print("Shared SKU reopening, safe recipient change, same-session save retry and 
 
 
 -- The dedicated path must call Roblox even when the player profile is unable to save.
-checkoutFixture.Enabled = true
+checkoutFixture.SetConfigValue(nil)
 paused = true
 local promptStarted, savedAtStart, shownAtStart = now, saveCalls, promptCount
+local writesAtStart = checkoutFixture.Writes
 assert(products.Prompt(buyer, "Cash", row, 105, buyer))
 assert(now == promptStarted and saveCalls == savedAtStart and promptCount == shownAtStart + 1)
+assert(checkoutFixture.Writes == writesAtStart + 1, "Default checkout opens cash packs after one order write")
 assert(not profile.Data.ProductPurchases.Intent, "Dedicated checkout must not write the profile intent")
 products.OnPromptFinished(buyer, 105, false)
 local dedicatedGiftAmount = 8_000_000
@@ -291,7 +293,7 @@ profile:Save()
 leave(buyer)
 profile = join(buyer)
 products = loadProducts()
-checkoutFixture.Enabled = false
+checkoutFixture.SetConfigValue(false)
 assert(not products.Prompt(buyer, "Cash", row, 105, buyer), "Rollback must guard pending dedicated checkouts")
 assert(products.Process(receipt("dedicated-gift", 105)) and products.Process(receipt("dedicated-gift", 105)))
 assert(checkoutFixture.Records["Product:1"].Status == "Complete")
@@ -304,7 +306,7 @@ for _, order in mail[other.UserId] do
 end
 assert(count == 1, "Replay delivers the shared SKU once to the frozen recipient")
 
-checkoutFixture.Enabled = true
+checkoutFixture.SetConfigValue(true)
 local balanceBeforeDedicated = profile.Data.Wins
 local selfReceipt = receipt("dedicated-self", 105)
 assert(products.Prompt(buyer, "Cash", row, 105, buyer))
@@ -324,7 +326,7 @@ end
 assert(grantedGift and grantedGift.PurchaseId == "DoubleTrain" and grantedGift.RecipientUserId == recipient.UserId)
 
 for _, dedicated in { false, true } do
-	checkoutFixture.Enabled = dedicated
+	checkoutFixture.SetConfigValue(dedicated)
 	local sku = if dedicated then 108 else 107
 	local cashBefore = profile.Data.Wins
 	assert(products.Prompt(buyer, "WinsTier1", row, sku, buyer, 100_000))

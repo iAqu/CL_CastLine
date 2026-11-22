@@ -1,6 +1,8 @@
 local ReplicatedFirst = game:GetService("ReplicatedFirst")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local PurchaseData = require(ReplicatedFirst.Data.PurchaseData)
+local FishingProgression = require(ReplicatedStorage.Modules.FishingProgression)
 local PurchaseDataHelper = {}
 
 function PurchaseDataHelper.IsRetired(purchaseId: unknown): boolean
@@ -80,6 +82,10 @@ function PurchaseDataHelper.GetPrice(purchaseId: string): number
 end
 
 function PurchaseDataHelper.GetDescription(purchaseId: string): string
+    if purchaseId == "MegaLuck" then
+        return string.format("%d× draw weight for high-grade fish in your rod's rarity.",
+            FishingProgression.ULTRA_LUCK_HIGH_BAND_WEIGHT)
+    end
     if not PurchaseDataHelper.GetData(purchaseId) then warn("PurchaseData not found for purchaseId: " .. purchaseId) return end
     if not PurchaseDataHelper.GetData(purchaseId).Description then warn("PurchaseData.Description not found for purchaseId: " .. purchaseId) return end
     return PurchaseDataHelper.GetData(purchaseId).Description

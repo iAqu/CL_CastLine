@@ -17,21 +17,28 @@ local PENDING_MESSAGE = "A purchase is still pending. Please contact support if 
 local sessions = setmetatable({}, { __mode = "k" })
 local mockRecords = {}
 local store
-local config
+local dedicatedWritesEnabled = false
+
+local function applyConfig(snapshot)
+	local value = snapshot:GetValue(CONFIG_KEY)
+	dedicatedWritesEnabled = value == nil or value == true
+end
 
 local function loadConfig()
 	local ok, snapshot = pcall(ConfigService.GetConfigAsync, ConfigService)
-	if not ok then
-		warn("Purchase checkout config could not be loaded", snapshot)
+	if not ok or snapshot.Error ~= Enum.ConfigSnapshotErrorState.None then
+		warn("Purchase checkout config could not be loaded", if ok then snapshot.Error else snapshot)
 		task.delay(60, loadConfig)
 		return
 	end
-	config = snapshot
+	applyConfig(snapshot)
 	snapshot.UpdateAvailable:Connect(function()
 		local refreshed, message = pcall(snapshot.Refresh, snapshot)
-		if not refreshed then
-			warn("Purchase checkout config could not be refreshed", message)
+		if not refreshed or snapshot.Error ~= Enum.ConfigSnapshotErrorState.None then
+			warn("Purchase checkout config could not be refreshed", if refreshed then snapshot.Error else message)
+			return
 		end
+		applyConfig(snapshot)
 	end)
 end
 
@@ -43,7 +50,7 @@ function Checkout.WritesEnabled(kind)
 	if kind == "Egg" and RunService:IsStudio() and game.PlaceId == DEV_PLACE_ID then
 		return workspace:GetAttribute(STUDIO_EGG_CHECKOUT_ATTRIBUTE) ~= false
 	end
-	return config ~= nil and config:GetValue(CONFIG_KEY) == true
+	return dedicatedWritesEnabled
 end
 
 local function update(kind, userId, transform)

@@ -46,40 +46,66 @@ local function getLiveCharacter(): (Model?, BasePart?, Humanoid?)
 	return character, root, humanoid
 end
 
-local function getUpgradeDestination(anchor: BasePart, character: Model, root: BasePart, humanoid: Humanoid): CFrame?
-	local forward = anchor.CFrame.LookVector * Vector3.new(1, 0, 1)
-	if forward.Magnitude < 0.01 then
-		return nil
+local function hasStandingRoom(frame: CFrame, size: Vector3, overlap: OverlapParams): boolean
+	if #Workspace:GetPartBoundsInBox(frame, size, overlap) == 0 then
+		return true
 	end
-	-- The floor marker's local X axis points up.
-	local left = -forward.Unit:Cross(Vector3.yAxis)
-	local landing = anchor.Position + left * 3
+
+	-- The pond ground mesh can enclose a clear landing in its bounding box.
+	local probe = Instance.new("Part")
+	probe.Anchored = true
+	probe.CanCollide, probe.CanTouch, probe.CanQuery = false, false, false
+	probe.Transparency = 1
+	probe.CFrame, probe.Size = frame, size
+	probe.Parent = Workspace
+	local clear = #Workspace:GetPartsInPart(probe, overlap) == 0
+	probe:Destroy()
+	return clear
+end
+
+local function getUpgradeDestination(anchor: BasePart, character: Model, root: BasePart, humanoid: Humanoid): CFrame?
+	local horizontal = Vector3.new(1, 0, 1)
+	local forward = anchor.CFrame.LookVector * horizontal
+	if forward.Magnitude < 0.01 then
+		forward = anchor.CFrame.RightVector * horizontal
+	end
+	forward = forward.Unit
+	local left = -forward:Cross(Vector3.yAxis)
+	local directions = { left, forward, -forward, -left }
+
 	local excluded = { character, anchor }
 	local ray = RaycastParams.new()
 	ray.FilterDescendantsInstances = excluded
 	ray.IgnoreWater, ray.RespectCanCollide = true, true
-	local floor = Workspace:Raycast(landing + Vector3.yAxis * 4, -Vector3.yAxis * 12, ray)
-	if not floor or floor.Normal.Y < 0.7 or math.abs(floor.Position.Y - anchor.Position.Y) > 3 then
-		return nil
-	end
-
-	local footHeight = FishingSpotUtil.GetFootHeight(root, humanoid)
-	local position = floor.Position + Vector3.yAxis * (footHeight + 0.1)
-	if (position - anchor.Position).Magnitude > TrainingConfig.PromptDistance then
-		return nil
-	end
 	local overlap = OverlapParams.new()
 	overlap.FilterDescendantsInstances = excluded
 	overlap.RespectCanCollide = true
-	local height = footHeight + root.Size.Y / 2 + 1
-	local center = floor.Position + Vector3.yAxis * (height / 2 + 0.1)
-	local size = Vector3.new(math.max(root.Size.X, 2), height, math.max(root.Size.Z, 2))
-	if #Workspace:GetPartBoundsInBox(CFrame.new(center), size, overlap) > 0 then
-		return nil
-	end
 
-	local rootDestination = CFrame.lookAt(position, position - left)
-	return rootDestination * root.CFrame:ToObjectSpace(character:GetPivot())
+	local footHeight = FishingSpotUtil.GetFootHeight(root, humanoid)
+	local height = footHeight + root.Size.Y / 2 + 1
+	local size = Vector3.new(math.max(root.Size.X, 2), height, math.max(root.Size.Z, 2))
+	for _, distance in ipairs({ 3, 5 }) do
+		for _, direction in ipairs(directions) do
+			local landing = anchor.Position + direction * distance
+			local floor = Workspace:Raycast(landing + Vector3.yAxis * 4, -Vector3.yAxis * 12, ray)
+			if not floor or floor.Normal.Y < 0.7 or math.abs(floor.Position.Y - anchor.Position.Y) > 3 then
+				continue
+			end
+
+			local position = floor.Position + Vector3.yAxis * (footHeight + 0.1)
+			if (position - anchor.Position).Magnitude > TrainingConfig.PromptDistance then
+				continue
+			end
+			local center = floor.Position + Vector3.yAxis * (height / 2 + 0.1)
+			if not hasStandingRoom(CFrame.new(center), size, overlap) then
+				continue
+			end
+
+			local rootDestination = CFrame.lookAt(position, position - direction)
+			return rootDestination * root.CFrame:ToObjectSpace(character:GetPivot())
+		end
+	end
+	return nil
 end
 
 function Controller:KnitStart()

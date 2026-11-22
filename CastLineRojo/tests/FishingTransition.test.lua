@@ -356,7 +356,7 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 		EggsData = {},
 		NotificationClient = { RedNotify = function(message) table.insert(notices, message) end },
 		FishingAssets = { GetBait = function() return object("Part") end },
-		UltraLuckDetails = { FishingGuiName = "FishingOddsGui" },
+		FishingOddsView = { GuiName = "FishingOddsGui" },
 		FishingBaitSelect = { Bind = function(gui, _, _, choose)
 			chooseBait = choose
 			return {
@@ -489,7 +489,7 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 		FishingConfig = "Config",
 		FishingAssets = "FishingAssets",
 		FishingBaitSelect = "FishingBaitSelect",
-		UltraLuckDetails = "UltraLuckDetails",
+		FishingOddsView = "FishingOddsView",
 		FishingBaitConfig = "FishingBaitConfig",
 		FishingSpotUtil = "FishingSpotUtil",
 		PlotWorkspaceUtil = "PlotWorkspaceUtil",
@@ -657,8 +657,8 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 			root.Position = vec(0, 3.5, -20)
 			heartbeat:Fire()
 		end,
-		move = function(z)
-			root.Position = vec(0, 3.5, z)
+		move = function(z, y)
+			root.Position = vec(0, y or 3.5, z)
 			heartbeat:Fire()
 		end,
 		fishingAudio = fishingAudio,
@@ -731,6 +731,17 @@ end
 local function revealPicker(fishing)
 	fishing.advance(0.121)
 	fishing.advance(0.101)
+end
+
+for _, height in { -10, 20 } do
+	local fishing = fixture(true, true)
+	fishing.move(10.01, height)
+	assert(#fishing.requests == 0, "Do not enter outside the horizontal footprint")
+	fishing.move(10, height)
+	assert(#fishing.requests == 1, "Enter at the horizontal edge regardless of height")
+	fishing.requests[1]({ ok = true, token = "height-test", rodId = "Rod_101" })
+	revealPicker(fishing)
+	assert(fishing.baitVisible(), "Open the bait picker at either height")
 end
 
 do
@@ -1028,7 +1039,9 @@ assert(not returning.fishingAudio.active, "Interrupted return must stop ocean au
 local failed = fixture()
 failed.failCreate()
 failed.advance(0.121)
-assert(not failed.locked() and not failed.root.Anchored and failed.covered() == 0 and #failed.warnings == 1)
+assert(failed.camera.CameraType == "Custom" and failed.covered() == 1 and not failed.root.Anchored)
+failed.advance(0.101)
+assert(not failed.locked() and failed.covered() == 0 and #failed.warnings == 1)
 assert(not failed.fishingAudio.active and failed.fishingAudio.starts == 0, "Failed preparation must never start ocean audio")
 local dead = fixture()
 revealPicker(dead)
@@ -1094,14 +1107,22 @@ local previewFrame = entering.camera.CFrame
 entering.requests[2](loading)
 entering.advance(0.101)
 entering.tap()
-assert(entering.covered() == 0 and entering.camera.CameraType == "Scriptable" and not entering.root.Anchored,
-	"Show the fishing camera before server confirmation")
+assert(entering.covered() == 1 and entering.camera.CameraType == "Scriptable" and not entering.root.Anchored,
+	"Keep the fishing camera completely hidden until server confirmation")
+assert(not entering.fishingAudio.active, "Wait to prepare the fishing scene until the server confirms")
 assert(not entering.baitVisible() and entering.pickerShows() == 0 and #entering.selections == 0 and #entering.notices == 0)
 assert(#entering.requests == 3, "Retry when the profile is still loading")
 entering.requests[3]({ ok = true, token = "confirmed", rodId = "Rod_101" })
 assert(entering.root.Anchored and entering.locked() and entering.camera.CFrame == previewFrame)
+assert(entering.covered() == 1 and entering.fishingAudio.active and not entering.baitVisible(),
+	"Prepare the confirmed scene behind the opaque cover")
+entering.advance(0.016)
+entering.advance(0.05)
+assert(entering.covered() > 0 and entering.covered() < 1 and not entering.baitVisible(),
+	"Keep bait unavailable throughout the reveal")
+entering.advance(0.051)
 assert(entering.baitVisible() and entering.pickerShows() == 1 and #entering.requests == 3,
-	"Show the confirmed picker once, with the same camera and no second transition")
+	"Show the confirmed picker once after the reveal")
 entering.advance(0.25)
 assert(entering.pickerShows() == 1)
 
@@ -1114,21 +1135,35 @@ assert(earlyReply.baitVisible() and earlyReply.pickerShows() == 1)
 local rejected = fixture(true)
 revealPicker(rejected)
 rejected.requests[1]({ ok = false, message = "Fishing rod unavailable" })
-assert(rejected.camera.CameraType == "Custom" and not rejected.locked() and not rejected.root.Anchored)
+assert(rejected.camera.CameraType == "Custom" and rejected.covered() == 1 and not rejected.root.Anchored,
+	"Restore the world camera before fading out of a rejection")
 assert(rejected.camera.CFrame.Position.Magnitude == 0 and rejected.camera.FieldOfView == 70)
 assert(rejected.notices[1] == "Fishing rod unavailable" and rejected.pickerShows() == 0)
-rejected.advance(0.1)
+rejected.advance(0.05)
+assert(rejected.covered() > 0 and rejected.covered() < 1 and not rejected.baitVisible())
+rejected.advance(0.051)
+assert(rejected.covered() == 0 and not rejected.locked())
 assert(#rejected.requests == 1, "A rejected entry requires leaving the spot before retrying")
 rejected.leave()
 rejected.move(0)
 assert(#rejected.requests == 2)
 
+local earlyRejection = fixture(true)
+earlyRejection.advance(0.04)
+local partialCover = earlyRejection.covered()
+earlyRejection.requests[1]({ ok = false, message = "Fishing rod unavailable" })
+assert(earlyRejection.camera.CameraType == "Custom" and earlyRejection.covered() == partialCover,
+	"Reverse an incomplete fade without flashing to full black")
+earlyRejection.advance(0.101)
+assert(earlyRejection.covered() == 0 and not earlyRejection.locked())
+
 for _, invalidate in ipairs({ "leave", "die", "abort" }) do
 	local abandoned = fixture(true)
 	revealPicker(abandoned)
 	abandoned[invalidate]()
-	assert(abandoned.camera.CameraType == "Custom" and not abandoned.locked())
+	assert(abandoned.camera.CameraType == "Custom")
 	abandoned.advance(0.2)
+	assert(not abandoned.locked())
 	abandoned.requests[1]({ ok = true, token = "stale" })
 	assert(abandoned.cancellations[1] == "stale" and #abandoned.cancellations == 1)
 	assert(not abandoned.root.Anchored and not abandoned.baitVisible() and #abandoned.notices == 0)
@@ -1139,13 +1174,19 @@ revealPicker(missingDuringPreview)
 missingDuringPreview.plot.children.FishingStartPart = nil
 missingDuringPreview.advance(0.02)
 missingDuringPreview.requests[1]({ ok = true, token = "removed-spot", rodId = "Rod_101" })
-assert(missingDuringPreview.camera.CameraType == "Custom" and not missingDuringPreview.locked())
+assert(missingDuringPreview.camera.CameraType == "Custom" and missingDuringPreview.covered() == 1)
+missingDuringPreview.advance(0.101)
+assert(not missingDuringPreview.locked())
 assert(missingDuringPreview.cancellations[1] == "removed-spot" and missingDuringPreview.pickerShows() == 0)
 
 local timedOut = fixture(true)
 revealPicker(timedOut)
 timedOut.advance(1.01)
-timedOut.advance(0.5)
+assert(timedOut.camera.CameraType == "Custom" and timedOut.covered() == 1 and not timedOut.baitVisible(),
+	"Restore the world camera while fully covered on timeout")
+timedOut.advance(0.05)
+assert(timedOut.covered() > 0 and timedOut.covered() < 1)
+timedOut.advance(0.051)
 assert(#timedOut.requests == 1 and #timedOut.notices == 1 and not timedOut.root.Anchored and not timedOut.locked())
 assert(timedOut.camera.CameraType == "Custom" and not timedOut.baitVisible())
 timedOut.requests[1]({ ok = true, token = "late" })

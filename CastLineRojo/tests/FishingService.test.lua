@@ -48,9 +48,15 @@ local plot = h.plot
 h.plot = nil
 assert(not h.client:Begin(h.player).ok)
 h.plot = plot
-h.footZ = -1000
-assert(not h.client:Begin(h.player).ok)
-h.footZ = 0
+h.rootPart.Position.Z = 10.01
+assert(h.client:Begin(h.player).code == "OutsideFishingSpot", "Reject positions beyond the horizontal tolerance")
+h.rootPart.Position.Z = 0
+for _, height in { -10, 20 } do
+	local entry = new()
+	entry.rootPart.Position.Y = height
+	entry.rootPart.Position.Z = 10
+	assert(entry.client:Begin(entry.player).ok, "Allow either height at the server's horizontal tolerance boundary")
+end
 h.begin()
 assert(not h.client:Begin(h.player).ok)
 assert(not h.client:SelectBait(h.player, "wrong", "NONE").ok)
@@ -169,7 +175,7 @@ local join = new()
 local slot = -7
 join.activeEvent = join.fishes.Event
 join.eventWindow = { SlotId = slot, StartsAt = join.now, EndsAt = join.now + 15 }
-join.footZ = -1000
+join.rootPart.Position.Z = -1000
 local character = join.player.Character
 local rootPart = character:FindFirstChild("HumanoidRootPart")
 local pivot, destination, landed = {}, {}, {}

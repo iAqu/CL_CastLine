@@ -26,14 +26,13 @@ function FishingSpotUtil.GetEntryRootCFrame(part: BasePart, root: BasePart, huma
 	return CFrame.lookAt(position, position + forward)
 end
 
-function FishingSpotUtil.Contains(part: BasePart, root: BasePart, humanoid: Humanoid, horizontalTolerance: number?): boolean
-	-- The marker is a thin floor, so check the feet rather than the root.
-	local feet = root.Position - Vector3.yAxis * FishingSpotUtil.GetFootHeight(root, humanoid)
-	local point = part.CFrame:PointToObjectSpace(feet)
+function FishingSpotUtil.Contains(part: BasePart, root: BasePart, horizontalTolerance: number?): boolean
+	local position = root.Position
+	local projected = Vector3.new(position.X, part.Position.Y, position.Z)
+	local point = part.CFrame:PointToObjectSpace(projected)
 	local tolerance = horizontalTolerance or 0
 	return math.abs(point.X) <= part.Size.X / 2 + tolerance
 		and math.abs(point.Z) <= part.Size.Z / 2 + tolerance
-		and math.abs(point.Y - part.Size.Y / 2) <= 2.5
 end
 
 return FishingSpotUtil

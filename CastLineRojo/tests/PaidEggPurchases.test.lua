@@ -454,7 +454,7 @@ local dedicatedDelivery = mailbox[2]["1:dedicated-egg"]
 assert(dedicatedDelivery and dedicatedDelivery.MaxWeight == 1000 and buyerProfile.Data.RobuxSpent == 398)
 assert(checkoutFixture.Records["Egg:1"].Status == "Complete")
 
--- Cloud configuration is absent. Only the actual Studio development path bypasses profile saves.
+-- Compare the legacy profile wait to the default production checkout for all three egg sizes.
 local savePaidEggProfile = playerData.SavePaidEggProfile
 local elapsed = 0
 function playerData:SavePaidEggProfile(player)
@@ -466,11 +466,13 @@ assert(service:Prompt(buyer, "Egg_R_1", true) and elapsed == 7)
 service:CancelPrompt(buyer, eggProduct, false)
 delayed[#delayed]()
 assert(not buyerProfile.Data.PaidEgg.Intent)
-checkoutFixture.StudioPaidEggOverride = nil
+checkoutFixture.Studio = false
+checkoutFixture.SetConfigValue(nil)
 
 for _, sku in Config.PurchaseOrder do
 	local row, quantity = Config.GetPurchase(sku, purchases)
 	local before = #prompts
+	local writesBefore = checkoutFixture.Writes
 	checkoutFixture.OnUpdate = function()
 		assert(#prompts == before, "Roblox must wait for the dedicated write")
 		elapsed += 0.035
@@ -478,6 +480,7 @@ for _, sku in Config.PurchaseOrder do
 	local started = elapsed
 	assert(service:Prompt(buyer, sku, true))
 	assert(math.abs(elapsed - started - 0.035) < 1e-8 and #prompts == before + 1)
+	assert(checkoutFixture.Writes == writesBefore + 1, "Default egg checkout opens after one order write")
 	assert(checkoutFixture.Records["Egg:1"].Snapshot.Quantity == quantity)
 	checkoutFixture.OnUpdate = nil
 	local snapshot = checkoutFixture.Records["Egg:1"].Snapshot

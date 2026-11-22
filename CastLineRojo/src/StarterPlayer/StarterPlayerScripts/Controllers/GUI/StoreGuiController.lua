@@ -19,7 +19,6 @@ local NumberUtil = require(ReplicatedStorage.Modules.NumberUtil)
 local CashPack = require(ReplicatedStorage.Modules.CashPack)
 local PlotFishIncome = require(ReplicatedStorage.Modules.PlotFishIncome)
 local PaidEggStoreView = require(ReplicatedStorage.Modules.PaidEggStoreView)
-local UltraLuckDetails = require(ReplicatedStorage.Modules.UltraLuckDetails)
 
 local localPlayer = Players.LocalPlayer
 -- local character = localPlayer.Character or localPlayer.CharacterAdded:Wait()
@@ -53,6 +52,7 @@ local GENERATED_WINS_ATTRIBUTE = "GeneratedStoreWinsCard"
 local shopModels = {}
 -- local isClosingToLimitedShop = false
 local isGifting = false
+local giftRecipientId: number?
 local isClosingToShopModel = false
 
 local StoreGuiController = Knit.CreateController {
@@ -116,6 +116,7 @@ function StoreGuiController:OpenGui()
 end
 
 function StoreGuiController:SetGiftingState(isGiftingState: boolean, giftedPlayer: Player?)
+    giftRecipientId = if isGiftingState and giftedPlayer then giftedPlayer.UserId else nil
     if isGiftingState then
         isGifting = true
         -- GiftButton.Text = "Cancel"
@@ -193,16 +194,15 @@ function StoreGuiController:GenerateGamePassList()
         button.NameLabel.Text = purchaseData.Name
         button.GamePassImage.Image = formatAssetId(purchaseData.IconId)
         button.Frame.BuyButton.PriceLabel.Text = tostring(purchaseData.Price)
-        button.DescriptionLabel.Text = if purchaseId == UltraLuckDetails.PurchaseId
-            then UltraLuckDetails.Description .. "\nView Details" else purchaseData.Description
+        button.DescriptionLabel.Text = PurchaseDataHelper.GetDescription(purchaseId)
         ButtonAnimation.SetUp(button)
         self:UpdateGamePass(purchaseId)
 
         button.Activated:Connect(function()
             local playerData = PlayerDataController:GetData()
             if not playerData then return end
-            if purchaseId == UltraLuckDetails.PurchaseId then
-                UltraLuckDetails.OpenPurchase(not isGifting)
+            if purchaseId == Constants.GAMEPASS.MEGA_LUCK then
+                Knit.GetService("PurchaseService").PromptPurchase:Fire(purchaseId, not isGifting, giftRecipientId)
             elseif isGifting then
                 Knit.GetService("PurchaseService").PromptPurchase:Fire(purchaseId)
             elseif playerData.GamePasses[purchaseId] then

@@ -16,7 +16,6 @@ local function new()
 		failGrant = false,
 		activeEvent = nil,
 		ready = true,
-		footZ = 0,
 	}
 	local delayed, encoded = {}, {}
 	local deferredThreads = {}
@@ -69,25 +68,27 @@ local function new()
 		}
 	end
 	local function vector(x, y, z)
-		return setmetatable({ X = x or 1, Y = y or 2, Z = z or 3 }, {
+		return setmetatable({ X = x, Y = y, Z = z }, {
 			__mul = function(a, b)
 				return vector(a.X * b, a.Y * b, a.Z * b)
 			end,
-			__sub = function()
-				return vector()
+			__sub = function(a, b)
+				return vector(a.X - b.X, a.Y - b.Y, a.Z - b.Z)
 			end,
 		})
 	end
 	local start = instance("BasePart")
+	start.Position = vector(0, 0, 0)
 	start.Size = { X = 10, Y = 1, Z = 10 }
 	start.CFrame = {
-		PointToObjectSpace = function()
-			return { X = 0, Y = 0.5, Z = h.footZ }
+		PointToObjectSpace = function(_, point)
+			return point - start.Position
 		end,
 	}
 	local rootPart = instance("BasePart")
-	rootPart.Position = vector()
+	rootPart.Position = vector(0, 3.5, 0)
 	rootPart.Size = { Y = 2 }
+	h.rootPart = rootPart
 	h.humanoid = { Health = 100, HipHeight = 2, RigType = "R15", Died = signal() }
 	h.player = {
 		UserId = 12,
@@ -168,7 +169,7 @@ local function new()
 			return {}
 		end,
 		GetBait = function()
-			return { Size = vector() }
+			return { Size = vector(1, 2, 3) }
 		end,
 	}
 	local modules = {
@@ -202,7 +203,7 @@ local function new()
 	modules.FishingSpotUtil = loadSource(
 		root .. "FishingSpotUtil.lua",
 		setmetatable(
-			{ Enum = { HumanoidRigType = { R6 = "R6" } }, Vector3 = { yAxis = vector() } },
+			{ Enum = { HumanoidRigType = { R6 = "R6" } }, Vector3 = { new = vector, yAxis = vector(0, 1, 0) } },
 			{ __index = getfenv() }
 		)
 	)

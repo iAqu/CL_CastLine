@@ -32,8 +32,11 @@ local purchaseConfigs = assert(loadstring(purchaseData))()
 assert(purchaseConfigs.DoubleWins.Description == "Earn double cash from fish in your slots.")
 local function loadHelper(configs)
 	return assert(load(purchaseHelper, "PurchaseDataHelper", "t", setmetatable({
-		game = { GetService = function()
-			return { Data = { PurchaseData = configs } }
+		game = { GetService = function(_, name)
+			if name == "ReplicatedFirst" then
+				return { Data = { PurchaseData = configs } }
+			end
+			return { Modules = { FishingProgression = { ULTRA_LUCK_HIGH_BAND_WEIGHT = 2 } } }
 		end },
 		require = function(config)
 			return config
@@ -104,9 +107,6 @@ local services = {
 		Packages = {
 			Knit = {
 				GetService = function(name)
-					if name == "FishingService" then
-						return { GetUltraLuckOdds = function() return { ok = true, grades = {} } end }
-					end
 					assert(name == "PaidEggService")
 					return { IsProduct = function() return false end }
 				end,
@@ -188,30 +188,31 @@ gamePassService:GiveGamePass(buyer, "DoubleTrain")
 assert(profile.Data.GamePasses.DoubleTrain == true and denied == signalsBefore + 1,
 	"Configured training passes must still grant and emit an entitlement event")
 
-purchaseService.Client.Server = purchaseService
-purchaseService:PromptPurchase(buyer, "MegaLuck", true, 42)
-assert(selfPrompts == 0, "The purchase needs an odds preview for the same recipient")
-assert(purchaseService.Client:GetUltraLuckOdds(buyer, true).canBuy)
 allowed = false
-purchaseService:PromptPurchase(buyer, "MegaLuck", true, 42)
-assert(selfPrompts == 0 and not purchaseService.Client:GetUltraLuckOdds(buyer, true).canBuy,
-	"Eligibility is rechecked before opening the purchase")
+purchaseService:PromptPurchase(buyer, "MegaLuck", true)
+assert(selfPrompts == 0, "Eligibility is checked before opening the purchase")
 allowed = true
-assert(purchaseService.Client:GetUltraLuckOdds(buyer, true).canBuy)
-purchaseService:PromptPurchase(buyer, "MegaLuck", true, 42)
-purchaseService:PromptPurchase(buyer, "MegaLuck", true, 42)
-assert(selfPrompts == 1, "A preview permits one eligible purchase prompt")
+purchaseService:PromptPurchase(buyer, "MegaLuck", true)
+assert(selfPrompts == 1, "An eligible Ultra Luck purchase opens directly")
+profile.Data.GamePasses.MegaLuck = true
+purchaseService:PromptPurchase(buyer, "MegaLuck", true)
+assert(selfPrompts == 1, "Owners must not be prompted again")
+profile.Data.GamePasses.MegaLuck = nil
 productPurchases.Prompt = function(_, id, _, sku, target)
 	assert(id == "MegaLuck" and sku == purchaseConfigs.MegaLuck.GiftProductId and target == recipient)
 	giftPrompts += 1
 	return true
 end
-assert(purchaseService.Client:GetUltraLuckOdds(buyer, false).recipientId == 43)
 purchaseService._PlayerGifted[buyer.UserId] = nil
 purchaseService:PromptPurchase(buyer, "MegaLuck", false, 43)
 assert(giftPrompts == 0 and selfPrompts == 1, "The gift cannot become a self purchase")
 purchaseService._PlayerGifted[buyer.UserId] = 43
-assert(purchaseService.Client:GetUltraLuckOdds(buyer, false).canBuy)
+purchaseService:PromptPurchase(buyer, "MegaLuck", false, 44)
+assert(giftPrompts == 0, "A stale gift recipient must be rejected")
+allowed = false
+purchaseService:PromptPurchase(buyer, "MegaLuck", false, 43)
+assert(giftPrompts == 0, "Restricted gifts must be rejected")
+allowed = true
 purchaseService:PromptPurchase(buyer, "MegaLuck", false, 43)
 assert(giftPrompts == 1)
 
@@ -269,7 +270,7 @@ end
 local shopper = waitFor(waitFor(storeGui))
 local opened, gifted, alreadyOwned, unavailable = 0, 0, 0, 0
 local owned = {}
-local cashPrompt
+local cashPrompt, ultraLuckPrompt
 local storeApi = {
 	Players = { LocalPlayer = shopper },
 	MarketplaceService = { PromptGamePassPurchase = function(_, player, sku)
@@ -286,17 +287,21 @@ local storeApi = {
 						cashPrompt = { id, ... }
 						return
 					end
+					if id == "MegaLuck" then
+						ultraLuckPrompt = { id, ... }
+						return
+					end
 					assert(id == purchaseId)
 					gifted += 1
 				end } }
 			end,
 		} },
 		Modules = {
-			Constants = { NOTIFICATION = { ALREADY_OWN_GAME_PASS = "Owned" } }, GuiAnimation = {},
+			Constants = { GAMEPASS = { MEGA_LUCK = "MegaLuck" }, NOTIFICATION = { ALREADY_OWN_GAME_PASS = "Owned" } },
+			GuiAnimation = {},
 			CashPack = cashPack,
 			PlotFishIncome = { BASE_RATE_ATTRIBUTE = "PlotFishBaseCashPerSecond" },
 			NumberUtil = { FormatWinsAmount = function(amount) return tostring(amount) .. "$" end },
-			UltraLuckDetails = { PurchaseId = "MegaLuck" },
 			ButtonAnimation = { SetUp = function() end },
 			NotificationClient = {
 				Notify = function(message)
@@ -312,6 +317,7 @@ local storeApi = {
 	} } },
 	ReplicatedFirst = { DataHelpers = { PurchaseDataHelper = {
 		IsRetired = function() return false end,
+		GetDescription = helper.GetDescription,
 		GetWinsData = function() return { WinsTier1 = purchaseConfigs.WinsTier1 } end,
 		GetGamePassesData = function()
 			return { [purchaseId] = {
@@ -356,6 +362,16 @@ assert(opened == 1 and gifted == 1 and unavailable == 0, "Gifting still uses ser
 
 initCashRecipient(shopper, 42)
 initCashRecipient(recipient, 43)
+purchaseId, passCard.Name = "MegaLuck", "MegaLuck"
+storeController:SetGiftingState(false)
+storeController:GenerateGamePassList()
+assert(passButton.DescriptionLabel.Text == "2× draw weight for high-grade fish in your rod's rarity.")
+activate()
+assert(ultraLuckPrompt[1] == purchaseId and ultraLuckPrompt[2] == true and opened == 1)
+storeController:SetGiftingState(true, recipient)
+activate()
+assert(ultraLuckPrompt[1] == purchaseId and ultraLuckPrompt[2] == false and ultraLuckPrompt[3] == 43)
+
 storeController:GenerateWinsList()
 storeController:SetGiftingState(false)
 assert(cashButton.BuyNumLabel.Text == "Loading..." and not cashButton.Interactable)

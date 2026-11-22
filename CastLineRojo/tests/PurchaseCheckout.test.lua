@@ -34,24 +34,45 @@ local function receipt(id)
 	return { PurchaseId = id, PlayerId = buyer.UserId, ProductId = productId }
 end
 
-assert(not checkout.WritesEnabled())
+assert(not checkout.WritesEnabled(), "An explicit false keeps legacy checkout")
+fixture.SetConfigValue(nil)
+assert(checkout.WritesEnabled("Product") and checkout.WritesEnabled("Egg") and checkout.WritesEnabled("Bait"),
+	"An absent setting enables dedicated checkout for all three purchase kinds")
+fixture.SetConfigValue(false)
+fixture.ConfigError = "LoadFailed"
+fixture.SetConfigValue(nil)
+assert(not checkout.WritesEnabled(), "An unsuccessful refresh preserves the previous rollback value")
+local retryingCheckout = fixture.Load()
+assert(not retryingCheckout.WritesEnabled(), "A failed first snapshot uses legacy checkout")
+fixture.ConfigError = nil
+local retry = jobs[#jobs]
+assert(retry, "A failed first snapshot schedules a retry")
+retry[1]()
+assert(retryingCheckout.WritesEnabled(), "A valid snapshot with an absent setting enables dedicated checkout")
+fixture.RefreshThrows = true
+fixture.SetConfigValue(true)
+assert(not checkout.WritesEnabled(), "A thrown refresh also preserves the previous value")
+fixture.RefreshThrows = false
+fixture.SetConfigValue(true)
+assert(checkout.WritesEnabled(), "A subsequent successful refresh applies the new value")
+fixture.SetConfigValue(false)
 fixture.Studio = true
 fixture.PlaceId = 84106335829275
 local devCheckout = fixture.Load()
 assert(devCheckout.WritesEnabled("Egg"), "The CastLine development place uses dedicated egg checkout in Studio")
 assert(not devCheckout.WritesEnabled("Product") and not devCheckout.WritesEnabled("Bait"))
 fixture.StudioPaidEggOverride = false
-fixture.Enabled = true
+fixture.SetConfigValue(true)
 assert(not devCheckout.WritesEnabled("Egg") and devCheckout.WritesEnabled("Product"))
 fixture.StudioPaidEggOverride = nil
-fixture.Enabled = false
+fixture.SetConfigValue(false)
 fixture.Studio = false
 assert(not devCheckout.WritesEnabled("Egg"), "Published servers keep the global flag")
 fixture.Studio = true
 fixture.PlaceId = 123
 assert(not fixture.Load().WritesEnabled("Egg"), "Other Studio places keep the global flag")
 fixture.Studio = false
-fixture.Enabled = true
+fixture.SetConfigValue(true)
 assert(checkout.WritesEnabled())
 fixture.OnUpdate = function()
 	coroutine.yield()
@@ -81,8 +102,8 @@ assert(not open(1), "Keep the local window occupied until its own closed event")
 checkout.Finish(kind, buyer, productId, true)
 assert(open(2))
 
+fixture.SetConfigValue(false)
 checkout = fixture.Load()
-fixture.Enabled = false
 assert(not checkout.WritesEnabled() and not checkout.CanUseLegacy(kind, buyer), "A restart with writes disabled must respect a pending checkout")
 local afterReconnect = assert(checkout.Bind(kind, buyer, receipt("reconnect")))
 assert(afterReconnect.Snapshot.RecipientUserId == 2)

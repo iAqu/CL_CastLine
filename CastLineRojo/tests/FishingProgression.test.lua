@@ -27,7 +27,7 @@ do
 		assert(entry.band == 3)
 		closeTo(base[index] / baseTotal, boosted[index] / boostedTotal)
 	end
-	assert(state.MissHigh == pity - 1, "Previewing odds must not advance pity")
+	assert(state.MissHigh == pity - 1, "Calculating odds must not advance pity")
 end
 
 for _, mode in ipairs({ "owned", "restricted", "unknown", "midCast" }) do
@@ -36,8 +36,10 @@ for _, mode in ipairs({ "owned", "restricted", "unknown", "midCast" }) do
 	fisher.profile.Data.GamePasses = { MegaLuck = mode ~= "midCast" }
 	fisher.restrictPaid, fisher.noPolicy = mode == "restricted", mode == "unknown"
 	fisher.sample = 0.85
-	local preview = fisher.service:GetUltraLuckOdds(fisher.player)
-	assert(preview.ok and #preview.grades == 4)
+	local multiplier = if mode == "owned" then P.ULTRA_LUCK_HIGH_BAND_WEIGHT else 1
+	local pool, pity = P.BuildPool(fishes, rods.Rod_101, rods, function() return true end, 1)
+	local candidates = P.GetCandidates(pool, P.Ensure(fisher.profile.Data), "Rod_101", pity)
+	local weights, weightTotal = P.GetWeights(candidates, multiplier)
 	fisher.begin("NONE")
 	local cast = fisher.castAt(1)
 	assert(cast.ok and cast.odds.boosted == (mode == "owned"))
@@ -48,8 +50,7 @@ for _, mode in ipairs({ "owned", "restricted", "unknown", "midCast" }) do
 	local total = 0
 	for index, row in ipairs(first.odds.rows) do
 		total += row.chance
-		local comparison = preview.grades[4].rows[index]
-		closeTo(row.chance, if mode == "owned" then comparison.boostedChance else comparison.chance)
+		closeTo(row.chance, weights[index] / weightTotal)
 	end
 	closeTo(total, 1)
 	assert((fisher.fishes[first.fishId].Index >= 7) == (mode == "owned"), mode .. " drew " .. first.fishId)

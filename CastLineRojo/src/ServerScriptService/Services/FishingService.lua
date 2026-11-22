@@ -43,7 +43,7 @@ local nextPresentationId = 0
 local random = Random.new()
 local ROUND_LEAD_SECONDS = 0.35
 local START_TIMEOUT = 60
-local START_HORIZONTAL_TOLERANCE = 1
+local START_HORIZONTAL_TOLERANCE = 5
 local BAIT_SPEND_FAILURE = "Could not use the Rainbow bait. Please try again."
 local CATCH_CHANCE_MUTATION_MULTIPLIERS = { Golden = 4, Diamond = 8, Rainbow = 16 }
 local CATCH_CHANCE_WEIGHT_STEP_MULTIPLIER = 1.25
@@ -104,47 +104,19 @@ local function ownsUltraLuck(profile)
 	return passes and passes[Constants.GAMEPASS.MEGA_LUCK] == true
 end
 
-local function fishOdds(pool, progress, rodId, pity, multiplier, compare)
+local function fishOdds(pool, progress, rodId, pity, multiplier)
 	local candidates = Progression.GetCandidates(pool, progress, rodId, pity)
 	local weights, total = Progression.GetWeights(candidates, multiplier)
-	local boosted, boostedTotal
-	if compare then
-		boosted, boostedTotal = Progression.GetWeights(candidates, Progression.ULTRA_LUCK_HIGH_BAND_WEIGHT)
-	end
 	local rows = {}
 	for index, entry in ipairs(candidates) do
 		if weights[index] > 0 then
 			table.insert(rows, {
 				name = entry.fish.DisplayName or entry.fish.FishID,
 				chance = weights[index] / total,
-				boostedChance = if boosted then boosted[index] / boostedTotal else nil,
 			})
 		end
 	end
 	return rows
-end
-
-function FishingService:GetUltraLuckOdds(player: Player)
-	local profile = PlayerDataService:GetProfile(player)
-	if not profile then
-		return failure("Fishing data is still loading.")
-	end
-	local rodId = RodInventory.GetEquippedId(profile.Data)
-	local rod = RodsData[rodId]
-	if not rod then
-		return failure("Fishing rod unavailable.")
-	end
-	local progress = Progression.Ensure(profile.Data)
-	local grades = {}
-	for _, example in ipairs({ 0, 0.5, 0.8, 1 }) do
-		local rating = Config.GetCastRating(example)
-		local pool, pity = getPool(rod, example)
-		table.insert(grades, {
-			name = rating.Id,
-			rows = fishOdds(pool, progress, rodId, pity, 1, true),
-		})
-	end
-	return { ok = true, rod = rod.DisplayName or rodId, grades = grades }
 end
 
 local function getCastOdds(state, progress, pending)
@@ -235,7 +207,7 @@ local function beginFishing(player: Player, eventSlotId: number?)
 	end
 	local plot = Knit.GetService("PlotSlotService"):GetPlayerPlot(player)
 	local part = FishingSpotUtil.GetStartPart(plot)
-	if eventSlotId == nil and (not part or not FishingSpotUtil.Contains(part, root, humanoid, START_HORIZONTAL_TOLERANCE)) then
+	if eventSlotId == nil and (not part or not FishingSpotUtil.Contains(part, root, START_HORIZONTAL_TOLERANCE)) then
 		return failure("Stand at your fishing spot to start fishing", "OutsideFishingSpot")
 	end
 	local existing = sessions[player]
