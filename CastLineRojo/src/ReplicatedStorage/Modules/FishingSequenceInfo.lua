@@ -218,7 +218,7 @@ function FishingSequenceInfo:_showCatch(bite, confettiOptions)
 	self.owner:_celebrateCatch(bite, confettiOptions)
 end
 
-function FishingSequenceInfo:Update(now, bite)
+function FishingSequenceInfo:Update(now, bite, guideVisible: boolean?)
 	if self.destroyed then
 		return
 	end
@@ -234,8 +234,10 @@ function FishingSequenceInfo:Update(now, bite)
 		self.shadowSeen = true
 	end
 	local target = FishingChanceReveal.GetTarget(bite, revealed)
-	local preview = self.shadowSeen
-		and (phase == "Approaching" or phase == "Holding" or phase == "Nibbling" or phase == "Bite")
+	-- A hidden guide can hand off to the starting number while the hook is being confirmed.
+	local guideHandOff = guideVisible == false and phase == "Struggling" and timeline.awaitingHook
+	local preview = self.shadowSeen and guideVisible ~= true
+		and (phase == "Approaching" or phase == "Holding" or phase == "Nibbling" or phase == "Bite" or guideHandOff)
 	self.luck.Visible, self.reveal.Visible = self.showLuck and not revealed and not target and not self.shadowSeen, revealed
 	self:_updateLuck(now)
 	if preview or target then

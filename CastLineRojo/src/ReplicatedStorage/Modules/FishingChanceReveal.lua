@@ -85,7 +85,7 @@ function FishingChanceReveal:_setNumber(value, rarity, now)
 			self.pulseAt, self.pulseStrength = now, if strong then 0.24 else 0.09
 		end
 		self.number, self.digits = value, digits
-	self.value.Text = "Rarity Score " .. NumberUtil.FormatNumberWithComma(value)
+		self.value.Text = "1 in " .. NumberUtil.FormatNumberWithComma(value)
 	end
 end
 

@@ -132,6 +132,7 @@ function Chance.new(luck)
 end
 function Chance:_burst()
 	self.maxRevealScale = math.huge
+	self.bursts = (self.bursts or 0) + 1
 end
 local function row(name)
 	return node(name, "Frame", { Label = node("Label", "TextLabel") })
@@ -568,32 +569,69 @@ do
 	assert(info.luck.Visible and not info.chance, "Keep luck until the shadow becomes visible")
 	bite.appearanceFade = 0.99
 	info:Update(11.1, bite)
-	assert(not info.luck.Visible and info.chance and info.chance.root.Visible and info.chance.value.Text == "Rarity Score 1",
-		"Show Rarity Score 1 in the first visible shadow frame")
+	assert(not info.luck.Visible and info.chance and info.chance.root.Visible and info.chance.value.Text == "1 in 1",
+		"Show 1 in 1 in the first visible shadow frame")
 	for index, phase in { "Holding", "Nibbling", "Bite" } do
 		bite.timeline.phase, bite.timeline.startedAt = phase, 11 + index
 		info:Update(11 + index, bite)
-		assert(info.chance.root.Visible and info.chance.value.Text == "Rarity Score 1", "Hold at Rarity Score 1 while waiting for the hook")
+		assert(info.chance.root.Visible and info.chance.value.Text == "1 in 1", "Hold at 1 in 1 while waiting for the hook")
 	end
 	local priorSounds = #owner.sounds
 	bite.catchChanceDenominator = 999
 	bite.timeline.phase, bite.timeline.startedAt = "Struggling", 14.5
 	info:Update(14.5, bite)
-	assert(info.chance.value.Text == "Rarity Score 1", "Begin the confirmed roll at Rarity Score 1")
+	assert(info.chance.value.Text == "1 in 1", "Begin the confirmed roll at 1 in 1")
 	info:Update(15.5, bite)
-	local rolling = tonumber(info.chance.value.Text:match("^Rarity Score (%d+)$"))
+	local rolling = tonumber(info.chance.value.Text:match("^1 in (%d+)$"))
 	assert(rolling and rolling > 1 and rolling < 999 and #owner.sounds == priorSounds + 1
 		and owner.sounds[#owner.sounds].name == "LuckTick", "Roll and tick after the confirmed hook")
 	bite.timeline.phase, bite.timeline.startedAt = "Lifting", 17.5
 	info:Update(19, bite)
-	assert(info.reveal.Visible and info.chance.root.Visible and info.chance.value.Text == "Rarity Score 999",
-		"Show the confirmed rarity score when the fish lands")
+	assert(info.reveal.Visible and info.chance.root.Visible and info.chance.value.Text == "1 in 999",
+		"Show the confirmed chance when the fish lands")
 	info:Update(20, { timeline = { phase = "Waiting", startedAt = 20 } })
 	assert(info.luck.Visible and not info.chance.root.Visible, "Start the next bite with luck restored")
 	info:Update(21, { wasVisible = true, appearanceFade = 0.99,
 		timeline = { phase = "Approaching", startedAt = 21 } })
-	assert(info.chance.value.Text == "Rarity Score 1", "Start a new shadow at Rarity Score 1")
+	assert(info.chance.value.Text == "1 in 1", "Start a new shadow at 1 in 1")
 	info:Destroy()
+end
+
+do
+	local info, owner = fixture(nil, nil, true)
+	local timing = { riseEnd = 0.4, fallStart = 0.5, landAt = 1.5, duration = 1.8 }
+	local bite = { wasVisible = true, appearanceFade = 0, fishConfig = item, catchWeight = 10,
+		timeline = { phase = "Approaching", startedAt = 11, struggleTime = 3, liftTiming = timing } }
+	local timeline = bite.timeline
+	info:Update(11, bite, true)
+	assert(not info.luck.Visible and (not info.chance or not info.chance.root.Visible),
+		"The instruction image and chance preview must never be visible together")
+	timeline.phase, timeline.startedAt, timeline.awaitingHook = "Struggling", 12, true
+	info:Update(12, bite, false)
+	assert(info.chance.root.Visible and info.chance.value.Text == "1 in 1" and #owner.sounds == 0,
+		"Reveal a quiet starting value on the first frame without the guide")
+	info:Update(12.5, bite, false)
+	assert(info.chance.value.Text == "1 in 1" and #owner.sounds == 0, "Wait for the authoritative catch before rolling")
+	timeline.phase, timeline.awaitingHook = "Escaped", nil
+	info:Update(12.6, bite, false)
+	assert(not info.chance.root.Visible, "A rejected hook must clear the preview")
+	local retry = { wasVisible = true, appearanceFade = 0, fishConfig = item, catchWeight = 10,
+		timeline = { phase = "Bite", startedAt = 15, struggleTime = 3, liftTiming = timing } }
+	info:Update(15, retry, true)
+	assert(not info.chance.root.Visible, "A new round with a guide must also hide the preview")
+	retry.catchChanceDenominator = 60
+	retry.timeline.phase, retry.timeline.startedAt = "Struggling", 15.1
+	info:Update(16.1, retry, false)
+	local rolling = tonumber(info.chance.value.Text:match("^1 in (%d+)$"))
+	assert(info.chance.root.Visible and rolling and rolling > 1 and rolling < 60 and owner.sounds[1].name == "LuckTick")
+	retry.timeline.phase, retry.timeline.startedAt = "Lifting", 18.1
+	info:Update(19.61, retry, false)
+	info:Update(19.62, retry, false)
+	assert(info.chance.value.Text == "1 in 60" and info.chance.bursts == 1 and #owner.celebrations == 1)
+	assert(#owner.sounds == 2 and owner.sounds[2].name == "CatchRevealImpact", "Play the reveal once")
+	local root = info.chance.root
+	info:Destroy()
+	assert(not info.chance and not root.Parent, "Destroy the chance UI when the sequence ends")
 end
 
 for _, phase in { "Escaped", "Reeling", "Struggling" } do

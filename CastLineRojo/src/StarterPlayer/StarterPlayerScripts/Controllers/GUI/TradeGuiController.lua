@@ -23,7 +23,6 @@ local PlayerThumbnailUtil = require(ReplicatedStorage.Modules.PlayerThumbnailUti
 local Players = game:GetService("Players")
 local localPlayer = Players.LocalPlayer
 local PlayerGUI = localPlayer:WaitForChild("PlayerGui")
-local HomeGui = PlayerGUI:WaitForChild("HomeGui")
 
 local TradeGui = PlayerGUI:WaitForChild("TradeGui")
 local MainFrame = TradeGui.Frame
@@ -236,13 +235,6 @@ local function clearTradePrompts(character: Model?)
 end
 
 function TradeGuiController:KnitInit()
-    TradeGui:GetPropertyChangedSignal("Enabled"):Connect(function()
-        if TradeGui.Enabled then
-            HomeGui.Enabled = false
-        else
-            HomeGui.Enabled = true
-        end
-    end)
     Init()
 end
 

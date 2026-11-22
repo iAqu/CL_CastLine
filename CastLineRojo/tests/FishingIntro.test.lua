@@ -11,6 +11,7 @@ end
 
 local config = loadModule("ReplicatedStorage/Modules/FishingIntroConfig")
 local openingUid = config.RewardUidPrefix .. tostring(config.Version)
+local starterDisplayChance = 73
 local fishing = loadModule("ReplicatedStorage/Modules/FishingConfig")
 local lift = loadModule("ReplicatedStorage/Modules/FishingLiftMotion")
 local bite = loadModule(
@@ -96,7 +97,10 @@ local function fixture(preview, cancelDuringGrant, onboardingTest)
 			Data = {
 				RodsData = {Rod_101={RodID="Rod_101",Rarity="Common",LayoutOrder=1}},
 				FishesData = {
-					[config.StarterFishId] = { FishID = config.StarterFishId, Model = "TestFish", DefaultWeight = 1, Rarity="Common",Index=1 },
+					[config.StarterFishId] = {
+						FishID = config.StarterFishId, Model = "TestFish", DefaultWeight = 1,
+						DisplayChance = starterDisplayChance, Rarity = "Common", Index = 1,
+					},
 				},
 			},
 		},
@@ -301,14 +305,19 @@ assert(live.round(7).code ~= "RoundNotReady")
 live.time(124)
 local first = live.round(0)
 assert(first.ok and first.weight == 1 and not live.round(0).ok,"Tutorial round must use the configured default weight")
+assert(first.catchChanceDenominator == nil, "Only reveal the denominator after a successful hook")
 assert(not live.hook(124).ok, "Cannot claim before a genuine bite")
 assert(live.hookResult().status == "Rejected" and live.hookResult(0).status == "Unknown")
 live.time(first.biteAt + 0.4)
 assert(not live.hook(first.biteAt + 0.2, 0).ok, "Wrong round must remain ineligible")
 assert(not live.hook(first.biteAt).ok, "Opening round must also enforce the delivery budget")
-assert(live.hook(first.biteAt + 0.2).ok and live.grants() == 1, "Opening round uses the mapped press")
+local caught = live.hook(first.biteAt + 0.2)
+assert(caught.ok and live.grants() == 1, "Opening round uses the mapped press")
+assert(caught.catchChanceDenominator == starterDisplayChance, "Opening must use the configured tutorial fish chance")
 assert(not live.hook(first.biteAt + 0.2).ok and live.grants() == 1)
-assert(live.hookResult().status == "Succeeded" and live.hookResult().result.weight == 1 and live.grants() == 1)
+local recovered = live.hookResult()
+assert(recovered.status == "Succeeded" and recovered.result.weight == 1 and live.grants() == 1)
+assert(recovered.result.catchChanceDenominator == caught.catchChanceDenominator, "Confirmation lookup must also restore the chance")
 assert(live.profile.Data.FishingIntroVersion == config.Version)
 assert(live.profile.Data.FishingOnboarding.Stage == "PlaceFish" and live.profile.Data.FishingOnboarding.FishUid == openingUid)
 assert(live.profile.Data.FishingProgress.Count == 1, "Teaching fish counts once toward newcomer milestones")
@@ -353,7 +362,8 @@ studio.cast()
 studio.time(124)
 studio.round(0)
 studio.time(1e6)
-assert(studio.hook(1e6).ok and studio.grants() == 0)
+local previewCatch = studio.hook(1e6)
+assert(previewCatch.ok and previewCatch.catchChanceDenominator == starterDisplayChance and studio.grants() == 0)
 assert(studio.profile.Data.FishingIntroVersion == 0 and studio.profile.Data.FishingOnboarding == nil,
 	"Studio preview must not write real onboarding progress")
 studio.cancel(true)

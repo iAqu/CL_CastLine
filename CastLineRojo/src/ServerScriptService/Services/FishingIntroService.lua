@@ -261,7 +261,14 @@ local function claimHook(player, state)
 		end
 	end
 	state.phase = "Caught"
-	return { ok = true, weight = state.weight, catchId = fish.FishID, catchKind = "Fish", isNewDiscovery = true }
+	return {
+		ok = true,
+		weight = state.weight,
+		catchId = fish.FishID,
+		catchKind = "Fish",
+		catchChanceDenominator = fish.DisplayChance,
+		isNewDiscovery = true,
+	}
 end
 
 function Service.Client:Hook(player, token, round, pressedAt)

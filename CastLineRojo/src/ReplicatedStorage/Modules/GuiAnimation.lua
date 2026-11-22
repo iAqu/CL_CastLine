@@ -10,17 +10,21 @@ local UserInputService = game:GetService("UserInputService")
 
 local FovController = require(ReplicatedStorage.Modules.FovController)
 local GameplayInputGate = require(ReplicatedStorage.Modules.GameplayInputGate)
+local HomeHudTransition = require(ReplicatedStorage.Modules.HomeHudTransition)
+local HoverGuiClient = require(ReplicatedStorage.Modules.HoverGuiClient)
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local Blur = game.Lighting:WaitForChild("Blur")
 
-local HomeGui = PlayerGui:WaitForChild("HomeGui")
+local HomeGui = PlayerGui:WaitForChild("HomeGui") :: ScreenGui
 
 local originalSizes: { [ScreenGui]: UDim2 } = {}
 local activeTweens: { [ScreenGui]: { Tween } } = {}
 local guis: { ScreenGui } = {}
 local transitions: { [ScreenGui]: (boolean, boolean) -> () } = {}
+local watchedPopups: { [ScreenGui]: { RBXScriptConnection } } = {}
+local pendingOpen: ScreenGui? = nil
 local openGeneration = 0
 local guiOpenSpeed = 0.18
 local guiCloseSpeed = 0.1
@@ -186,6 +190,43 @@ local function focusTopGui()
     revealSelection(target)
 end
 
+local homeSelection: GuiObject? = nil
+
+local function restoreHomeSelection()
+    if not isUsingGamepad() or GuiService.MenuIsOpen or topNavigationEntry() then
+        return
+    end
+    local previous = homeSelection
+    homeSelection = nil
+    local current = GuiService.SelectedObject
+    if (not current or current:IsDescendantOf(HomeGui)) and isSelectable(previous, HomeGui) then
+        GuiService.SelectedObject = previous
+    end
+end
+
+local homeHud = HomeHudTransition.new(HomeGui, restoreHomeSelection)
+
+local function updateHomeHud()
+    local shouldHide = pendingOpen ~= nil
+    if not shouldHide then
+        for gui in pairs(watchedPopups) do
+            if gui.Enabled and gui:IsDescendantOf(PlayerGui) then
+                shouldHide = true
+                break
+            end
+        end
+    end
+    if shouldHide and homeHud.IsInteractive() then
+        local selection = GuiService.SelectedObject
+        if selection and selection:IsDescendantOf(HomeGui) then
+            homeSelection = selection
+            GuiService.SelectedObject = nil
+        end
+        HoverGuiClient.HideInfoHover()
+    end
+    homeHud.SetHidden(shouldHide)
+end
+
 local function pushNavigation(
     gui: ScreenGui,
     initialFocus: GuiObject?,
@@ -243,10 +284,43 @@ local function popNavigation(gui: ScreenGui)
     elseif isUsingGamepad() and not GuiService.MenuIsOpen and removed then
         local previous = removed.previousSelection
         local previousGui = previous and previous:FindFirstAncestorWhichIsA("ScreenGui")
-        if previousGui and previousGui:IsDescendantOf(PlayerGui) and isSelectable(previous, previousGui) then
+        if previousGui == HomeGui and not homeHud.IsInteractive() then
+            homeSelection = homeSelection or previous
+        elseif previousGui and previousGui:IsDescendantOf(PlayerGui) and isSelectable(previous, previousGui) then
             GuiService.SelectedObject = previous
+        elseif homeHud.IsInteractive() then
+            restoreHomeSelection()
         end
     end
+end
+
+local function watchPopup(gui: ScreenGui)
+    if watchedPopups[gui] then
+        return
+    end
+    watchedPopups[gui] = {
+        gui:GetPropertyChangedSignal("Enabled"):Connect(function()
+            if not gui.Enabled then
+                popNavigation(gui)
+            end
+            task.defer(updateHomeHud)
+        end),
+        gui.Destroying:Connect(function()
+            for _, connection in watchedPopups[gui] do
+                connection:Disconnect()
+            end
+            watchedPopups[gui] = nil
+            popNavigation(gui)
+            task.defer(updateHomeHud)
+        end),
+        gui.AncestryChanged:Connect(function()
+            if not gui:IsDescendantOf(PlayerGui) then
+                popNavigation(gui)
+            end
+            task.defer(updateHomeHud)
+        end),
+    }
+    task.defer(updateHomeHud)
 end
 
 function GuiAnimation.SetNavigationOptions(
@@ -504,13 +578,20 @@ function GuiAnimation.Setup(gui: ScreenGui)
     gui.Enabled = false
     mainFrame.Visible = true
     blur_default_size = Blur.Size
+    watchPopup(gui)
 end
 
 function GuiAnimation.SetTransition(gui: ScreenGui, transition: (boolean, boolean) -> ())
     transitions[gui] = transition
+    watchPopup(gui)
 end
 
 function GuiAnimation.CloseGui(gui: ScreenGui, immediately: boolean?)
+    if pendingOpen == gui then
+        openGeneration += 1
+        pendingOpen = nil
+        task.defer(updateHomeHud)
+    end
     local transition = transitions[gui]
     if transition then
         transition(false, immediately == true)
@@ -520,6 +601,9 @@ function GuiAnimation.CloseGui(gui: ScreenGui, immediately: boolean?)
         return
     end
 
+    if not gui.Enabled then
+        return
+    end
     local mainFrame = findMainFrame(gui)
     if not mainFrame then
         warn("Gui frame not found:", gui.Name)
@@ -546,8 +630,6 @@ function GuiAnimation.CloseGui(gui: ScreenGui, immediately: boolean?)
         mainFrame.Size = originalSize
         Blur.Enabled = false
     end)
-
-    HomeGui.Enabled = true
 end
 
 local function closeGuis(except: ScreenGui?): boolean
@@ -570,36 +652,49 @@ end
 
 function GuiAnimation.CloseAllGuis()
     openGeneration += 1
+    pendingOpen = nil
     closeGuis(nil)
+    task.defer(updateHomeHud)
 end
 
-function GuiAnimation.OpenGui(gui: ScreenGui, hideHomeGui: boolean?)
+function GuiAnimation.OpenGui(gui: ScreenGui)
+    local transition = transitions[gui]
+    local mainFrame = findMainFrame(gui)
+    if not transition and not mainFrame then
+        warn("Gui frame not found:", gui.Name)
+        return
+    end
+    if not gui:IsDescendantOf(PlayerGui) then
+        return
+    end
+
     openGeneration += 1
     local generation = openGeneration
-    local transition = transitions[gui]
-    if closeGuis(if transition then gui else nil) then
+    pendingOpen = gui
+    watchPopup(gui)
+    updateHomeHud()
+    if closeGuis(gui) then
         task.wait(guiCloseSpeed + 0.01)
     end
     if generation ~= openGeneration then
         return
     end
+    pendingOpen = nil
+    if not gui:IsDescendantOf(PlayerGui) then
+        task.defer(updateHomeHud)
+        return
+    end
 
     if transition then
         transition(true, false)
-        pushNavigation(gui, initialFocuses[gui], backHandlers[gui])
+        if gui.Enabled then
+            pushNavigation(gui, initialFocuses[gui], backHandlers[gui])
+        end
+        task.defer(updateHomeHud)
         return
     end
 
-    hideHomeGui = hideHomeGui or false
-    if hideHomeGui then
-        HomeGui.Enabled = false
-    end
-
-    local mainFrame = findMainFrame(gui)
-    if not mainFrame then
-        warn("Gui frame not found:", gui.Name)
-        return
-    end
+    local frame = mainFrame :: Frame
 
     if not isValidOriginalSize(originalSizes[gui]) then
         GuiAnimation.Setup(gui)
@@ -607,8 +702,8 @@ function GuiAnimation.OpenGui(gui: ScreenGui, hideHomeGui: boolean?)
 
     cancelGuiTweens(gui)
 
-    local originalSize = getOriginalSize(gui, mainFrame)
-    mainFrame.Size = UDim2.fromScale(0.5, 0.5)
+    local originalSize = getOriginalSize(gui, frame)
+    frame.Size = UDim2.fromScale(0.5, 0.5)
 
     gui.Enabled = true
     gui.DisplayOrder = 100
@@ -616,7 +711,7 @@ function GuiAnimation.OpenGui(gui: ScreenGui, hideHomeGui: boolean?)
     Blur.Size = 0
 
     local tweenInfo = TweenInfo.new(guiOpenSpeed, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
-    local openTween = TweenService:Create(mainFrame, tweenInfo, {Size = originalSize})
+    local openTween = TweenService:Create(frame, tweenInfo, {Size = originalSize})
     local blurTween = TweenService:Create(Blur, tweenInfo, {Size = blur_default_size})
     trackTween(gui, openTween)
     trackTween(gui, blurTween)
@@ -641,10 +736,6 @@ for _, gui in pairs(PopupGuis) do
     GuiAnimation.Setup(gui)
 
     gui:GetPropertyChangedSignal("Enabled"):Connect(function()
-        if not gui.Enabled then
-            popNavigation(gui)
-        end
-
         -- check if all popup guis are closed, then reset blur
         local isAllPopupGuisClosed = GuiAnimation.IsAllPopupGuisClosed()
         if isAllPopupGuisClosed then
@@ -664,6 +755,9 @@ end)
 
 GuiService.MenuClosed:Connect(function()
     task.defer(focusTopGui)
+    if homeHud.IsInteractive() then
+        task.defer(restoreHomeSelection)
+    end
 end)
 
 GuiAnimation.PopupGuis = PopupGuis

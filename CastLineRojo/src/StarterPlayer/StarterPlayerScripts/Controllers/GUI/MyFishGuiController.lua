@@ -66,33 +66,13 @@ function MyFishGuiController:KnitStart()
 	local opening = false
 	local isOpen = false
 	local panelHome = frame.Position
-	local rightHome = right.Position
-	local rightWasInteractable: boolean? = nil
 	local panelTween: Tween? = nil
-	local rightTween: Tween? = nil
-	local slideGeneration = 0
-
-	local function menuAwayPosition(): UDim2
-		local left = right.AbsolutePosition.X
-		for _, child in right:GetDescendants() do
-			if child:IsA("GuiObject") and child.Visible then
-				left = math.min(left, child.AbsolutePosition.X)
-			end
-		end
-		-- Some of the menu buttons extend to the left of their parent.
-		return offscreenRight(right, rightHome, 12 + right.AbsolutePosition.X - left)
-	end
 
 	local function panelAwayPosition(): UDim2
 		return offscreenRight(frame, panelHome, frame.AbsoluteSize.X * 0.3 + 12)
 	end
 
 	local function finishClose()
-		right.Position = rightHome
-		if rightWasInteractable ~= nil then
-			right.Interactable = rightWasInteractable
-			rightWasInteractable = nil
-		end
 		gui.Enabled = false
 		frame.Position = panelHome
 	end
@@ -102,54 +82,35 @@ function MyFishGuiController:KnitStart()
 			return
 		end
 		isOpen = shouldOpen
-		slideGeneration += 1
-		local generation = slideGeneration
 		if panelTween then
-			panelTween:Cancel()
+			local previousTween = panelTween
 			panelTween = nil
-		end
-		if rightTween then
-			rightTween:Cancel()
-			rightTween = nil
+			previousTween:Cancel()
 		end
 		if immediately and not shouldOpen then
 			finishClose()
 			return
 		end
 
-		if shouldOpen then
-			if rightWasInteractable == nil then
-				rightWasInteractable = right.Interactable
-			end
-			right.Interactable = false
-			if not gui.Enabled then
-				frame.Position = panelAwayPosition()
-				gui.Enabled = true
-			end
+		if shouldOpen and not gui.Enabled then
+			frame.Position = panelAwayPosition()
+			gui.Enabled = true
 		end
 
 		local panel = TweenService:Create(frame, if shouldOpen then SLIDE_IN else SLIDE_OUT, {
 			Position = if shouldOpen then panelHome else panelAwayPosition(),
 		})
-		local menu = TweenService:Create(right, if shouldOpen then SLIDE_OUT else SLIDE_IN, {
-			Position = if shouldOpen then menuAwayPosition() else rightHome,
-		})
 		panelTween = panel
-		rightTween = menu
-		menu.Completed:Once(function(state)
-			if state ~= Enum.PlaybackState.Completed or generation ~= slideGeneration then
+		panel.Completed:Once(function(state)
+			if state ~= Enum.PlaybackState.Completed or panelTween ~= panel then
 				return
 			end
-			rightTween = nil
-			if shouldOpen then
-				right.Position = menuAwayPosition()
-			else
-				panelTween = nil
+			panelTween = nil
+			if not shouldOpen then
 				finishClose()
 			end
 		end)
 		panel:Play()
-		menu:Play()
 	end
 
 	local function resizeRows()
@@ -283,16 +244,11 @@ function MyFishGuiController:KnitStart()
 	end
 
 	gui:GetPropertyChangedSignal("Enabled"):Connect(function()
-		if not gui.Enabled and rightWasInteractable ~= nil then
+		if not gui.Enabled and (isOpen or panelTween) then
 			setDockOpen(false, true)
 		end
 	end)
 	list:GetPropertyChangedSignal("AbsoluteSize"):Connect(resizeRows)
-	right:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
-		if isOpen and not rightTween then
-			right.Position = menuAwayPosition()
-		end
-	end)
 	GuiAnimation.SetTransition(gui, setDockOpen)
 	GuiAnimation.SetNavigationOptions(gui, closeButton, close)
 	closeButton.Activated:Connect(close)

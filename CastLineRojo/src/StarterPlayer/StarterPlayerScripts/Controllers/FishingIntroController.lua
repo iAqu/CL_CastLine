@@ -198,6 +198,14 @@ local function prepareTeaching(state)
 		isSoundEnabled = function()
 			return state.phase == "Teaching" and state.soundEnabled()
 		end,
+		updateBiteGuide = function(sequence)
+			local guide = state.biteGuide
+			if not guide then
+				return nil
+			end
+			guide.Visible = BITE_GUIDE_PHASES[sequence.phase] == true and not sequence.hookPending
+			return guide.Visible
+		end,
 		presentCaught = function(bite, now, camera)
 			if not state.caughtAt then
 				state.caughtAt = now
@@ -288,9 +296,6 @@ local function update(state, now, dt)
 		Knit.GetController("MusicController"):SetCinematicDuck(Controller, nil)
 		seq:Update(now, dt)
 		local phase = seq.phase
-		if state.biteGuide then
-			state.biteGuide.Visible = BITE_GUIDE_PHASES[phase] == true and not seq.hookPending
-		end
 		seq.meter.prompt.Visible, seq.continueLabel.Visible = false, false
 		instruction(state, nil)
 		local timeline = seq.bite and seq.bite.timeline

@@ -1630,7 +1630,9 @@ function FishingCastSequence:_updatePresentation(now, dt)
 		end
 	end
 	if self.info then
-		self.info:Update(now, self.bite)
+		local updateBiteGuide = self.options and self.options.updateBiteGuide
+		local guideVisible = if updateBiteGuide then updateBiteGuide(self) else nil
+		self.info:Update(now, self.bite, guideVisible)
 	end
 	if self.perfectAt then
 		local alpha = math.clamp((now - self.perfectAt) / settings.PerfectFlash, 0, 1)

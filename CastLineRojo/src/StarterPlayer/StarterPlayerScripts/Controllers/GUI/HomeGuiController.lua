@@ -475,11 +475,7 @@ function HomeGuiController:AddTopBarIcon(gui, image: string, order: number, imag
                 -- end
             end
 
-            local isHideHomeGui = false
-            if gui.Name == "SpinningWheelGui" then
-                isHideHomeGui = true
-            end
-            GuiAnimation.OpenGui(gui, isHideHomeGui)
+            GuiAnimation.OpenGui(gui)
         end
     end)
 
@@ -1062,7 +1058,6 @@ function HomeGuiController:KnitStart()
     StoreButton.Activated:Connect(function()
         if not GuiHelper.CanOpenGui() then return end
         if not StoreGui.Enabled then
-            -- GuiAnimation.OpenGui(StoreGui, true)
             Knit.GetController("StoreGuiController"):OpenGui()
         else
             GuiAnimation.CloseGui(StoreGui)

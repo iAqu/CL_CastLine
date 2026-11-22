@@ -579,6 +579,34 @@ local pending = setmetatable({
 		Update = function() end,
 	},
 }, Sequence)
+
+do
+	local guide = { Visible = false }
+	local bite = {}
+	local sequence = setmetatable({
+		fixedCast = true,
+		phase = "Bite",
+		bite = bite,
+		options = {
+			updateBiteGuide = function(owner)
+				guide.Visible = owner.phase == "Bite"
+				return guide.Visible
+			end,
+		},
+		info = {
+			Update = function(_, _, currentBite, guideVisible)
+				assert(currentBite == bite and guideVisible == guide.Visible,
+					"Use this frame's guide visibility when rendering the chance")
+			end,
+		},
+	}, Sequence)
+	sequence:_updatePresentation(1, 0)
+	assert(guide.Visible)
+	sequence.phase = "Struggling"
+	sequence:_updatePresentation(2, 0)
+	assert(not guide.Visible)
+end
+
 feedbackHarness.attach(pending)
 pending.bait = { Position = vector(1, 1, 1) }
 pending.tip = { WorldPosition = vector(0, 0, 0) }
@@ -944,6 +972,7 @@ do
 		local item = node(name, "TextLabel")
 		item.Text, item.Visible, item.TextTransparency, item.TextColor3 = name, false, 0.2, "studioColor"
 		item.Position, item.FontFace = "studioPosition", "studioFont"
+		item.TextSize = 28
 		return item
 	end
 	local gui = node("FishingSequenceGui", "ScreenGui", {
@@ -1094,6 +1123,7 @@ do
 			end,
 		},
 		gui = resource,
+		continueLabel = { Visible = false },
 		bars = {},
 		barAmount = 0,
 		bite = {
