@@ -12,11 +12,19 @@ local modules = {
 }
 local services = {
 	ReplicatedStorage = { Modules = modules },
-	GuiService = {}, TweenService = {}, UserInputService = {},
+	GuiService = {},
+	TweenService = { Create = function() return { Play = function() end, Cancel = function() end } end },
+	UserInputService = { PreferredInput = "Gamepad" },
 }
 local environment = setmetatable({
 	game = { GetService = function(_, name) return services[name] end },
 	require = function(value) return value end,
+	Enum = { PreferredInput = { Gamepad = "Gamepad" }, EasingStyle = {}, EasingDirection = {}, SizeConstraint = {} },
+	UDim2 = {
+		fromScale = function() return {} end,
+		new = function() return {} end,
+	},
+	TweenInfo = { new = function() return {} end },
 }, { __index = getfenv() })
 local chunk = assert(loadstring(source, "RodPopupView"), "Compile the popup view")
 local View = setfenv(chunk, environment)()
@@ -27,6 +35,7 @@ local main = {
 	NameLabel = {},
 	PriceLabel = {},
 	ShopButton = { NameLabel = { Text = "SHOP" } },
+	ProgressFrame = { ProgressBar = {} },
 }
 local attributes = {}
 local popup = {
@@ -35,8 +44,10 @@ local popup = {
 	IsA = function() return true end,
 	SetAttribute = function(_, name, value) attributes[name] = value end,
 	Visible = true,
+	Position = { X = { Scale = 0.5, Offset = 0 } },
+	Size = { X = { Scale = 0.5, Offset = 0 } },
 }
-local gui = { Enabled = false }
+local gui = { Enabled = false, AbsoluteSize = { X = 1920, Y = 1080 } }
 local view = View.new(gui, popup, "Rod")
 
 local rod = { RodID = "Rod_102", DisplayName = "Park Rod", Rarity = "Common", Price = 500, Icon = "rbxassetid://2" }
@@ -64,6 +75,9 @@ assert(not view:Paused(), "An idle pointer must not pause the countdown")
 view.hovered = true
 assert(view:Paused(), "Hover pauses the countdown")
 view.hovered = false
+view:Show()
+assert(gui.Enabled and popup.Visible, "Show the upgrade prompt for gamepad users")
+assert(services.GuiService.SelectedObject == nil, "A passive upgrade prompt must leave the left stick with native character movement")
 services.GuiService.SelectedObject = {
 	IsDescendantOf = function(_, parent)
 		return parent == view.popup
@@ -74,7 +88,18 @@ services.GuiService.SelectedObject = { IsDescendantOf = function()
 	return false
 end }
 assert(not view:Paused(), "Focus on another screen must not pause the banner")
-services.GuiService.SelectedObject = nil
+local otherSelection = services.GuiService.SelectedObject
+view:Show()
+assert(services.GuiService.SelectedObject == otherSelection, "Showing an upgrade prompt preserves the active UI selection")
+view:Hide(true)
+assert(services.GuiService.SelectedObject == otherSelection, "Closing an upgrade prompt preserves focus owned by another UI")
+services.GuiService.SelectedObject = {
+	IsDescendantOf = function(_, parent)
+		return parent == popup
+	end,
+}
+view:Hide(true)
+assert(services.GuiService.SelectedObject == nil, "Closing the focused upgrade prompt hands the stick back to native movement")
 
 local barbellView = View.new(gui, popup, "Barbell")
 main.ShopButton.NameLabel.Text = "UPGRADE"

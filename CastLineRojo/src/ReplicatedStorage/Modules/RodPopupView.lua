@@ -1,7 +1,6 @@
 local GuiService = game:GetService("GuiService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
 local NumberUtil = require(ReplicatedStorage.Modules.NumberUtil)
 local RarityPresentation = require(ReplicatedStorage.Modules.RarityPresentation)
 
@@ -68,6 +67,7 @@ function View:Show(item)
 	self.closing, self.hovered = false, false
 	self.main.ProgressFrame.ProgressBar.Size = UDim2.fromScale(1, 1)
 	self.popup.Position = UDim2.new(self.restingPosition.X.Scale, self.restingPosition.X.Offset, -0.4, -64)
+	-- Let players enter Roblox GUI navigation explicitly before a banner takes focus.
 	self.gui.Enabled, self.popup.Visible = true, true
 	self:Fit()
 	self.tween = TweenService:Create(
@@ -76,10 +76,6 @@ function View:Show(item)
 		{ Position = self.restingPosition }
 	)
 	self.tween:Play()
-	if UserInputService.PreferredInput == Enum.PreferredInput.Gamepad then
-		self.previousSelection = GuiService.SelectedObject
-		GuiService.SelectedObject = self.button
-	end
 end
 
 function View:Hide(immediate: boolean?)
@@ -91,11 +87,8 @@ function View:Hide(immediate: boolean?)
 	self.closing = true
 	local selected = GuiService.SelectedObject
 	if selected and selected:IsDescendantOf(self.popup) then
-		GuiService.SelectedObject = if self.previousSelection and self.previousSelection.Parent
-			then self.previousSelection
-			else nil
+		GuiService.SelectedObject = nil
 	end
-	self.previousSelection = nil
 	if immediate then
 		self.popup.Visible, self.gui.Enabled = false, false
 		self.closing = false
