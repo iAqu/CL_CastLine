@@ -183,10 +183,11 @@ local function new()
 		FishingProgression = h.progression,
 		FishingBaitConfig = h.baitConfig,
 		FishingBiteSequence = {
-			GetBiteWindow = function(_, size, _, ready, _, _, _, fish)
+			GetBiteWindow = function(_, size, _, ready, _, _, _, fish, _, _, weight)
 				h.biteSize = size
 				h.biteFish = fish
-				return ready + 1, ready + 2, 3
+				h.biteScale = weight / fish.DefaultWeight
+				return ready + 1, if h.infiniteBite then math.huge else ready + 2, 3, h.biteScale
 			end,
 		},
 		FishingProjectileMath = {
@@ -242,7 +243,11 @@ local function new()
 		RunService = { IsStudio = function() return h.studio == true end },
 		HttpService = {
 			JSONEncode = function(_, value)
-				table.insert(encoded, table.clone(value))
+				local snapshot = table.clone(value)
+				if snapshot.bite then
+					snapshot.bite = table.clone(snapshot.bite)
+				end
+				table.insert(encoded, snapshot)
 				return tostring(#encoded)
 			end,
 			JSONDecode = function(_, value)

@@ -21,6 +21,15 @@ local function connectButton(button: GuiButton, signal: RBXScriptSignal, callbac
 	table.insert(buttonConnections[button], signal:Connect(callback))
 end
 
+local function disconnectButton(button: GuiButton)
+	for _, connection in buttonConnections[button] do
+		connection:Disconnect()
+	end
+	buttonConnections[button] = nil
+	originalSizes[button] = nil
+	mouseEnterScaleSizes[button] = nil
+end
+
 local function playClickSound()
 	-- 音效依赖存档和声音资源，不能阻塞动画初始化。
 	local SoundHelper = require(ReplicatedStorage.Modules.SoundHelper)
@@ -118,33 +127,35 @@ local function setUpSizeButton(button: GuiButton)
 	end)
 end
 
-function module.SetUp(button: GuiButton, mouseEnterScaleSize: number?)
+function module.SetUp(button: GuiButton, mouseEnterScaleSize: number?, useUIScale: boolean?)
 	-- TopbarPlus owns this hit area and updates its size after parenting it.
 	-- Capturing its temporary zero size makes every later hover disable the icon.
 	if button:GetAttribute("CorrespondingIconUID") ~= nil then
 		return
 	end
 	if buttonConnections[button] then
-		if mouseEnterScaleSize ~= nil then
-			mouseEnterScaleSizes[button] = mouseEnterScaleSize
+		if not useUIScale or not originalSizes[button] then
+			if mouseEnterScaleSize ~= nil then
+				mouseEnterScaleSizes[button] = mouseEnterScaleSize
+			end
+			return
 		end
-		return
+		mouseEnterScaleSize = mouseEnterScaleSize or mouseEnterScaleSizes[button]
+		disconnectButton(button)
 	end
 	buttonConnections[button] = {}
 
-	mouseEnterScaleSize = mouseEnterScaleSize or MOUSE_ENTER_SIZE
-	mouseEnterScaleSizes[button] = mouseEnterScaleSize
+	mouseEnterScaleSizes[button] = mouseEnterScaleSize or MOUSE_ENTER_SIZE
 	connectButton(button, button.Destroying, function()
-		for _, connection in buttonConnections[button] do
-			connection:Disconnect()
-		end
-		buttonConnections[button] = nil
-		originalSizes[button] = nil
-		mouseEnterScaleSizes[button] = nil
+		disconnectButton(button)
 	end)
 	connectButton(button, button.Activated, playClickSound)
 
-	local uiScale = button:FindFirstChild("UIScale")
+	local uiScale = if useUIScale then button:FindFirstChildOfClass("UIScale") else button:FindFirstChild("UIScale")
+	if useUIScale and not uiScale then
+		uiScale = Instance.new("UIScale")
+		uiScale.Parent = button
+	end
 	if uiScale and uiScale:IsA("UIScale") then
 		setUpUIScaleButton(button, uiScale)
 		return

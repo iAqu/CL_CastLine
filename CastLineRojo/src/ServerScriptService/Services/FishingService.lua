@@ -171,19 +171,32 @@ local function clearPresentation(player: Player, state)
 	state.character:SetAttribute(ObserverState.Attribute, nil)
 end
 
-local function publishPresentation(state, phase, now)
-	state.presentation.phase = phase
-	state.presentation.startedAt = now
+local function replicatePresentation(state)
 	state.character:SetAttribute(ObserverState.Attribute, ObserverState.Encode(state.presentation))
 end
 
+local function publishPresentation(state, phase, now)
+	state.presentation.phase = phase
+	state.presentation.startedAt = now
+	replicatePresentation(state)
+end
+
 local function scheduleCatchPresentation(player, state, pending, pressedAt, isNewDiscovery)
+	if presentations[player] ~= state or getSession(player, state.token) ~= state then
+		return
+	end
 	local now = Workspace:GetServerTimeNow()
 	local liftAt = math.max(now, pressedAt + state.struggleTime)
+	local bite = state.presentation.bite
+	if bite and bite.round == state.round then
+		bite.hookedAt, bite.liftAt = pressedAt, liftAt
+		replicatePresentation(state)
+	end
 	task.delay(liftAt - now, function()
 		if presentations[player] ~= state or getSession(player, state.token) ~= state then
 			return
 		end
+		state.presentation.bite = nil
 		state.presentation.catchKind = pending.Kind
 		state.presentation.catchId = pending.FishId
 		state.presentation.weight = pending.Weight
@@ -626,10 +639,8 @@ function FishingService.Client:NextRound(player: Player, token, previousRound)
 		return failure("Fish model unavailable")
 	end
 	local seed, motionSeed = random:NextInteger(1, 2 ^ 30), random:NextInteger(1, 2 ^ 30)
-	local landing = Config.Landing
-	local settleTime = math.max(Config.ReturnInputDelay, landing.SinkTime + landing.ReboundTime + landing.SettleTime)
-	local readyAt = if state.round == 0 then startedAt + settleTime else startedAt
-	local biteAt, biteEndsAt, struggleTime = BiteSequence.GetBiteWindow(
+	local readyAt = if state.round == 0 then startedAt + Config.GetLandingSettleTime() else startedAt
+	local biteAt, biteEndsAt, struggleTime, displayScale = BiteSequence.GetBiteWindow(
 		template,
 		state.baitSize,
 		startedAt,
@@ -650,6 +661,20 @@ function FishingService.Client:NextRound(player: Player, token, previousRound)
 	state.catchKind, state.catchId = catchKind, if catchKind == "Egg" then fish.EggId else fish.FishID
 	state.biteAt, state.biteEndsAt, state.struggleTime = biteAt, biteEndsAt, struggleTime
 	state.retryAt = if lesson then now + 0.2 else biteEndsAt + Config.Bite.EscapeTime
+	state.presentation.bite = if catchKind == "Fish" then {
+		round = state.round,
+		fishId = fish.FishID,
+		scale = displayScale,
+		tutorial = lesson ~= nil,
+		startedAt = startedAt,
+		readyAt = readyAt,
+		biteAt = biteAt,
+		biteEndsAt = if biteEndsAt < math.huge then biteEndsAt else nil,
+		retryAt = if biteEndsAt < math.huge then biteEndsAt + Config.Bite.EscapeTime else nil,
+		seed = seed,
+		motionSeed = motionSeed,
+	} else nil
+	replicatePresentation(state)
 	if lesson and Analytics:IsNewPlayer(player) then
 		Analytics:Step(player, lesson .. "Landed")
 		local round = state.round
@@ -836,6 +861,7 @@ function FishingService.Client:Cancel(player: Player, token, finished, emptyReel
 			and getLiveCharacter(player) == state.character
 		then
 			local now = Workspace:GetServerTimeNow()
+			state.presentation.bite = nil
 			state.presentation.expiresAt = now + ObserverState.EmptyReelDuration
 			publishPresentation(state, "EmptyReel", now)
 			task.delay(ObserverState.EmptyReelDuration, function()

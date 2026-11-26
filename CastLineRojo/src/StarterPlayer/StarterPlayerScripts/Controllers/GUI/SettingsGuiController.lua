@@ -25,7 +25,6 @@ local ScrollingFrame = SettingsGui.Frame.ScrollingFrame
 local MusicButton = ScrollingFrame.MusicFrame.SwitchButton
 local SoundButton = ScrollingFrame.SoundFrame.SwitchButton
 
--- local TradeButton = ScrollingFrame.TradingFrame.SwitchButton
 local GlobalMessageButton = ScrollingFrame.ShowGlobalMessage.SwitchButton
 local PerformanceModeFrame = ScrollingFrame:FindFirstChild("PerformanceModeFrame")
 local PerformanceModeButton = PerformanceModeFrame and PerformanceModeFrame:FindFirstChild("SwitchButton")
@@ -132,7 +131,10 @@ end
 function SettingsGuiController:KnitStart()
     LogHelper.Print("SettingsGuiController started")
 
-    local SettingsService = Knit.GetService("SettingsService")
+    local tradingFrame = ScrollingFrame:FindFirstChild("TradingFrame")
+    if tradingFrame and tradingFrame:IsA("GuiObject") then
+        tradingFrame.Visible = false
+    end
     for _, name in ipairs({ "ShowYourPets", "ShowOtherPets" }) do
         local row = ScrollingFrame:FindFirstChild(name)
         local button = row and row:FindFirstChild("SwitchButton")
@@ -172,16 +174,6 @@ function SettingsGuiController:KnitStart()
     UpdLogButton.Activated:Connect(function()
         GuiAnimation.OpenGui(UpdateLogGui)
     end)
-
-    -- TradeButton.Activated:Connect(function()
-    --     local playerData = PlayerDataController:GetData()
-    --     if not playerData then warn("No player data found!") return end
-
-    --     SettingsService.ChangeSetting:Fire(Constants.SETTINGS_ID.TRADE, not playerData.Settings[Constants.SETTINGS_ID.TRADE])
-    --     playerData.Settings[Constants.SETTINGS_ID.TRADE] = not playerData.Settings[Constants.SETTINGS_ID.TRADE]
-
-    --     self:UpdateSettingButtons()
-    -- end)
 
     RedeemButton.Activated:Connect(function()
         local codeId = CodeTextBox.Text

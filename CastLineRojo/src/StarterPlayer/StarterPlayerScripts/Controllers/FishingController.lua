@@ -20,7 +20,6 @@ local Analytics = require(ReplicatedStorage.Modules.FishingAnalyticsPresentation
 local Config = require(ReplicatedStorage.Modules.FishingConfig)
 local FishingAssets = require(ReplicatedStorage.Modules.FishingAssets)
 local FishingBaitSelect = require(ReplicatedStorage.Modules.FishingBaitSelect)
-local FishingOddsView = require(ReplicatedStorage.Modules.FishingOddsView)
 local BaitConfig = require(ReplicatedStorage.Modules.FishingBaitConfig)
 local FishingSpotUtil = require(ReplicatedStorage.Modules.FishingSpotUtil)
 local PlotWorkspaceUtil = require(ReplicatedStorage.Modules.PlotWorkspaceUtil)
@@ -191,9 +190,6 @@ local function restore(state, returnToSpawn: boolean)
 		return
 	end
 	state.restored = true
-	if state.oddsView then
-		state.oddsView.Destroy()
-	end
 	if state.baitSelection then
 		state.baitSelection.Destroy()
 		state.baitSelection = nil
@@ -519,7 +515,7 @@ local function startEntryPresentation(entry)
 			assert(rod and rod:IsA("Tool"), "Equipped rod model is missing")
 			state.rig = FishingRigUtil.Create(template, character, rod)
 			local rig = state.rig
-			FishingRigUtil.PlaceAtFishingSpot(rig, part)
+			local _, _, groundY = FishingRigUtil.PlaceAtFishingSpot(rig, part)
 			rig.Parent = Workspace
 			local dataController = Knit.GetController("PlayerDataController")
 			local function isSoundEnabled()
@@ -638,6 +634,7 @@ local function startEntryPresentation(entry)
 							initialYaw = result.initialYaw,
 							initialLuck = result.luck,
 							fixedCast = true,
+							castGroundY = groundY,
 							meterStartsAt = result.meterStartsAt,
 							launchPosition = part.Position,
 							resolveFish = function(fishId)
@@ -652,12 +649,7 @@ local function startEntryPresentation(entry)
 										else FishingAssets.GetFish(config.Model))
 							end,
 							requestRound = function(previousRound)
-								return state.service:NextRound(state.token, previousRound):andThen(function(round)
-									if session == state and not state.restored and state.oddsView and round.odds then
-										state.oddsView.Update(round.odds)
-									end
-									return round
-								end)
+								return state.service:NextRound(state.token, previousRound)
 							end,
 								hook = function(round, pressedAt)
 									return state.service:Hook(state.token, round, pressedAt)
@@ -732,7 +724,6 @@ local function startEntryPresentation(entry)
 					gui:IsA("ScreenGui")
 					and gui ~= meter.gui
 					and gui.Name ~= "FishingSequenceGui"
-					and gui.Name ~= FishingOddsView.GuiName
 					and gui.Name ~= "FishingVignetteGui"
 					and gui.Name ~= "FishingOnboardingGui"
 					and gui.Name ~= "NotificationGui"
@@ -1063,10 +1054,6 @@ function FishingController:HandleFishingInput(input, processed, fromGamepad)
 				state.castPending = false
 				if result.ok then
 					sequence:Cast(result.castProgress, result.distance, result.luck, result.castRating)
-					if result.odds and not state.restored then
-						state.oddsView = FishingOddsView.Bind(localPlayer:FindFirstChildOfClass("PlayerGui"))
-						state.oddsView.Update(result.odds)
-					end
 				else
 					state.fail(result.message)
 				end

@@ -474,13 +474,6 @@ function AchievementGuiController:KnitStart()
     --     end)
     -- end)
 
-    -- local UpgradeService = Knit.GetService("UpgradeService")
-    -- UpgradeService.Upgrade:Connect(function()
-    --     task.delay(0, function()
-    --         updateAllStats()
-    --     end)
-    -- end)
-
     --     task.delay(0, function()
     --         updateAllStats()
     --     end)

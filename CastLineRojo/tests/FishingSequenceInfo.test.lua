@@ -60,7 +60,11 @@ local liftMotion = assert(loadstring(read(prefix .. "FishingLiftMotion.lua")))()
 local modules = {
 	FishingConfig = config,
 	FishingLiftMotion = liftMotion,
-	FishInventoryData = {},
+	FishInventoryData = {
+		{ Rarity = "Common", DisplayChance = 50 },
+		{ Rarity = "Uncommon", DisplayChance = 310 },
+		{ Rarity = "Legendary", DisplayChance = 73457 },
+	},
 	GuiUtil = harness.load("GuiUtil"),
 	ItemStatUtil = stats,
 	MutationDataUtil = mutationUtil,
@@ -69,11 +73,6 @@ local modules = {
 	RarityConfig = harness.load("RarityConfig"),
 	RarityPresentation = harness.load("RarityPresentation"),
 }
-local Chance = assert(load(read(prefix .. "FishingChanceReveal.lua"), "FishingChanceReveal", "t", setmetatable({
-	script = { Parent = modules },
-	require = function(value) return value end,
-}, { __index = getfenv() })))()
-modules.FishingChanceReveal = Chance
 local dimensions = {}
 dimensions.__index = dimensions
 local function size(x, y)
@@ -85,6 +84,14 @@ end
 function dimensions.__add(left, right)
 	return size(left.X + right.X, left.Y + right.Y)
 end
+local Chance = assert(load(read(prefix .. "FishingChanceReveal.lua"), "FishingChanceReveal", "t", setmetatable({
+	script = { Parent = modules },
+	require = function(value) return value end,
+	Color3 = harness.colors,
+	UDim = { new = function(scale, offset) return { Scale = scale, Offset = offset } end },
+	UDim2 = { new = size, fromScale = size },
+}, { __index = getfenv() })))()
+modules.FishingChanceReveal = Chance
 local Info = assert(load(read(prefix .. "FishingSequenceInfo.lua"), "FishingSequenceInfo", "t", setmetatable({
 	game = { GetService = function(_, name)
 		assert(name == "Players")
@@ -124,15 +131,24 @@ local function node(name, class, children)
 	end
 	return object
 end
-function Chance.new(luck)
-	local root = node("CatchChance", "Frame")
-	root.Visible, root.Parent = false, luck.Parent
-	local value = { AbsoluteSize = size(200, 80), TextBounds = size(160, 60), UIGradient = {} }
-	return setmetatable({ root = root, value = value, scale = { Scale = 1 } }, Chance)
+local function cloneLuck()
+	local root = node("LuckMeter", "Frame")
+	root.Glow, root.Word = node("Glow", "Frame"), node("Word", "Frame")
+	local value = node("Value", "TextLabel")
+	value.Size = size({ Scale = 1, Offset = 0 }, { Scale = 1, Offset = 0 })
+	value.AbsoluteSize, value.TextBounds = size(200, 80), size(160, 60)
+	value.ZIndex, value.UIGradient, value.TextStroke = 1, {}, { Transparency = 1 }
+	function value:FindFirstChildOfClass(class)
+		assert(class == "UIScale")
+		return node("UIScale", "UIScale")
+	end
+	root.Value = value
+	return root
 end
-function Chance:_burst()
+function Chance:_burst(color, strength, strong)
 	self.maxRevealScale = math.huge
 	self.bursts = (self.bursts or 0) + 1
+	self.burstColor, self.revealStrength, self.strongReveal = color, strength, strong
 end
 local function row(name)
 	return node(name, "Frame", { Label = node("Label", "TextLabel") })
@@ -186,6 +202,8 @@ local function fixture(reuseScale, rarityVisible, tutorial)
 		}),
 	})
 	gui.AbsoluteSize = size(1920, 1080)
+	gui.children.LuckMeter.Position = size(0, 0)
+	gui.children.LuckMeter.Clone = cloneLuck
 	local owner = { originals = {}, createdScales = {}, sounds = {}, attempts = {}, enabled = true, phase = "Preparing" }
 	owner.options = { tutorial = tutorial }
 	owner.celebrations = {}
@@ -280,11 +298,11 @@ do
 	info:SetCastProgress(0.4)
 	checkColors(3)
 	info:SetLuck(5000.25, 11, true)
-	assert(info.value.Text == "5000.25X", "Display the actual high multiplier")
+	assert(info.shown == 5000.25 and info.value.Text == "5001X", "Round high luck up for display")
 	checkColors(3)
 	info:SetLuck(12000.5, 11)
 	info:Update(12)
-	assert(info.value.Text == "12000.50X", "Display the later round multiplier")
+	assert(info.shown == 12000.5 and info.value.Text == "12001X", "Round the settled multiplier up for display")
 	checkColors(3)
 end
 
@@ -293,7 +311,7 @@ for _, reuseScale in { false, true } do
 	local authoredGradient = info.name:FindFirstChild("AuthoredGradient")
 	local authoredBackground, authoredTextColor = info.name.BackgroundColor3, info.name.TextColor3
 	local holderScale, glowSize = info.luck.children.UIScale.Scale, info.glow.Size
-	assert(info.luck.Visible and not info.reveal.Visible and info.value.Text == "1.00X", "Start with luck and hide result placeholders")
+	assert(info.luck.Visible and not info.reveal.Visible and info.value.Text == "1X", "Start with luck and hide result placeholders")
 	assert(not info.name.Parent.children.New.Visible, "Do not display the NEW sample badge")
 	assert(not info.rarityRow.Visible, "Hide rarity even when the authored row is visible")
 	assertMutation(info, nil)
@@ -306,20 +324,22 @@ for _, reuseScale in { false, true } do
 	info:SetLuck(5, 10.3)
 	assert(info.from == previous, "Retarget from the displayed luck")
 	info:Update(11)
-	assert(info.shown == 5 and info.value.Text == "5.00X" and info.lastWhole == 5, "Reach the exact server luck after a frame gap")
+	assert(info.shown == 5 and info.value.Text == "5X" and info.lastWhole == 5, "Reach the exact server luck after a frame gap")
 	assert(info.pulseAt == 11 and info.valueGradient.Color == info.glowGradient.Color, "Pulse at the new integer and keep the digit and glow gradients in sync")
 	info:Update(11.6)
 	assert(info.scale.Scale == info.baseScale and info.glow.BackgroundTransparency == info.glowTransparency, "Finish the punch without leaving scale changes")
 	info:SetLuck(1000, 12)
 	info:Update(13)
-	assert(info.value.Text == "1000.00X", "High luck values must reach the target")
+	assert(info.value.Text == "1000X", "High luck values must reach the target")
 	info:SetLuck(1, 13)
 	info:Update(14)
-	assert(info.value.Text == "1.00X" and info.lastWhole == 1, "Retarget downward without stale styling")
+	assert(info.value.Text == "1X" and info.lastWhole == 1, "Retarget downward without stale styling")
 	info:SetLuck(0.13, 14, true)
-	assert(info.shown == 0.13 and info.value.Text == "0.13X", "Allow a meter result below one")
+	assert(info.shown == 0.13 and info.value.Text == "1X", "Round positive luck below one up to one")
+	info:SetLuck(5.01, 14.005, true)
+	assert(info.shown == 5.01 and info.value.Text == "6X", "Round up immediately above an integer")
 	info:SetLuck(5.5, 14.01, true)
-	assert(info.shown == 5.5 and info.value.Text == "5.50X", "Immediate meter updates must not lag behind the bar")
+	assert(info.shown == 5.5 and info.value.Text == "6X", "Immediate meter updates must not lag behind the bar")
 	info:Update(14.5)
 	assert(info.shown == 5.5, "An older rolling animation must not overwrite an immediate value")
 	info:SetLuck(8, 15)
@@ -547,7 +567,7 @@ do
 	info:Update(10)
 	info:SetLuck(100.25, 10.1, true)
 	info:Update(10.1)
-	assert(#owner.sounds == 0 and info.value.Text == "100.25X" and info.scale.Scale > info.baseScale,
+	assert(#owner.sounds == 0 and info.value.Text == "101X" and info.scale.Scale > info.baseScale,
 		"Preparing must keep number feedback while progress owns the audio")
 	owner.phase = "Casting"
 	info:Update(10.2)
@@ -571,6 +591,8 @@ do
 	info:Update(11.1, bite)
 	assert(not info.luck.Visible and info.chance and info.chance.root.Visible and info.chance.value.Text == "1 in 1",
 		"Show 1 in 1 in the first visible shadow frame")
+	assert(info.chance.value.TextTransparency == 0 and info.chance.value.TextStroke.Transparency == 0,
+		"Render the chance text and its outline while the chance frame is visible")
 	for index, phase in { "Holding", "Nibbling", "Bite" } do
 		bite.timeline.phase, bite.timeline.startedAt = phase, 11 + index
 		info:Update(11 + index, bite)
@@ -594,6 +616,43 @@ do
 	info:Update(21, { wasVisible = true, appearanceFade = 0.99,
 		timeline = { phase = "Approaching", startedAt = 21 } })
 	assert(info.chance.value.Text == "1 in 1", "Start a new shadow at 1 in 1")
+	info:Destroy()
+end
+
+for _, case in {
+	{ value = 309, rolling = "Common", final = "Common" },
+	{ value = 310, rolling = "Common", final = "Uncommon" },
+	{ value = 620, rolling = "Uncommon", final = "Uncommon" },
+	{ value = 73457, rolling = "Uncommon", final = "Legendary" },
+} do
+	local info, owner = fixture()
+	local presentation = modules.RarityPresentation
+	local bite = {
+		catchChanceDenominator = case.value,
+		fishConfig = { DisplayName = "Common Fish", Rarity = "Common", DefaultWeight = 10, CpsPrice = 100 },
+		catchWeight = 10,
+		timeline = {
+			phase = "Lifting", startedAt = 20, struggleTime = 3,
+			liftTiming = { riseEnd = 0.4, fallStart = 0.5, landAt = 1.5, duration = 1.8 },
+		},
+	}
+	info:Update(21.499, bite)
+	local chance = info.chance
+	assert(chance.value.Text == "1 in " .. tostring(case.value - 1)
+		and chance.value.UIGradient.Color == presentation.GetTemplate(case.rolling).Color,
+		"Use the rolling value's tier just before the reveal")
+	local soundsBeforeReveal = #owner.sounds
+	info:Update(21.5, bite)
+	info:Update(21.6, bite)
+	assert(chance.value.Text == "1 in " .. tostring(case.value)
+		and chance.value.UIGradient.Color == presentation.GetTemplate(case.final).Color,
+		"Use the final denominator's gradient at the reveal")
+	assert(chance.burstColor == presentation.GetColor(case.final), "Use the same tier for the ring and stars")
+	assert(chance.bursts == 1 and chance.revealStrength == 0 and chance.strongReveal == false,
+		"Use the fish rarity for effect intensity and the single-ring reveal")
+	local impact = owner.sounds[#owner.sounds]
+	assert(#owner.sounds == soundsBeforeReveal + 1 and impact.name == "CatchRevealImpact"
+		and impact.pitch == config.Sounds.CatchRevealImpact.Pitch, "Use the fish rarity for the reveal sound")
 	info:Destroy()
 end
 

@@ -113,8 +113,8 @@ function RodShopGuiController:KnitStart()
 	local requestToken
 	local opening = false
 
-	local function isTrainingReward(id)
-		return id == Onboarding.RewardRodId and localPlayer:GetAttribute(Onboarding.StageAttribute) == "RodReward"
+	local function isRodPurchaseStage()
+		return localPlayer:GetAttribute(Onboarding.StageAttribute) == "RodReward"
 	end
 
 	local function render()
@@ -122,22 +122,22 @@ function RodShopGuiController:KnitStart()
 			return
 		end
 		local balance = cash and cash.Value
+		local stage = localPlayer:GetAttribute(Onboarding.StageAttribute)
 		for id, card in cards do
 			local owned = inventory.ownedRods[id] == true
 			local equipped = inventory.equippedRodId == id
-			local canClaim = isTrainingReward(id)
-			local trainingLocked = not owned and id == Onboarding.RewardRodId and not canClaim
-				and Onboarding.IsActiveStage(localPlayer:GetAttribute(Onboarding.StageAttribute))
+			local trainingLocked = not owned and id == Onboarding.RewardRodId
+				and stage ~= "RodReward" and Onboarding.IsActiveStage(stage)
 			local price = RodsData[id].Price
 			local buyButton = card.BuyButton
-			local canBuy = not owned and (canClaim or (not trainingLocked and balance ~= nil and balance >= price))
+			local canBuy = not owned and not trainingLocked and balance ~= nil and balance >= price
 			local canBuyGradient = buyButton:FindFirstChild("Gradient_CanBuy")
 			local cannotBuyGradient = buyButton:FindFirstChild("Gradient_CannotBuy")
 			if canBuyGradient and canBuyGradient:IsA("UIGradient") and cannotBuyGradient and cannotBuyGradient:IsA("UIGradient") then
 				canBuyGradient.Enabled = canBuy
 				cannotBuyGradient.Enabled = not canBuy
 			end
-			buyButton.TextLabel.Text = if canClaim then "CLAIM" elseif trainingLocked then "TRAIN FIRST"
+			buyButton.TextLabel.Text = if trainingLocked then "TRAIN FIRST"
 				else "$" .. NumberUtil.FormatNumberStartKWithDecimal(price, 1)
 			buyButton.Visible = not owned
 			card.EquipButton.Visible = owned and not equipped
@@ -166,10 +166,15 @@ function RodShopGuiController:KnitStart()
 			return closeButton
 		end
 		local card = cards[Onboarding.RewardRodId]
-		if not card or not isTrainingReward(Onboarding.RewardRodId) then
-			return closeButton
+		if card and isRodPurchaseStage() then
+			if card.BuyButton.Visible then
+				return card.BuyButton, "RodPurchasePrompt"
+			elseif card.EquipButton.Visible then
+				return card.EquipButton, "RodEquipPrompt"
+			end
 		end
-		return if card.BuyButton.Visible then card.BuyButton elseif card.EquipButton.Visible then card.EquipButton else closeButton
+		local stage = localPlayer:GetAttribute(Onboarding.StageAttribute)
+		return closeButton, if stage == "FinalCatch" then "RodShopClosePrompt" else nil
 	end
 
 	-- Subscribe before any GetState request, so late responses cannot replace an event.
@@ -187,8 +192,7 @@ function RodShopGuiController:KnitStart()
 		actionPending = true
 		render()
 		local snapshotToken = snapshots:BeginRequest()
-		local request = if buy and isTrainingReward(id) then service:ClaimTrainingRod()
-			elseif buy then service:BuyRod(id) else service:EquipRod(id)
+		local request = if buy then service:BuyRod(id) else service:EquipRod(id)
 		request
 			:andThen(function(result)
 				if result and result.ok then
@@ -486,7 +490,7 @@ function RodShopGuiController:KnitStart()
 			return
 		end
 
-		open(if isTrainingReward(Onboarding.RewardRodId) then Onboarding.RewardRodId else nil, false)
+		open(if isRodPurchaseStage() then Onboarding.RewardRodId else nil, false)
 	end)
 end
 

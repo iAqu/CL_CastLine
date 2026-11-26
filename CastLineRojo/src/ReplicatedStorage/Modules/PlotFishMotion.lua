@@ -11,7 +11,7 @@ local PlotFishMotion = {
 -- Match StealEgg: constrain the body center, allowing fins and tails past the fence.
 local EDGE_INSET = 1.75
 local FLOAT_HEIGHT = 5
-local FLOAT_AMPLITUDE = 0.5
+local FLOAT_AMPLITUDE = 1.2
 local FLOAT_PERIOD = 6
 
 export type Move = {

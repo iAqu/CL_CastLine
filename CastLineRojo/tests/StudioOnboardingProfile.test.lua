@@ -163,9 +163,7 @@ local function loadLegacy(items, placements)
 		Items = items,
 		PlotPlacements = placements,
 		FishingIntroVersion = intro.Version,
-		OnboardingAnalyticsV1 = { Sent = 8 },
 	})
-	assert(saved.OnboardingAnalyticsV1.Retired and saved.OnboardingAnalyticsV1.Sent == 8)
 	assert(saved.Items == items, "Migration does not grant or replace inventory")
 	return migratedStage, fishUid
 end

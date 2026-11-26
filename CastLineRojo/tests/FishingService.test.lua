@@ -81,6 +81,7 @@ h.now += 5
 h.sample = 0
 local firstRound = h.client:NextRound(h.player, h.token, 0)
 assert(firstRound.ok and h.fishes[firstRound.fishId].Rarity == "Common", "Open the first round with the selected rod")
+assert(math.abs(firstRound.readyAt - firstRound.startedAt - 1.2) < 1e-6, "First round must wait for the dive")
 assert(not h.client:Hook(h.player, h.token, 1, h.now).ok, "No early hook")
 assert(h.client:GetHookResult(h.player, h.token, 1).status == "Rejected")
 assert(not h.client:NextRound(h.player, h.token, 1).ok, "No early next round")
@@ -90,6 +91,7 @@ h.fishes.Fish_110.DisplayChance = 100
 h.round = h.client:NextRound(h.player, h.token, firstRound.round)
 assert(h.round.ok and h.round.round == 2 and h.round.fishId == "Fish_110" and h.round.fishId ~= firstRound.fishId,
 	"Missing the first bite must roll a fresh fish from the same rod pool")
+assert(h.round.readyAt == h.round.startedAt, "Retries start with the bait already at depth")
 assert(h.round.weight == 10 and h.round.mutationId == nil, "Present the new fish's weight and conceal its mutation")
 assert(h.round.castRating == firstRound.castRating and h.round.luck == firstRound.luck, "Reuse the cast settings")
 local progress = h.profile.Data.FishingProgress
@@ -228,6 +230,15 @@ assert(broken.hook().ok and broken.grants == 1)
 
 local lesson = new()
 local lessonData = lesson.profile.Data
+local function countLessonEvent(event, detail)
+	local count = 0
+	for _, record in lesson.analytics do
+		if record[2] == event and record[3] == detail then
+			count += 1
+		end
+	end
+	return count
+end
 local levels = assert(loadstring(assert(io.open("src/ReplicatedFirst/Data/TrainingLevelsData.lua")):read("*a")))()
 local trainingProgress = assert(loadstring(assert(io.open("src/ReplicatedStorage/Modules/TrainingProgress.lua")):read("*a")))()
 local finalCatchCap = levels["2"].MaxCatchWeight
@@ -287,11 +298,15 @@ assert(not lesson.hook().ok and lessonData.Wins == 200)
 lesson.failGrant = false
 lessonData.Wins = 29
 assert(not lesson.hook().ok and lessonData.Wins == 29 and lessonData.FishingOnboarding.Stage == "FinalCatch")
+assert(countLessonEvent("FinalCatchCaught") == 0, "A failed grant must leave the completion step pending")
 lessonData.Wins = 200
 assert(finalLessonRound.mutationId == "Golden" and lesson.hook().ok)
 assert(lessonData.FishingOnboarding.Stage == "Complete" and lessonData.Wins == 170 and lesson.grants == 3)
 assert(lessonData.FishingProgress.Count == 1 and not lesson.hook().ok)
+assert(countLessonEvent("FinalCatchCaught") == 1 and countLessonEvent("FinalCatch", "ContinueConfirmed") == 0)
 lesson.client:Cancel(lesson.player, lesson.token, true)
+lesson.client:Cancel(lesson.player, lesson.token, true)
+assert(countLessonEvent("FinalCatch", "ContinueConfirmed") == 1)
 assert(#lesson.equippedCatches == 2 and lesson.equippedCatches[2] == lesson.lastOptions.InstanceId)
 
 lesson.activeEvent = nil

@@ -60,17 +60,16 @@ end
 
 local function enableGamepadNavigation()
     GuiService.GuiNavigationEnabled = true
-    GuiService.AutoSelectGuiEnabled = true
 end
 
-local function isVisibleWithin(guiObject: GuiObject, gui: ScreenGui): boolean
+local function isInteractiveWithin(guiObject: GuiObject, gui: ScreenGui): boolean
     if not gui.Enabled or not guiObject:IsDescendantOf(gui) then
         return false
     end
 
     local current: Instance? = guiObject
     while current and current ~= gui do
-        if current:IsA("GuiObject") and not current.Visible then
+        if current:IsA("GuiObject") and (not current.Visible or not current.Interactable) then
             return false
         end
         current = current.Parent
@@ -83,8 +82,7 @@ local function isSelectable(guiObject: GuiObject?, gui: ScreenGui): boolean
         and guiObject.Parent ~= nil
         and guiObject.Active
         and guiObject.Selectable
-        and guiObject.Interactable
-        and isVisibleWithin(guiObject, gui)
+        and isInteractiveWithin(guiObject, gui)
 end
 
 local function navigationRoot(gui: ScreenGui): GuiObject?
@@ -193,7 +191,11 @@ end
 local homeSelection: GuiObject? = nil
 
 local function restoreHomeSelection()
-    if not isUsingGamepad() or GuiService.MenuIsOpen or topNavigationEntry() then
+    if not isUsingGamepad() then
+        homeSelection = nil
+        return
+    end
+    if GuiService.MenuIsOpen or topNavigationEntry() then
         return
     end
     local previous = homeSelection

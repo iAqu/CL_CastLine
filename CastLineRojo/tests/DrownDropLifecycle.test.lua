@@ -72,6 +72,12 @@ assert(drownDropService:find('Vector2.new(boundsHalfExtents.X, boundsHalfExtents
 assert(drownDropService:find('random:NextNumber(DROP_SCATTER_GAP_MIN, DROP_SCATTER_GAP_MAX)', 1, true), "Scatter spacing must include a random gap")
 assert(drownDropService:find('requiredDistance = footprintRadius + placement.footprintRadius + gap', 1, true), "Scatter spacing must prevent bounding-circle overlap")
 assert(drownDropService:find('params.IgnoreWater = true', 1, true), "Ground sampling must ignore water geometry")
+assert(
+	drownDropService:find("table.insert(exclusions, waterTop)", 1, true)
+		and drownDropService:find("_getGroundY(candidate, waterTop, dropFolder, sampleLift)", 1, true)
+		and drownDropService:find("placements,%s+waterTop,%s+dropFolder,%s+maxGroundY"),
+	"The drop ray must exclude the water surface and still detect a collidable pool floor inside the Water folder"
+)
 
 assert(waterDrownService:find('Drowned = Knit.CreateSignal()', 1, true), "Drowning must notify only the victim to play the death sound")
 assert(waterDrownService:find('self.Client.Drowned:Fire(player, character)', 1, true), "Drowning must notify the victim before death")

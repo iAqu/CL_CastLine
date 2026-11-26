@@ -269,7 +269,7 @@ end
 
 function DrownDropService:_getGroundY(
 	position: Vector3,
-	water: Instance?,
+	waterTop: BasePart?,
 	dropFolder: Folder,
 	sampleLift: number?
 ): number?
@@ -278,8 +278,9 @@ function DrownDropService:_getGroundY(
 	params.IgnoreWater = true
 	params.RespectCanCollide = true
 	local exclusions: { Instance } = { dropFolder }
-	if water then
-		table.insert(exclusions, water)
+	-- The Water folder may also contain the collidable pool floor.
+	if waterTop then
+		table.insert(exclusions, waterTop)
 	end
 	for _, player in ipairs(Players:GetPlayers()) do
 		if player.Character then
@@ -314,7 +315,7 @@ function DrownDropService:_resolveGroundedPosition(
 	desiredPosition: Vector3,
 	footprintRadius: number,
 	placements: { ScatterPlacement },
-	water: Instance?,
+	waterTop: BasePart?,
 	dropFolder: Folder,
 	maxGroundY: number?
 ): (Vector3?, number?)
@@ -322,7 +323,7 @@ function DrownDropService:_resolveGroundedPosition(
 		if not isPlacementClear(candidate, footprintRadius, placements) then
 			return nil, nil
 		end
-		local groundY = self:_getGroundY(candidate, water, dropFolder, sampleLift)
+		local groundY = self:_getGroundY(candidate, waterTop, dropFolder, sampleLift)
 		if groundY and maxGroundY and groundY > maxGroundY + WATER_SUBMERGE_EPSILON then
 			return nil, nil
 		end
@@ -472,8 +473,6 @@ function DrownDropService:_createDrop(
 	})
 
 	local dropFolder = getDropFolder()
-	local areas = Workspace:FindFirstChild("Areas")
-	local water = areas and areas:FindFirstChild("Water")
 	local authoredPivot = model:GetPivot()
 	local boundsCFrame, size = model:GetBoundingBox()
 	local shortestAxis = getShortestBoundsAxis(boundsCFrame, size)
@@ -499,7 +498,7 @@ function DrownDropService:_createDrop(
 		desiredPosition,
 		footprintRadius,
 		placements,
-		water,
+		waterTop,
 		dropFolder,
 		maxGroundY
 	)

@@ -8,8 +8,8 @@ local player = game:GetService("Players").LocalPlayer
 
 local BackpackScript = require(script.Parent)
 local Icon = require(ReplicatedStorage.Packages.TopbarPlus)
-local GameplayInputGate = require(ReplicatedStorage.Modules.GameplayInputGate)
 
+Icon.highlightKey = false
 local icon = Icon.new()
 icon:modifyTheme({ "IconLabel", "AutoLocalize", false })
 local iconLabelContainer = icon:getInstance("IconLabelContainer") :: Instance
@@ -32,26 +32,6 @@ icon:setOrder(-1)
 icon:bindToggleKey(Enum.KeyCode.Backquote)
 icon:autoDeselect(false)
 icon:setCaption("Inventory")
-
--- TopbarPlus also uses DPadUp when a GUI has already handled the input.
-task.defer(function()
-	local highlightKey = Icon.highlightKey
-	if not highlightKey then
-		return
-	end
-
-	local function syncHighlightShortcut()
-		local uiHasFocus = GameplayInputGate.IsActive("Popup") or GameplayInputGate.IsActive("Backpack")
-		Icon.highlightKey = if uiHasFocus then false else highlightKey
-	end
-
-	GameplayInputGate.ContextChanged:Connect(function(context)
-		if context == "Popup" or context == "Backpack" then
-			syncHighlightShortcut()
-		end
-	end)
-	syncHighlightShortcut()
-end)
 
 local function syncIconState()
 	if BackpackScript.IsOpen then

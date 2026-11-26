@@ -134,7 +134,8 @@ local function restoreOtherGuis()
 		guiConnections[gui] = nil
 	end
 	for gui in pairs(hiddenGuis) do
-		if gui.Parent then
+		-- The invite controller opens this popup once it has an online friend to show.
+		if gui.Parent and gui.Name ~= "InvitePopGui" then
 			gui.Enabled = true
 		end
 		hiddenGuis[gui] = nil

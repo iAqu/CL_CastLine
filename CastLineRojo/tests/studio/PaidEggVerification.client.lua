@@ -140,14 +140,21 @@ local function verify()
 		card.Size == authored.Size and card.Buy1Button.Position == authored.Buy1Button.Position,
 		"Extra space below egg card"
 	)
-	for _, icon in ipairs(authored.IconFrame:GetChildren()) do
-		local label = icon:FindFirstChildWhichIsA("TextLabel", true)
-		if label then
-			assert(
-				card.IconFrame[icon.Name]:FindFirstChildWhichIsA("TextLabel", true).Text == label.Text,
-				"Authored odds changed"
-			)
+	local featuredChance, featuredBadge
+	for _, child in ipairs(card.IconFrame:GetChildren()) do
+		if child:IsA("TextLabel") then
+			if child.Text == "OP" then
+				featuredBadge = child
+			elseif child.Text:match("^%d+%.?%d*%%$") then
+				featuredChance = child
+			end
 		end
+	end
+	assert(featuredBadge, "The featured fish badge is missing")
+	for _, fish in ipairs(config.Fish) do
+		local label = card.IconFrame[fish.Card]:FindFirstChild("TextLabel")
+			or (fish.Card == "GalaxyMegalodon" and featuredChance)
+		assert(label and label.Text == string.format("%g%%", fish.Chance), fish.Card .. " odds differ from the fish pool")
 	end
 	assert(
 		not card:FindFirstChild("PaidEggDetailsButton") and not gui:FindFirstChild("PaidEggOddsGui"),

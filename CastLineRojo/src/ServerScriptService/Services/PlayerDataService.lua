@@ -13,7 +13,6 @@ local PlotFishIncome = require(ReplicatedStorage.Modules.PlotFishIncome)
 local PlotPlacementUtil = require(ReplicatedStorage.Modules.PlotPlacementUtil)
 local RodInventory = require(ReplicatedStorage.Modules.RodInventory)
 local FishingOnboarding = require(ReplicatedStorage.Modules.FishingOnboarding)
-local TimeUtil = require(ReplicatedStorage.Modules.TimeUtil)
 
 local DATA_BASE_NAME = "RELEASE_230724"
 local ProfileStore = ProfileService.GetProfileStore(DATA_BASE_NAME, Template)
@@ -118,7 +117,6 @@ local PlayerDataService = Knit.CreateService {
         TotalWinsChanged = Knit.CreateSignal(),
         TotalStrengthChanged = Knit.CreateSignal(),
         -- Client to Server
-        UpdateLoginDate = Knit.CreateSignal(),
 
         -- 存档加载完成后主动推送给对应客户端, 避免客户端轮询等待
         DataLoaded = Knit.CreateSignal(),
@@ -129,7 +127,6 @@ local PlayerDataService = Knit.CreateService {
     WinsChangedServerEvent = Signal.new(),
     TrophyChangedServerEvent = Signal.new(),
     ProfileLoaded = Signal.new(),
-    UpdateLoginDateEvent = Signal.new(),
 
     _Profiles = {},
     _LoadingProfiles = {},
@@ -297,9 +294,6 @@ local function reconcileFishingOnboarding(data, seedStudioOnboarding)
 				break
 			end
 		end
-	end
-	if type(data.OnboardingAnalyticsV1) == "table" then
-		data.OnboardingAnalyticsV1.Retired = true
 	end
 end
 
@@ -873,37 +867,6 @@ function PlayerDataService:KnitStart()
         local reason = if studioOnboardingTest then "RestartTest onboarding" else "StudioUseMockProfiles"
         warn(("[PlayerDataService] Explicit temporary profiles enabled by %s. Progress lasts for this Studio session."):format(reason))
     end
-
-    self.Client.UpdateLoginDate:Connect(function(player: Player, localDate: number)
-        if type(localDate) ~= "number" or localDate % 1 ~= 0 or math.abs(TimeUtil.GetUniversalDate() - localDate) > 1 then
-            return
-        end
-        
-        local profile = self._Profiles[player]
-        if not profile then return end
-
-        if not profile.Data.FirstLoginDate then
-            profile.Data.FirstLoginDate = localDate
-        end
-        
-        if not profile.Data.LoginDate then
-            profile.Data.LoginDate = localDate
-            profile.Data.ContinueLoginDays = 1
-        end
-
-        if localDate == profile.Data.LoginDate then     
-            -- do nothing
-        elseif localDate - profile.Data.LoginDate == 1 or localDate - profile.Data.LoginDate == 636 then    -- 2023001 - 2022365 - 636
-            profile.Data.ContinueLoginDays += 1
-            profile.Data.LoginDate = localDate
-
-        else
-            profile.Data.ContinueLoginDays = 1
-            profile.Data.LoginDate = localDate
-        end
-
-        self.UpdateLoginDateEvent:Fire(player)
-    end)
 end
 
 return PlayerDataService

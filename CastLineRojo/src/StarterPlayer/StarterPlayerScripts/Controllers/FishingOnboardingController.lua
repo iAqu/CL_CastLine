@@ -222,11 +222,8 @@ function Controller:KnitStart()
 				mask:Clear()
 				return
 			end
-			if stage == "RodReward" or stage == "FinalCatch" then
-				pointAt = shop.GetOnboardingTarget and shop:GetOnboardingTarget()
-				if pointAt and stage == "RodReward" then
-					detail = "RodRewardPrompt"
-				end
+			if (stage == "RodReward" or stage == "FinalCatch") and shop.GetOnboardingTarget then
+				pointAt, detail = shop:GetOnboardingTarget()
 			end
 			if player:GetAttribute("IsTraining") then
 				if stage == "StopTraining" then
@@ -313,12 +310,13 @@ function Controller:KnitStart()
 			label.Position = UDim2.fromScale(0.5, if pointAt then 0.70 else 0.78)
 			label:FindFirstChildOfClass("UITextSizeConstraint").MaxTextSize = 48
 		end
-		if message or (pointAt and visible(pointAt)) then
+		if message then
 			report(detail)
 		end
 		if pointAt then
 			local low, high = mask:Update(pointAt)
 			if low and high then
+				report(detail)
 				local center = (low + high) * 0.5
 				local x = if high.X + 34 <= gui.AbsoluteSize.X then high.X + 6 else low.X - 6
 				x = math.clamp(x, 28, math.max(28, gui.AbsoluteSize.X - 28))

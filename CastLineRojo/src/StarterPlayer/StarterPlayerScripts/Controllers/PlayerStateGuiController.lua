@@ -16,7 +16,6 @@ local PlayerDataController = require(StarterPlayer.StarterPlayerScripts.Controll
 local LogHelper = require(ReplicatedStorage.Modules.LogHelper)
 local RainbowGradientModule = require(ReplicatedStorage.Modules.RainbowGradientModule)
 local RotationGradientModule = require(ReplicatedStorage.Modules.RotationGradientModule)
-local Constants = require(ReplicatedStorage.Modules.Constants)
 local ParticleEmitter = require(ReplicatedStorage.Libs.ParticleEmitter)
 local NumberUtil = require(ReplicatedStorage.Modules.NumberUtil)
 local GuiHelper = require(ReplicatedStorage.Modules.GuiHelper)
@@ -35,7 +34,6 @@ local HomeGui = PlayerGUI:WaitForChild("HomeGui")
 local BottomFrame = HomeGui:WaitForChild("BottomFrame")
 local PlayerStateFrame = BottomFrame:WaitForChild("PlayerStateFrame")
 local PotionTemplate = PlayerStateFrame.PotionTemplate
-local WeekendEventTemplate = PlayerStateFrame.WeekendEventTemplate
 local FriendBoostFrame = PlayerStateFrame.FriendBoost
 local FriendBoostButton = FriendBoostFrame.FriendBoostButton
 local PremiumBoostFrame = PlayerStateFrame.PremiumBoost
@@ -46,7 +44,6 @@ local TokenCountdownLabel = TokenFrame.CountdownLabel
 
 local InfoHoverFrame = HomeGui.PlayerStateInfoHover
 
-local weekEventLeftTime = 0
 local isInfoHoverShow = false
 -- local setuppedHoverGuiElements = {}
 
@@ -59,7 +56,10 @@ function PlayerStateGuiController:Init()
     -- InfoHoverFrame.Visible = false
 
     PotionTemplate.Visible = false
-    WeekendEventTemplate.Visible = false
+    local weekendTemplate = PlayerStateFrame:FindFirstChild("WeekendEventTemplate")
+    if weekendTemplate and weekendTemplate:IsA("GuiObject") then
+        weekendTemplate.Visible = false
+    end
 
     local playerData = PlayerDataController:GetData()
     if not playerData then warn("No playerData") return end
@@ -88,17 +88,6 @@ function PlayerStateGuiController:GeneratePotion(potionId: string)
     self:SetupInfoHover(potionClone, potionData.Name .. " Boost")
 end
 
-function PlayerStateGuiController:GenerateWeekendEvent(type: "Wins")
-    local clone = WeekendEventTemplate:Clone()
-    clone.Parent = PlayerStateFrame
-    clone.Visible = true
-    clone.Name = "WeekendEvent_" .. type
-    if type == "Wins" then
-        clone.EventImage.Image = Constants.IMAGE.WINS_ICON
-    end
-    self:SetupInfoHover(clone, "x2 Weekend Event")
-end
-
 function PlayerStateGuiController:UpdatePlayerStateGui()
     local playerData = PlayerDataController:GetData()
     if not playerData then warn("No playerData") return end
@@ -113,16 +102,6 @@ function PlayerStateGuiController:UpdatePlayerStateGui()
                 potionFrame:Destroy()
             else
                 potionFrame.TimeLabel.Text = NumberUtil.ConvertToMS(potionData.LastTime - os.time())
-            end
-        end
-    end
-
-    for _, weekendEventFrame in PlayerStateFrame:GetChildren() do
-        if weekendEventFrame.Name == "WeekendEvent_Wins" then
-            if weekEventLeftTime > 0 then
-                weekendEventFrame.TimeLabel.Text = NumberUtil.ConvertToAutoHMS(weekEventLeftTime)
-            else
-                weekendEventFrame:Destroy()
             end
         end
     end
@@ -233,21 +212,9 @@ function PlayerStateGuiController:KnitStart()
     task.spawn(function()
         while true do
             self:UpdatePlayerStateGui()
-            weekEventLeftTime = weekEventLeftTime - 1
             task.wait(1)
         end
     end)
-
-    Knit.GetService("WeekendEventService"):GetWeekendEventLeftTime():andThen(function(leftTime)
-        if not leftTime then warn("leftTime is nil") return end
-        weekEventLeftTime = leftTime
-        if leftTime > 0 then
-            if Constants.WEEKEND_EVENT_WINS_ENABLED then
-                self:GenerateWeekendEvent("Wins")
-            end
-        end
-    end)
-
 end
 
 return PlayerStateGuiController

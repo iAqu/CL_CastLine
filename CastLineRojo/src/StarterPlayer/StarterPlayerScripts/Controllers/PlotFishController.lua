@@ -24,8 +24,6 @@ local PlotWorkspaceUtil = require(ReplicatedStorage.Modules.PlotWorkspaceUtil)
 
 local LOCAL_PLAYER = Players.LocalPlayer
 local TITLE_HOME_HEIGHT_OFFSET = 2
-local RENDER_DISTANCE = 160
-local RENDER_EXIT_DISTANCE = 172
 local DISPLAY_RECHECK_SECONDS = 0.25
 local GAMEPAD_PLACE_ACTION = "PlacePlotFish"
 
@@ -100,7 +98,6 @@ function PlotFishController:KnitStart()
 	local service = Knit.GetService("PlotFishService")
 	local plotRoot
 	local displays = {}
-	local nearbyPlots = {}
 	local preview = createPreview()
 	local requestInFlight = false
 
@@ -269,10 +266,10 @@ function PlotFishController:KnitStart()
 		end
 	end
 
-	local function reconcileDisplays(now, root, camera)
+	local function reconcileDisplays(now)
 		local areas = Workspace:FindFirstChild("Areas")
 		plotRoot = areas and areas:FindFirstChild("Plot")
-		local present, nearby = {}, {}
+		local present = {}
 		for _, plot in if plotRoot then plotRoot:GetChildren() else {} do
 			if not PlotWorkspaceUtil.isValidPlot(plot) then
 				continue
@@ -285,13 +282,6 @@ function PlotFishController:KnitStart()
 			then
 				continue
 			end
-			local position = boundary.Position
-			local distance = if nearbyPlots[plot] then RENDER_EXIT_DISTANCE else RENDER_DISTANCE
-			if not ((root and (root.Position - position).Magnitude <= distance)
-				or (camera and (camera.CFrame.Position - position).Magnitude <= distance)) then
-				continue
-			end
-			nearby[plot] = true
 			for _, fish in folder:GetChildren() do
 				present[fish] = true
 				local display = displays[fish]
@@ -307,7 +297,6 @@ function PlotFishController:KnitStart()
 				end
 			end
 		end
-		nearbyPlots = nearby
 		for fish in displays do
 			if not present[fish] then
 				removeDisplay(fish)
@@ -338,7 +327,7 @@ function PlotFishController:KnitStart()
 
 	task.spawn(function()
 		while LOCAL_PLAYER.Parent do
-			reconcileDisplays(Workspace:GetServerTimeNow(), getRoot(), Workspace.CurrentCamera)
+			reconcileDisplays(Workspace:GetServerTimeNow())
 			task.wait(DISPLAY_RECHECK_SECONDS)
 		end
 	end)

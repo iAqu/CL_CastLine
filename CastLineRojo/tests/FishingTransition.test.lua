@@ -172,6 +172,7 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 	local humanoid = object("Humanoid")
 	humanoid.HipHeight, humanoid.Health, humanoid.AutoRotate, humanoid.Died = 2, 100, true, signal()
 	local character = object("Model", { HumanoidRootPart = root, Humanoid = humanoid })
+	root.Parent = character
 	function character:GetPivot()
 		return root.CFrame
 	end
@@ -220,6 +221,7 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 	function plot:GetAttribute() return self.owner end
 	local workspace = object("Workspace", { Areas = object("Folder", { Plot = object("Folder", { Plot_1 = plot }) }) })
 	workspace.GetServerTimeNow = function() return now end
+	workspace.Raycast = function() return { Position = vec(0, -1, 0) } end
 	workspace.CurrentCamera = camera
 	local function addSceneGui(class, inPlayerGui, enabled, exempt)
 		local container = if inPlayerGui then playerGui else workspace
@@ -310,7 +312,13 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 					catch = function(self) return self end,
 				}
 			end
-			return resolved({ ok = true, distance = 30, luck = 3.9875, castProgress = 0.55 })
+			return resolved({
+				ok = true,
+				distance = 30,
+				luck = 3.9875,
+				castProgress = 0.55,
+				odds = { name = "GOOD", rows = { { name = "Test fish", chance = 1 } } },
+			})
 		end,
 		Cancel = function(_, token)
 			table.insert(cancellations, token)
@@ -356,7 +364,6 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 		EggsData = {},
 		NotificationClient = { RedNotify = function(message) table.insert(notices, message) end },
 		FishingAssets = { GetBait = function() return object("Part") end },
-		FishingOddsView = { GuiName = "FishingOddsGui" },
 		FishingBaitSelect = { Bind = function(gui, _, _, choose)
 			chooseBait = choose
 			return {
@@ -400,7 +407,7 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 		},
 		FishingRigUtil = {
 			PlaceAtFishingSpot = function(_, part)
-				return part.Position
+				return part.Position, part.CFrame.LookVector, -1
 			end,
 			Create = function()
 				if failCreate then
@@ -416,6 +423,7 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 			new = function(_, _, sequenceMeter, _, _, options)
 				vignetteGui.Enabled = true
 					assert(options.fixedCast and options.launchPosition == start.Position)
+					assert(options.castGroundY == -1, "Pass the rig's ground height to the cast presentation")
 					assert(options.initialLuck == 7.25, "Forward the server's initial luck to the presentation")
 					assert(options.waterSurfaceY == nil, "Ignore the legacy water height on FishingStartPart")
 				sequence = {
@@ -489,7 +497,6 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 		FishingConfig = "Config",
 		FishingAssets = "FishingAssets",
 		FishingBaitSelect = "FishingBaitSelect",
-		FishingOddsView = "FishingOddsView",
 		FishingBaitConfig = "FishingBaitConfig",
 		FishingSpotUtil = "FishingSpotUtil",
 		PlotWorkspaceUtil = "PlotWorkspaceUtil",
@@ -558,6 +565,7 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 		require = function(name)
 			return assert(modules[name], name)
 		end,
+		RaycastParams = { new = function() return {} end },
 		Instance = {
 			new = function(class)
 				local obj = object(class)
@@ -597,6 +605,7 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 		},
 		Enum = {
 			HumanoidRigType = { R6 = "R6" },
+			RaycastFilterType = { Exclude = "Exclude" },
 			CameraType = { Custom = "Custom", Scriptable = "Scriptable" },
 			CoreGuiType = { Backpack = "Backpack" },
 			ContextActionPriority = { High = { Value = 2000 } },

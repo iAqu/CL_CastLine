@@ -8,6 +8,7 @@ local Modules = ReplicatedStorage.Modules
 local Assets = require(Modules.FishingAssets)
 local ObserverState = require(Modules.FishingObserverState)
 local ObserverVisual = require(Modules.FishingObserverVisual)
+local GameplayInputGate = require(Modules.GameplayInputGate)
 local FishingSpotUtil = require(Modules.FishingSpotUtil)
 local PetFeatureConfig = require(Modules.PetFeatureConfig)
 local WaterSurfaceUtil = require(Modules.WaterSurfaceUtil)
@@ -83,6 +84,7 @@ function Controller:KnitStart()
 	local function remove(player)
 		local entry = entries[player]
 		if entry then
+			entry.attributeConnection:Disconnect()
 			clearVisual(entry)
 			entries[player] = nil
 		end
@@ -108,6 +110,9 @@ function Controller:KnitStart()
 		if not entry or entry.character ~= character then
 			remove(player)
 			entry = { character = character }
+			entry.attributeConnection = character:GetAttributeChangedSignal(ObserverState.Attribute):Connect(function()
+				nextCheck = 0
+			end)
 			entries[player] = entry
 		end
 		if entry.raw ~= raw then
@@ -159,6 +164,19 @@ function Controller:KnitStart()
 			end
 		end
 	end)
+	GameplayInputGate.ContextChanged:Connect(function(context)
+		if context ~= "Fishing" then
+			return
+		end
+		nextCheck = 0
+		if GameplayInputGate.IsActive("Fishing") then
+			for _, entry in pairs(entries) do
+				if entry.visual then
+					entry.visual:ClearFishShadow()
+				end
+			end
+		end
+	end)
 	Players.PlayerRemoving:Connect(remove)
 	RunService.RenderStepped:Connect(function()
 		if localPlayer:GetAttribute("FishingIntroActive") then
@@ -176,11 +194,14 @@ function Controller:KnitStart()
 				end
 			end
 		end
+		local canSeeFish = not GameplayInputGate.IsActive("Fishing")
 		for _, entry in pairs(entries) do
 			local state = entry.shownState
 			if state and (waterY or not state.distance) then
-				local ok, err =
-					pcall(entry.visual.Update, entry.visual, state, now, waterY, entry.asset, entry.catchConfig)
+				local fish = if canSeeFish and state.bite then FishesData[state.bite.fishId] else nil
+				local ok, err = pcall(
+					entry.visual.Update, entry.visual, state, now, waterY, entry.asset, entry.catchConfig, fish
+				)
 				if not ok then
 					onError(entry, err)
 				end

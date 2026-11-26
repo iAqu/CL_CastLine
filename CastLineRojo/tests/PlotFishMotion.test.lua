@@ -342,8 +342,8 @@ for _, name in { "Axolotl", "Slender", "Wide" } do
 				local center = ground.CFrame:PointToObjectSpace(pose.Position)
 				expectHorizontal(center, target, "Reach the center limit independently of floating height")
 				local bottomGap = center.Y + metrics.bottom * geometry.scale - ground.Size.Y / 2
-				assert(bottomGap >= 4.5 - 1e-5 and bottomGap <= 5.5 + 1e-5,
-					"Every model size must float 4.5 to 5.5 studs above the ground")
+				assert(bottomGap >= 3.8 - 1e-5 and bottomGap <= 6.2 + 1e-5,
+					"Every model size must float 3.8 to 6.2 studs above the ground")
 				local forward = ground.CFrame:VectorToObjectSpace(pose.LookVector)
 				for _, x in { metrics.minimum.X * geometry.scale, metrics.maximum.X * geometry.scale } do
 					for _, z in { metrics.minimum.Z * geometry.scale, metrics.maximum.Z * geometry.scale } do
@@ -411,10 +411,10 @@ assert(floatPhase >= 0 and floatPhase < 2 * math.pi, "Map fish IDs into one floa
 assert(floatPhase == motion.GetFloatPhase(uid), "Display recreation must preserve the same phase")
 assert(math.abs(motion.GetFloatPhase("fish-1") - motion.GetFloatPhase("fish-2")) > 0.1,
 	"Similar fish IDs must not float in lockstep")
-for time, offset in { [0] = 0, [1.5] = 0.5, [3] = 0, [4.5] = -0.5, [6] = 0 } do
+for time, offset in { [0] = 0, [1.5] = 1.2, [3] = 0, [4.5] = -1.2, [6] = 0 } do
 	local pose = motion.Sample(floatBoundary, 7, floatMove, time, 0)
 	local localPosition = floatBoundary.CFrame:PointToObjectSpace(pose.Position)
-	assert(math.abs(localPosition.Y - 7 - offset) < 1e-5, "Float by half a stud over a six-second cycle")
+	assert(math.abs(localPosition.Y - 7 - offset) < 1e-5, "Float by 1.2 studs over a six-second cycle")
 end
 for _, time in { 0, 0.37, 3, 6, 1794812000.25 } do
 	local pose = motion.Sample(floatBoundary, 7, floatMove, time, floatPhase)
@@ -435,7 +435,7 @@ expectVector(beforeRest.Position, afterRest.Position, "Floating must not reset w
 local idleStart = motion.Sample(floatBoundary, 7, floatRest, 0, 0)
 local idlePeak = motion.Sample(floatBoundary, 7, floatRest, 1.5, 0)
 expectHorizontal(idleStart.Position, idlePeak.Position, "Idle fish stay in place horizontally")
-assert(math.abs(idlePeak.Position.Y - idleStart.Position.Y - 0.5) < 1e-5, "Idle fish must continue floating")
+assert(math.abs(idlePeak.Position.Y - idleStart.Position.Y - 1.2) < 1e-5, "Idle fish must continue floating")
 local restartAt = floatRest.startedAt + floatRest.duration
 local floatNext = assert(motion.Advance(floatBoundary, floatRest, restartAt, fixedRandom(2)))
 local beforeRestart = motion.Sample(floatBoundary, 7, floatRest, restartAt, floatPhase)

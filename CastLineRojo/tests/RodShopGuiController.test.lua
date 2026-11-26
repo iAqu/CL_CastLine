@@ -75,7 +75,7 @@ h:setStage("PlaceFish")
 h.controller:OpenForRod("b")
 h.requests[1](initial)
 local buyButton = h:getCard("b").BuyButton
-local rewardButton = h:getCard("Rod_102").BuyButton
+local parkRodButton = h:getCard("Rod_102").BuyButton
 expectGradient(buyButton, false, "Cash below the price must start with the cannot-buy gradient")
 assert(buyButton.Interactable, "An unaffordable rod must remain clickable for the purchase feedback")
 buyButton.Activated:Fire()
@@ -85,21 +85,51 @@ assert(h.error == "Not enough cash" and buyButton.Interactable)
 
 h:setCash(100)
 expectGradient(buyButton, true, "Cash equal to the price must switch to the can-buy gradient")
-expectGradient(rewardButton, false, "Training lock must override an affordable price")
-assert(rewardButton.TextLabel.Text == "TRAIN FIRST" and not rewardButton.Interactable)
+h:setCash(200)
+expectGradient(parkRodButton, false, "Training lock must override an affordable price")
+assert(parkRodButton.TextLabel.Text == "TRAIN FIRST" and not parkRodButton.Interactable,
+	"The guided rod must remain locked before training ends")
 h:setCash(101)
 expectGradient(buyButton, true, "Cash above the price must keep the can-buy gradient")
 h:setCash(0)
 expectGradient(buyButton, false, "Spending cash must restore the cannot-buy gradient while open")
 h:setStage("RodReward")
-expectGradient(rewardButton, true, "A free training claim must use the can-buy gradient with zero cash")
-assert(rewardButton.TextLabel.Text == "CLAIM" and rewardButton.Interactable)
+assert(parkRodButton.TextLabel.Text == "$200" and parkRodButton.Interactable,
+	"The trained player must see Park Rod's price and be able to request a purchase")
+local guideTarget, guideDetail = h.controller:GetOnboardingTarget()
+assert(guideTarget == parkRodButton and guideDetail == "RodPurchasePrompt", "The guide must point to the priced buy button")
+expectGradient(parkRodButton, false, "The guided rod must use the cannot-buy gradient at zero cash")
+parkRodButton.Activated:Fire()
+assert(h.purchases[2].id == "Rod_102", "The guided button must use the normal purchase request")
+h.purchases[2].resolve({ ok = false, message = "Not enough cash" })
+assert(h.error == "Not enough cash" and parkRodButton.Interactable, "A rejected purchase must leave the button available")
 
 h:setCash(100)
 buyButton.Activated:Fire()
 expectGradient(buyButton, true, "An in-flight purchase must keep the eligibility gradient")
 assert(not buyButton.Interactable)
 buyButton.Activated:Fire()
-assert(#h.purchases == 2, "An in-flight purchase must reject another click")
-h.purchases[2].resolve(purchased)
+assert(#h.purchases == 3, "An in-flight purchase must reject another click")
+h.purchases[3].resolve(purchased)
 assert(not buyButton.Visible and h:getCard("b").EquipedButton.Visible, "A purchased rod must show its equipped state")
+
+h:setCash(200)
+expectGradient(parkRodButton, true, "The guided rod becomes affordable when cash reaches its price")
+parkRodButton.Activated:Fire()
+assert(h.purchases[4].id == "Rod_102", "The player must be able to retry once they have enough cash")
+h.purchases[4].resolve({ ok = true, ownedRods = { a = true, b = true, Rod_102 = true }, equippedRodId = "Rod_102" })
+assert(not parkRodButton.Visible and h:getCard("Rod_102").EquipedButton.Visible,
+	"The guided purchase must render Park Rod as equipped")
+h:setStage("FinalCatch")
+guideTarget, guideDetail = h.controller:GetOnboardingTarget()
+assert(guideTarget.Name == "CloseButton" and guideDetail == "RodShopClosePrompt")
+
+h = harness(100)
+h:setStage("RodReward")
+h.inside = true
+h:step()
+h.requests[1]({ ok = true, ownedRods = { a = true, Rod_102 = true }, equippedRodId = "a" })
+local equipButton = h:getCard("Rod_102").EquipButton
+guideTarget, guideDetail = h.controller:GetOnboardingTarget()
+assert(h.gui.Enabled and h.focus == equipButton and guideTarget == equipButton and guideDetail == "RodEquipPrompt",
+	"Entering the shop with Park Rod owned must focus its equip button even with low cash")

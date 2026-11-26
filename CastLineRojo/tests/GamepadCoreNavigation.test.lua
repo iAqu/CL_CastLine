@@ -34,13 +34,14 @@ end
 
 local gui = service({
 	MenuIsOpen = false,
+	AutoSelectGuiEnabled = true,
 	MenuOpened = signal(),
 	MenuClosed = signal(),
 })
 local input = {
 	InputBegan = signal(),
 	InputEnded = signal(),
-	WindowFocusReleased = signal(),
+	WindowFocused = signal(),
 	GamepadConnected = signal(),
 	GamepadDisconnected = signal(),
 	TextBoxFocused = signal(),
@@ -91,15 +92,15 @@ file:close()
 setfenv(run, environment)()
 assert(not navigationEnabled.Gamepad1, "Entering gameplay must reserve the left stick for native movement")
 
+assert(not gui.AutoSelectGuiEnabled, "Roblox must not automatically enter top-bar selection")
 gui.SelectedObject = {}
-assert(navigationEnabled.Gamepad1, "An explicit top-bar shortcut enables UI navigation")
-assert(not navigationEnabled.Gamepad2, "The game must not enable navigation on controllers it never suspended")
+assert(not navigationEnabled.Gamepad1, "A passive HUD selection cannot take over native movement")
 gui.SelectedObject = nil
-assert(not navigationEnabled.Gamepad1, "Returning from the top bar restores native movement")
 
 gui.MenuIsOpen = true
 gui.MenuOpened:Fire()
 assert(navigationEnabled.Gamepad1, "The explicitly opened Roblox menu can use native navigation")
+assert(not navigationEnabled.Gamepad2, "The game must not enable navigation on controllers it never suspended")
 gui.MenuIsOpen = false
 gui.MenuClosed:Fire()
 flush()
@@ -123,7 +124,12 @@ assert(not navigationEnabled.Gamepad1, "Leaving the on-screen keyboard resumes w
 
 local selectInput = { KeyCode = "ButtonSelect" }
 input.InputBegan:Fire(selectInput)
-assert(navigationEnabled.Gamepad1, "The native Select shortcut can enter UI navigation")
+assert(not navigationEnabled.Gamepad1, "Select must not enable navigation during free movement")
 input.InputEnded:Fire(selectInput)
 flush()
-assert(not navigationEnabled.Gamepad1, "Select without a focused UI does not capture movement")
+assert(not navigationEnabled.Gamepad1, "Releasing Select must not capture movement")
+
+navigationEnabled.Gamepad1 = true
+input.WindowFocused:Fire()
+flush()
+assert(not navigationEnabled.Gamepad1, "Refocusing the viewport keeps the stick with native movement")

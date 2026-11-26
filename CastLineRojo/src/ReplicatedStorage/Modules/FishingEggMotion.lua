@@ -48,9 +48,10 @@ function Motion.Pose(self, phase, elapsed, target)
 	elseif phase == "Lifting" or phase == "Caught" then
 		local lift = if phase == "Caught" then 1 else alpha
 		local height = self:GetShowcaseHeight()
+		local startDepth = self.depth + (self.fishingDepth or 0)
 		position = target
 			+ Vector3.yAxis
-				* (-self.depth + (height + self.depth) * lift + math.sin(math.pi * lift) * Settings.LiftBounceHeight)
+				* (-startDepth + (height + startDepth) * lift + math.sin(math.pi * lift) * Settings.LiftBounceHeight)
 		rotation = CFrame.Angles(0, yaw + 2 * math.pi * lift, rock * (1 - lift))
 		local struggleElapsed = self.timeline.liftStruggleElapsed
 		if phase == "Lifting" and struggleElapsed and struggleElapsed > self.timeline.struggleTime then

@@ -7,7 +7,6 @@ local Template = require(ReplicatedStorage.PlayerData.Template)
 local PurchaseDataHelper = require(ReplicatedFirst.DataHelpers.PurchaseDataHelper)
 local Constants = require(ReplicatedStorage.Modules.Constants)
 local LogHelper = require(ReplicatedStorage.Modules.LogHelper)
-local TimeUtil = require(ReplicatedStorage.Modules.TimeUtil)
 local AchievementsDataHelper = require(ReplicatedFirst.DataHelpers.AchievementsDataHelper)
 local NumberUtil = require(ReplicatedStorage.Modules.NumberUtil)
 local LoadingAttributes = require(ReplicatedFirst:WaitForChild("LoadingAttributes"))
@@ -180,14 +179,6 @@ function PlayerDataController:KnitStart()
         self._PlayerData.Trophy = result
     end)
 
-    local UpgradeService = Knit.GetService("UpgradeService")
-    listen(UpgradeService.Upgrade, function(upgradeId: string, isSuccess: boolean, _resultText: string, newLevel: number?)
-        if isSuccess then
-			self._PlayerData.Upgrades[upgradeId] = newLevel
-				or ((self._PlayerData.Upgrades[upgradeId] or 0) + 1)
-        end
-    end)
-
     local AreaService = Knit.GetService("AreaService")
     listen(AreaService.ResetAreas, function()
         self._PlayerData.Areas = Template.DEFAULT_AREAS
@@ -219,10 +210,6 @@ function PlayerDataController:KnitStart()
     end)
 
     local ChestService = Knit.GetService("ChestService")
-    listen(ChestService.ClaimDailyChestComplete, function(openTime: number)
-        self._PlayerData.DailyChestLastOpenTime = openTime
-    end)
-
     listen(ChestService.ClaimGroupChestComplete, function(_openTime: number)
         self._PlayerData.GroupChestIsClaimed = true
     end)
@@ -234,116 +221,6 @@ function PlayerDataController:KnitStart()
     local PotionService = Knit.GetService("PotionService")
     listen(PotionService.UpdatePotionCount, function(potionId: string, potionCount: number)
         self._PlayerData.Potions[potionId].Count = potionCount
-    end)
-
-    local DailyRewardService = Knit.GetService("DailyRewardService")
-    listen(DailyRewardService.ClaimDailyReward, function(index: number, isSuccess: boolean, _resultText: string)
-        if isSuccess then
-            self._PlayerData.DailyRewards[index].IsClaimed = true
-        end
-    end)
-
-    listen(DailyRewardService.CompleteDailyReward, function(index: number, completeDate: string)
-        self._PlayerData.DailyRewards[index].CompleteDate = completeDate
-    end)
-
-    listen(DailyRewardService.ResetAllRewards, function(DailyRewards: {})
-        self._PlayerData.DailyRewards = DailyRewards
-    end)
-
-    local HareDailyRewardService = Knit.GetService("HareDailyRewardService")
-    listen(HareDailyRewardService.ClaimDailyReward, function(index: number, isSuccess: boolean, _resultText: string)
-        if isSuccess then
-            self._PlayerData.HareDailyRewards[index].IsClaimed = true
-        end
-    end)
-
-    listen(HareDailyRewardService.CompleteDailyReward, function(index: number, completeDate: string)
-        self._PlayerData.HareDailyRewards[index].CompleteDate = completeDate
-    end)
-
-    listen(HareDailyRewardService.ResetAllRewards, function(HareDailyRewards: {})
-        self._PlayerData.HareDailyRewards = HareDailyRewards
-    end)
-
-    local LongDailyRewardService = Knit.GetService("LongDailyRewardService")
-    listen(LongDailyRewardService.ClaimLongDailyReward, function(index: number, isSuccess: boolean, _resultText: string)
-        if isSuccess then
-            self._PlayerData.LongDailyRewards[index].IsClaimed = true
-        end
-    end)
-
-    listen(LongDailyRewardService.CompleteLongDailyReward, function(index: number, completeDate: string)
-        self._PlayerData.LongDailyRewards[index].CompleteDate = completeDate
-    end)
-
-    listen(LongDailyRewardService.ResetAllRewards, function(longDailyRewards: {})
-        self._PlayerData.LongDailyRewards = longDailyRewards
-    end)
-
-    local ChristmasDailyRewardService = Knit.GetService("ChristmasDailyRewardService")
-    listen(ChristmasDailyRewardService.ClaimRewardEvent, function(index: number, isSuccess: boolean, _resultText: string)
-        if isSuccess then
-            self._PlayerData.ChristmasDailyRewards[index].IsClaimed = true
-        end
-    end)
-
-    listen(ChristmasDailyRewardService.CompleteDailyRewardEvent, function(index: number, completeDate: string)
-        self._PlayerData.ChristmasDailyRewards[index].CompleteDate = completeDate
-    end)
-
-    local ValentineDailyRewardService = Knit.GetService("ValentineDailyRewardService")
-    listen(ValentineDailyRewardService.ClaimRewardEvent, function(index: number, isSuccess: boolean, _resultText: string)
-        if isSuccess then
-            self._PlayerData.ValentineDailyRewards[index].IsClaimed = true
-        end
-    end)
-
-    listen(ValentineDailyRewardService.CompleteDailyRewardEvent, function(index: number, completeDate: string)
-        self._PlayerData.ValentineDailyRewards[index].CompleteDate = completeDate
-    end)
-
-    local HalloweenDailyRewardService = Knit.GetService("HalloweenDailyRewardService")
-    listen(HalloweenDailyRewardService.ClaimRewardEvent, function(index: number, isSuccess: boolean, _resultText: string)
-        if isSuccess then
-            self._PlayerData.HalloweenDailyRewards[index].IsClaimed = true
-        end
-    end)
-
-    listen(HalloweenDailyRewardService.CompleteDailyRewardEvent, function(index: number, completeDate: string)
-        self._PlayerData.HalloweenDailyRewards[index].CompleteDate = completeDate
-    end)
-
-    local SpinningWheelService = Knit.GetService("SpinningWheelService")
-    listen(SpinningWheelService.UpdateSpinningWheelCount, function(spinningWheelLastCheckTime: number, spinningWheelBonusSpins: number)
-        self._PlayerData.SpinningWheelLastCheckTime = spinningWheelLastCheckTime
-        self._PlayerData.SpinningWheelBonusSpins = spinningWheelBonusSpins
-    end)
-
-    local GiftBoxService = Knit.GetService("GiftBoxService")
-    listen(GiftBoxService.DropGifts, function(giftBoxId: string, _dropGifts: {})
-        self._PlayerData.GiftBoxClaimLog[giftBoxId] = true
-    end)
-
-    local localDate = TimeUtil.GetLocalDate()
-    PlayerDataService.UpdateLoginDate:Fire(localDate)
-
-    local SeasonService = Knit.GetService("SeasonService")
-    listen(SeasonService.UpdateSeasonTaskProgress, function(dailyTasksProgress, weeklyTasksProgress)
-        self._PlayerData.SeasonDailyTasksProgress = dailyTasksProgress
-        self._PlayerData.SeasonWeeklyTasksProgress = weeklyTasksProgress
-    end)
-
-    listen(SeasonService.UpdateFreeRewardsClaimLog, function(freeRewardsClaimLog)
-        self._PlayerData.SeasonFreeRewardsClaimLog = freeRewardsClaimLog
-    end)
-
-    listen(SeasonService.UpdatePremiumRewardsClaimLog, function(premiumRewardsClaimLog)
-        self._PlayerData.SeasonPremiumRewardsClaimLog = premiumRewardsClaimLog
-    end)
-
-    listen(SeasonService.UpdateSeasonXp, function(seasonXp)
-        self._PlayerData.SeasonXp = seasonXp
     end)
 
     local AchievementService = Knit.GetService("AchievementService")
@@ -360,21 +237,6 @@ function PlayerDataController:KnitStart()
         self._PlayerData.RandomPotionBuyLog = randomPotionBuyLog
     end)
 
-    local OnlineRewardService = Knit.GetService("OnlineRewardService")
-    listen(OnlineRewardService.ResetOnlineRewards, function(_rebirth: number, _onlineStartTime: number, _onlineRewards: {})
-        self._PlayerData.OnlineRewardsKeepTime = 0
-        self._PlayerData.OnlineRewardsClaimLog = {
-            [1] = false, [2] = false, [3] = false, [4] = false,
-            [5] = false, [6] = false, [7] = false, [8] = false,
-            [9] = false, [10] = false, [11] = false, [12] = false,
-        }
-    end)
-
-    listen(OnlineRewardService.ClaimOnlineReward, function(index: number, isSuccess: boolean, _resultText: string)
-        if isSuccess then
-            self._PlayerData.OnlineRewardsClaimLog[index] = true
-        end
-    end)
     self._InterfaceService = PlayerDataService
     if self._WaitingForInterface then
         self:_RequestInterfaceData()

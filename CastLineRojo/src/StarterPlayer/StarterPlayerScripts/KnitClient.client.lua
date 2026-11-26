@@ -28,30 +28,10 @@ local REQUIRE_STUCK_WARN_SECONDS = 10
 -- 旧界面的控制器只在对应的 Studio 模板存在时加载。
 local optionalControllerTemplates: { [string]: { string } } = {
     AchievementGuiController = { "AchievementGui" },
-    ChestController = { "ChestDailyRewardGui" },
-    ChristmasDailyRewardGuiController = { "ChristmasDailyRewardGui" },
-    DailyRewardGuiController = { "DailyRewardGui" },
     DiamondBuyGuiController = { "DiamondBuyGui" },
-    HalloweenDailyRewardGuiController = { "HalloweenDailyRewardGui" },
-    HareDailyRewardGuiController = { "HareDailyRewardGui" },
-    LimitedAdvancedPackGuiController = { "LimitedAdvancedPackGui" },
-    LimitedChristmasPackGuiController = { "LimitedChristmasPackGui" },
-    LimitedPackDetailGuiController = { "LimitedPackListGui", "LimitedPackDetailGui" },
-    LimitedPackListGuiController = { "LimitedPackListGui", "LimitedPackDetailGui" },
-    LimitedSquidPackGuiController = { "LimitedSquidPackGui" },
-    LimitedStarterPackGuiController = { "LimitedStarterPackGui" },
-    LongDailyRewardGuiController = { "LongDailyRewardGui" },
-    OnlineQuestGuiController = { "OnlineQuestGui" },
-    OnlineRewardGuiController = { "OnlineRewardGui" },
     RandomPotionGuiController = { "RandomPotionGui" },
     RebirthGuiController = { "RebirthGui" },
-    SeasonGuiController = { "SeasonGui" },
-    SpinningWheelController = { "SpinningWheelGui" },
-    StarterPackGuiController = { "StarterPackGui" },
     SuperRebirthGuiController = { "RebirthGui", "SuperRebirthGui" },
-    TradeGuiController = { "TradeGui" },
-    TradeMenuGuiController = { "TradeMenuGui" },
-    ValentineDailyRewardGuiController = { "ValentineDailyRewardGui" },
 }
 
 local function hasControllerTemplates(controllerName: string): boolean

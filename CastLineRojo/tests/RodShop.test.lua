@@ -81,8 +81,20 @@ services.ReplicatedStorage.Packages.Knit = {
 }
 local client
 local charges, ready, allowCharge = 0, true, true
+local steps, growth, details = {}, {}, {}
 environment.script = { Parent = {
-	OnboardingAnalyticsService = { Step = function() end, Detail = function() end, Growth = function() end },
+	OnboardingAnalyticsService = {
+		Step = function(_, _, step)
+			table.insert(steps, step)
+		end,
+		Detail = function(_, _, group, detail)
+			assert(group == "Guide")
+			table.insert(details, detail)
+		end,
+		Growth = function(_, _, event, amount, id, source)
+			table.insert(growth, { event, amount, id, source })
+		end,
+	},
 	PlayerDataService = {
 	GetProfile = function() return if ready then { Data = data } else nil end,
 	AdjustWins = function(_, _, amount)
@@ -125,8 +137,10 @@ assert(data.EquippedRodId == "Rod_102", "A valid saved equipment choice must sur
 
 data.OwnedRods.Rod_102 = nil
 data.EquippedRodId = "Rod_101"
-assert(not client:ClaimTrainingRod(player).ok, "Only the completed training step unlocks the free rod")
-data.FishingOnboarding = { Stage = "RodReward" }
+data.Wins = 300
+data.FishingOnboarding = { Stage = "Train" }
+assert(not client:BuyRod(player, "Rod_102").ok and charges == 1, "Park Rod is locked before training ends")
+data.FishingOnboarding.Stage = "RodReward"
 services.ReplicatedStorage.Packages.Knit.GetService = function()
 	return {
 		GetPlayerPlot = function()
@@ -134,9 +148,44 @@ services.ReplicatedStorage.Packages.Knit.GetService = function()
 		end,
 	}
 end
-assert(not client:ClaimTrainingRod(player).ok, "An absent character cannot claim from the shop")
+assert(not client:BuyRod(player, "Rod_102").ok, "An absent character cannot make the guided purchase")
 player.Character = character
+foot.Z = 50
+assert(not client:BuyRod(player, "Rod_102").ok, "Guided purchase requires visiting the player's shop")
 foot.Z = 0
-assert(client:ClaimTrainingRod(player).ok and data.OwnedRods.Rod_102 and attribute == "Rod_102")
-assert(data.FishingOnboarding.Stage == "FinalCatch" and data.Wins == 1 and charges == 1)
-assert(not client:ClaimTrainingRod(player).ok, "The free claim is consumed by the successful equip")
+data.Wins = rods.Rod_102.Price - 1
+local insufficient = client:BuyRod(player, "Rod_102")
+assert(not insufficient.ok and insufficient.message == modules.Constants.NOTIFICATION_NO_ENOUGH_WIN,
+	"The guided purchase must report insufficient cash")
+assert(data.Wins == rods.Rod_102.Price - 1 and not data.OwnedRods.Rod_102,
+	"An unaffordable purchase must preserve the player's cash and inventory")
+assert(data.FishingOnboarding.Stage == "RodReward" and charges == 1 and #inventoryEvents == 3,
+	"Rejected purchases must preserve progress and leave inventory events unchanged")
+assert(#steps == 0 and #details == 1 and details[1] == "RodPurchaseInsufficientCash")
+
+data.Wins = 300
+allowCharge = false
+assert(not client:BuyRod(player, "Rod_102").ok and #steps == 0 and #details == 1)
+allowCharge = true
+local guidedPurchase = client:BuyRod(player, "Rod_102")
+assert(guidedPurchase.ok and data.OwnedRods.Rod_102 and attribute == "Rod_102",
+	"Buying Park Rod must grant and equip it")
+assert(data.FishingOnboarding.Stage == "FinalCatch" and data.Wins == 300 - rods.Rod_102.Price and charges == 2,
+	"A guided purchase must charge the configured price once and advance to the final catch")
+assert(#steps == 1 and steps[1] == "RodReady" and inventoryEvents[4] == guidedPurchase,
+	"The guided purchase must record RodReady and publish its inventory snapshot")
+assert(#details == 2 and details[2] == "RodPurchased")
+local guidedGrowth = growth[#growth]
+assert(guidedGrowth[1] == "CL_RodChange_v1" and guidedGrowth[2] == rods.Rod_102.Price,
+	"The growth event must record the configured price")
+assert(guidedGrowth[3] == "Rod_102" and guidedGrowth[4] == "Purchase", "The growth event must record a Park Rod purchase")
+assert(not client:BuyRod(player, "Rod_102").ok and charges == 2, "Duplicate attempts must not deduct cash")
+assert(#steps == 1 and #details == 2, "Duplicate purchases must not report onboarding progress")
+
+assert(client:EquipRod(player, "Rod_101").ok and data.FishingOnboarding.Stage == "RodReward",
+	"Equipping the starter rod must return to the rod step")
+assert(client:EquipRod(player, "Rod_102").ok and data.FishingOnboarding.Stage == "FinalCatch",
+	"An owned Park Rod must still advance the guide when equipped")
+assert(client:EquipRod(player, "Rod_102").ok and #details == 3 and details[3] == "OwnedRodEquipped")
+assert(data.Wins == 300 - rods.Rod_102.Price and charges == 2, "Equipping an owned Park Rod is free")
+assert(client.ClaimTrainingRod == nil, "The old free-claim endpoint must be absent")

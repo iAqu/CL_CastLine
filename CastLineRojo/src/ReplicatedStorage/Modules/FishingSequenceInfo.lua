@@ -94,7 +94,7 @@ function FishingSequenceInfo.new(gui, owner, initialLuck, now)
 	luck.Visible, reveal.Visible = self.showLuck, false
 	self.value.TextColor3 = Color3.new(1, 1, 1)
 	self:SetCastProgress(0)
-	self.value.Text = "1.00X"
+	self.value.Text = "1X"
 	self:SetLuck(initialLuck or 1, now)
 	return self
 end
@@ -153,7 +153,7 @@ function FishingSequenceInfo:_updateLuck(now)
 			self.owner:_sound("LuckTick", nil, pitch)
 		end
 	end
-	self.value.Text = string.format("%.2fX", math.floor(self.shown * 100 + 1e-6) / 100)
+	self.value.Text = string.format("%.0fX", math.ceil(self.shown))
 	local progress = if self.pulseAt then math.clamp((now - self.pulseAt) / 0.5, 0, 1) else 1
 	local strength = (1 - progress) ^ 2
 	self.scale.Scale = self.baseScale * (1 + 0.45 * strength * math.cos(progress * math.pi * 4))

@@ -158,4 +158,11 @@ function Effects.Play(owner, now, group, name, position, direction, scale, conti
 	return effect
 end
 
+function Effects.PlayStruggle(owner, now, position, direction, fishScale, fishDiameter)
+	local settings = Config.WaterVFX
+	local baseScale = settings.StruggleScale * math.max(1, fishScale or 1)
+	local diameterScale = math.min(settings.StruggleDiameterScaleCap, (fishDiameter or 0) / settings.StruggleStudsPerScale)
+	return Effects.Play(owner, now, "WaterVFX", settings.Struggle, position, direction, math.max(baseScale, diameterScale))
+end
+
 return Effects

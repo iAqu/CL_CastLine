@@ -296,11 +296,12 @@ function FishingChanceReveal:Update(now, bite, target, revealed, revealAt)
 		if not self.lockedAt then
 			local rarity = RarityConfig.Get(bite.fishConfig.Rarity)
 			local strength = math.clamp((rarity.Index - 1) / 11, 0, 1)
-			self:_setNumber(target, rarity.Name, now)
+			local colorTier = colorFor(target)
+			self:_setNumber(target, colorTier, now)
 			local strong = rarity.Index >= RarityConfig.ByName.Legendary.Index
 			self.lockedAt = now
 			self.punch = if strong then 0.56 + 0.20 * strength else 0.26 + 0.14 * strength
-			self:_burst(RarityPresentation.GetColor(rarity.Name), strength, strong)
+			self:_burst(RarityPresentation.GetColor(colorTier), strength, strong)
 			revealStrength, strongReveal = strength, strong
 		end
 		local elapsed = now - self.lockedAt

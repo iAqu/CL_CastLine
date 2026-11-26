@@ -30,6 +30,11 @@ local function landingDuration()
 	return settings.SinkTime + settings.ReboundTime + settings.SettleTime
 end
 
+local function smoothstep(value)
+	local t = math.clamp(value, 0, 1)
+	return t * t * (3 - 2 * t)
+end
+
 local updateRipple, updateWaterVFX = WaterEffects.UpdateRipple, WaterEffects.Update
 
 local function lineAnchor(parent, name)
@@ -345,6 +350,7 @@ end
 
 function FishingCastSequence:_init(rig, playerGui, meter, animation, baitTemplate, options)
 	self.options, self.sounds = options or {}, {}
+	self.fishingDepth = Config.Landing.FishingDepth
 	self.fixedCast = self.options.fixedCast
 	self.fishAudio = self.options.audio
 	self.originals, self.createdScales = {}, {}
@@ -376,7 +382,9 @@ function FishingCastSequence:_init(rig, playerGui, meter, animation, baitTemplat
 	self.baitHighlight = Instance.new("Highlight")
 	self.baitHighlight.Name, self.baitHighlight.Adornee = "BaitOutline", visual
 	self.baitHighlight.OutlineColor, self.baitHighlight.OutlineTransparency = Color3.new(1, 1, 1), 0
-	self.baitHighlight.FillColor = Color3.fromRGB(unpack(Config.Bite.BaitFillColor))
+	self.waitingBaitFill = Color3.fromRGB(125, 225, 236)
+	self.bitingBaitFill = Color3.fromRGB(unpack(Config.Bite.BaitFillColor))
+	self.baitHighlight.FillColor = self.bitingBaitFill
 	self.baitHighlight.FillTransparency = 1
 	self.baitHighlight.DepthMode, self.baitHighlight.Parent = Enum.HighlightDepthMode.AlwaysOnTop, self.folder
 	self.lineEnd, self.lineEndAttachment = lineAnchor(self.folder, "FishingLineEnd")
@@ -405,14 +413,14 @@ function FishingCastSequence:_init(rig, playerGui, meter, animation, baitTemplat
 
 	self:_bindCastMeter(meter)
 	local humanoid = assert(rig:FindFirstChildOfClass("Humanoid"))
-	self.castGroundY = self.root.Position.Y - humanoid.HipHeight - self.root.Size.Y * 0.5
+	self.castGroundY = self.options.castGroundY or (self.root.Position.Y - humanoid.HipHeight - self.root.Size.Y * 0.5)
 	local animator = humanoid:FindFirstChildOfClass("Animator")
 	if not animator then
 		animator = Instance.new("Animator")
 		animator.Parent = humanoid
 	end
 	CastPresentation.Prepare(self, animator, animation, self.options.specialCastAnimation)
-	self.characterVFX = FishingCharacterVFX.new(rig, self.folder)
+	self.characterVFX = FishingCharacterVFX.new(rig, self.folder, self.castGroundY)
 	self.impulses = {}
 	self.cameraFrame, self.cameraFov = Workspace.CurrentCamera.CFrame, Workspace.CurrentCamera.FieldOfView
 	self:_shot("Behind", 0, os.clock())
@@ -610,6 +618,22 @@ function FishingCastSequence:_waterTarget()
 	return Vector3.new(position.X, waterY, position.Z)
 end
 
+function FishingCastSequence:_diveOffset(now)
+	local depth = self.fishingDepth or 0
+	if depth > 0 and self.landedAt then
+		depth *= smoothstep((now - self.landedAt) / Config.Landing.DiveTime)
+	end
+	return -depth
+end
+
+function FishingCastSequence:_baitTarget(now, surface)
+	return surface + Vector3.yAxis * self:_diveOffset(now)
+end
+
+function FishingCastSequence:_landingPosition(now, surface)
+	return self:_baitTarget(now, surface) + Vector3.yAxis * self:_landingOffset(now - self.landedAt)
+end
+
 function FishingCastSequence:_release(now)
 	if self.flightStarted then
 		return
@@ -693,14 +717,10 @@ local playVFX = WaterEffects.Play
 
 function FishingCastSequence:_playWaterVFX(now, name, position, direction, fishScale, fishDiameter)
 	local settings = Config.WaterVFX
-	local scale
 	if name == settings.Struggle then
-		local baseScale = settings.StruggleScale * math.max(1, fishScale or 1)
-		local diameterScale = math.min(settings.StruggleDiameterScaleCap, (fishDiameter or 0) / settings.StruggleStudsPerScale)
-		scale = math.max(baseScale, diameterScale)
-	elseif name == settings.Exit then
-		scale = fishScale
+		return WaterEffects.PlayStruggle(self, now, position, direction, fishScale, fishDiameter)
 	end
+	local scale = if name == settings.Exit then fishScale else nil
 	return playVFX(self, now, "WaterVFX", name, position, direction, scale)
 end
 
@@ -889,9 +909,11 @@ function FishingCastSequence:_presentBait(phase, elapsed)
 		elseif not visible then 1
 		else 0
 	fade = fade * fade * (3 - 2 * fade)
-	local fill = if phase == "Bite" or phase == "Struggling"
-		then Config.Bite.BaitFillTransparency
-		else 1
+	local biting = phase == "Bite" or phase == "Struggling"
+	local waitingUnderwater = not biting and visible and phase ~= "Reeling" and (self.fishingDepth or 0) > 0
+		and WaterSurfaceUtil.IsPointSubmerged(self.bait.Position)
+	local fill = if biting then Config.Bite.BaitFillTransparency elseif waitingUnderwater then 0.86 else 1
+	self.baitHighlight.FillColor = if waitingUnderwater then self.waitingBaitFill else self.bitingBaitFill
 	self.baitHighlight.FillTransparency = fill + (1 - fill) * fade
 	self.baitHighlight.OutlineTransparency = fade
 	self.baitHighlight.Enabled = visible and fade < 1
@@ -929,7 +951,9 @@ function FishingCastSequence:_startBiteRound(now, readyAt, round)
 		self.waterVFX = {}
 		self.splashes, self.ripples = {}, {}
 	end
-	BaitElasticMotion.Apply(self, CFrame.new(self:_waterTarget()) * CFrame.Angles(0, self.spin or 0, 0), Vector3.one)
+	if (self.fishingDepth or 0) == 0 then
+		BaitElasticMotion.Apply(self, CFrame.new(self:_waterTarget()) * CFrame.Angles(0, self.spin or 0, 0), Vector3.one)
+	end
 	self:_presentBait("Waiting")
 	if round then
 		local fish, template
@@ -992,7 +1016,7 @@ function FishingCastSequence:_requestBiteRound()
 		self.localRoundStart = receivedAt + (round.startedAt - round.sentAt)
 		local localReadyAt = self.localRoundStart + (round.readyAt - round.startedAt)
 		self.readyAt = math.max(self.readyAt, localReadyAt)
-		self:_startBiteRound(self.localRoundStart, localReadyAt, round)
+		self:_startBiteRound(self.localRoundStart, self.readyAt, round)
 	end):catch(function(err)
 		if not self.destroyed then
 			warn("FishingCastSequence: " .. tostring(err))
@@ -1007,7 +1031,7 @@ function FishingCastSequence:_land(now)
 		0, self.baitBaseSize.Y * 0.5 + Config.Bite.Prompt.HeightOffset, 0
 	)
 	self.landedAt = now
-	self.readyAt = now + math.max(Config.ReturnInputDelay, landingDuration())
+	self.readyAt = now + Config.GetLandingSettleTime()
 	self.trail.Enabled = false
 	if self.castProfile and self.castProfile.Id == "Godlike" then
 		self.characterVFX:StopFlight(now)
@@ -1185,6 +1209,11 @@ function FishingCastSequence:_updateBait(now, dt)
 					self.bite:Update(now, true)
 				end
 			end
+		elseif (self.fishingDepth or 0) > 0 then
+			-- 等待服务端回合期间，鱼饵仍按真实落水时刻下潜。
+			local position = self:_landingPosition(now, self:_waterTarget())
+			BaitElasticMotion.Apply(self, CFrame.new(position) * CFrame.Angles(0, self.spin or 0, 0), Vector3.one)
+			self:_presentBait("Settling", elapsed)
 		end
 	end
 end
@@ -1276,10 +1305,22 @@ function FishingCastSequence:_fishLiftCamera(now, target)
 	local distance = Config.Bite.ShowcaseCloseupDistance
 		+ math.clamp((size - settings.CameraPullbackStartSize) * settings.CameraPullbackPerStud, 0, settings.CameraMaxPullback)
 	local incoming = (self.showcaseFrom + target).Position
+	local depth = self.fishingDepth or 0
+	if depth > 0 then
+		-- 展示镜头按原有水面构图求解，先跟随鱼的起升，再从出水点接入展示。
+		focus += Vector3.yAxis * depth * (1 - entry)
+	end
 	local level = smooth((elapsed - plan.timing.fallStart) / (plan.timing.duration - plan.timing.fallStart))
+	local surfaceEye = incoming + Vector3.yAxis * depth
 	local eye = focus - self.forward * distance
-		- Vector3.yAxis * (focus.Y - incoming.Y) * (1 - settings.CameraRiseFollow) * (1 - level)
-	local position = incoming:Lerp(eye, pullback)
+		- Vector3.yAxis * (focus.Y - surfaceEye.Y) * (1 - settings.CameraRiseFollow) * (1 - level)
+	local position = surfaceEye:Lerp(eye, pullback)
+	if depth > 0 and elapsed < plan.exitAt + settings.CameraBlend then
+		local rise = bite:_liftFrame(elapsed, target).Position - (target + bite.liftInitial.Position)
+		local blend = smoothstep((elapsed - plan.exitAt) / settings.CameraBlend)
+		position = (incoming + rise):Lerp(position, blend)
+		focus = (target + self.showcaseFocus + rise):Lerp(focus, blend)
+	end
 	return CFrame.lookAt(position, focus), focus
 end
 
@@ -1299,17 +1340,16 @@ function FishingCastSequence:_reelCamera(target, viewport)
 		radius / (tangent * math.min(aspect, 1) * settings.ShowcaseScreenFraction) + radius
 	)
 	local focus = target + Vector3.yAxis * settings.ShowcaseHeight
+	if (self.fishingDepth or 0) > 0 and self.bite and self.bite.reelMotion then
+		focus += Vector3.yAxis * math.min(0, self.bite.reelMotion.position.Y)
+	end
 	return CFrame.lookAt(focus - self.forward * distance, focus), focus
-end
-
-local function smoothstep(value)
-	local t = math.clamp(value, 0, 1)
-	return t * t * (3 - 2 * t)
 end
 
 function FishingCastSequence:_baitViewCamera(now, dt, viewport)
 	local settings, view = Config.Camera.WaterFraming, Config.Camera.BaitView
-	local target, bite = self:_waterTarget(), self.bite
+	local surface, bite = self:_waterTarget(), self.bite
+	local target = self:_baitTarget(now, surface)
 	local aspect = math.max(viewport.X, 1) / math.max(viewport.Y, 1)
 	local narrowAxis = math.min(aspect, 1)
 	local tangent = math.tan(math.rad(view.Fov * 0.5)) * narrowAxis
@@ -1329,6 +1369,12 @@ function FishingCastSequence:_baitViewCamera(now, dt, viewport)
 	))
 	local eye = target + offset.Unit * distance
 	local baitPosition = bite and bite.lastBaitPosition or target
+	if (self.fishingDepth or 0) > 0 then
+		eye = Vector3.new(eye.X, target.Y + view.Height, eye.Z)
+		if self.landedAt and (not bite or bite.timeline.phase == "Settling") then
+			baitPosition = self:_landingPosition(now, surface)
+		end
+	end
 	local neutral = CFrame.lookAt(eye, baitPosition)
 	local desiredAim, desiredFov = Vector2.zero, view.Fov
 	local contactWeight = 0
@@ -1455,8 +1501,10 @@ function FishingCastSequence:_updateCamera(now, dt, camera)
 		showcasePullback = pullback
 		local fishFocus = self.bite.showcasePosition or self.bite.lastPosition or goalFocus
 		local closeup = fishFocus - self.forward * Config.Bite.ShowcaseCloseupDistance
-		local position = (self.showcaseFrom + target).Position:Lerp(closeup:Lerp(goal.Position, pullback), entry)
-		focus = (target + self.showcaseFocus):Lerp(fishFocus, entry)
+		local depth = self.fishingDepth or 0
+		local rise = Vector3.yAxis * math.clamp(fishFocus.Y - target.Y + depth + self.bite.depth, 0, depth)
+		local position = (self.showcaseFrom + target + rise).Position:Lerp(closeup:Lerp(goal.Position, pullback), entry)
+		focus = (target + self.showcaseFocus + rise):Lerp(fishFocus, entry)
 		shot = CFrame.lookAt(position, focus)
 		fov = Config.Bite.ShowcaseFov
 	elseif Config.Camera.FollowFishEnabled
@@ -1472,7 +1520,7 @@ function FishingCastSequence:_updateCamera(now, dt, camera)
 	then
 		waterView = true
 		local bite = self.bite
-		local target = self:_waterTarget()
+		local target = self:_baitTarget(now, self:_waterTarget())
 		local phase = bite.timeline.phase
 		local waiting = phase == "Escaped" or phase == "Waiting"
 		if not bite.isEgg then
@@ -1492,7 +1540,7 @@ function FishingCastSequence:_updateCamera(now, dt, camera)
 		end
 		local eye = focus + offset
 		if mouthPosition then
-			-- 大鱼挣扎时咬点可能很深，机位仍留在水面上方。
+			-- 大鱼挣扎时咬点可能很深，机位留在等候深度上方。
 			eye += Vector3.yAxis * math.max(0, target.Y + 2 - eye.Y)
 		end
 		shot = CFrame.lookAt(eye, focus)
@@ -1500,16 +1548,22 @@ function FishingCastSequence:_updateCamera(now, dt, camera)
 	else
 		waterView = true
 		local settings = Config.Camera.BaitView
-		-- 固定看向落水点，仅随水面升降，不追随鱼和鱼饵的短促动作。
-		focus = self:_waterTarget()
+		-- 固定看向鱼饵的等候位置。
+		focus = self:_baitTarget(now, self:_waterTarget())
 		shot = CFrame.lookAt(focus - self.forward * settings.Distance + Vector3.yAxis * settings.Height, focus)
 		fov = settings.Fov
 	end
 	local alpha = if self.shotDuration <= 0 then 1 else math.clamp(elapsed / self.shotDuration, 0, 1)
 	alpha = TweenService:GetValue(alpha, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
+	local diveOffset
 	if waterView then
 		if self.landingCameraTransition then
-			-- 落水继续使用原有的定时过渡，不再叠加指数插值延长到位时间。
+			-- 先过渡构图，再应用鱼饵和镜头共同的下潜位移。
+			if (self.fishingDepth or 0) > 0 then
+				diveOffset = Vector3.yAxis * self:_diveOffset(now)
+				shot -= diveOffset
+				focus -= diveOffset
+			end
 			focus = (self.shotFocusFrom or focus):Lerp(focus, alpha)
 			if alpha >= 1 then
 				self.landingCameraTransition = false
@@ -1522,9 +1576,15 @@ function FishingCastSequence:_updateCamera(now, dt, camera)
 				fov = self.cameraFov + (fov - self.cameraFov) * amount
 			end
 		end
-		self.biteFocus = focus
 	end
 	shot, fov = self.shotFrom:Lerp(shot, alpha), self.fovFrom + (fov - self.fovFrom) * alpha
+	if diveOffset then
+		shot += diveOffset
+		focus += diveOffset
+	end
+	if waterView then
+		self.biteFocus = focus
+	end
 	self.cameraFrame, self.cameraFov, self.cameraFocus = shot, fov, focus
 	local x, y, rx, ry, rz, fovOffset = self:_sampleImpulses(now)
 	if self.bite and self.bite.timeline.phase == "Struggling" then

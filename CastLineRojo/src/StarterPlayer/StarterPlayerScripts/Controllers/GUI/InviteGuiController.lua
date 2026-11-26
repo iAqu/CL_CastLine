@@ -1,13 +1,8 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local SoundService = game:GetService("SoundService")
-local StarterPlayer = game:GetService("StarterPlayer")
 local Players = game:GetService("Players")
 local SocialService = game:GetService("SocialService")
 
 local Knit = require(ReplicatedStorage.Packages.Knit)
-local PlayerDataController = require(StarterPlayer.StarterPlayerScripts.Controllers.PlayerDataController)
-local Constants = require(ReplicatedStorage.Modules.Constants)
-local LogHelper = require(ReplicatedStorage.Modules.LogHelper)
 local PlayerThumbnailUtil = require(ReplicatedStorage.Modules.PlayerThumbnailUtil)
 local Timer = require(ReplicatedStorage.Packages.Timer)
 
@@ -36,6 +31,7 @@ end
 
 local function initGui()
 	InvitePopGui.Enabled = false
+	InvitePopGui.Frame.NameLabel.Text = ""
 	InvitePopGui.Frame.Visible = true
 	InvitePopGui.Frame.CloseButton.Activated:Connect(function()
 		InvitePopGui.Enabled = false
@@ -52,60 +48,42 @@ local function initGui()
 	end)
 end
 
-local function iterPageItems(pages)
-	return coroutine.wrap(function()
-		local pagenum = 1
-		while true do
-			for _, item in ipairs(pages:GetCurrentPage()) do
-				coroutine.yield(item, pagenum)
-			end
-			if pages.IsFinished then
-				break
-			end
-			pages:AdvanceToNextPageAsync()
-			pagenum = pagenum + 1
-		end
-	end)
-end
-
 local function showInviteGui()
-	InvitePopGui.Frame.AvatarImage.Image = ""
-	InvitePopGui.Frame.NameLabel.Text = ""
+	local canInviteSuccess, canInvite = pcall(SocialService.CanSendGameInviteAsync, SocialService, localPlayer)
+	if not canInviteSuccess then
+		warn("InviteGuiController: Could not check invite availability", canInvite)
+		return
+	end
+	if not canInvite then return end
 
-	local Success, result = pcall(function()
-		return SocialService:CanSendGameInviteAsync(localPlayer)
-	end)
-	if not result then warn("No result found!") return end
-
-	local friends = {}
-	-- local friendPages = Players:GetFriendsAsync(localPlayer.UserId)
-	-- local onlineFriends = Players:GetFriendsOnline()
-	local getOnlineFriendsSuccess, onlineFriends = pcall(localPlayer.GetFriendsOnline, localPlayer, 10)
-	if not getOnlineFriendsSuccess then warn("No online friends found!") return end
-	
-	-- for item, _pageNo in iterPageItems(onlineFriends) do
-	for _, item in pairs(onlineFriends) do
-        if not item.IsOnline then  continue end						-- friend is offline
-		if table.find(invitedFriends, item.VisitorId) then continue end	-- friend is already invited
-		if Players:GetPlayerByUserId(item.VisitorId) then continue end		-- friend is already in the game
-		-- if Knit.GetController("FightController"):IsFighting() then continue end	--  in fight
-
-		table.insert(friends, item)
+	local getOnlineFriendsSuccess, onlineFriends = pcall(localPlayer.GetFriendsOnlineAsync, localPlayer, 10)
+	if not getOnlineFriendsSuccess then
+		warn("InviteGuiController: Could not get online friends", onlineFriends)
+		return
 	end
 
-	-- warn(friends)
+	local friends = {}
+	for _, friend in ipairs(onlineFriends) do
+		if not friend.IsOnline then continue end
+		if table.find(invitedFriends, friend.VisitorId) then continue end
+		if Players:GetPlayerByUserId(friend.VisitorId) then continue end
+		table.insert(friends, friend)
+	end
 
 	if #friends == 0 then return end
-	local item = friends[math.random(1, #friends)]
-	
-	InvitePopGui.Frame.AvatarImage.Image = PlayerThumbnailUtil.GetHeadshot(item.VisitorId, 60)
-	InvitePopGui.Frame.NameLabel.Text = item.DisplayName .. "is online!"
+	local friend = friends[math.random(1, #friends)]
+	local name = friend.DisplayName
+	if not name or name == "" then
+		name = friend.UserName
+	end
+
+	InvitePopGui.Frame.AvatarImage.Image = PlayerThumbnailUtil.GetHeadshot(friend.VisitorId, 60)
+	currentFriendUserId = friend.VisitorId
+	InvitePopGui.Frame.NameLabel.Text = if name and name ~= "" then name .. " is online!" else "friend is online"
 	InvitePopGui.Enabled = true
 	task.delay(AUTO_CLOSE_TIME, function()
 		InvitePopGui.Enabled = false
 	end)
-
-	currentFriendUserId = item.VisitorId
 end
 
 function InviteGuiController:KnitInit()
@@ -113,9 +91,7 @@ function InviteGuiController:KnitInit()
 end
 
 function InviteGuiController:KnitStart()
-
 	local inviteTimer = Timer.new(INVITE_COOLDOWN)
-	-- local inviteTimer = Timer.new(10)
 	inviteTimer.Tick:Connect(function()
 		if InvitePopGui.Enabled then return end
 		showInviteGui()

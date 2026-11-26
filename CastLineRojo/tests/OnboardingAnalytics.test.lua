@@ -11,12 +11,12 @@ local function loadService(studio)
 	end
 	local services = {
 		AnalyticsService = {
-			LogFunnelStepEvent = function(_, player, funnel, sessionId, step, name)
-				assert((funnel == "CL_Onboarding_v1" or funnel == "CL_Onboarding_v2") and sessionId == "")
+			LogFunnelStepEvent = function(_, player, funnel, sessionId, step, name, fields)
+				assert(funnel == "CL_Onboarding" and sessionId == "")
 				if step == rejected then
 					error("Simulated analytics failure")
 				end
-				table.insert(sent, { player = player, step = step, name = name, funnel = funnel })
+				table.insert(sent, { player = player, step = step, name = name, funnel = funnel, fields = fields })
 			end,
 			LogCustomEvent = function(_, player, name, value, fields)
 				table.insert(sent, { player = player, name = name, value = value, fields = fields })
@@ -68,7 +68,7 @@ end
 
 local service, events, listeners, warnings, pump = loadService(false)
 local newcomer = player()
-local first = profile(1, { FishingOnboarding = { Stage = "PlaceFish" } })
+local first = profile(1)
 service:Initialize(newcomer, first)
 service:Step(newcomer, "IntroCreated") -- Remote and server observations can arrive out of order.
 service:Step(newcomer, "IntroCreated")
@@ -80,7 +80,8 @@ listeners.guide(newcomer, "RodShopOpened")
 pump()
 pump()
 assert(#events == 1 and events[1].step == 1)
-assert(next(first.Data.OnboardingAnalyticsV2.Details) == nil)
+assert(events[1].fields.Field1 == "New" and events[1].fields.Field2 == "Intro")
+assert(next(first.Data.OnboardingAnalytics.Details) == nil)
 
 service:Step(newcomer, "IntroClaimed")
 pump(2)
@@ -92,6 +93,7 @@ pump()
 assert(#events == 3 and events[2].step == 2 and events[3].step == 3)
 service:FishingPresentation(newcomer, "Intro", "Waiting", 1, "Nibble1")
 service:FishingPresentation(newcomer, "Intro", "Waiting", 1, "Nibble1")
+first.Data.FishingOnboarding = { Stage = "PlaceFish" }
 listeners.guide(newcomer, "PlacementPrompt")
 for _, step in { "IntroStarted", "IntroCast", "IntroLanded", "IntroBite", "IntroCaught" } do
 	service:Step(newcomer, step)
@@ -106,13 +108,28 @@ for _, step in {
 } do
 	service:Step(returned, step)
 end
-service:Detail(returned, "Guide", "RodAlreadyReady")
+for _ = 1, 12 do
+	pump()
+end
+assert(first.Data.OnboardingAnalytics.Sent == 10, "Training level 2 must not unlock the next step")
+service:Step(returned, "TrainingGoalReached")
+first.Data.FishingOnboarding.Stage = "RodReward"
+listeners.guide(returned, "RodPurchasePrompt")
+listeners.guide(returned, "RodEquipPrompt")
+listeners.guide(returned, "RodShopClosePrompt")
+assert(first.Data.OnboardingAnalytics.Details["Guide/RodShopClosePrompt"] == nil)
+first.Data.FishingOnboarding.Stage = "FinalCatch"
+listeners.guide(returned, "RodShopClosePrompt")
+assert(first.Data.OnboardingAnalytics.Details["Guide/RodShopClosePrompt"] == false)
+service:Detail(returned, "Guide", "RodPurchaseInsufficientCash")
+service:Detail(returned, "Guide", "RodPurchaseInsufficientCash")
+service:Detail(returned, "Guide", "RodPurchased")
 service:Detail(returned, "FinalCatch", "FreePracticeSelected")
 for _ = 1, 24 do
 	pump()
 end
-assert(first.Data.OnboardingAnalyticsV2.Sent == 14, "Free practice must not complete bait selection")
-assert(first.Data.OnboardingAnalyticsV2.Details["Intro/Reveal"] == nil, "Rejoin must not invent a reveal")
+assert(first.Data.OnboardingAnalytics.Sent == 14, "Free practice must not complete bait selection")
+assert(first.Data.OnboardingAnalytics.Details["Intro/Reveal"] == nil, "Rejoin must not invent a reveal")
 for _, step in { "FinalBaitSelected", "FinalCatchCast", "FinalCatchLanded", "FinalCatchBite", "FinalCatchCaught" } do
 	service:Step(returned, step)
 end
@@ -125,39 +142,71 @@ service:Growth(veteran, "InvalidValue", math.huge)
 for _ = 1, 8 do
 	pump()
 end
-local cursor, nibbleCount, veteranCount = 0, 0, 0
+local cursor, nibbleCount, veteranCount, insufficientCount = 0, 0, 0, 0
 for _, event in events do
 	if event.step then
 		cursor += 1
-		assert(event.step == cursor and event.funnel == "CL_Onboarding_v2")
+		assert(event.step == cursor and event.funnel == "CL_Onboarding")
 		if cursor == 9 then
 			assert(event.name == "First fish placed", "Placement immediately follows the opening catch")
+		elseif cursor == 11 then
+			assert(event.name == "Training level 3 reached")
 		end
 	elseif event.fields.Field2 == "Nibble1" then
 		nibbleCount += 1
+	elseif event.fields.Field2 == "RodPurchaseInsufficientCash" then
+		assert(event.name == "CL_OnboardingDetail" and event.fields.Field1 == "Guide" and event.fields.Field3 == "New")
+		insufficientCount += 1
 	end
 	if event.player == veteran then
 		veteranCount += 1
 		assert(event.name == "CL_PlotUpgrade_v1" and event.value == 500 and event.fields.Field2 == "6")
 	end
 end
-assert(cursor == 19 and nibbleCount == 1 and veteranCount == 1 and existing.Data.OnboardingAnalyticsV2 == nil)
+assert(cursor == 19 and nibbleCount == 1 and veteranCount == 1 and insufficientCount == 1)
+assert(first.Data.OnboardingAnalytics.Source == "New" and existing.Data.OnboardingAnalytics == nil)
 assert(not service:SampleFishingCast())
 
+for _, checkpoint in {
+	{ "PlaceFish", "FishPlaced", 9 },
+	{ "Train", "TrainingStarted", 10 },
+	{ "StopTraining", "TrainingEnded", 12 },
+	{ "RodReward", "RodReady", 13 },
+	{ "FinalCatch", "FinalCatchStarted", 14 },
+} do
+	local tracking, checkpointEvents, checkpointListeners, _, pumpCheckpoint = loadService(false)
+	local resume = player()
+	local stage, nextStep, index = table.unpack(checkpoint)
+	local old = profile(2, {
+		FishingOnboarding = { Stage = stage },
+		OnboardingAnalyticsV1 = { Sent = 2 },
+		OnboardingAnalyticsV2 = { Sent = 8 },
+	})
+	tracking:Initialize(resume, old)
+	pumpCheckpoint()
+	pumpCheckpoint()
+	assert(#checkpointEvents == 1 and checkpointEvents[1].step == 1)
+	assert(checkpointEvents[1].fields.Field1 == "Resumed" and checkpointEvents[1].fields.Field2 == stage)
+	tracking:Step(resume, nextStep)
+	pumpCheckpoint(index)
+	assert(old.Data.OnboardingAnalytics.Sent == 1, "Failed checkpoint sends must stay pending")
+	checkpointListeners.leave(resume)
+	local resumedAgain = player()
+	tracking:Initialize(resumedAgain, old)
+	pumpCheckpoint()
+	pumpCheckpoint()
+	assert(#checkpointEvents == 2 and checkpointEvents[2].step == index and checkpointEvents[2].player == resumedAgain)
+	assert(old.Data.OnboardingAnalytics.Sent == index and old.Data.OnboardingAnalytics.Source == "Resumed")
+	assert(old.Data.OnboardingAnalytics.Observed.TrainingGoalReached == nil)
+end
+
 local legacy, legacyEvents, _, _, pumpLegacy = loadService(false)
-local pastPlacement = player()
-local skippedLesson = player()
-legacy:Initialize(pastPlacement, profile(2, {
-	OnboardingAnalyticsV1 = { Sent = 13, Observed = {}, Details = {} },
-}))
-legacy:Initialize(skippedLesson, profile(2, {
-	OnboardingAnalyticsV1 = { Sent = 13, Observed = {}, Details = {}, Retired = true },
-}))
-legacy:Step(pastPlacement, "FishPlaced")
-legacy:Step(skippedLesson, "FishPlaced")
+local completed = player()
+local completedProfile = profile(2, { FishingOnboarding = { Stage = "Complete" } })
+legacy:Initialize(completed, completedProfile)
+legacy:Step(completed, "FinalCatchCaught")
 pumpLegacy()
-assert(#legacyEvents == 1 and legacyEvents[1].player == pastPlacement and legacyEvents[1].step == 14
-	and legacyEvents[1].funnel == "CL_Onboarding_v1", "Existing v1 funnels keep their numbering and skipped lessons are not logged")
+assert(#legacyEvents == 0 and completedProfile.Data.OnboardingAnalytics == nil)
 
 local dryRun, outgoing, _, _, pumpStudio = loadService(true)
 local mock = profile(1)
@@ -167,7 +216,9 @@ dryRun:Growth(newcomer, "CL_TrainingLevelUp_v1", 1, "Training_101", 2, 2)
 pumpStudio()
 pumpStudio()
 local snapshot = dryRun:GetStudioSnapshot(newcomer)
-assert(snapshot.Sent == 2 and #snapshot.Events == 3 and mock.Data.OnboardingAnalyticsV2 == nil)
+assert(snapshot.Sent == 2 and #snapshot.Events == 3 and mock.Data.OnboardingAnalytics == nil)
+assert(snapshot.Funnel == "CL_Onboarding" and snapshot.Source == "New" and snapshot.EntryStage == "Intro")
+assert(snapshot.Events[1].Fields.Field1 == "New")
 assert(#outgoing == 0 and dryRun:SampleFishingCast())
 
 local fishingHarness = require("./helpers/FishingHarness")

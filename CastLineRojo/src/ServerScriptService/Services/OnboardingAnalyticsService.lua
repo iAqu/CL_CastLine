@@ -9,14 +9,15 @@ local Service = Knit.CreateService({
 	Client = { GuidePresentation = Knit.CreateSignal() },
 })
 
-local DETAIL_EVENT = "CL_OnboardingDetail_v1"
+local FUNNEL = "CL_Onboarding"
+local DETAIL_EVENT = "CL_OnboardingDetail"
 local IS_STUDIO = RunService:IsStudio()
 local CUSTOM_FIELD_1 = Enum.AnalyticsCustomFieldKeys.CustomField01.Name
 local CUSTOM_FIELD_2 = Enum.AnalyticsCustomFieldKeys.CustomField02.Name
 local CUSTOM_FIELD_3 = Enum.AnalyticsCustomFieldKeys.CustomField03.Name
 
 -- Steps and names are stable once published.
-local stepsV1 = {
+local steps = {
 	{ "ProfileReady", "Profile ready" },
 	{ "IntroClaimed", "Intro autoplay claimed" },
 	{ "IntroCreated", "Intro session created" },
@@ -25,14 +26,9 @@ local stepsV1 = {
 	{ "IntroLanded", "Intro bait landed" },
 	{ "IntroBite", "Intro hook window opened" },
 	{ "IntroCaught", "Intro fish granted" },
-	{ "FirstCatchStarted", "First lesson started" },
-	{ "FirstCatchCast", "First lesson cast accepted" },
-	{ "FirstCatchLanded", "First lesson bait landed" },
-	{ "FirstCatchBite", "First lesson hook window opened" },
-	{ "FirstCatchCaught", "First lesson fish granted" },
 	{ "FishPlaced", "First fish placed" },
 	{ "TrainingStarted", "Training started" },
-	{ "TrainingLevel2", "Training level 2 reached" },
+	{ "TrainingGoalReached", "Training level 3 reached" },
 	{ "TrainingEnded", "Training ended" },
 	{ "RodReady", "Upgraded rod ready" },
 	{ "FinalCatchStarted", "Final lesson started" },
@@ -42,13 +38,17 @@ local stepsV1 = {
 	{ "FinalCatchBite", "Final lesson hook window opened" },
 	{ "FinalCatchCaught", "Onboarding completed" },
 }
-local stepsV2, stepIndex = {}, {}
-for index, step in ipairs(stepsV1) do
+local stepIndex = {}
+for index, step in ipairs(steps) do
 	stepIndex[step[1]] = index
-	if not step[1]:match("^FirstCatch") then
-		table.insert(stepsV2, step)
-	end
 end
+local resumeSteps = {
+	PlaceFish = stepIndex.FishPlaced,
+	Train = stepIndex.TrainingStarted,
+	StopTraining = stepIndex.TrainingEnded,
+	RodReward = stepIndex.RodReady,
+	FinalCatch = stepIndex.FinalCatchStarted,
+}
 
 local guideStages = {
 	BackpackPrompt = "PlaceFish",
@@ -63,7 +63,9 @@ local guideStages = {
 	ResumeTrainingRoute = "StopTraining",
 	RodShopRoute = "RodReward",
 	RodShopOpened = "RodReward",
-	RodRewardPrompt = "RodReward",
+	RodPurchasePrompt = "RodReward",
+	RodEquipPrompt = "RodReward",
+	RodShopClosePrompt = "FinalCatch",
 	FinalLessonRoute = "FinalCatch",
 }
 
@@ -121,20 +123,29 @@ function Service:Initialize(player, profile)
 	if sessions[player] then
 		return
 	end
-	local saved = profile.Data.OnboardingAnalyticsV2 or profile.Data.OnboardingAnalyticsV1
-	local version = if profile.Data.OnboardingAnalyticsV2 or not saved then 2 else 1
-	if saved == nil and profile.MetaData.SessionLoadCount == 1 then
-		saved = { Observed = {}, Sent = 0, Details = {} }
+	local saved = profile.Data.OnboardingAnalytics
+	local progress = profile.Data.FishingOnboarding
+	local stage = progress and progress.Stage
+	local resumeStep = resumeSteps[stage]
+	if not saved and (resumeStep or (stage == nil and profile.MetaData.SessionLoadCount == 1)) then
+		saved = {
+			Observed = {},
+			Sent = 0,
+			Details = {},
+			Source = if resumeStep then "Resumed" else "New",
+			EntryStage = stage or "Intro",
+		}
 		if not IS_STUDIO then
-			profile.Data.OnboardingAnalyticsV2 = saved
+			profile.Data.OnboardingAnalytics = saved
 		end
 	elseif saved and IS_STUDIO then
-		saved = { Observed = table.clone(saved.Observed), Sent = saved.Sent, Details = table.clone(saved.Details), Retired = saved.Retired }
+		saved = table.clone(saved)
+		saved.Observed = table.clone(saved.Observed)
+		saved.Details = table.clone(saved.Details)
 	end
 	sessions[player] = {
 		Profile = profile,
 		Onboarding = saved,
-		FunnelVersion = version,
 		ClientTokens = 16,
 		ClientAt = os.clock(),
 		Events = if IS_STUDIO then {} else nil,
@@ -220,7 +231,7 @@ function Service:_send(player, session, event)
 		end
 		table.insert(events, event)
 	elseif event.Step then
-		AnalyticsService:LogFunnelStepEvent(player, `CL_Onboarding_v{session.FunnelVersion}`, "", event.Step, event.Name)
+		AnalyticsService:LogFunnelStepEvent(player, FUNNEL, "", event.Step, event.Name, event.Fields)
 	else
 		AnalyticsService:LogCustomEvent(player, event.Name, event.Value, event.Fields)
 	end
@@ -249,12 +260,16 @@ function Service:Pump()
 		end
 		local session = activeSession(player)
 		local saved = session and session.Onboarding
-		if saved and not saved.Retired and now >= (session.FunnelRetryAt or 0) then
+		if saved and now >= (session.FunnelRetryAt or 0) then
 			local index = saved.Sent + 1
-			local steps = if session.FunnelVersion == 1 then stepsV1 else stepsV2
+			-- Send the cohort anchor before the first observed step at the saved checkpoint.
+			if index == 2 then
+				index = resumeSteps[saved.EntryStage] or index
+			end
 			local step = steps[index]
 			if step and saved.Observed[step[1]] then
-				if send(player, session, { Step = index, Name = step[2] }) then
+				local entryFields = if index == 1 then fields(saved.Source, saved.EntryStage) else nil
+				if send(player, session, { Step = index, Name = step[2], Fields = entryFields }) then
 					saved.Sent = index
 					session.FunnelFailures, session.FunnelRetryAt = nil, nil
 				else
@@ -276,7 +291,7 @@ function Service:Pump()
 			for key, sent in pairs(saved.Details) do
 				if not sent then
 					local group, detail = string.match(key, "^([^/]+)/(.+)$")
-					if send(player, session, { Name = DETAIL_EVENT, Value = 1, Fields = fields(group, detail) }) then
+					if send(player, session, { Name = DETAIL_EVENT, Value = 1, Fields = fields(group, detail, saved.Source) }) then
 						saved.Details[key] = true
 					else
 						session.DetailRetryAt = now + 10
@@ -308,7 +323,10 @@ function Service:GetStudioSnapshot(player)
 	end
 	local saved = session.Onboarding
 	return {
+		Funnel = FUNNEL,
 		Sent = saved and saved.Sent,
+		Source = saved and saved.Source,
+		EntryStage = saved and saved.EntryStage,
 		Observed = saved and table.clone(saved.Observed),
 		Details = saved and table.clone(saved.Details),
 		Events = table.clone(session.Events),

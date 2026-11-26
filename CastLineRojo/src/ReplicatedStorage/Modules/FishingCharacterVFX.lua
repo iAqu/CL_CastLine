@@ -18,11 +18,12 @@ local function rainbow()
 	return ColorSequence.new(keys)
 end
 
-function FishingCharacterVFX.new(rig: Model, parent: Instance)
+function FishingCharacterVFX.new(rig: Model, parent: Instance, groundY: number?)
 	local self = setmetatable({
 		rig = rig,
 		root = assert(rig.PrimaryPart, "Fishing rig root is missing"),
 		humanoid = assert(rig:FindFirstChildOfClass("Humanoid"), "Fishing rig humanoid is missing"),
+		groundY = groundY,
 		effects = {},
 		attachments = {},
 	}, FishingCharacterVFX)
@@ -36,7 +37,7 @@ end
 
 function FishingCharacterVFX:Configure(profile, tip)
 	self.profile, self.tip, self.budget = profile, tip, 1
-	self.groundY = self.root.Position.Y - FishingSpotUtil.GetFootHeight(self.root, self.humanoid)
+	self.groundY = self.groundY or (self.root.Position.Y - FishingSpotUtil.GetFootHeight(self.root, self.humanoid))
 	local lowQuality = false
 	pcall(function()
 		local quality = UserSettings():GetService("UserGameSettings").SavedQualityLevel.Value
@@ -56,6 +57,8 @@ function FishingCharacterVFX:_groundPosition()
 	end
 	local params = RaycastParams.new()
 	params.FilterType = Enum.RaycastFilterType.Exclude
+	params.RespectCanCollide = true
+	params.IgnoreWater = true
 	local excluded = { self.rig, self.folder }
 	local player = game:GetService("Players").LocalPlayer
 	if player and player.Character then
@@ -77,7 +80,8 @@ function FishingCharacterVFX:_position(effect)
 		if self.profile then
 			position = self:_groundPosition()
 		else
-			position -= Vector3.yAxis * FishingSpotUtil.GetFootHeight(root, self.humanoid)
+			local groundY = self.groundY or (position.Y - FishingSpotUtil.GetFootHeight(root, self.humanoid))
+			position = Vector3.new(position.X, groundY, position.Z)
 		end
 	elseif self.profile then
 		local anchor = self.rig:FindFirstChild(effect.anchor or "UpperTorso")

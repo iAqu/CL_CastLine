@@ -206,14 +206,21 @@ return function(initialCash)
 		RodShopClientState = require("../src/ReplicatedStorage/Modules/RodShopClientState"),
 		RodShopFocus = require("../src/ReplicatedStorage/Modules/RodShopFocus"),
 	}
-	local knit = { CreateController = function(controller) return controller end, GetService = function() return service end, Util = { Promise = { resolve = resolved } } }
+	local analytics = { GuidePresentation = signal() }
+	local knit = {
+		CreateController = function(controller) return controller end,
+		GetService = function(name)
+			return if name == "OnboardingAnalyticsService" then analytics else service
+		end,
+		Util = { Promise = { resolve = resolved } },
+	}
 	local rods = {
 		a = { RodID = "a", DisplayName = "Rod", LayoutOrder = 1, Price = 0, Rarity = "Common", LuckBoost = 1, Icon = "a" },
 		b = {
 			RodID = "b", DisplayName = "Park Rod", LayoutOrder = 2, Price = 100,
 			Rarity = "Uncommon", LuckBoost = 2, Icon = "b", MaxWeight = 1234567.125,
 		},
-		[onboarding.RewardRodId] = { RodID = onboarding.RewardRodId, DisplayName = "Reward Rod", LayoutOrder = 3, Price = 100, Rarity = "Common", LuckBoost = 1, Icon = "reward" },
+		[onboarding.RewardRodId] = require("../src/ReplicatedFirst/Data/RodsData")[onboarding.RewardRodId],
 	}
 	local data = { WaitForChild = function() return rods end }
 	local storage = node("ReplicatedStorage", "ReplicatedStorage")

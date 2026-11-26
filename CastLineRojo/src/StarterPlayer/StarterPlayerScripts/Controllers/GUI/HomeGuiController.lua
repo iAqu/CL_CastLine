@@ -20,7 +20,6 @@ local Timer = require(ReplicatedStorage.Packages.Timer)
 local GuiHelper = require(ReplicatedStorage.Modules.GuiHelper)
 local GameplayInputGate = require(ReplicatedStorage.Modules.GameplayInputGate)
 local BackpackConfig = require(ReplicatedStorage.Modules.BackpackConfig)
-local GameDataUtil = require(ReplicatedStorage.Modules.GameDataUtil)
 local CharacterUtil = require(ReplicatedStorage.Modules.CharacterUtil)
 local ItemStatUtil = require(ReplicatedStorage.Modules.ItemStatUtil)
 local Icon = require(ReplicatedStorage.Libs.Icon)
@@ -35,7 +34,6 @@ local PlayerGUI = localPlayer:WaitForChild("PlayerGui")
 local HomeGui = PlayerGUI:WaitForChild("HomeGui")
 local TopFrame = HomeGui.TopFrame
 local BottomFrame = HomeGui.BottomFrame
-local StarterPackButton = TopFrame.StarterPackButton
 local LeaderboardButton = TopFrame:WaitForChild("LeaderboardButton") :: TextButton
 -- local NotificationLabel = TopFrame.NotificationLabel
 
@@ -53,7 +51,6 @@ end
 local HomeButton = RightFrame.HomeButton
 -- local CurrencyFrame = LeftFrame.CurrencyFrame
 
--- local SeasonButton = RightFrame.SeasonButton
 
 -- local EventButton = RightFrame.EventButton
 
@@ -66,7 +63,6 @@ local LeftMenuFrame = LeftFrame:WaitForChild("MenuFrame")
 local RightMenuFrame = RightFrame:WaitForChild("MenuFrame")
 -- local DoubleSpeedButton = RightFrame.DoubleSpeedButton
 
--- local HalloweenDailyButton = RightFrame.HalloweenDailyButton
 
 -- local ChristmasTokenFrame = CurrencyFrame.ChristmasTokenFrame
 local WinsFrame = CurrencyFrame.Wins
@@ -79,10 +75,8 @@ local LuckFrame = CurrencyFrame:FindFirstChild("Luck")
 local LuckShadowLabel = LuckFrame and LuckFrame:FindFirstChild("LuckShadowLabel")
 local LuckLabel = LuckShadowLabel and LuckShadowLabel:FindFirstChild("LuckLabel")
 local StoreButton = LeftMenuFrame.StoreFrame.StoreButton
-local SeasonButton = RightMenuFrame.SeasonFrame.SeasonButton
 local StoreDot = StoreButton.Dot
 local RebirthButton = RightMenuFrame.RebirthFrame.RebirthButton
-local TradeButton = RightMenuFrame.TradeFrame.TradeButton
 local InviteButon = RightMenuFrame.InviteFrame.InviteButton
 local AchievementButton = RightMenuFrame.AchievementFrame.AchievementButton
 
@@ -91,25 +85,10 @@ local AchievementDot = AchievementButton.Dot
 
 -- local RightFrame = HomeGui.RightFrame
 -- local RightMenuFrame = RightFrame.MenuFrame
--- local SeasonButton = RightMenuFrame.SeasonFrame.SeasonButton
--- local ChristmasPackButton = RightFrame.ChristmasPackButton
 -- local CodeButton = RightMenuFrame.CodeFrame.CodeButton
 -- local SettingButton = RightMenuFrame.SettingFrame.SettingButton
-local OnlineQuestButton = RightFrame:FindFirstChild("OnlineQuestButton")
--- local LongDailyButton = RightFrame.LongDailyButton
--- local ValentineDailyButton = RightFrame.ValentineDailyButton
--- local LimitedPackButton = RightFrame.LimitedPackButtonVipFrame
--- local DailyRewardButton = RightFrame.DailyRewardButton
 -- local LimitedUgcButton = RightFrame.LimitedUgcButton
--- local DailyRewardDot = DailyRewardButton.Dot
--- local LongDailyButton = RightMenuFrame.LongDailyFrame.LongDailyButton
--- local ChristmasDailyButton = RightMenuFrame.ChristmasDailyFrame.ChristmasDailyButton
 
--- local SpinButton = RightMenuFrame.SpinFrame.SpinButton
--- local SpinDot = SpinButton.Dot
--- local LongDailyDot = LongDailyButton.Dot
--- local ValentineDailyDot = ValentineDailyButton.Dot
-local OnlineRewardButton = LeftMenuFrame.OnlineRewardFrame.OnlineRewardButton
 local IndexFrame = LeftMenuFrame:FindFirstChild("IndexFrame")
 local IndexButton = IndexFrame and IndexFrame:FindFirstChild("IndexButton")
 local IndexDot = IndexButton and IndexButton:FindFirstChild("Dot")
@@ -142,7 +121,6 @@ local currentTrophyValue = Instance.new("NumberValue")
 -- local currentTowerTokenValue = Instance.new("NumberValue")
 -- local currentDungeonTokenValue = Instance.new("NumberValue")
 
-local isOnlineRewardReady = false
 local UnstuckButton = BottomFrame:WaitForChild("UnstuckButton") :: TextButton
 local PickUpButton = BottomFrame:WaitForChild("PickUpButton") :: TextButton
 local PickUpShortcutLabel = PickUpButton:WaitForChild("ShortcutLabel") :: TextLabel
@@ -331,8 +309,21 @@ function HomeGuiController:Init()
     -- TowerTokenFrame.Visible = false
     -- DungeonTokenFrame.Visible = false
     -- EventButton.Visible = true
-    if OnlineQuestButton then
-        OnlineQuestButton.Visible = false
+    local secondaryMenu = RightFrame:FindFirstChild("MenuFrame_b")
+    for _, entry in {
+        LeftMenuFrame:FindFirstChild("OnlineRewardFrame"),
+        secondaryMenu and secondaryMenu:FindFirstChild("OnlineRewardFrame"),
+        RightMenuFrame:FindFirstChild("TradeFrame"),
+        secondaryMenu and secondaryMenu:FindFirstChild("TradeFrame"),
+        RightMenuFrame:FindFirstChild("SeasonFrame"),
+        RightFrame:FindFirstChild("OnlineQuestButton"),
+        RightFrame:FindFirstChild("HalloweenDailyButton"),
+        TopFrame:FindFirstChild("StarterPackButton"),
+        TopFrame:FindFirstChild("LimitedDailyPotionButton"),
+    } do
+        if entry:IsA("GuiObject") then
+            entry.Visible = false
+        end
     end
 
     -- OtherPositionTemplate.Visible = false
@@ -358,40 +349,6 @@ function HomeGuiController:Init()
         setTrophyAmountText(formatTrophyAmountText(currentTrophy))
     end
     settingsTopBarIcon = self:AddTopBarIcon(SettingsGui, TOP_BAR_ICON.SETTINGS, 2, 1.5)
-
-    -- local hasStarterPack = playerData.LimitedPurchaseHistory[Constants.PURCHASE_ID.STARTER_PACK]
-    -- if not hasStarterPack then
-    --     hasStarterPack = playerData.EventRewardClaimLog[Constants.EVENT_REWARD_ID.STARTER_PACK]
-    -- end
-    -- if hasStarterPack then
-    --     StarterPackButton.Visible = false
-    -- else
-    --     StarterPackButton.Visible = true
-    -- end
-
-    -- local hasAdvancedPack = playerData.LimitedPurchaseHistory[Constants.PURCHASE_ID.ADVANCED_PACK]
-    -- if not hasAdvancedPack then
-    --     hasAdvancedPack = playerData.EventRewardClaimLog[Constants.EVENT_REWARD_ID.ADVANCED_PACK]
-    -- end
-    -- if hasAdvancedPack then
-    --     AdvancedPackButton.Visible = false
-    -- else
-    --     if hasStarterPack then
-    --         AdvancedPackButton.Visible = true
-    --     else
-    --         AdvancedPackButton.Visible = false
-    --     end
-    -- end
-
-    -- local isAllDailyRewardClaimed = true
-    -- for i = 1, 7 do
-    --     local reward = playerData.DailyRewards[i]
-    --     if not reward.CompleteDate or not reward.IsClaimed then
-    --         isAllDailyRewardClaimed = false
-    --         break
-    --     end
-    -- end
-    -- DailyRewardButton.Visible = not isAllDailyRewardClaimed
 
     -- currentTowerTokenValue:GetPropertyChangedSignal("Value"):Connect(function()
     --     TowerTokenLabel.Text = NumberUtil.FormatNumberStartKWithDecimal(math.floor(currentTowerTokenValue.Value), 2)
@@ -464,17 +421,6 @@ function HomeGuiController:AddTopBarIcon(gui, image: string, order: number, imag
             return
         end
         if not gui.Enabled then
-            if gui.Name == "TradeMenuGui" then
-                local playerData = PlayerDataController:GetData()
-                if not playerData then warn("No player data found!") return end
-
-                -- if playerData.PlayTime < 20*60 then
-                --     NotificationClient.GreenNotify("Play 20min to Unlock")
-                --     icon:deselect()
-                --     return
-                -- end
-            end
-
             GuiAnimation.OpenGui(gui)
         end
     end)
@@ -613,42 +559,6 @@ function HomeGuiController:ShowPetNotif(enable: boolean)
     end
 end
 
--- function HomeGuiController:ShowLongDailyNotif(enable: boolean)
---     LongDailyDot.Visible = enable
--- end
-
-function HomeGuiController:ShowValentineDailyNotif(enable: boolean)
-    -- ValentineDailyButton removed from Studio scene
-end
-
--- function HomeGuiController:ShowStartPackButton(enable: boolean)
---     StarterPackButton.Visible = enable
--- end
-
--- function HomeGuiController:ShowAdvancedPackButton(enable: boolean)
---     AdvancedPackButton.Visible = enable
--- end
-
--- -- Right Gui
--- function HomeGuiController:UpdateDailyRewardNotif(strength: number)
---     local playerData = PlayerDataController:GetData()
---     if not playerData then warn("No player data found!") return end
-
---     local isDailyRewardAvailable = false
---     for _, dailyReward in playerData.DailyRewards do
---         if dailyReward.CompleteDate and not dailyReward.IsClaimed then
---             isDailyRewardAvailable = true
---             break
---         end
---     end
-
---     if isDailyRewardAvailable then
---         DailyRewardDot.Visible = true
---     else
---         DailyRewardDot.Visible = false
---     end
--- end
-
 function HomeGuiController:InviteFriend()
     local inviteOptions = Instance.new("ExperienceInviteOptions")
     inviteOptions.PromptMessage = "⚡ +10% Power Per Online Friend!"
@@ -662,120 +572,6 @@ function HomeGuiController:InviteFriend()
         SocialService:PromptGameInvite(localPlayer, inviteOptions)
     else
         NotificationClient.Notify(Constants.NOTIFICATION.CANNOT_INVITE_FRIEND)
-    end
-end
-
-function HomeGuiController:UpdateOnlineRewardButton(text: string, readyCount: number?)
-    -- OnlineRewardButton.TextLabel.Text = text
-    
-    readyCount = readyCount or 0
-    if readyCount == 0 then
-        OnlineRewardButton.CountLabel.Visible = false
-        isOnlineRewardReady = false
-    else
-        OnlineRewardButton.CountLabel.Visible = true
-        isOnlineRewardReady = true
-    end
-    OnlineRewardButton.CountLabel.Text = readyCount
-end
-
-function HomeGuiController:PlayOnlineRewardAnimation()
-    local originalSize = OnlineRewardButton.ImageLabel.Size
-
-    local rotateTweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, 0, false, 0)
-    local scaleTweenInfo = TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, 0, false, 0)
-    local rotate1Tween = TweenService:Create(OnlineRewardButton.ImageLabel, rotateTweenInfo, {Rotation = 20})
-    local rotate2Tween = TweenService:Create(OnlineRewardButton.ImageLabel, rotateTweenInfo, {Rotation = -20})
-    local rotateBackTween = TweenService:Create(OnlineRewardButton.ImageLabel, rotateTweenInfo, {Rotation = 0})
-    local scale1Tween = TweenService:Create(OnlineRewardButton.ImageLabel, scaleTweenInfo, {Size = UDim2.new(originalSize.X.Scale * 1.1, 0, originalSize.Y.Scale * 1.1, 0)})
-    local scaleBackTween = TweenService:Create(OnlineRewardButton.ImageLabel, scaleTweenInfo, {Size = originalSize})
-
-    scale1Tween:Play()
-    rotate1Tween:Play()
-    rotate1Tween.Completed:Wait()
-
-    rotate2Tween:Play()
-    rotate2Tween.Completed:Wait()
-
-    rotate1Tween:Play()
-    rotate1Tween.Completed:Wait()
-
-    rotate2Tween:Play()
-    rotate2Tween.Completed:Wait()
-
-    rotate1Tween:Play()
-    rotate1Tween.Completed:Wait()
-
-    scaleBackTween:Play()
-    rotateBackTween:Play()
-end
-
-local function updateLockButton(button, isLocked: boolean)
-    local lockCover = button.LockCover
-    lockCover.Visible = isLocked
-
-    if isLocked then
-        button.ImageLabel.ImageColor3 = Color3.fromRGB(60, 60, 60)
-    else
-        button.ImageLabel.ImageColor3 = Color3.fromRGB(255, 255, 255)
-    end
-end
-
-
-local function updateTradeSystemLockState()
-    -- TradeButton.LockCover.Visible = GameDataUtil.IsTradeSystemLocked(PlayerDataController:GetData())
-    updateLockButton(TradeButton, GameDataUtil.IsTradeSystemLocked(PlayerDataController:GetData()))
-end
-
--- local function updatePrincessSystemLockState()
---     PrincessButton.LockCover.Visible = GameDataUtil.IsSeasonSystemLocked(PlayerDataController:GetData())
--- end
-
--- local function updateSeasonSystemLockState()
---     SeasonButton.LockCover.Visible = GameDataUtil.IsSeasonSystemLocked(PlayerDataController:GetData())
--- end
-
-function HomeGuiController:UpdateOnlineQuestTimeLabel(timeString: string)
-    if not OnlineQuestButton then return end
-    OnlineQuestButton.TimeLabel.Text = timeString
-end
-
-function HomeGuiController:ShowDailyRewardNotif(_enable: boolean)
-    -- Kept as a no-op for callers after the DailyRewards topbar entry was removed.
-end
-
--- local function updateChristmasPackButton()
---     local playerData = PlayerDataController:GetData()
---     if not playerData then return end
-
---     ChristmasPackButton.Visible = not playerData.LimitedPurchaseHistory[Constants.PURCHASE_ID.LIMITED_CHRISTMAS_PACK]
--- end
-
--- local function updateHalloweenDailyButton()
---     local playerData = PlayerDataController:GetData()
---     if not playerData then return end
-
---     local isAllClaimed = true
---     for _, reward in playerData.HalloweenDailyRewards do
---         if reward.IsClaimed == false then
---             isAllClaimed = false
---             break
---         end
---     end
-
---     if isAllClaimed then
---         HalloweenDailyButton.Visible = false
---     else
---         HalloweenDailyButton.Visible = true
---     end
--- end
-
-
-function HomeGuiController:UpdateStarterPackButton(visible: boolean, text: string)
-    -- Temporarily disabled: never expose the starter pack entry point.
-    StarterPackButton.Visible = false
-    if visible then
-        StarterPackButton.TimeLabel.Text = text
     end
 end
 
@@ -878,11 +674,11 @@ function HomeGuiController:KnitStart()
         bindBackpackInventory(existingBackpackGui)
     end
 
-    -- Trade 功能已停用：保留旧资源但移除所有玩家入口。
-    RightMenuFrame.TradeFrame.Visible = false
-    local tradeMenuGui = PlayerGUI:FindFirstChild("TradeMenuGui")
-    if tradeMenuGui then
-        tradeMenuGui.Enabled = false
+    for _, name in { "TradeMenuGui", "TradeRequestGui" } do
+        local retiredGui = PlayerGUI:FindFirstChild(name)
+        if retiredGui and retiredGui:IsA("ScreenGui") then
+            retiredGui.Enabled = false
+        end
     end
 
     PickUpButton.Activated:Connect(activatePickUpTarget)
@@ -910,17 +706,6 @@ function HomeGuiController:KnitStart()
         end
 
         activatePickUpTarget(true)
-    end)
-
-    StarterPackButton.Activated:Connect(function()
-        if not StarterGui:FindFirstChild("LimitedStarterPackGui") then return end
-        if not GuiHelper.CanOpenGui() then return end
-        local LimitedStarterPackGuiController = Knit.GetController("LimitedStarterPackGuiController")
-        if LimitedStarterPackGuiController:IsOpen() then
-            LimitedStarterPackGuiController:CloseGui()
-        else
-            LimitedStarterPackGuiController:OpenGui()
-        end
     end)
 
     -- AddJurassicTokenButton.Activated:Connect(function()
@@ -957,50 +742,9 @@ function HomeGuiController:KnitStart()
     --     self:InviteFriend()
     -- end)
 
-    -- LongDailyButton.Activated:Connect(function()
-    --     if not GuiHelper.CanOpenGui() then return end
-    --     local LongDailyRewardGuiController = Knit.GetController("LongDailyRewardGuiController")
-    --     if LongDailyRewardGuiController:IsOpen() then
-    --         LongDailyRewardGuiController:CloseGui()
-    --     else
-    --         LongDailyRewardGuiController:OpenGui()
-    --     end
-    -- end)
-
-    -- ValentineDailyButton.Activated:Connect(function()
-    --     if not GuiHelper.CanOpenGui() then return end
-    --     local ValentineDailyRewardGuiController = Knit.GetController("ValentineDailyRewardGuiController")
-    --     if ValentineDailyRewardGuiController:IsOpen() then
-    --         ValentineDailyRewardGuiController:CloseGui()
-    --     else
-    --         ValentineDailyRewardGuiController:OpenGui()
-    --     end
-    -- end)
-
     InviteButon.Activated:Connect(function()
         if not GuiHelper.CanOpenGui() then return end
         self:InviteFriend()
-    end)
-
-    -- LimitedPackButton.Activated:Connect(function()
-    --     if not GuiHelper.CanOpenGui() then return end
-    --     local LimitedPackListGuiController = Knit.GetController("LimitedPackListGuiController")
-    --     if LimitedPackListGuiController:IsOpen() then
-    --         LimitedPackListGuiController:CloseGui()
-    --     else
-    --         LimitedPackListGuiController:OpenGui()
-    --     end
-    -- end)
-
-    OnlineRewardButton.Activated:Connect(function()
-        if not StarterGui:FindFirstChild("OnlineRewardGui") then return end
-        if not GuiHelper.CanOpenGui() then return end
-        local OnlineRewardGuiController = Knit.GetController("OnlineRewardGuiController")
-        if OnlineRewardGuiController:IsOpen() then
-            OnlineRewardGuiController:CloseOnlineRewardGui()
-        else
-            OnlineRewardGuiController:OpenOnlineRewardGui()
-        end
     end)
 
     if IndexButton then
@@ -1020,17 +764,6 @@ function HomeGuiController:KnitStart()
         end)
     end
 
-    -- DailyRewardButton.Activated:Connect(function()
-    --     if not GuiHelper.CanOpenGui() then return end
-
-    --     local DailyRewardGuiController = Knit.GetController("DailyRewardGuiController")
-    --     if DailyRewardGuiController:IsOpen() then
-    --         DailyRewardGuiController:CloseGui()
-    --     else
-    --         DailyRewardGuiController:OpenGui()
-    --     end
-    -- end)
-
     -- EventButton.Activated:Connect(function()
     --     if not GuiHelper.CanOpenGui() then return end
     --     local EventGuiController = Knit.GetController("EventGuiController")
@@ -1038,16 +771,6 @@ function HomeGuiController:KnitStart()
     --         EventGuiController:CloseGui()
     --     else
     --         EventGuiController:OpenGui()
-    --     end
-    -- end)
-
-    -- OnlineQuestButton.Activated:Connect(function()
-    --     if not GuiHelper.CanOpenGui() then return end
-    --     local OnlineQuestGuiController = Knit.GetController("OnlineQuestGuiController")
-    --     if OnlineQuestGuiController:IsOpen() then
-    --         OnlineQuestGuiController:CloseGui()
-    --     else
-    --         OnlineQuestGuiController:OpenGui()
     --     end
     -- end)
 
@@ -1097,21 +820,6 @@ function HomeGuiController:KnitStart()
         end
     end)
 
-    SeasonButton.Activated:Connect(function()
-        if not StarterGui:FindFirstChild("SeasonGui") then return end
-        if not GuiHelper.CanOpenGui() then return end
-        -- if GameDataUtil.IsSeasonSystemLocked(PlayerDataController:GetData()) then
-        --     NotificationClient.Notify("🔒 Complete tutorial to unlock")
-        --     return
-        -- end
-        local SeasonGuiController = Knit.GetController("SeasonGuiController")
-        if SeasonGuiController:IsOpen() then
-            SeasonGuiController:CloseGui()
-        else
-            SeasonGuiController:OpenGui()
-        end
-    end)
-
     HomeButton.Activated:Connect(function()
         if not GuiHelper.CanWorkInFight() then return end
         if not GuiHelper.CanOpenGui() then return end
@@ -1138,38 +846,6 @@ function HomeGuiController:KnitStart()
         MarketplaceService:PromptGamePassPurchase(localPlayer, PurchaseDataHelper.GetProductId(Constants.GAMEPASS.DOUBLE_WINS))
     end)
 
-    -- StarterPackButton.Activated:Connect(function()
-    --     if not GuiHelper.CanOpenGui() then return end
-
-    --     local StarterPackGuiController = Knit.GetController("StarterPackGuiController")
-    --     if StarterPackGuiController:IsOpen() then
-    --         StarterPackGuiController:CloseGui()
-    --     else
-    --         StarterPackGuiController:OpenGui()
-    --     end
-    -- end)
-
-    -- AdvancedPackButton.Activated:Connect(function()
-    --     if not GuiHelper.CanOpenGui() then return end
-
-    --     local AdvancedPackGuiController = Knit.GetController("AdvancedPackGuiController")
-    --     if AdvancedPackGuiController:IsOpen() then
-    --         AdvancedPackGuiController:CloseGui()
-    --     else
-    --         AdvancedPackGuiController:OpenGui()
-    --     end
-    -- end)
-
-    -- HalloweenDailyButton.Activated:Connect(function()
-    --     if not GuiHelper.CanOpenGui() then return end
-    --     local HalloweenDailyRewardGuiController = Knit.GetController("HalloweenDailyRewardGuiController")
-    --     if HalloweenDailyRewardGuiController:IsOpen() then
-    --         HalloweenDailyRewardGuiController:CloseGui()
-    --     else
-    --         HalloweenDailyRewardGuiController:OpenGui()
-    --     end
-    -- end)
-
     local PlayerDataService = Knit.GetService("PlayerDataService")
 
     PlayerDataService.WinsChanged:Connect(function(result)
@@ -1183,13 +859,6 @@ function HomeGuiController:KnitStart()
             self:UpdateCurrency("Trophy", result)
         end)
     end)
-
-    PlayerDataService.RebirthsChanged:Connect(function(result)
-        task.delay(0, function()
-            updateTradeSystemLockState()
-        end)
-    end)
-
 
     -- PlayerDataService.DiamondsChanged:Connect(function(result)
     -- end)
@@ -1232,11 +901,9 @@ function HomeGuiController:KnitStart()
     --     if areaName == Constants.AREA_NAME.DUNGEON then
     --         DungeonTokenFrame.Visible = true
     --         EventButton.Visible = false
-    --         OnlineQuestButton.Visible = false
     --     else
     --         DungeonTokenFrame.Visible = false
     --         EventButton.Visible = true
-    --         OnlineQuestButton.Visible = true
     --     end
     -- end)
 
@@ -1249,7 +916,6 @@ function HomeGuiController:KnitStart()
     end):catch(function(err)
         warn("HomeGuiController: failed to get player Luck", err)
     end)
-    updateTradeSystemLockState()
 
     -- DoubleSpeedButton.Activated:Connect(function()
     --     if not playerData.GamePasses[Constants.GAMEPASS.DOUBLE_SPEED] then
@@ -1258,21 +924,6 @@ function HomeGuiController:KnitStart()
     --         NotificationClient.GreenNotify("Already Owned!")
     --     end
     -- end)
-
-    -- local HalloweenDailyRewardService = Knit.GetService("HalloweenDailyRewardService")
-    -- HalloweenDailyRewardService.ClaimRewardEvent:Connect(function(player, index, isSuccess, resultText)
-    --     task.delay(0, function()
-    --         updateHalloweenDailyButton()
-    --     end)
-    -- end)
-
-    task.spawn(function()
-        while task.wait(3) do
-            if isOnlineRewardReady then
-                self:PlayOnlineRewardAnimation()
-            end
-        end
-    end)
 
     updateGamepassPurchaseFrame()
 

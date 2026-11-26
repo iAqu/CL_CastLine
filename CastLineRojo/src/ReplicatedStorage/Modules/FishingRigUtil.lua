@@ -1,3 +1,6 @@
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+
 local FishingRigUtil = {}
 
 local function prepareParts(model: Instance)
@@ -171,19 +174,53 @@ function FishingRigUtil.Create(template: Model, character: Model, rodTemplate: T
 	return rig
 end
 
+local function getGroundY(surface: Vector3): number
+	local excluded = {}
+	for _, player in ipairs(Players:GetPlayers()) do
+		if player.Character then
+			table.insert(excluded, player.Character)
+		end
+	end
+	local params = RaycastParams.new()
+	params.FilterType = Enum.RaycastFilterType.Exclude
+	params.FilterDescendantsInstances = excluded
+	params.RespectCanCollide = true
+	params.IgnoreWater = true
+	local hit = Workspace:Raycast(surface + Vector3.yAxis * 8, Vector3.yAxis * -24, params)
+	return if hit then hit.Position.Y else surface.Y
+end
+
+local function getSoleOffset(root: BasePart, humanoid: Humanoid): number
+	local rig = root.Parent
+	local lowest = math.huge
+	for _, name in ipairs({ "LeftFoot", "RightFoot" }) do
+		local foot = rig and rig:FindFirstChild(name)
+		if foot and foot:IsA("BasePart") then
+			local frame = root.CFrame:ToObjectSpace(foot.CFrame)
+			local half = foot.Size / 2
+			local extent = math.abs(frame.RightVector.Y) * half.X
+				+ math.abs(frame.UpVector.Y) * half.Y
+				+ math.abs(frame.LookVector.Y) * half.Z
+			lowest = math.min(lowest, frame.Position.Y - extent)
+		end
+	end
+	return if lowest < math.huge then -lowest else humanoid.HipHeight + root.Size.Y / 2
+end
+
 function FishingRigUtil.GetSpotRootCFrame(part: BasePart, root: BasePart, humanoid: Humanoid): (CFrame, Vector3, number)
 	local forward = part.CFrame.LookVector * Vector3.new(1, 0, 1)
 	assert(forward.Magnitude >= 0.001, "FishingStartPart must face horizontally")
-	local ground = part.Position + part.CFrame.UpVector * part.Size.Y / 2
-	local position = ground + Vector3.yAxis * (humanoid.HipHeight + root.Size.Y / 2)
-	return CFrame.lookAt(position, position + forward), forward.Unit, ground.Y
+	local surface = part.Position + part.CFrame.UpVector * (part.Size.Y / 2)
+	local groundY = getGroundY(surface)
+	local position = Vector3.new(surface.X, groundY + getSoleOffset(root, humanoid), surface.Z)
+	return CFrame.lookAt(position, position + forward), forward.Unit, groundY
 end
 
 function FishingRigUtil.PlaceAtFishingSpot(rig: Model, part: BasePart)
 	local root = assert(rig.PrimaryPart, "FishingRig.PrimaryPart is missing")
 	local humanoid = assert(rig:FindFirstChildOfClass("Humanoid"), "FishingRig.Humanoid is missing")
 	local target, forward, groundY = FishingRigUtil.GetSpotRootCFrame(part, root, humanoid)
-	rig:PivotTo(target)
+	rig:PivotTo(target * root.CFrame:ToObjectSpace(rig:GetPivot()))
 	return target.Position, forward, groundY
 end
 

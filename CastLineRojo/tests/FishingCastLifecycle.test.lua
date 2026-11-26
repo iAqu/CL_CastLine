@@ -184,8 +184,12 @@ end
 
 do
 	local top = {
+		Name = "Top",
 		Size = vector(100, 4, 100),
-		CFrame = { PointToWorldSpace = function(_, point) return point + vector(0, 100, 0) end },
+		CFrame = {
+			PointToWorldSpace = function(_, point) return point + vector(0, 100, 0) end,
+			PointToObjectSpace = function(_, point) return point - vector(0, 100, 0) end,
+		},
 		IsA = function(_, className) return className == "BasePart" end,
 	}
 	local function container(name, child)
@@ -213,6 +217,55 @@ do
 		cast:_waterFeedback(0, vector(3, 95, 4), 1, true, true)
 		assert(feedback == 2, "Splash and ripple must both use the water surface")
 	end
+	local secondTop = {
+		Name = "Top",
+		Size = top.Size,
+		CFrame = { PointToObjectSpace = function(_, point) return point - vector(0, 100, 99) end },
+		IsA = top.IsA,
+	}
+	water.GetChildren = function() return { top, secondTop } end
+	assert(modules.water.IsPointSubmerged(vector(0, 2, 90)), "The second water panel must activate the underwater effects")
+	assert(not modules.water.IsPointSubmerged(vector(0, 104, 90)), "Above either water panel stays clear")
+end
+
+do
+	local surface = vector(3, 102, 4)
+	local savedFrame, savedApply = environment.CFrame, Elastic.Apply
+	local savedYAxis, savedOne = environment.Vector3.yAxis, environment.Vector3.one
+	environment.Vector3.yAxis = vector(0, 1, 0)
+	environment.Vector3.one = vector(1, 1, 1)
+	environment.CFrame = {
+		new = function(position)
+			return setmetatable({ Position = position }, { __mul = function(frame) return frame end })
+		end,
+		Angles = function() return {} end,
+	}
+	Elastic.Apply = function(owner, frame) owner.baitPosition = frame.Position end
+	local retryCount = 0
+	local cast = setmetatable({
+		phase = "Waiting",
+		landedAt = 10,
+		roundRetryAt = 10,
+		fishingDepth = 100,
+		baitBaseSize = vector(1, 3, 1),
+		wind = { Volume = 1, Stop = function() end },
+		_waterTarget = function() return surface end,
+		_requestBiteRound = function() retryCount += 1 end,
+		_presentBait = function(_, phase) assert(phase == "Settling") end,
+	}, Sequence)
+	cast:_updateBait(10, 0)
+	assert(cast.baitPosition.Y == surface.Y, "Start the descent at the actual water surface")
+	cast:_updateBait(10.6, 0.6)
+	assert(math.abs(cast.baitPosition.Y - (surface.Y - 50)) < 1e-6, "Bait should be halfway down after 0.6 seconds")
+	assert(math.abs(cast:_diveOffset(10.6) - (cast.baitPosition.Y - surface.Y)) < 1e-6, "Camera uses the same descent")
+	cast:_updateBait(11.2, 0.6)
+	assert(cast.baitPosition.Y == surface.Y - 100, "Complete the descent before a delayed round arrives")
+	cast:_updateBait(12, 0.8)
+	assert(cast.baitPosition.Y == surface.Y - 100 and retryCount == 4, "Keep depth while retrying the round")
+	cast.fishingDepth = 0
+	assert(cast:_landingPosition(10.5, surface).Y == surface.Y, "Zero depth restores the surface position")
+	environment.CFrame, Elastic.Apply = savedFrame, savedApply
+	environment.Vector3.yAxis, environment.Vector3.one = savedYAxis, savedOne
 end
 
 for _, result in ipairs({

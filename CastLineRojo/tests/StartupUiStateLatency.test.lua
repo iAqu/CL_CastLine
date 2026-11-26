@@ -71,9 +71,6 @@ assert(
 local avatarControllers = {
 	"src/StarterPlayer/StarterPlayerScripts/Controllers/PlayerController.lua",
 	"src/StarterPlayer/StarterPlayerScripts/Controllers/GUI/InviteGuiController.lua",
-	"src/StarterPlayer/StarterPlayerScripts/Controllers/GUI/TradeGuiController.lua",
-	"src/StarterPlayer/StarterPlayerScripts/Controllers/GUI/TradeRequestGuiController.lua",
-	"src/StarterPlayer/StarterPlayerScripts/Controllers/GUI/TradeMenuGuiController.lua",
 	"src/StarterPlayer/StarterPlayerScripts/Controllers/GUI/StoreGiftMenuGuiController.lua",
 }
 for _, path in ipairs(avatarControllers) do
@@ -86,21 +83,11 @@ end
 
 local nonBlockingControllerModules = {
 	"src/StarterPlayer/StarterPlayerScripts/Controllers/AtmosphereController.lua",
-	"src/StarterPlayer/StarterPlayerScripts/Controllers/GiftBoxController.lua",
 	"src/StarterPlayer/StarterPlayerScripts/Controllers/LightingController.lua",
 	"src/StarterPlayer/StarterPlayerScripts/Controllers/PlayerStateGuiController.lua",
-	"src/StarterPlayer/StarterPlayerScripts/Controllers/GUI/LimitedAdvancedPackGuiController.lua",
-	"src/StarterPlayer/StarterPlayerScripts/Controllers/GUI/LimitedChristmasPackGuiController.lua",
-	"src/StarterPlayer/StarterPlayerScripts/Controllers/GUI/LimitedPackDetailGuiController.lua",
-	"src/StarterPlayer/StarterPlayerScripts/Controllers/GUI/LimitedSquidPackGuiController.lua",
-	"src/StarterPlayer/StarterPlayerScripts/Controllers/GUI/LimitedStarterPackGuiController.lua",
 	"src/StarterPlayer/StarterPlayerScripts/Controllers/GUI/RandomPotionGuiController.lua",
-	"src/StarterPlayer/StarterPlayerScripts/Controllers/GUI/SeasonGuiController.lua",
-	"src/StarterPlayer/StarterPlayerScripts/Controllers/GUI/SpinningWheelController.lua",
 	"src/StarterPlayer/StarterPlayerScripts/Controllers/GUI/StoreGiftMenuGuiController.lua",
 	"src/StarterPlayer/StarterPlayerScripts/Controllers/GUI/TouchGuiController.lua",
-	"src/StarterPlayer/StarterPlayerScripts/Controllers/GUI/TradeMenuGuiController.lua",
-	"src/StarterPlayer/StarterPlayerScripts/Controllers/GUI/TradeRequestGuiController.lua",
 }
 for _, path in ipairs(nonBlockingControllerModules) do
 	local source = read(path)

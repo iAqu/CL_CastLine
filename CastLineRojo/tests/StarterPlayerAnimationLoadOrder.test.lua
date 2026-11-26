@@ -1,6 +1,5 @@
 local files = {
 	"src/StarterPlayer/StarterPlayerScripts/Controllers/GUI/EggHatchGuiController.lua",
-	"src/StarterPlayer/StarterPlayerScripts/Controllers/GiftBoxController.lua",
 	"src/StarterPlayer/StarterPlayerScripts/Controllers/PlayerAnimController.lua",
 	"src/StarterPlayer/StarterPlayerScripts/Controllers/PetFollowController.lua",
 }

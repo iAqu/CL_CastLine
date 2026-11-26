@@ -6,7 +6,9 @@ local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
 local Knit = require(ReplicatedStorage.Packages.Knit)
+local GameplayInputGate = require(ReplicatedStorage.Modules.GameplayInputGate)
 local NotificationClient = require(ReplicatedStorage.Modules.NotificationClient)
+local WaterSurfaceUtil = require(ReplicatedStorage.Modules.WaterSurfaceUtil)
 
 local WARNING_DELAY = 0
 local UNDERWATER_TWEEN_INFO = TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
@@ -25,6 +27,12 @@ local UNDERWATER_PROPERTIES = {
 	Saturation = -0.25,
 	TintColor = UNDERWATER_COLOR,
 }
+local FISHING_UNDERWATER_PROPERTIES = {
+	Brightness = 0.06,
+	Contrast = 0,
+	Saturation = 0,
+	TintColor = Color3.fromRGB(205, 225, 255),
+}
 local SURFACE_PROPERTIES = {
 	Brightness = 0,
 	Contrast = 0,
@@ -39,36 +47,17 @@ local WaterDrownController = Knit.CreateController {
 	_ColorCorrection = nil,
 	_Blur = nil,
 	_Underwater = false,
+	_FishingUnderwater = false,
 	_EffectTween = nil,
 	_BlurTween = nil,
 	_WarningFrame = nil,
 	_PendingDroppedItemCount = 0,
 }
 
-local function getWaterTop(): BasePart?
-	local areas = Workspace:FindFirstChild("Areas")
-	local water = areas and areas:FindFirstChild("Water")
-	local top = water and water:FindFirstChild("Top")
-	if top and top:IsA("BasePart") then
-		return top
-	end
-	return nil
-end
-
-local function isPointBelowWaterSurface(part: BasePart, point: Vector3): boolean
-	local localPoint = part.CFrame:PointToObjectSpace(point)
-	local halfSize = part.Size * 0.5
-	return math.abs(localPoint.X) <= halfSize.X
-		and math.abs(localPoint.Z) <= halfSize.Z
-		and localPoint.Y <= halfSize.Y
-end
-
-function WaterDrownController:IsPointSubmerged(worldPosition: Vector3): boolean
-	local waterTop = getWaterTop()
-	return waterTop ~= nil and isPointBelowWaterSurface(waterTop, worldPosition)
-end
-
 function WaterDrownController:_ensureEffects()
+	if self._ColorCorrection and self._ColorCorrection.Parent == Lighting and self._Blur and self._Blur.Parent == Lighting then
+		return true
+	end
 	local colorCorrection = Lighting:FindFirstChild(COLOR_CORRECTION_NAME)
 	if not colorCorrection or not colorCorrection:IsA("ColorCorrectionEffect") then
 		warn("WaterDrownController: Lighting.UnderwaterColorCorrection is missing")
@@ -119,11 +108,13 @@ function WaterDrownController:_ensureWarningGui()
 	self._WarningFrame = frame
 end
 
-function WaterDrownController:_setUnderwater(enabled: boolean)
-	if self._Underwater == enabled then
+function WaterDrownController:_setUnderwater(enabled: boolean, fishing: boolean?)
+	local fishingUnderwater = enabled and fishing == true
+	if self._Underwater == enabled and self._FishingUnderwater == fishingUnderwater then
 		return
 	end
 	self._Underwater = enabled
+	self._FishingUnderwater = fishingUnderwater
 	if not self:_ensureEffects() then
 		return
 	end
@@ -143,7 +134,9 @@ function WaterDrownController:_setUnderwater(enabled: boolean)
 
 	colorCorrection.Enabled = true
 	blur.Enabled = true
-	self._EffectTween = TweenService:Create(colorCorrection, UNDERWATER_TWEEN_INFO, enabled and UNDERWATER_PROPERTIES or SURFACE_PROPERTIES)
+	local correction = if fishingUnderwater then FISHING_UNDERWATER_PROPERTIES
+		elseif enabled then UNDERWATER_PROPERTIES else SURFACE_PROPERTIES
+	self._EffectTween = TweenService:Create(colorCorrection, UNDERWATER_TWEEN_INFO, correction)
 	self._BlurTween = TweenService:Create(blur, UNDERWATER_TWEEN_INFO, { Size = enabled and 8 or 0 })
 	self._EffectTween:Play()
 	self._BlurTween:Play()
@@ -257,10 +250,11 @@ function WaterDrownController:KnitStart()
 		end)
 	end)
 
-	RunService:BindToRenderStep("SeaDigWaterDrownVisuals", Enum.RenderPriority.Camera.Value + 1, function()
+	-- 常规钓鱼和新手教学分别在 Camera + 2、Camera + 3 更新。
+	RunService:BindToRenderStep("SeaDigWaterDrownVisuals", Enum.RenderPriority.Camera.Value + 4, function()
 		local camera = Workspace.CurrentCamera
-		local cameraUnderwater = camera and self:IsPointSubmerged(camera.CFrame.Position) or false
-		self:_setUnderwater(cameraUnderwater)
+		local cameraUnderwater = camera and WaterSurfaceUtil.IsPointSubmerged(camera.CFrame.Position) or false
+		self:_setUnderwater(cameraUnderwater, cameraUnderwater and GameplayInputGate.IsActive("Fishing"))
 		self:_updateWarning()
 	end)
 end

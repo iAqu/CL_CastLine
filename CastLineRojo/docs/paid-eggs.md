@@ -2,7 +2,7 @@
 
 商店仅启用 `LimitedEggFrame.Egg_R_1`。三档商品沿用 PurchaseData 的既有 ID、图标及价格：1 个 79、3 个 199、10 个 649 Robux。`PaidEggConfig` 是鱼池和概率展示的共同来源，修改概率时必须同时提高配置版本；已经开始的订单使用冻结的配置。
 
-鱼池为 Fish_001～Fish_005，分别对应 Neon Cyber、Flamingo、Hell Shark、Undead Megalodon、Galaxy Megalodon，概率 55%／30%／10%／4.5%／0.5%。变异必出，Golden／Diamond／Rainbow 权重为 10／5／2，独立于鱼种且不受幸运加成影响。商店显示 Studio 美术原有的概率文字。
+鱼池为 Fish_001～Fish_005，分别对应 Neon Cyber、Flamingo、Hell Shark、Undead Megalodon、Galaxy Megalodon，概率 55%／30%／10%／4.5%／0.5%。变异必出，Golden／Diamond／Rainbow 权重为 10／5／2，独立于鱼种且不受幸运加成影响。商店通过 `PaidEggConfig` 更新现有概率标签。
 
 重量复用 TrainingProgress.CalculateFishWeight：从 DefaultWeight 开始按 3.375 倍分档，取不超过训练捕获上限的最大档；基础重量高于上限时取上限。赠送使用收礼人的训练上限。发起购买时冻结收件人、重量上限、鱼池及变异权重，不预先抽奖，也不向客户端暴露未付款的随机结果。
 

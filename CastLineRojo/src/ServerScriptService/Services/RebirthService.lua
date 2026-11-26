@@ -31,10 +31,6 @@ function RebirthService:Rebirth(player: Player): string
     local cost = RebirthDataHelper.GetRebirthCost(nextRebirth)
     if not cost then warn("Rebirth.Rebirth: 超过最大重生次数") return end
 
-    if currentRebirth == 0 then
-        Knit.GetService("SettingsService"):EnableTrade(player, true)
-    end
-
     -- local canAfford = profile.Data.Wins >= cost
     local canAfford = profile.Data.Strength >= cost
     if not canAfford then return "Not enough strength!" end

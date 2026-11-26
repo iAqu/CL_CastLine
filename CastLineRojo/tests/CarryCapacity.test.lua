@@ -5,13 +5,12 @@ local function read(path: string): string
 	return source
 end
 
-local config = read("src/ReplicatedStorage/Modules/UpgradeShopConfig.lua")
 local home = read("src/StarterPlayer/StarterPlayerScripts/Controllers/GUI/HomeGuiController.lua")
 local playerData = read("src/ServerScriptService/Services/PlayerDataService.lua")
 
 assert(not io.open("src/ServerScriptService/Services/CarryCapacityService.lua", "r"), "Retired capacity service must be removed")
 assert(not io.open("src/ReplicatedStorage/Modules/CarryCapacityUtil.lua", "r"), "Retired capacity module must be removed")
-assert(not config:find("CARRY_WEIGHT", 1, true), "Old carry upgrade cannot be purchased")
+assert(not io.open("src/ServerScriptService/Services/UpgradeService.lua", "r"), "Old capacity upgrades must have no purchase service")
 assert(not home:find("BackpackPanel", 1, true), "Home must not bind the retired capacity panel")
 assert(playerData:find("TotalItemWeightTenths", 1, true), "Cumulative catch weight must remain available")
 

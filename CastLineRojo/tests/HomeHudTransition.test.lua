@@ -7,9 +7,15 @@ function vector.new(x, y)
     return setmetatable({ X = x, Y = y }, vectorMetatable)
 end
 vector.zero = vector.new(0, 0)
-vectorMetatable.__add = function(a, b) return vector.new(a.X + b.X, a.Y + b.Y) end
-vectorMetatable.__sub = function(a, b) return vector.new(a.X - b.X, a.Y - b.Y) end
-vectorMetatable.__mul = function(a, b) return vector.new(a.X * b.X, a.Y * b.Y) end
+function vectorMetatable.__add(a, b)
+    return vector.new(a.X + b.X, a.Y + b.Y)
+end
+function vectorMetatable.__sub(a, b)
+    return vector.new(a.X - b.X, a.Y - b.Y)
+end
+function vectorMetatable.__mul(a, b)
+    return vector.new(a.X * b.X, a.Y * b.Y)
+end
 
 local function position(xScale, xOffset, yScale, yOffset)
     return { X = { Scale = xScale, Offset = xOffset }, Y = { Scale = yScale, Offset = yOffset } }
@@ -21,7 +27,11 @@ local function signal()
     function event:Connect(callback)
         local key = {}
         listeners[key] = callback
-        return { Disconnect = function() listeners[key] = nil end }
+        return {
+            Disconnect = function()
+                listeners[key] = nil
+            end,
+        }
     end
     function event:Once(callback)
         local connection
@@ -40,7 +50,7 @@ end
 
 local activeTweens = {}
 local tweenService = {}
-function tweenService:Create(object, _info, properties)
+function tweenService.Create(_, object, _info, properties)
     local tween = { Completed = signal(), Goal = properties.Position }
     function tween:Play()
         activeTweens[object] = self
@@ -61,7 +71,8 @@ local services = {
     TweenService = tweenService,
     Workspace = { CurrentCamera = { ViewportSize = vector.new(800, 600) } },
 }
-local module = assert(load(source, sourcePath, "t", setmetatable({
+local chunk, loadError = loadstring(source, sourcePath)
+local module = setfenv(assert(chunk, loadError), setmetatable({
     game = { GetService = function(_, name) return services[name] end },
     Vector2 = vector,
     UDim2 = { new = position },
@@ -71,7 +82,7 @@ local module = assert(load(source, sourcePath, "t", setmetatable({
         EasingDirection = { In = "In", Out = "Out" },
         PlaybackState = { Completed = "Completed" },
     },
-}, { __index = getfenv() })))()
+}, { __index = getfenv() }))()
 
 local function element(name, x, y, width, height, anchorX, anchorY)
     local properties = {
@@ -137,11 +148,13 @@ end
 top.Interactable = false
 local rightHome = right.Position
 local restored = 0
-local transition = module.new(home, function() restored += 1 end)
+local transition = module.new(home, function()
+    restored += 1
+end)
 
 transition.SetHidden(true)
-assert(not transition.IsInteractive() and not left.Interactable and not tooltip.Visible)
-assert(activeTweens[left].Goal.X.Offset == -112)
+assert(not transition.IsInteractive() and not left.Interactable and not tooltip.Visible, "Collapse must block input")
+assert(activeTweens[left].Goal.X.Offset == -112, "The left panel must clear the screen")
 assert(activeTweens[right].Goal.X.Scale == 1 and activeTweens[right].Goal.X.Offset == 132,
     "The right edge must clear a button extending past the left side of its parent")
 assert(activeTweens[top].Goal.Y.Offset == -102 and activeTweens[bottom].Goal.Y.Offset == 152,
@@ -150,18 +163,20 @@ local effect = element("RewardParticle", 0, 0, 20, 20, 0, 0)
 add(home, effect)
 assert(not effect.Visible, "New decorations must stay hidden behind an open window")
 tooltip.Visible = true
-assert(not tooltip.Visible)
+assert(not tooltip.Visible, "A hover event must not reveal the tooltip while collapsed")
 finishTweens()
 
 transition.SetHidden(false)
-assert(not transition.IsInteractive() and not right.Interactable and not tooltip.Visible)
+assert(not transition.IsInteractive() and not right.Interactable and not tooltip.Visible,
+    "Input and decorations must stay suppressed during the return animation")
 transition.SetHidden(true)
 finishTweens()
-assert(restored == 0 and not right.Interactable)
+assert(restored == 0 and not right.Interactable, "A cancelled return animation must not restore input")
 transition.SetHidden(false)
 finishTweens()
-assert(restored == 1 and transition.IsInteractive())
-assert(right.Position == rightHome and right.Interactable and not top.Interactable)
+assert(restored == 1 and transition.IsInteractive(), "The final return must restore input once")
+assert(right.Position == rightHome and right.Interactable and not top.Interactable,
+    "The final return must preserve original positions and interaction flags")
 assert(tooltip.Visible and effect.Visible and not home.Enabled,
     "Showing the HUD must preserve external ScreenGui.Enabled and restore decorations")
 

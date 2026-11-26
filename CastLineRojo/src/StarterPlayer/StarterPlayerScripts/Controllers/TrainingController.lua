@@ -9,6 +9,7 @@ local Progress = require(ReplicatedStorage.Modules.TrainingProgress)
 local Config = require(ReplicatedStorage.Modules.TrainingConfig)
 local Grip = require(ReplicatedStorage.Modules.TrainingGrip)
 local Gate = require(ReplicatedStorage.Modules.GameplayInputGate)
+local ButtonAnimation = require(ReplicatedStorage.Modules.ButtonAnimation)
 local GuiAnimation = require(ReplicatedStorage.Modules.GuiAnimation)
 local Loading = require(ReplicatedFirst.LoadingAttributes)
 local WeightFormat = require(ReplicatedStorage.Modules.WeightFormat)
@@ -79,11 +80,15 @@ function Controller:KnitStart()
 		return
 	end
 	local xpBar = gui.XPBar
+	local stopButton = gui.StopButton
 	gui.Info.Visible = false
-	gui.StopButton.Visible = true
-	gui.StopButton.Active = true
-	gui.StopButton.Interactable = true
-	gui.StopButton.Selectable = true
+	-- Keep the animation separate from the button size computed during layout.
+	ButtonAnimation.SetUp(stopButton, nil, true)
+	local stopScale = stopButton:FindFirstChildOfClass("UIScale")
+	stopButton.Visible = true
+	stopButton.Active = true
+	stopButton.Interactable = true
+	stopButton.Selectable = true
 	local effects = UIEffects.new(gui)
 	local backpack = BackpackState.new(playerGui, function()
 		return Gate.IsActive("Fishing") or player:GetAttribute("FishingIntroActive") == true
@@ -166,6 +171,10 @@ function Controller:KnitStart()
 		feedbackPrevious = value
 		snapshot = value
 		self._snapshot = value
+		if stopScale and gui.Enabled and not value.active then
+			-- The GUI can close before MouseLeave fires. Cancel any hover tween as it closes.
+			TweenService:Create(stopScale, TweenInfo.new(0), { Scale = 1 }):Play()
+		end
 		gui.Enabled = value.active
 		Gate.SetActive("Training", self, value.active)
 		backpack:SetActive(value.active)
@@ -235,8 +244,8 @@ function Controller:KnitStart()
 		prompt.Name = "TrainingUpgradePrompt"
 		prompt.ActionText = "UPGRADE"
 		prompt.ObjectText = ""
-		prompt:SetAttribute("StudsOffsetWorldSpace", Vector3.new(0, -2, 0))
-		prompt:SetAttribute("ActionTextStrokeScale", 0.16)
+		prompt:SetAttribute("StudsOffsetWorldSpace", Vector3.new(0, 2, 0))
+		prompt:SetAttribute("ActionTextStrokeScale", 0.08)
 		prompt.Parent = anchor
 		billboard = titleTemplate:Clone()
 		billboard.Name = "TrainingUpgradeTitle"
@@ -305,7 +314,7 @@ function Controller:KnitStart()
 				stopping = false
 			end)
 	end
-	listen(gui.StopButton.Activated, function()
+	listen(stopButton.Activated, function()
 		requestStop(false)
 	end)
 	listen(UserInputService.JumpRequest, function()
@@ -395,8 +404,8 @@ function Controller:KnitStart()
 		xpBar.Size = UDim2.fromOffset(width, height)
 		local stopHeight = math.clamp(size.Y * 0.065, 48, 64)
 		local stopBottom = math.min(size.Y * 0.86, size.Y * 0.965 - height - 10)
-		gui.StopButton.Size = UDim2.fromOffset(math.clamp(size.X * 0.11, 144, 210), stopHeight)
-		gui.StopButton.Position = UDim2.new(0.5, 0, 0, stopBottom)
+		stopButton.Size = UDim2.fromOffset(math.clamp(size.X * 0.11, 144, 210), stopHeight)
+		stopButton.Position = UDim2.new(0.5, 0, 0, stopBottom)
 		if billboard then
 			billboard.Holder.Arrow.Position =
 				UDim2.fromScale(0.5, if affordable then math.sin(now * 5) * 0.05 + 1.02 else 1.02)

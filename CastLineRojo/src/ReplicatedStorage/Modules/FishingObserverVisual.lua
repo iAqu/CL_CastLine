@@ -4,7 +4,10 @@ local BaitMotion = require(Modules.BaitElasticMotion)
 local CastPresentation = require(Modules.FishingCastPresentation)
 local Config = require(Modules.FishingConfig)
 local FishAnimation = require(Modules.FishAnimationController)
+local Assets = require(Modules.FishingAssets)
+local BiteSequence = require(Modules.FishingBiteSequence)
 local FishingCharacterVFX = require(Modules.FishingCharacterVFX)
+local FishingCatchTrail = require(Modules.FishingCatchTrail)
 local FishingLiftMotion = require(Modules.FishingLiftMotion)
 local ObserverState = require(Modules.FishingObserverState)
 local RarityVFX = require(Modules.FishingRarityVFX)
@@ -21,6 +24,7 @@ FishingObserverVisual.__index = FishingObserverVisual
 
 local EFFECT_WINDOW = 0.45
 local CARRY_ROTATION = CFrame.Angles(0, math.pi / 2, 0)
+local FISH_FLIGHT = Config.Bite.ObserverFishLift
 
 local function createLine(folder, tip)
 	local endpoint = Instance.new("Part")
@@ -68,7 +72,7 @@ function FishingObserverVisual.new(player, character, part, template, rod, anima
 			animator.Parent = humanoid
 		end
 		CastPresentation.Prepare(self, animator, animation, specialAnimation)
-		self.characterVFX = FishingCharacterVFX.new(rig, folder)
+		self.characterVFX = FishingCharacterVFX.new(rig, folder, groundY)
 		self.visibility:HideCharacter(character)
 	end)
 	if not ok then
@@ -102,7 +106,46 @@ function FishingObserverVisual:_finishCast(now)
 	self.characterVFX:StopFlight(now)
 end
 
-function FishingObserverVisual:_cast(state, now, target)
+function FishingObserverVisual:ClearFishShadow()
+	if self.shadow then
+		self.shadow:Destroy()
+		self.shadow = nil
+	end
+	if self.shadowOwner then
+		self.shadowOwner.folder:Destroy()
+		self.shadowOwner = nil
+	end
+end
+
+function FishingObserverVisual:_updateFishShadow(round, fishConfig, now, target, spin)
+	if not fishConfig or now < round.readyAt or now >= (round.liftAt or round.retryAt or math.huge) then
+		self:ClearFishShadow()
+		return nil
+	end
+	if self.shadow and self.shadow.observedRound ~= round then
+		self:ClearFishShadow()
+	end
+	if not self.shadow then
+		local template = Assets.GetFish(fishConfig.Model)
+		if not template then
+			return nil
+		end
+		local folder = Instance.new("Folder")
+		folder.Name, folder.Parent = "FishShadowEffects", self.folder
+		self.warnedWaterVFX = self.warnedWaterVFX or {}
+		self.shadowOwner = {
+			folder = folder,
+			forward = self.forward,
+			spin = spin,
+			baitBaseSize = BaitMotion.BaseSize(self) * Config.BaitFlightScale,
+			warnedWaterVFX = self.warnedWaterVFX,
+		}
+		self.shadow = BiteSequence.newObserver(self.shadowOwner, round, template, fishConfig)
+	end
+	return self.shadow:UpdateObserver(now, target)
+end
+
+function FishingObserverVisual:_cast(state, now, target, fishConfig)
 	if not self.castProfile then
 		CastPresentation.Select(self, state.castRating)
 		if self.castProfile.Id == "Godlike" then
@@ -167,10 +210,16 @@ function FishingObserverVisual:_cast(state, now, target)
 		self.splashed = true
 		WaterEffects.Play(self, now, "WaterVFX", Config.WaterVFX.Entry, target)
 	end
+	local spin = state.initialYaw + duration * 7
+	local shadowBait, shadowBaitScale = self:_updateFishShadow(state.bite, fishConfig, now, target, spin)
+	if shadowBait then
+		BaitMotion.Apply(self, shadowBait, shadowBaitScale * Config.BaitFlightScale)
+		return
+	end
 	local height = Config.BaitElastic.IdleHeight * math.sin(landedFor * Config.BaitElastic.IdleFrequency)
 	BaitMotion.Apply(
 		self,
-		CFrame.new(target + Vector3.yAxis * height) * CFrame.Angles(0, state.initialYaw + duration * 7, 0),
+		CFrame.new(target + Vector3.yAxis * height) * CFrame.Angles(0, spin, 0),
 		Vector3.one * Config.BaitFlightScale
 	)
 end
@@ -182,14 +231,25 @@ function FishingObserverVisual:_makeCatch(state, config, template)
 	local bounds = ItemStatUtil.GetModelBounds(template)
 	model:ScaleTo(template:GetScale() * scale)
 	model.Name = "CaughtFish"
+	local trail = if not isEgg then {
+		fish = model,
+		owner = self,
+		scale = scale,
+		originals = {},
+		mutationId = state.mutationId,
+	} else nil
 	for _, part in ipairs(model:GetDescendants()) do
 		if part:IsA("BasePart") then
 			part.Anchored, part.CanCollide, part.CanTouch, part.CanQuery = true, false, false, false
+			if trail and part.Transparency < 1 and part.Name ~= "CameraPart" then
+				trail.originals[part] = true
+			end
 		elseif part:IsA("BaseScript") then
 			part:Destroy()
 		end
 	end
 	self.fish = model
+	self.catchTrail = trail
 	self.bodyToPivot = model.PrimaryPart.CFrame:ToObjectSpace(model:GetPivot())
 	local center = (bounds.minimum + bounds.maximum) * 0.5
 	self.belly = Vector3.new(center.X, bounds.minimum.Y, center.Z) * scale
@@ -202,6 +262,48 @@ function FishingObserverVisual:_makeCatch(state, config, template)
 	if not isEgg then
 		MutationVisualUtil.Apply(model, state.mutationId, template.Name)
 	end
+end
+
+function FishingObserverVisual:_fishCatchPose(target, elapsed, config)
+	local carryRotation = self.root.CFrame.Rotation * CARRY_ROTATION
+	local bellyOffset = carryRotation:VectorToWorldSpace(self.belly)
+	if not self.catchMotion then
+		local hand = self.grip.WorldPosition
+		local shoulder = self.shoulder
+		if shoulder and shoulder.Part0 then
+			self.catchShoulderFrom = shoulder.C0
+			self.catchShoulderGoal = self.readyShoulder * CFrame.Angles(math.rad(-25), 0, 0)
+			-- 抬手时沿用同一条曲线，预先计算最终握点。
+			local joint = shoulder.Part0.CFrame
+			local handOffset = (joint * self.catchShoulderFrom):PointToObjectSpace(hand)
+			hand = (joint * self.catchShoulderGoal):PointToWorldSpace(handOffset)
+		end
+		local goal = hand - bellyOffset
+		local oldOrigin = target + Vector3.yAxis * math.max(0, -self.belly.Y)
+		local oldArc = ProjectileMath.CreateArc(oldOrigin, goal, FishingLiftMotion.Timing(Config.Bite, false).duration)
+		local initialSpeed = oldArc:VelocityAt(0).Y
+		local finalSpeed = oldArc:VelocityAt(oldArc.Duration).Y
+		local oldApexTime = oldArc.Duration * math.clamp(initialSpeed / (initialSpeed - finalSpeed), 0, 1)
+		local distance = ((goal - target) * Vector3.new(1, 0, 1)).Magnitude
+		self.catchGoal = goal
+		self.catchUpright = FishingLiftMotion.UprightRotation(self.forward, config.DisplayFacing)
+		self.catchMotion = FishingLiftMotion.NewObserver(
+			FISH_FLIGHT, target.Y, goal.Y, distance, self.diameter, oldArc:PositionAt(oldApexTime).Y
+		)
+	end
+
+	local height, progress, turn = FishingLiftMotion.SampleObserver(self.catchMotion, elapsed)
+	if self.catchShoulderGoal then
+		self.shoulder.C0 = self.catchShoulderFrom:Lerp(self.catchShoulderGoal, turn)
+	end
+	if elapsed >= FISH_FLIGHT.Duration then
+		return self.grip.WorldPosition - bellyOffset, carryRotation
+	end
+	local position = target:Lerp(self.catchGoal, progress)
+	local rotation = if elapsed < FISH_FLIGHT.RiseTime
+		then FishingLiftMotion.RiseRotation(self.catchUpright, elapsed / FISH_FLIGHT.RiseTime, Config.Bite.LiftSpinTurns)
+		else self.catchUpright:Lerp(carryRotation, turn)
+	return Vector3.new(position.X, height, position.Z), rotation
 end
 
 function FishingObserverVisual:_catch(state, now, target, config, template)
@@ -217,16 +319,21 @@ function FishingObserverVisual:_catch(state, now, target, config, template)
 
 	local elapsed = now - state.startedAt
 	local isEgg = state.catchKind == "Egg"
-	local duration = FishingLiftMotion.Timing(Config.Bite, isEgg).duration
-	local alpha = math.clamp(elapsed / duration, 0, 1)
-	local grip = CFrame.new(self.grip.WorldPosition) * self.root.CFrame.Rotation * CARRY_ROTATION
-	local goal = grip * CFrame.new(-self.belly)
-	local origin = target + Vector3.yAxis * math.max(0, -self.belly.Y)
-	local arc = ProjectileMath.CreateArc(origin, goal.Position, duration)
-	local position = arc:PositionAt(elapsed)
-	local rotation = CFrame.lookAt(Vector3.zero, self.forward).Rotation:Lerp(goal.Rotation, alpha)
-	if self.shoulder then
-		self.shoulder.C0 = self.readyShoulder * CFrame.Angles(math.rad(-25) * alpha, 0, 0)
+	local duration = if isEgg then FishingLiftMotion.Timing(Config.Bite, true).duration else FISH_FLIGHT.Duration
+	local landed = elapsed >= duration
+	local position, rotation
+	if isEgg then
+		local alpha = math.clamp(elapsed / duration, 0, 1)
+		local grip = CFrame.new(self.grip.WorldPosition) * self.root.CFrame.Rotation * CARRY_ROTATION
+		local goal = grip * CFrame.new(-self.belly)
+		local origin = target + Vector3.yAxis * math.max(0, -self.belly.Y)
+		position = ProjectileMath.CreateArc(origin, goal.Position, duration):PositionAt(elapsed)
+		rotation = CFrame.lookAt(Vector3.zero, self.forward).Rotation:Lerp(goal.Rotation, alpha)
+		if self.shoulder then
+			self.shoulder.C0 = self.readyShoulder * CFrame.Angles(math.rad(-25) * alpha, 0, 0)
+		end
+	else
+		position, rotation = self:_fishCatchPose(target, elapsed, config)
 	end
 	self.fish:PivotTo(CFrame.new(position) * rotation * self.bodyToPivot)
 	if not self.fish.Parent then
@@ -236,26 +343,32 @@ function FishingObserverVisual:_catch(state, now, target, config, template)
 		end
 	end
 	if self.fishAnimation then
-		local animationPhase = if alpha < 1 then "Lifting" else "Caught"
-		local phaseStarted = if alpha < 1 then state.startedAt else state.startedAt + duration
+		local animationPhase = if landed then "Caught" else "Lifting"
+		local phaseStarted = if landed then state.startedAt + duration else state.startedAt
 		self.fishAnimation:Update(animationPhase, phaseStarted, now, nil, nil, nil, nil, duration)
 	end
-	if elapsed <= EFFECT_WINDOW and not self.catchExitPlayed then
+	if self.catchTrail then
+		local rising = elapsed >= 0 and elapsed < FISH_FLIGHT.RiseTime
+		FishingCatchTrail.Update(self.catchTrail, now, rising, self.fish.PrimaryPart.Position.Y >= target.Y)
+	end
+	if elapsed >= 0 and not self.catchExitPlayed then
 		self.catchExitPlayed = true
-		WaterEffects.Play(
-			self,
-			now,
-			"WaterVFX",
-			Config.WaterVFX.Exit,
-			target,
-			nil,
-			math.clamp(self.diameter / 12, 1, 3)
-		)
-		if not isEgg then
-			self.exitEffect = RarityVFX.Play(self, now, position, config.Rarity, self.diameter, "Exit")
+		if elapsed <= EFFECT_WINDOW then
+			WaterEffects.Play(
+				self,
+				now,
+				"WaterVFX",
+				Config.WaterVFX.Exit,
+				target,
+				nil,
+				math.clamp(self.diameter / 12, 1, 3)
+			)
+			if not isEgg then
+				self.exitEffect = RarityVFX.Play(self, now, position, config.Rarity, self.diameter, "Exit")
+			end
 		end
 	end
-	if alpha >= 1 and not self.catchLanded then
+	if landed and not self.catchLanded then
 		self.catchLanded = true
 		self.rod.Parent = nil
 		if not isEgg and elapsed <= duration + EFFECT_WINDOW then
@@ -296,7 +409,22 @@ function FishingObserverVisual:_emptyReel(state, now, target)
 	self.endpoint.Position = target:Lerp(tip, alpha * (2 - alpha)) + Vector3.yAxis * (4 * math.sin(alpha * math.pi))
 end
 
-function FishingObserverVisual:Update(state, now, waterY, asset, catchConfig)
+local function updateWaterEffects(owner, now)
+	for index = #(owner.waterVFX or {}), 1, -1 do
+		local effect = owner.waterVFX[index]
+		if now >= effect.expiresAt then
+			effect.model:Destroy()
+			table.remove(owner.waterVFX, index)
+		else
+			WaterEffects.Update(effect, now)
+		end
+	end
+end
+
+function FishingObserverVisual:Update(state, now, waterY, asset, catchConfig, shadowConfig)
+	if state.phase ~= "Cast" or not shadowConfig then
+		self:ClearFishShadow()
+	end
 	if state.phase == "Selecting" then
 		return
 	end
@@ -307,7 +435,7 @@ function FishingObserverVisual:Update(state, now, waterY, asset, catchConfig)
 		if state.phase == "Preparing" then
 			self:_holdBait(state, math.max(0, now - state.startedAt), 1.5)
 		else
-			self:_cast(state, now, self:_waterTarget(state, waterY))
+			self:_cast(state, now, self:_waterTarget(state, waterY), shadowConfig)
 		end
 		if not self.baitVisual.Parent then
 			self.baitVisual.Parent = self.folder
@@ -320,19 +448,19 @@ function FishingObserverVisual:Update(state, now, waterY, asset, catchConfig)
 		self:_emptyReel(state, now, self:_waterTarget(state, waterY))
 	end
 	self.characterVFX:Update(now)
-	for index = #(self.waterVFX or {}), 1, -1 do
-		local effect = self.waterVFX[index]
-		if now >= effect.expiresAt then
-			effect.model:Destroy()
-			table.remove(self.waterVFX, index)
-		else
-			WaterEffects.Update(effect, now)
-		end
+	updateWaterEffects(self, now)
+	if self.shadowOwner then
+		updateWaterEffects(self.shadowOwner, now)
 	end
 end
 
 function FishingObserverVisual:Destroy()
+	self:ClearFishShadow()
 	CastPresentation.Destroy(self)
+	if self.catchTrail then
+		FishingCatchTrail.Destroy(self.catchTrail)
+		self.catchTrail = nil
+	end
 	if self.fishAnimation then
 		self.fishAnimation:Destroy()
 	end

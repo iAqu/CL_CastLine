@@ -37,3 +37,76 @@ for _, case in {
 	assert(caught.ok and caught.mutationId == case.mutation)
 	assert(caught.catchChanceDenominator == case.expected)
 end
+
+local onboarding = require("../src/ReplicatedStorage/Modules/FishingOnboarding")
+local items = require("../src/ReplicatedFirst/Data/TrainingData")
+local levels = require("../src/ReplicatedFirst/Data/TrainingLevelsData")
+local rods = require("../src/ReplicatedFirst/Data/RodsData")
+local config = require("../src/ReplicatedStorage/Modules/TrainingConfig")
+local player = { UserId = 42, SetAttribute = function() end }
+local character = {
+	FindFirstChild = function() return {} end,
+	FindFirstChildOfClass = function(_, class)
+		return if class == "Humanoid" then { Health = 100 } else nil
+	end,
+}
+player.Character = character
+local plot = {
+	GetAttribute = function() return player.UserId end,
+	FindFirstChild = function() return {} end,
+}
+local recorded = {}
+local services = {
+	ReplicatedFirst = { Data = { TrainingData = items, TrainingLevelsData = levels, RodsData = rods } },
+	ReplicatedStorage = {
+		Packages = { Knit = {
+			CreateService = function(service) return service end,
+			CreateSignal = function() return {} end,
+			GetService = function(name)
+				if name == "PlotSlotService" then
+					return { GetPlayerPlot = function() return plot end }
+				end
+				return { IsActive = function() return false end }
+			end,
+		} },
+		Modules = {
+			TrainingProgress = Progress,
+			FishingOnboarding = onboarding,
+			TrainingConfig = config,
+			TrainingSpotUtil = { Contains = function() return true end },
+			TrainingCharacterLock = { Release = function() end },
+			RodInventory = { GetEquippedId = function(data) return data.EquippedRodId end },
+		},
+	},
+}
+local env = setmetatable({
+	game = { GetService = function(_, name) return services[name] end },
+	require = function(module) return module end,
+	script = { Parent = { OnboardingAnalyticsService = {
+		Step = function(_, _, step) table.insert(recorded, step) end,
+		Growth = function() end,
+	} } },
+}, { __index = getfenv() })
+local trainingSource = assert(io.open("src/ServerScriptService/Services/TrainingService.lua")):read("*a")
+local service = assert(load(trainingSource, "TrainingService", "t", env))()
+local data = { FishingOnboarding = { Stage = "Train" }, EquippedRodId = "Rod_101" }
+local state = {
+	training = Progress.Ensure(data, items, levels), data = data, active = true, allowed = true,
+	character = character, plot = plot, elapsed = 0,
+}
+service._state = function() return state end
+service._syncDisplay = function() end
+service._publish = function() end
+for _ = 1, levels["1"].XpToNextLevel do
+	service:_step(player, config.RepInterval)
+end
+assert(state.training.Level == 2 and data.FishingOnboarding.Stage == "Train")
+assert(#recorded == 1 and recorded[1] == "TrainingStarted")
+for _ = 1, levels["2"].XpToNextLevel do
+	service:_step(player, config.RepInterval)
+end
+assert(state.training.Level == 3 and data.FishingOnboarding.Stage == "StopTraining")
+assert(#recorded == 2 and recorded[2] == "TrainingGoalReached")
+service:_step(player, config.RepInterval)
+service:Stop(player, true)
+assert(#recorded == 3 and recorded[3] == "TrainingEnded" and data.FishingOnboarding.Stage == "RodReward")

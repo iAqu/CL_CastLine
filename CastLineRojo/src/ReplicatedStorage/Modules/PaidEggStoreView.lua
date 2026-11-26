@@ -6,6 +6,30 @@ local PurchaseData = require(ReplicatedFirst.Data.PurchaseData)
 local ButtonAnimation = require(script.Parent.ButtonAnimation)
 local View = {}
 
+local function updateFishChances(card)
+	local icons = card:FindFirstChild("IconFrame")
+	if not icons then
+		return
+	end
+
+	for _, fish in ipairs(Config.Fish) do
+		local icon = icons:FindFirstChild(fish.Card)
+		local label = icon and icon:FindFirstChild("TextLabel")
+		if not label and fish.Card == "GalaxyMegalodon" then
+			-- The featured fish's chance is next to its icon and the OP badge.
+			for _, child in ipairs(icons:GetChildren()) do
+				if child:IsA("TextLabel") and child.Text:match("^%d+%.?%d*%%$") then
+					label = child
+					break
+				end
+			end
+		end
+		if label and label:IsA("TextLabel") then
+			label.Text = string.format("%g%%", fish.Chance)
+		end
+	end
+end
+
 function View.Bind(storeGui, purchaseService, paidEggService)
 	local root = storeGui.Frame.MainFrame.ScrollingFrame:FindFirstChild("LimitedEggFrame")
 	local card = root and root:FindFirstChild("Egg_R_1")
@@ -25,6 +49,7 @@ function View.Bind(storeGui, purchaseService, paidEggService)
 	if image then
 		image.Image = PurchaseData.Egg_R_1.IconId
 	end
+	updateFishChances(card)
 	local status = card.Buy1Button.TextLabel:Clone()
 	status.Name = "PaidEggAvailability"
 	status.AnchorPoint = Vector2.zero

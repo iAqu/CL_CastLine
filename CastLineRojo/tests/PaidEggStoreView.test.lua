@@ -21,7 +21,25 @@ local function node(children)
 end
 local open, profileReady, nativeFinished = signal(), signal(), signal()
 local card = node({})
-local config = { PurchaseOrder = {}, Purchases = {} }
+local function label(text)
+	return { Text = text, IsA = function(_, className) return className == "TextLabel" end }
+end
+local featuredChance, featuredBadge = label("0.2%"), label("OP")
+card.IconFrame = node({
+	Flamingo = node({ TextLabel = label("34%") }),
+	HellShark = node({ TextLabel = label("10.5%") }),
+	GalaxyMegalodon = node({}),
+	GetChildren = function() return { featuredBadge, featuredChance } end,
+})
+local config = {
+	PurchaseOrder = {},
+	Purchases = {},
+	Fish = {
+		{ Card = "Flamingo", Chance = 30 },
+		{ Card = "HellShark", Chance = 10 },
+		{ Card = "GalaxyMegalodon", Chance = 0.5 },
+	},
+}
 local products = {}
 function config.GetPurchase(id)
 	return products[id]
@@ -80,6 +98,9 @@ local view = assert(load(source:read("*a"), path, "t", setmetatable({
 }, { __index = getfenv() })))()
 source:close()
 view.Bind(store, purchaseService, eggService)
+assert(card.IconFrame.Flamingo.TextLabel.Text == "30%")
+assert(card.IconFrame.HellShark.TextLabel.Text == "10%")
+assert(featuredChance.Text == "0.5%" and featuredBadge.Text == "OP")
 assert(not status.Visible and #refresh == 1 and #prompts == 0, "Binding checks eligibility without making an order")
 profileReady:Fire()
 refresh[2]({ Allowed = true })

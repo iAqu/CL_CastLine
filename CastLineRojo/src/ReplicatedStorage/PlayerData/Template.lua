@@ -108,7 +108,7 @@ local Template = {
     LastOnlineTime = 0,
     UpdateReadLog = {},
     Strength = 10,
-    Wins = 200,
+    Wins = 300,
     OwnedRods = { [FishingConfig.DefaultRodId] = true },
     EquippedRodId = FishingConfig.DefaultRodId,
     Rebirths = 0,

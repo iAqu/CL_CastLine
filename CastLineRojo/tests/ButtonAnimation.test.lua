@@ -54,6 +54,11 @@ local function button(offset, useUIScale)
 	function result:FindFirstChild(name)
 		return rawget(self, name)
 	end
+	function result:FindFirstChildOfClass(class)
+		if class == "UIScale" then
+			return self.UIScale or self.ExistingScale
+		end
+	end
 	function result:GetAttribute(name)
 		return self.attributes and self.attributes[name]
 	end
@@ -107,6 +112,18 @@ local function harness(existing, tagged)
 			return value
 		end,
 		UDim2 = { new = dim },
+		Instance = { new = function(class)
+			assert(class == "UIScale")
+			return setmetatable({ Name = class, Scale = 1, IsA = function(_, name) return name == class end }, {
+				__newindex = function(instance, key, value)
+					rawset(instance, key, value)
+					if key == "Parent" then
+						assert(not value.UIScale, "Only create one UIScale per button")
+						value.UIScale = instance
+					end
+				end,
+			})
+		end },
 		TweenInfo = { new = function(duration) return { Time = duration } end },
 		Enum = { EasingDirection = { Out = "Out" }, EasingStyle = { Quad = "Quad", Back = "Back" } },
 	}, { __index = getfenv() }))
@@ -188,6 +205,50 @@ scaled.SelectionGained:Fire()
 assert(scaled.UIScale.Scale == 1.05)
 scaled.SelectionLost:Fire()
 assert(scaled.UIScale.Scale == 1 and scaled.MouseEnter:Count() == 1)
+
+-- STOP is first registered at its prefab size, then its controller owns the base size.
+local stop = button()
+stop.Size = dim(0.16, 0, 0.07, 0)
+local training = harness({ stop })
+training.module.Start()
+assert(stop.MouseEnter:Count() == 1 and stop.UIScale == nil)
+training.module.SetUp(stop, nil, true)
+local stopScale = assert(stop.UIScale, "Responsive buttons must animate a UIScale")
+training.module.SetUp(stop, nil, true)
+training.collection.added:Fire(stop)
+assert(stop.UIScale == stopScale)
+for _, event in ipairs(stop.signals) do
+	assert(event:Count() == 1, "Switching animation modes replaces the original listeners")
+end
+stop.Size = dim(0, 210, 0, 64)
+stop.MouseEnter:Fire()
+assert(stopScale.Scale == 1.1 and training.lastTweenInfo.Time == 0.1)
+assert(stop.Size.X.Offset == 210 and stop.Size.Y.Offset == 64 and stop.lastTween == nil)
+stop.Size = dim(0, 144, 0, 48)
+assert(stopScale.Scale == 1.1, "Layout updates during hover preserve animation scale")
+stop.MouseButton1Down:Fire()
+assert(stopScale.Scale == 1 and stop.lastTween == nil)
+stop.MouseButton1Up:Fire()
+assert(stopScale.Scale == 1.1 and stop.lastTween == nil)
+stop.MouseLeave:Fire()
+assert(stopScale.Scale == 1 and stop.Size.X.Offset == 144 and stop.Size.Y.Offset == 48)
+stop.SelectionGained:Fire()
+assert(stopScale.Scale == 1.1)
+stop.SelectionLost:Fire()
+assert(stopScale.Scale == 1)
+stop.Activated:Fire()
+assert(#training.sounds == 1)
+stop.Destroying:Fire()
+for _, event in ipairs(stop.signals) do
+	assert(event:Count() == 0)
+end
+
+local responsive = button(20)
+local existingScale = button(20, true).UIScale
+responsive.ExistingScale = existingScale
+training.module.SetUp(responsive, nil, true)
+responsive.MouseEnter:Fire()
+assert(existingScale.Scale == 1.1 and responsive.UIScale == nil, "Reuse an existing UIScale of any name")
 
 -- Destroy disconnects every callback; a replacement GUI can bind normally.
 late.Destroying:Fire()

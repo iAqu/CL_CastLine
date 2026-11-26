@@ -159,7 +159,8 @@ function Service.Client:NextRound(player, token, previousRound)
 		return failure("Opening fishing assets unavailable")
 	end
 	local startedAt = now + 0.35
-	local readyAt = startedAt + 0.5
+	local settleTime = if state.round == 0 then FishingConfig.GetLandingSettleTime() else FishingConfig.ReturnInputDelay
+	local readyAt = startedAt + settleTime
 	local seed, motionSeed = random:NextInteger(1, 2 ^ 30), random:NextInteger(1, 2 ^ 30)
 	local biteAt, biteEndsAt = BiteSequence.GetBiteWindow(
 		template,

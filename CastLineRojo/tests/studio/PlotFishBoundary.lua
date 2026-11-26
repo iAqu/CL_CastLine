@@ -42,7 +42,7 @@ local ok, result = xpcall(function()
 					local center = boundary.CFrame:PointToObjectSpace(pose.Position)
 					local bottomGap = center.Y + metrics.bottom * geometry.scale - boundary.Size.Y / 2
 					minimumGap, maximumGap = math.min(minimumGap, bottomGap), math.max(maximumGap, bottomGap)
-					assert(bottomGap >= 4.5 - 0.002 and bottomGap <= 5.5 + 0.002,
+					assert(bottomGap >= 3.8 - 0.002 and bottomGap <= 6.2 + 0.002,
 						"Fish belly outside floating height range: " .. item.Model)
 					assert(math.abs(center.X) <= halfX + 0.002 and math.abs(center.Z) <= halfZ + 0.002,
 						"Fish center crossed its fixed boundary: " .. item.Model)

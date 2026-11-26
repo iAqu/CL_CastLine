@@ -313,12 +313,10 @@ function Service:_step(player, dt)
 			Analytics:Growth(player, "CL_TrainingLevelUp_v1", gained, state.training.TrainingID,
 				state.training.Level, multiplier)
 		end
-		if isOnboardingTraining and state.training.Level >= 2 and not state.onboardingTrainingLevel2Observed then
-			state.onboardingTrainingLevel2Observed = true
-			Analytics:Step(player, "TrainingLevel2")
-		end
-		if isOnboardingTraining and state.training.Level >= Onboarding.TrainingLevel then
-			Onboarding.Advance(player, state.data, "Train", "StopTraining")
+		if isOnboardingTraining and state.training.Level >= Onboarding.TrainingLevel
+			and Onboarding.Advance(player, state.data, "Train", "StopTraining")
+		then
+			Analytics:Step(player, "TrainingGoalReached")
 		end
 		state.training.LastActiveAt = os.time()
 		self:_publish(player)

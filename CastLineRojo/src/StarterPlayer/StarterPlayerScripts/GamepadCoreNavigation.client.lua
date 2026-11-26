@@ -6,13 +6,9 @@ local VRService = game:GetService("VRService")
 local GameplayInputGate = require(ReplicatedStorage.Modules.GameplayInputGate)
 
 local suspendedGamepads: { [Enum.UserInputType]: boolean } = {}
-local selectHeld = false
 
 local function syncNavigation()
-	local navigatingUi = selectHeld
-		or VRService.VREnabled
-		or GuiService.SelectedObject ~= nil
-		or GameplayInputGate.IsUiBlockingWorld()
+	local navigatingUi = VRService.VREnabled or GameplayInputGate.IsUiBlockingWorld()
 
 	for _, gamepad in ipairs(UserInputService:GetConnectedGamepads()) do
 		if navigatingUi then
@@ -32,33 +28,15 @@ local function deferSyncNavigation()
 	task.defer(syncNavigation)
 end
 
-local function releaseSelect()
-	selectHeld = false
-	deferSyncNavigation()
-end
-
--- Keep Roblox's explicit GUI toggle available even when the stick is driving the character.
-UserInputService.InputBegan:Connect(function(input)
-	if input.KeyCode == Enum.KeyCode.ButtonSelect then
-		selectHeld = true
-		syncNavigation()
-	end
-end)
-UserInputService.InputEnded:Connect(function(input)
-	if input.KeyCode == Enum.KeyCode.ButtonSelect then
-		releaseSelect()
-	end
-end)
-UserInputService.WindowFocusReleased:Connect(releaseSelect)
+UserInputService.WindowFocused:Connect(deferSyncNavigation)
 UserInputService.GamepadConnected:Connect(deferSyncNavigation)
 UserInputService.GamepadDisconnected:Connect(function(gamepad)
 	suspendedGamepads[gamepad] = nil
-	releaseSelect()
+	deferSyncNavigation()
 end)
 UserInputService.TextBoxFocused:Connect(deferSyncNavigation)
 UserInputService.TextBoxFocusReleased:Connect(deferSyncNavigation)
 VRService:GetPropertyChangedSignal("VREnabled"):Connect(syncNavigation)
-GuiService:GetPropertyChangedSignal("SelectedObject"):Connect(syncNavigation)
 GuiService.MenuOpened:Connect(syncNavigation)
 GuiService.MenuClosed:Connect(deferSyncNavigation)
 GameplayInputGate.ContextChanged:Connect(function(context)
@@ -67,4 +45,6 @@ GameplayInputGate.ContextChanged:Connect(function(context)
 	end
 end)
 
+-- Panels set an initial focus themselves. Leave free movement out of Roblox's automatic GUI selection.
+GuiService.AutoSelectGuiEnabled = false
 syncNavigation()

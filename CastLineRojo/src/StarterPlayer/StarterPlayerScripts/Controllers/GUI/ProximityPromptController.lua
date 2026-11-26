@@ -13,6 +13,7 @@ local PLAYER_GUI = LOCAL_PLAYER:WaitForChild("PlayerGui")
 
 local LUCKIEST_GUY = Font.fromName("LuckiestGuy", Enum.FontWeight.Regular, Enum.FontStyle.Normal)
 local ACTION_TEXT_SIZE = 19
+local TRAINING_UPGRADE_TEXT_SIZE = ACTION_TEXT_SIZE * 2
 local OBJECT_TEXT_SIZE = 14
 local TEXT_SIZE_FONT = Enum.Font.GothamBold
 local PROGRESS_BILLBOARD_SIZE = 72
@@ -454,14 +455,31 @@ local function createPrompt(
 	local buttonTweenInfo = TweenInfo.new(0.06, Enum.EasingStyle.Linear, Enum.EasingDirection.Out)
 	local showTweenInfo = TweenInfo.new(0.55, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out)
 	local hideTweenInfo = TweenInfo.new(0.22, Enum.EasingStyle.Sine, Enum.EasingDirection.Out)
+	local isTrainingUpgrade = prompt.Name == "TrainingUpgradePrompt"
+	local actionMeasureFont = if isTrainingUpgrade then Enum.Font.FredokaOne else TEXT_SIZE_FONT
+	local actionMeasureSize = if isTrainingUpgrade then TRAINING_UPGRADE_TEXT_SIZE else ACTION_TEXT_SIZE
 
 	local billboard = Instance.new("BillboardGui")
 	billboard.Name = "Prompt"
-	billboard.AlwaysOnTop = true
+	billboard.AlwaysOnTop = not isTrainingUpgrade
 	billboard.Enabled = true
 	local worldOffset = prompt:GetAttribute("StudsOffsetWorldSpace")
-	if typeof(worldOffset) == "Vector3" then
+	if not isTrainingUpgrade and typeof(worldOffset) == "Vector3" then
 		billboard.StudsOffsetWorldSpace = worldOffset
+	end
+	local renderAttachment: Attachment?
+	local function updateAdornee(parent: Instance?)
+		if isTrainingUpgrade and parent and parent:IsA("BasePart") and typeof(worldOffset) == "Vector3" then
+			-- The rotated upgrade marker needs a world-aligned point for depth-tested rendering.
+			local attachment = renderAttachment or Instance.new("Attachment")
+			attachment.Name = "TrainingUpgradePromptAdornee"
+			attachment.Position = parent.CFrame:VectorToObjectSpace(worldOffset)
+			attachment.Parent = parent
+			renderAttachment = attachment
+			billboard.Adornee = attachment
+		else
+			billboard.Adornee = parent
+		end
 	end
 
 	local promptFrame = Instance.new("Frame")
@@ -500,8 +518,16 @@ local function createPrompt(
 	local actionText = Instance.new("TextLabel")
 	actionText.Name = "ActionText"
 	actionText.Size = UDim2.fromScale(1, 1)
-	actionText.FontFace = LUCKIEST_GUY
-	actionText.TextSize = ACTION_TEXT_SIZE
+	if isTrainingUpgrade then
+		actionText.Font = actionMeasureFont
+		actionText.TextScaled = true
+		local textSizeConstraint = Instance.new("UITextSizeConstraint")
+		textSizeConstraint.MaxTextSize = TRAINING_UPGRADE_TEXT_SIZE
+		textSizeConstraint.Parent = actionText
+	else
+		actionText.FontFace = LUCKIEST_GUY
+		actionText.TextSize = ACTION_TEXT_SIZE
+	end
 	actionText.BackgroundTransparency = 1
 	actionText.TextTransparency = 1
 	actionText.TextColor3 = Color3.new(1, 1, 1)
@@ -700,10 +726,12 @@ local function createPrompt(
 	local function updateUIFromPrompt()
 		local actionTextValue = prompt.ActionText or ""
 		local objectTextValue = prompt.ObjectText or ""
+		local actionTextWidth = if actionTextValue == "" then 0
+			else TextService:GetTextSize(actionTextValue, actionMeasureSize, actionMeasureFont, Vector2.new(1000, 1000)).X
 
 		local width = if actionTextValue == "" and objectTextValue == "" then 72
 			else math.max(
-				TextService:GetTextSize(actionTextValue, ACTION_TEXT_SIZE, TEXT_SIZE_FONT, Vector2.new(1000, 1000)).X,
+				actionTextWidth,
 				TextService:GetTextSize(objectTextValue, OBJECT_TEXT_SIZE, TEXT_SIZE_FONT, Vector2.new(1000, 1000)).X
 			) + 72 + 24
 
@@ -713,6 +741,10 @@ local function createPrompt(
 			0,
 			if objectTextValue == "" then 0 else 9
 		)
+		if isTrainingUpgrade then
+			-- Keep click padding out of the bounds used by TextScaled.
+			actionText.Size = UDim2.fromOffset(actionTextWidth, 72)
+		end
 		objectText.Position = UDim2.new(0.5, 72 - width / 2, 0, -10)
 		actionText.Text = actionTextValue
 		objectText.Text = objectTextValue
@@ -729,7 +761,7 @@ local function createPrompt(
 	local changedConn = prompt.Changed:Connect(updateUIFromPrompt)
 	local ancestryConn = prompt.AncestryChanged:Connect(function(_, parent)
 		if parent and parent:IsA("BasePart") then
-			billboard.Adornee = parent
+			updateAdornee(parent)
 			if attachedProgressPrompt == prompt and sharedProgressBillboard then
 				sharedProgressBillboard.Adornee = parent
 			end
@@ -737,7 +769,7 @@ local function createPrompt(
 	end)
 
 	updateUIFromPrompt()
-	billboard.Adornee = prompt.Parent
+	updateAdornee(prompt.Parent)
 	billboard.Parent = parentGui
 
 	table.insert(activePrompts, {
@@ -776,6 +808,9 @@ local function createPrompt(
 		triggerEndedConn:Disconnect()
 		changedConn:Disconnect()
 		ancestryConn:Disconnect()
+		if renderAttachment then
+			renderAttachment:Destroy()
+		end
 
 		for index, entry in activePrompts do
 			if entry.prompt == prompt then

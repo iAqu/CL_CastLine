@@ -12,23 +12,34 @@ success.cast()
 local cast = success.presentation()
 assert(cast.phase == "Cast" and cast.distance > 0 and cast.castRating and cast.startedAt < success.now)
 assert(cast.catchId == nil and cast.weight == nil and cast.mutationId == nil and cast.seed == nil)
+local bite = cast.bite
+assert(bite.fishId == success.round.fishId and bite.scale == success.biteScale)
+assert(bite.round == success.round.round and bite.startedAt == success.round.startedAt)
+assert(bite.readyAt == success.round.readyAt and bite.biteAt == success.round.biteAt)
+assert(bite.biteEndsAt == success.round.biteEndsAt and bite.seed == success.round.seed)
+assert(bite.motionSeed == success.round.motionSeed and bite.retryAt == success.round.retryAt)
+assert(bite.weight == nil and bite.mutationId == nil and bite.hookedAt == nil)
 local lateAt = success.round.readyAt + 3
 success.now = lateAt
 assert(not success.client:Hook(success.player, success.token, success.round.round, lateAt - 2).ok,
 	"The receive window cannot be extended by an earlier timestamp")
 assert(success.presentation() == cast)
 success.onGrant = function()
-	assert(success.presentation().catchId == nil)
+	assert(success.presentation().catchId == nil and success.presentation().bite.hookedAt == nil)
 end
 local caught = success.hook()
 assert(caught.ok and success.grants == 1)
+local struggle = success.presentation()
+assert(struggle.phase == "Cast" and struggle.startedAt == cast.startedAt, "Struggle must preserve the cast clock")
+assert(struggle.bite.round == bite.round and struggle.bite.hookedAt == success.now)
+assert(struggle.bite.liftAt == success.now + 3)
 assert(not success.client:Hook(success.player, success.token, success.round.round, success.now).ok)
 success.advance(2)
-assert(success.presentation() == cast, "fish must remain private during struggle")
+assert(success.presentation() == struggle and struggle.catchId == nil and struggle.mutationId == nil and struggle.weight == nil)
 success.advance(1.01)
 local reveal = success.presentation()
 assert(reveal.phase == "Catch" and reveal.id == cast.id and reveal.catchId == caught.catchId)
-assert(reveal.weight == caught.weight and reveal.isNewDiscovery and reveal.startedAt <= success.now)
+assert(reveal.weight == caught.weight and reveal.isNewDiscovery and reveal.startedAt <= success.now and reveal.bite == nil)
 success.client:Cancel(success.player, success.token, true)
 assert(success.presentation() == nil and #success.equippedCatches == 1)
 
@@ -38,7 +49,9 @@ retry.cast()
 local retryCast = retry.presentation()
 retry.now = retry.round.retryAt + 0.1
 assert(retry.client:NextRound(retry.player, retry.token, retry.round.round).ok)
-assert(retry.presentation() == retryCast, "normal bite retry must keep the line in the water")
+local retryNext = retry.presentation()
+assert(retryNext.id == retryCast.id and retryNext.startedAt == retryCast.startedAt, "Retry must preserve the cast clock")
+assert(retryNext.bite.round == retryCast.bite.round + 1 and retryNext.bite.hookedAt == nil)
 retry.client:Cancel(retry.player, retry.token, false, retry.round.round)
 assert(retry.presentation() == nil, "cancel with a stale round must not play an empty reel")
 
@@ -47,7 +60,7 @@ reel.begin("NONE")
 reel.cast()
 reel.client:Cancel(reel.player, reel.token, false, reel.round.round)
 local empty = reel.presentation()
-assert(empty.phase == "EmptyReel" and empty.catchId == nil and empty.expiresAt > reel.now)
+assert(empty.phase == "EmptyReel" and empty.catchId == nil and empty.bite == nil and empty.expiresAt > reel.now)
 assert(not reel.service:IsActive(reel.player))
 reel.advance(0.4)
 assert(reel.presentation() == empty)
@@ -75,6 +88,19 @@ failedGrant.failGrant = true
 assert(not failedGrant.hook().ok)
 failedGrant.advance(4)
 assert(failedGrant.presentation().phase == "Cast" and failedGrant.presentation().catchId == nil)
+assert(failedGrant.presentation().bite.hookedAt == nil, "A rejected grant must not publish a struggle")
+
+local tutorial = new()
+tutorial.infiniteBite = true
+tutorial.profile.Data.FishingOnboarding = { Stage = "FinalCatch" }
+tutorial.profile.Data.EquippedRodId = "Rod_102"
+local tutorialEntry = tutorial.begin()
+assert(tutorial.client:SelectBait(tutorial.player, tutorial.token, tutorialEntry.guideBaitId).ok)
+tutorial.cast()
+local tutorialBite = tutorial.presentation().bite
+assert(tutorialBite.tutorial and tutorialBite.biteAt == tutorial.round.biteAt)
+assert(tutorialBite.biteEndsAt == nil and tutorialBite.retryAt == nil, "An open bite window needs no infinite JSON number")
+tutorial.cancel()
 
 local lifecycle = new()
 lifecycle.service:KnitStart()

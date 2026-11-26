@@ -1,6 +1,5 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
-local Players = game:GetService("Players")
 
 local PlayerDataService = require(ServerScriptService.Services.PlayerDataService)
 local Knit = require(ReplicatedStorage.Packages.Knit)
@@ -15,7 +14,9 @@ local PERFORMANCE_MODES = {
 
 local settingIds = {}
 for _, settingId in Constants.SETTINGS_ID do
-    settingIds[settingId] = true
+    if settingId ~= Constants.SETTINGS_ID.TRADE then
+        settingIds[settingId] = true
+    end
 end
 
 local function isValidSettingValue(settingId: unknown, value: unknown): boolean
@@ -39,25 +40,6 @@ local SettingsService = Knit.CreateService {
     },
 }
 
-function SettingsService.Client:GetAllPlayersTradeSetting(): { [string]: boolean }
-    return self.Server:GetAllPlayersTradeSetting()
-end
-
-function SettingsService:GetAllPlayersTradeSetting(): { [string]: boolean }
-    local result = {}
-    for _, player in pairs(Players:GetPlayers()) do
-        local profile = PlayerDataService:GetProfile(player)
-        if profile then
-            result[player.UserId] = profile.Data.Settings[Constants.SETTINGS_ID.TRADE]
-        end
-    end
-    return result
-end
-
-function SettingsService:EnableTrade(player: Player, enabled: boolean)
-    self:ChangeSetting(player, Constants.SETTINGS_ID.TRADE, enabled)
-end
-
 function SettingsService:ChangeSetting(player: Player, settingId: unknown, value: unknown)
     if not isValidSettingValue(settingId, value) then
         return
@@ -67,11 +49,7 @@ function SettingsService:ChangeSetting(player: Player, settingId: unknown, value
         return
     end
     profile.Data.Settings[settingId] = value
-    if settingId == Constants.SETTINGS_ID.TRADE then
-        self.Client.ChangeSetting:FireAll(player, settingId, value)
-    else
-        self.Client.ChangeSetting:Fire(player, settingId, value)
-    end
+    self.Client.ChangeSetting:Fire(player, settingId, value)
 end
 
 function SettingsService:KnitInit()
@@ -82,11 +60,6 @@ function SettingsService:KnitStart()
     LogHelper.Print("CodesService started")
     self.Client.ChangeSetting:Connect(function(player: Player, settingId: string, settingValue: any)
         self:ChangeSetting(player, settingId, settingValue)
-    end)
-
-    -- when new player joins, tell all players to update his equipped greatsword
-    PlayerDataService.ProfileLoaded:Connect(function(player: Player, playerData)
-        self.Client.ChangeSetting:FireAll(player, Constants.SETTINGS_ID.TRADE, playerData.Settings[Constants.SETTINGS_ID.TRADE])
     end)
 
     self.Client.ReadUpdateLog:Connect(function(player: Player)

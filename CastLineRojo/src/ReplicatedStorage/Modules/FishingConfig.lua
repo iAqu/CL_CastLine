@@ -111,6 +111,8 @@ local Config = {
 		ShowcaseSwayFade = 0.4,
 	},
 	Landing = {
+		FishingDepth = 100, -- 临时试玩深度（studs）；设为 0 恢复水面钓鱼。
+		DiveTime = 1.2,
 		SinkTime = 0.12,
 		ReboundTime = 0.18,
 		SettleTime = 0.2,
@@ -391,6 +393,15 @@ local Config = {
 			Exit = { Fov = 10, Recovery = 0.25, Shake = 3.6, Duration = 0.22, Frequency = 22 },
 			Land = { Shake = 0.6, Duration = 0.12, Frequency = 22 },
 		},
+		ObserverFishLift = {
+			RiseTime = 0.60,
+			TurnEnd = 0.95,
+			Duration = 1.55,
+			StartSpeedScale = 0.8,
+			MinHeightGain = 12,
+			DistanceRise = 1.15,
+			SizeRise = 1.5,
+		},
 		-- 鱼蛋保留原演出参数。
 		LiftTime = 2,
 		LiftRiseEnd = 0.35,
@@ -507,6 +518,12 @@ Config.CastRainbow = {
 	{ 90, 130, 255 },
 	{ 195, 80, 255 },
 }
+
+function Config.GetLandingSettleTime(): number
+	local landing = Config.Landing
+	local diveTime = if landing.FishingDepth > 0 then landing.DiveTime else 0
+	return math.max(Config.ReturnInputDelay, landing.SinkTime + landing.ReboundTime + landing.SettleTime, diveTime)
+end
 
 function Config.GetCastProfile(castRating: string?)
 	return if castRating == "GODLIKE" then Config.CastProfiles.Godlike else Config.CastProfiles.Normal
