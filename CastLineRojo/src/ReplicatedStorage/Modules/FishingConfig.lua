@@ -81,6 +81,7 @@ local Config = {
 		FollowFishMaxDistance = 24,
 		WaterViewSmoothSpeed = 5, -- 约 0.6 秒完成 95% 的水面镜头过渡。
 		BaitView = { Distance = 12, Height = 8, Fov = 60 },
+		Dive = { EntryPitch = 70, FlightPitchEnd = 0.9, SettleBlendTime = 0.3 },
 		WaterFraming = {
 			MaxTurn = 8,
 			BaitCenterFraction = 0.3,
@@ -106,12 +107,22 @@ local Config = {
 		Release = { Fov = 10, Recovery = 0.5, Shake = 0.5, Duration = 0.25, Frequency = 24 },
 		Landing = { Fov = -8, Recovery = 0.4, Shake = 1.8, Bonus = 1.2, Duration = 0.65, Frequency = 18 },
 		Bite = { Shake = 1.2, Duration = 0.35, Frequency = 24 },
-		Struggle = { Shake = 0.7, Frequency = 24 },
+		Struggle = {
+			Shake = 0.7,
+			Frequency = 24,
+			BaseDistance = 20,
+			EntryBlendTime = 0.2,
+			FollowDegrees = 3,
+			FollowHalfLife = 0.12,
+			MaxShakeOffset = 0.25,
+			MaxShakeDegrees = 1.5,
+			WallClearance = 0.75,
+		},
 		FishExit = { Fov = 7, Recovery = 0.5, Shake = 3.6, Duration = 0.65, Frequency = 22 },
 		ShowcaseSwayFade = 0.4,
 	},
 	Landing = {
-		FishingDepth = 100, -- 临时试玩深度（studs）；设为 0 恢复水面钓鱼。
+		FishingDepth = 300, -- 临时试玩深度（studs）；设为 0 恢复水面钓鱼。
 		DiveTime = 1.2,
 		SinkTime = 0.12,
 		ReboundTime = 0.18,
@@ -223,9 +234,22 @@ local Config = {
 		},
 		ReboundPadding = 1.5,
 		CameraTime = 0.2,
+		CameraMinDistance = 6,
 		SwayScale = 0.5,
 		SwayFadeTime = 0.2,
 		HoldTime = 0.5,
+	},
+	DeepCatch = {
+		EntranceTime = 2.4,
+		ApproachDistance = 12,
+		SwayDistance = 0.75,
+		SwayCycles = 4,
+		RollDegrees = 5,
+		InitialProgress = 0.5,
+		TapGain = 0.125,
+		MinTapInterval = 0.075,
+		DecayDelay = 0.45,
+		DecayPerSecond = 0.5,
 	},
 	Bite = {
 		MutationTrail = {
@@ -367,9 +391,9 @@ local Config = {
 			Speed = 2,
 			FeedbackFrequencyMin = 0.7,
 			FeedbackFrequencyMax = 1.1,
-			StartRadiusScale = 1.2,
-			EndRadiusMin = 0.8,
-			EndRadiusMax = 0.8,
+			Radius = 5,
+			MinRadius = 2,
+			MaxRadius = 8,
 			AnimationCycle = 0.45,
 		},
 		RippleInterval = 0.22,
@@ -541,6 +565,18 @@ end
 
 function Config.GetFishingInputDelay(player: Player): number
 	return math.clamp(player:GetNetworkPing() / 2, 0, 0.2)
+end
+
+function Config.GetDeepCatchEntrance(catchKind: string, tutorial: boolean): string?
+	if Config.Landing.FishingDepth <= 0 or catchKind ~= "Fish" or tutorial then
+		return nil
+	end
+	return "Rise"
+end
+
+function Config.GetCatchProgress(value: number, lastTapAt: number, now: number): number
+	local settings = Config.DeepCatch
+	return math.max(0, value - math.max(0, now - lastTapAt - settings.DecayDelay) * settings.DecayPerSecond)
 end
 
 function Config.GetHookTime(receivedAt: number, pressedAt: unknown, biteAt: number, biteEndsAt: number, rtt: number): number?

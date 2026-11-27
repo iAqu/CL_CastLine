@@ -15,6 +15,7 @@ local FarmSignController = Knit.CreateController({
 local EMPTY_OWNER_USER_ID = 0
 local FARM_SIGN_NAME = "FarmSign"
 local FARM_SIGN_ATTACHMENT_NAME = "FarmSignAttachment"
+local OWN_FARM_SIGN_SCALE = 1.25
 
 local TEXT_GRADIENT = ColorSequence.new({
 	ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 253, 255)),
@@ -23,6 +24,7 @@ local TEXT_GRADIENT = ColorSequence.new({
 local WHITE = Color3.fromRGB(255, 255, 255)
 
 local originalGuiStyles: { [GuiObject]: { backgroundColor: Color3, backgroundTransparency: number } } = {}
+local originalFarmSignSizes: { [BillboardGui]: UDim2 } = {}
 local earlyUiStarted = false
 
 local function getOwnerUserId(farm: Instance): number
@@ -151,6 +153,18 @@ local function updateFarmSign(farm: Instance, ownerUserId: number, ownerName: st
 	end
 
 	local hasOwner = ownerUserId ~= EMPTY_OWNER_USER_ID
+	local originalSize = originalFarmSignSizes[farmSign] or farmSign.Size
+	originalFarmSignSizes[farmSign] = originalSize
+	if hasOwner and isOwnFarm then
+		farmSign.Size = UDim2.new(
+			originalSize.X.Scale * OWN_FARM_SIGN_SCALE,
+			originalSize.X.Offset * OWN_FARM_SIGN_SCALE,
+			originalSize.Y.Scale * OWN_FARM_SIGN_SCALE,
+			originalSize.Y.Offset * OWN_FARM_SIGN_SCALE
+		)
+	else
+		farmSign.Size = originalSize
+	end
 	farmSign.Enabled = hasOwner
 
 	local homeImage = findImageLabel(farmSign, "HomeImage")

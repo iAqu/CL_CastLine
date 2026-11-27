@@ -62,7 +62,11 @@ local function position(x)
 		end,
 	})
 end
-local data = { Wins = 2e15, PlotUpgradeLevel = 0 }
+local budget = 0
+for level = 1, upgrades.MAX_LEVEL do
+	budget += upgrades.Get(level).Price
+end
+local data = { Wins = budget, PlotUpgradeLevel = 0 }
 local profile = { Data = data }
 local players = {}
 local transitionEvents = {}
@@ -184,6 +188,13 @@ service = loadSource("src/ServerScriptService/Services/PlotUpgradeService.lua", 
 					Modules = {
 						PlotUpgradeData = upgrades,
 						PlotAppearance = appearance,
+						PlotFishMotion = {
+							GetBoundary = function() return {} end,
+							GetEntry = function(_, characterRoot)
+								local x = characterRoot.Position.X
+								return if x >= 30 and x <= 48 then {} else nil
+							end,
+						},
 						PlotUpgradeTransitionConfig = transitionConfig,
 					},
 				}
@@ -322,9 +333,23 @@ end
 nested = function()
 	assert(not service:RequestUpgrade(player, 0).ok, "Reentrant upgrade must be locked")
 end
+root.Position = position(36)
+assert(not service:RequestUpgrade(player, 0).ok, "The sign button still requires proximity to the sign")
+local beforePondUpgrade = data.Wins
+local eventCount = #transitionEvents
+waitHook = function()
+	root.Position = position(60)
+end
+assert(not service:RequestUpgrade(player, 0, true).ok and data.Wins == beforePondUpgrade)
+assert(transitionEvents[eventCount + 2].phase == "Cancel", "Leaving the plot during the upgrade cancels the purchase")
+root.Position = position(36)
+waitHook = function()
+	assert(not service:RequestUpgrade(player, 0, true).ok, "Concurrent purchases cannot enter the delayed commit")
+end
 for level = 1, 10 do
 	local old = data.Wins
-	assert(service:RequestUpgrade(player, level - 1).ok)
+	assert(service:RequestUpgrade(player, level - 1, level == 1).ok)
+	root.Position = position(0)
 	assert(data.Wins == old - upgrades.Get(level).Price and data.PlotUpgradeLevel == level)
 	assert(attributes.PlotCapacity == upgrades.Get(level).Capacity and currentLevel == level)
 	assert(not service:RequestUpgrade(player, level - 1).ok, "A duplicate expected level cannot buy twice")

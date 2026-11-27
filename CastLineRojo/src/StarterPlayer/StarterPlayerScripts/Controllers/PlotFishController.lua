@@ -18,6 +18,7 @@ local ItemToolUtil = require(ReplicatedStorage.Modules.ItemToolUtil)
 local MutationDataUtil = require(ReplicatedStorage.Modules.MutationDataUtil)
 local MutationVisualUtil = require(ReplicatedStorage.Modules.MutationVisualUtil)
 local NotificationClient = require(ReplicatedStorage.Modules.NotificationClient)
+local PlotFullGui = require(ReplicatedStorage.Modules.PlotFullGui)
 local PlotUpgradeData = require(ReplicatedStorage.Modules.PlotUpgradeData)
 local PlotFishMotion = require(ReplicatedStorage.Modules.PlotFishMotion)
 local PlotWorkspaceUtil = require(ReplicatedStorage.Modules.PlotWorkspaceUtil)
@@ -96,12 +97,21 @@ end
 
 function PlotFishController:KnitStart()
 	local service = Knit.GetService("PlotFishService")
+	local upgradeService = Knit.GetService("PlotUpgradeService")
 	local plotRoot
 	local displays = {}
 	local preview = createPreview()
 	local requestInFlight = false
+	local closeFullGui
 
-	local function request(callback, fallback: string, onSuccess)
+	LOCAL_PLAYER.CharacterRemoving:Connect(function()
+		if closeFullGui then
+			closeFullGui()
+			closeFullGui = nil
+		end
+	end)
+
+	local function request(callback, fallback: string, onSuccess, onRejected)
 		if requestInFlight then
 			return
 		end
@@ -112,7 +122,7 @@ function PlotFishController:KnitStart()
 					if onSuccess then
 						onSuccess(response)
 					end
-				else
+				elseif not onRejected or not onRejected(response) then
 					NotificationClient.RedNotify((response and response.message) or fallback)
 				end
 			end)
@@ -138,7 +148,7 @@ function PlotFishController:KnitStart()
 		local plot = getLocalPlot()
 		local boundary = plot and PlotFishMotion.GetBoundary(plot)
 		local root = getRoot()
-		local entry = boundary and root and PlotFishMotion.GetEntry(boundary, root)
+		local entry = boundary and root and PlotFishMotion.GetEntry(boundary, root, plot)
 		if not plot or not boundary or not entry then
 			return nil
 		end
@@ -162,6 +172,27 @@ function PlotFishController:KnitStart()
 		return uid, boundary, entry, emptySlot
 	end
 
+	local function showFull(uid, full)
+		if getPlacement(getHeldTool()) ~= uid then
+			return false
+		end
+		closeFullGui = PlotFullGui.Open(full, function()
+			request(function()
+				return service:RequestSwap(uid, full.swap.uid, full.swap.rate)
+			end, "Could not swap fish.", function(response)
+				splash(response.position)
+				NotificationClient.GreenNotify("Fish swapped!")
+			end)
+		end, function()
+			request(function()
+				return upgradeService:RequestUpgrade(full.level, true)
+			end, "Could not upgrade your plot.", function(response)
+				NotificationClient.GreenNotify("Plot upgraded! " .. response.capacity .. " fish slots")
+			end)
+		end)
+		return closeFullGui ~= nil
+	end
+
 	local function tryPlace(): boolean
 		local uid = getPlacement(getHeldTool())
 		if not uid then
@@ -175,6 +206,9 @@ function PlotFishController:KnitStart()
 			function(response)
 				splash(response.position)
 				NotificationClient.GreenNotify("Fish placed!")
+			end,
+			function(response)
+				return response and response.full and showFull(uid, response.full)
 			end
 		)
 		return true

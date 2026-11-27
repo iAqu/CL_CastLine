@@ -5,7 +5,7 @@ local function loadSource(path, environment)
 	return assert(load(source, path, "t", environment or getfenv()))()
 end
 local root = "src/ReplicatedStorage/Modules/"
-local function new()
+local function new(deepCatch)
 	local h = {
 		now = 100,
 		sample = 0.5,
@@ -143,6 +143,9 @@ local function new()
 },{__index=getfenv()}))
 	h.baitConfig = loadSource(root .. "FishingBaitConfig.lua")
 	local config = loadSource(root .. "FishingConfig.lua")
+	if not deepCatch then
+		config.GetDeepCatchEntrance = function() return nil end
+	end
 	local petConfig = loadSource(root .. "PetFeatureConfig.lua")
 	h.roll = loadSource(
 		root .. "FishingRoll.lua",
@@ -183,10 +186,13 @@ local function new()
 		FishingProgression = h.progression,
 		FishingBaitConfig = h.baitConfig,
 		FishingBiteSequence = {
-			GetBiteWindow = function(_, size, _, ready, _, _, _, fish, _, _, weight)
+			GetBiteWindow = function(_, size, _, ready, _, _, _, fish, _, _, weight, entrance)
 				h.biteSize = size
 				h.biteFish = fish
 				h.biteScale = weight / fish.DefaultWeight
+				if entrance then
+					return ready + config.DeepCatch.EntranceTime, math.huge, 3, h.biteScale
+				end
 				return ready + 1, if h.infiniteBite then math.huge else ready + 2, 3, h.biteScale
 			end,
 		},

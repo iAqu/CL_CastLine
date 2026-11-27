@@ -654,6 +654,9 @@ local function startEntryPresentation(entry)
 								hook = function(round, pressedAt)
 									return state.service:Hook(state.token, round, pressedAt)
 							end,
+							tapCatch = function(round, sequence)
+								return state.service:TapCatch(state.token, round, sequence)
+							end,
 							getHookResult = function(round)
 							return state.service:GetHookResult(state.token, round)
 						end,
@@ -662,6 +665,11 @@ local function startEntryPresentation(entry)
 							end,
 							onFailure = fail,
 						})
+						table.insert(state.connections, state.service.CatchEscaped:Connect(function(token, round)
+							if session == state and token == state.token then
+								state.sequence:OnCatchEscaped(round, os.clock())
+							end
+						end))
 						ContextActionService:BindActionAtPriority(CONFIRM_BINDING, function(_, inputState, input)
 							if session ~= state or GameplayInputGate.IsUiBlockingWorld() or GuiService.SelectedObject then
 								return Enum.ContextActionResult.Pass

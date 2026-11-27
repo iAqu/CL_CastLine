@@ -70,7 +70,8 @@ local function position(x)
 end
 
 local modules = "src/ReplicatedStorage/Modules/"
-local placements = loadSource(modules .. "PlotPlacementUtil.lua", require("./helpers/PlotUpgrades").environment)
+local upgrades = require("./helpers/PlotUpgrades")
+local placements = loadSource(modules .. "PlotPlacementUtil.lua", upgrades.environment)
 local stats = require("./helpers/ItemStats")
 local inventory = {
 	Small = { ItemID = "Small", CpsPrice = 4 },
@@ -181,6 +182,7 @@ local services = {
 			FishInventoryData = inventory,
 			MutationDataUtil = mutations,
 			PlotPlacementUtil = placements,
+			PlotUpgradeData = upgrades.data,
 			PlotFishIncome = income,
 			ItemStatUtil = stats,
 			ItemToolUtil = {
@@ -495,4 +497,47 @@ data.LastOnlineTime, data.PendingPlotOfflineCash = 100, 17
 income.PrepareOffline(data, 109)
 assert(data.PendingPlotOfflineCash == 17 + income.ComputeOfflineCash(baseRate, 9) * 2,
 	"Double only newly earned offline cash after applying the existing rounding rule")
+
+-- The full-plot offer previews the gain without consuming the held fish or changing the pond.
+root.Position = position(0)
+local incoming = hold("full-plot-incoming", nil, "Large", "Golden")
+local beforeSwap = client:GetEquippedFish(player)
+local beforeSwapRate = income.GetRate(data)
+local quoted = plotService:RequestPlace(player, "full-plot-incoming")
+assert(not quoted.ok and quoted.full.capacity == beforeSwap.capacity and quoted.full.level == data.PlotUpgradeLevel)
+local offer = quoted.full.swap
+local swapFolder = plot:FindFirstChild("PlacedFish")
+local oldDisplay = assert(swapFolder:FindFirstChild(offer.uid))
+assert(offer.rate > 0 and incoming.Parent == player.Character)
+assert(client:GetEquippedFish(player).revision == beforeSwap.revision)
+local function confirmSwap(target, rate)
+	return plotService:RequestSwap(player, "full-plot-incoming", target, rate)
+end
+assert(not confirmSwap("other-large", offer.rate).ok and not confirmSwap(offer.uid, offer.rate + 1).ok)
+root.Position = position(300)
+assert(not confirmSwap(offer.uid, offer.rate).ok, "Confirm from inside the owned plot")
+root.Position = position(0)
+failOnCreate = createCount + 1
+assert(not confirmSwap(offer.uid, offer.rate).ok and oldDisplay.Parent == swapFolder and incoming.Parent == player.Character)
+failOnCreate = nil
+local swapped = confirmSwap(offer.uid, offer.rate)
+assert(swapped.ok and swapped.position.X == 5 and not incoming.Parent)
+assert(not oldDisplay.Parent and backpack:FindFirstChild(offer.uid))
+assert(placements.GetItemUid(data.PlotPlacements, offer.slot) == "full-plot-incoming")
+assert(income.GetRate(data) - beforeSwapRate == offer.rate and #swapFolder:GetChildren() == beforeSwap.capacity)
+assert(not confirmSwap(offer.uid, offer.rate).ok, "Retrying a successful swap cannot return a second tool")
+
+local remaining = client:GetEquippedFish(player).fish
+local weakest = remaining[#remaining]
+for _, fish in {
+	{ uid = "full-plot-even", itemId = weakest.itemId, mutationId = weakest.mutationId },
+	{ uid = "full-plot-weaker", itemId = "Small", mutationId = "Normal" },
+} do
+	local held = hold(fish.uid, nil, fish.itemId, fish.mutationId)
+	local noGain = plotService:RequestPlace(player, fish.uid)
+	assert(noGain.full and not noGain.full.swap, "Only offer a swap when it increases income")
+	assert(not plotService:RequestSwap(player, fish.uid, weakest.uid, 0).ok)
+	assert(held.Parent == player.Character, "The held fish stays equipped when no swap is offered")
+	held:Destroy()
+end
 print("PlotFishService.test.lua passed")

@@ -78,6 +78,8 @@ local environment = setmetatable({
 	},
 }, { __index = getfenv() })
 environment.script.Parent.BaitElasticMotion = "elastic"
+environment.script.Parent.FishingCatchMeter = "catchMeter"
+modules.catchMeter = {}
 local baseRequire = environment.require
 local Elastic = assert(load(read("src/ReplicatedStorage/Modules/BaitElasticMotion.lua"), "Elastic", "t", environment))()
 environment.require = function(name)

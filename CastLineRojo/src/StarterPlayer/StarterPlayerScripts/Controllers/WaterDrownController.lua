@@ -6,7 +6,6 @@ local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
 local Knit = require(ReplicatedStorage.Packages.Knit)
-local GameplayInputGate = require(ReplicatedStorage.Modules.GameplayInputGate)
 local NotificationClient = require(ReplicatedStorage.Modules.NotificationClient)
 local WaterSurfaceUtil = require(ReplicatedStorage.Modules.WaterSurfaceUtil)
 
@@ -14,31 +13,9 @@ local WARNING_DELAY = 0
 local UNDERWATER_TWEEN_INFO = TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
 local DROWNING_ATTRIBUTE = "WaterDrowning"
 local DROWN_STARTED_AT_ATTRIBUTE = "WaterDrownStartedAt"
-local COLOR_CORRECTION_NAME = "UnderwaterColorCorrection"
-local BLUR_NAME = "UnderwaterBlur"
 local WARNING_GUI_NAME = "SeaDigWaterDrownWarning"
 local DEFAULT_DEATH_SOUND_ID = "rbxasset://sounds/uuhhh.wav"
 local DEFAULT_DEATH_SOUND_VOLUME = 0.5
-
-local UNDERWATER_COLOR = Color3.fromRGB(87, 158, 174)
-local UNDERWATER_PROPERTIES = {
-	Brightness = -0.12,
-	Contrast = 0.08,
-	Saturation = -0.25,
-	TintColor = UNDERWATER_COLOR,
-}
-local FISHING_UNDERWATER_PROPERTIES = {
-	Brightness = 0.06,
-	Contrast = 0,
-	Saturation = 0,
-	TintColor = Color3.fromRGB(205, 225, 255),
-}
-local SURFACE_PROPERTIES = {
-	Brightness = 0,
-	Contrast = 0,
-	Saturation = 0,
-	TintColor = Color3.new(1, 1, 1),
-}
 
 local localPlayer = Players.LocalPlayer
 
@@ -46,39 +23,81 @@ local WaterDrownController = Knit.CreateController {
 	Name = "WaterDrownController",
 	_ColorCorrection = nil,
 	_Blur = nil,
+	_SurfacePreset = nil,
+	_UnderwaterPreset = nil,
+	_SurfaceLighting = nil,
+	_UnderwaterLighting = nil,
 	_Underwater = false,
-	_FishingUnderwater = false,
 	_EffectTween = nil,
 	_BlurTween = nil,
+	_LightingTween = nil,
 	_WarningFrame = nil,
 	_PendingDroppedItemCount = 0,
 }
 
-function WaterDrownController:_ensureEffects()
-	if self._ColorCorrection and self._ColorCorrection.Parent == Lighting and self._Blur and self._Blur.Parent == Lighting then
-		return true
+local function getPreset(colorName: string, blurName: string)
+	local color = Lighting:FindFirstChild(colorName)
+	if not color or not color:IsA("ColorCorrectionEffect") then
+		warn("WaterDrownController: expected ColorCorrectionEffect at Lighting." .. colorName)
+		return nil
 	end
-	local colorCorrection = Lighting:FindFirstChild(COLOR_CORRECTION_NAME)
-	if not colorCorrection or not colorCorrection:IsA("ColorCorrectionEffect") then
-		warn("WaterDrownController: Lighting.UnderwaterColorCorrection is missing")
-		return false
+
+	local blur = Lighting:FindFirstChild(blurName)
+	if not blur or not blur:IsA("BlurEffect") then
+		warn("WaterDrownController: expected BlurEffect at Lighting." .. blurName)
+		return nil
 	end
-	for property, value in pairs(SURFACE_PROPERTIES) do
+	return { Color = color, Blur = blur }
+end
+
+local function colorProperties(color: ColorCorrectionEffect)
+	return {
+		TintColor = color.TintColor,
+		Brightness = color.Brightness,
+		Contrast = color.Contrast,
+		Saturation = color.Saturation,
+	}
+end
+
+function WaterDrownController:_initializeEffects()
+	local surface = getPreset("ColorCorrectionEffect", "Blur_Default")
+	if not surface then
+		return
+	end
+	local underwater = getPreset("UnderwaterColorCorrection", "UnderwaterBlur")
+	if not underwater then
+		return
+	end
+
+	local colorCorrection = Instance.new("ColorCorrectionEffect")
+	colorCorrection.Name = "WaterTransitionColorCorrection"
+	for property, value in pairs(colorProperties(surface.Color)) do
 		colorCorrection[property] = value
 	end
-	colorCorrection.Enabled = false
+	local blur = Instance.new("BlurEffect")
+	blur.Name = "WaterTransitionBlur"
+	blur.Size = surface.Blur.Size
 
-	local blur = Lighting:FindFirstChild(BLUR_NAME)
-	if not blur or not blur:IsA("BlurEffect") then
-		warn("WaterDrownController: Lighting.UnderwaterBlur is missing")
-		return false
-	end
-	blur.Size = 0
-	blur.Enabled = false
+	-- Render with one pair while keeping the authored values available as tween targets.
+	surface.Color.Enabled = false
+	surface.Blur.Enabled = false
+	underwater.Color.Enabled = false
+	underwater.Blur.Enabled = false
+	colorCorrection.Parent = Lighting
+	blur.Parent = Lighting
 
+	self._SurfacePreset = surface
+	self._UnderwaterPreset = underwater
 	self._ColorCorrection = colorCorrection
 	self._Blur = blur
-	return true
+
+	local ambient = underwater.Color:GetAttribute("Ambient")
+	local brightness = underwater.Color:GetAttribute("Brightness")
+	if typeof(ambient) == "Color3" and typeof(brightness) == "number" then
+		self._UnderwaterLighting = { Ambient = ambient, Brightness = brightness }
+	else
+		warn("WaterDrownController: Lighting.UnderwaterColorCorrection requires Ambient (Color3) and Brightness (number) attributes")
+	end
 end
 
 function WaterDrownController:_ensureWarningGui()
@@ -108,16 +127,49 @@ function WaterDrownController:_ensureWarningGui()
 	self._WarningFrame = frame
 end
 
-function WaterDrownController:_setUnderwater(enabled: boolean, fishing: boolean?)
-	local fishingUnderwater = enabled and fishing == true
-	if self._Underwater == enabled and self._FishingUnderwater == fishingUnderwater then
+function WaterDrownController:_tweenLighting(underwater: boolean)
+	local underwaterLighting = self._UnderwaterLighting
+	if not underwaterLighting then
+		return
+	end
+	if underwater and not self._SurfaceLighting then
+		self._SurfaceLighting = { Ambient = Lighting.Ambient, Brightness = Lighting.Brightness }
+	end
+	local target = if underwater then underwaterLighting else self._SurfaceLighting
+	if not target then
+		return
+	end
+
+	local previousTween = self._LightingTween
+	self._LightingTween = nil
+	if previousTween then
+		previousTween:Cancel()
+	end
+	local tween = TweenService:Create(Lighting, UNDERWATER_TWEEN_INFO, target)
+	self._LightingTween = tween
+	tween.Completed:Once(function(playbackState)
+		if self._LightingTween ~= tween then
+			return
+		end
+		self._LightingTween = nil
+		if not underwater and playbackState == Enum.PlaybackState.Completed then
+			self._SurfaceLighting = nil
+		end
+	end)
+	tween:Play()
+end
+
+function WaterDrownController:_setUnderwater(enabled: boolean)
+	if self._Underwater == enabled then
+		return
+	end
+	local preset = if enabled then self._UnderwaterPreset else self._SurfacePreset
+	local colorCorrection = self._ColorCorrection
+	local blur = self._Blur
+	if not preset or not colorCorrection or not blur then
 		return
 	end
 	self._Underwater = enabled
-	self._FishingUnderwater = fishingUnderwater
-	if not self:_ensureEffects() then
-		return
-	end
 
 	if self._EffectTween then
 		self._EffectTween:Cancel()
@@ -126,30 +178,11 @@ function WaterDrownController:_setUnderwater(enabled: boolean, fishing: boolean?
 		self._BlurTween:Cancel()
 	end
 
-	local colorCorrection = self._ColorCorrection
-	local blur = self._Blur
-	if not colorCorrection or not blur then
-		return
-	end
-
-	colorCorrection.Enabled = true
-	blur.Enabled = true
-	local correction = if fishingUnderwater then FISHING_UNDERWATER_PROPERTIES
-		elseif enabled then UNDERWATER_PROPERTIES else SURFACE_PROPERTIES
-	self._EffectTween = TweenService:Create(colorCorrection, UNDERWATER_TWEEN_INFO, correction)
-	self._BlurTween = TweenService:Create(blur, UNDERWATER_TWEEN_INFO, { Size = enabled and 8 or 0 })
+	self._EffectTween = TweenService:Create(colorCorrection, UNDERWATER_TWEEN_INFO, colorProperties(preset.Color))
+	self._BlurTween = TweenService:Create(blur, UNDERWATER_TWEEN_INFO, { Size = preset.Blur.Size })
 	self._EffectTween:Play()
 	self._BlurTween:Play()
-
-	if not enabled then
-		local finishedTween = self._BlurTween
-		finishedTween.Completed:Connect(function(playbackState)
-			if playbackState == Enum.PlaybackState.Completed and not self._Underwater and self._Blur == blur then
-				colorCorrection.Enabled = false
-				blur.Enabled = false
-			end
-		end)
-	end
+	self:_tweenLighting(enabled)
 end
 
 function WaterDrownController:_updateWarning()
@@ -227,7 +260,7 @@ local function playDefaultDeathSound(character: Model)
 end
 
 function WaterDrownController:KnitStart()
-	self:_ensureEffects()
+	self:_initializeEffects()
 	self:_ensureWarningGui()
 	local waterDrownService = Knit.GetService("WaterDrownService")
 	waterDrownService.Drowned:Connect(function(character: Model)
@@ -254,7 +287,7 @@ function WaterDrownController:KnitStart()
 	RunService:BindToRenderStep("SeaDigWaterDrownVisuals", Enum.RenderPriority.Camera.Value + 4, function()
 		local camera = Workspace.CurrentCamera
 		local cameraUnderwater = camera and WaterSurfaceUtil.IsPointSubmerged(camera.CFrame.Position) or false
-		self:_setUnderwater(cameraUnderwater, cameraUnderwater and GameplayInputGate.IsActive("Fishing"))
+		self:_setUnderwater(cameraUnderwater)
 		self:_updateWarning()
 	end)
 end

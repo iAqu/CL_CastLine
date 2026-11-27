@@ -7,6 +7,22 @@ local FINGER_X, FINGER_Y = 0.84, 0.6
 local WAIT_COLOR = Color3.new(1, 1, 1)
 local HOOK_COLOR = Color3.fromRGB(unpack(Config.Instructions.Hook.Color))
 
+function View.CreateTapFinger(parent, zIndex, image)
+	local tap = Instance.new("ImageLabel")
+	tap.Name, tap.Image, tap.BackgroundTransparency = "HookTapFinger", image or "rbxassetid://8903957093", 1
+	tap.AnchorPoint, tap.ScaleType, tap.ZIndex = Vector2.new(0.5, 0.5), Enum.ScaleType.Fit, zIndex
+	tap.Active, tap.Selectable, tap.Interactable, tap.Visible = false, false, false, false
+	tap.Parent = parent
+	return tap
+end
+
+function View.AnimateTapFinger(finger, elapsed, position, size)
+	local press = 0.5 - 0.5 * math.cos(elapsed * math.pi * 2 / 0.36)
+	local pressedSize = size * (1 - press * 0.15)
+	finger.Position = position + UDim2.fromOffset(-10 * press, 6 * press)
+	finger.Size = UDim2.fromOffset(pressedSize, pressedSize)
+end
+
 function View.Create(playerGui, name)
 	local gui = Instance.new("ScreenGui")
 	gui.Name, gui.ResetOnSpawn, gui.IgnoreGuiInset, gui.DisplayOrder = name, false, true, 200
@@ -29,11 +45,8 @@ function View.Create(playerGui, name)
 	biteCue.TextXAlignment, biteCue.TextYAlignment = Enum.TextXAlignment.Center, Enum.TextYAlignment.Bottom
 	biteCue:FindFirstChildOfClass("UITextSizeConstraint").MaxTextSize = 64
 	biteCue.Parent = gui
-	local tap = Instance.new("ImageLabel")
-	tap.Name, tap.Image, tap.BackgroundTransparency = "HookTapFinger", "rbxassetid://8903957093", 1
-	tap.AnchorPoint, tap.ScaleType, tap.ZIndex = Vector2.new(0.5, 0.5), Enum.ScaleType.Fit, 3
-	tap.Active, tap.Selectable, tap.Interactable, tap.Visible = false, false, false, false
-	tap.Parent, gui.Parent = gui, playerGui
+	local tap = View.CreateTapFinger(gui, 3)
+	gui.Parent = playerGui
 	return gui, label, tap, biteCue
 end
 
@@ -52,10 +65,7 @@ function View.ShowBiteCue(label, finger, phase, elapsed)
 		label.TextColor3 = if canHook then HOOK_COLOR else WAIT_COLOR
 	end
 	if canHook then
-		local press = 0.5 - 0.5 * math.cos(elapsed * math.pi * 2 / 0.36)
-		local pressedSize = size * (1 - press * 0.15)
-		finger.Position = UDim2.new(FINGER_X, -10 * press, FINGER_Y, 6 * press)
-		finger.Size = UDim2.fromOffset(pressedSize, pressedSize)
+		View.AnimateTapFinger(finger, elapsed, UDim2.fromScale(FINGER_X, FINGER_Y), size)
 	end
 end
 

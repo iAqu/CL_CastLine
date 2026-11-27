@@ -1,4 +1,5 @@
 local HttpService = game:GetService("HttpService")
+local Workspace = game:GetService("Workspace")
 
 local FishingAssets = require(script.Parent.FishingAssets)
 local ItemStatUtil = require(script.Parent.ItemStatUtil)
@@ -62,16 +63,43 @@ local function clampToSwimArea(boundary: BasePart, position: Vector3): Vector3
 	return clampToPlot(position, halfX, halfZ)
 end
 
-function PlotFishMotion.GetEntry(boundary: BasePart, root: BasePart): Vector3?
+local function isInsideXZ(position: Vector3, half: Vector3): boolean
+	return math.abs(position.X) <= half.X and math.abs(position.Z) <= half.Z
+end
+
+local function findHomeLot(plot: Instance): BasePart?
+	local spawn = plot:FindFirstChild("AreaSpawnPoint")
+	local map = Workspace:FindFirstChild("RoundPondPrototype")
+	local homes = map and map:FindFirstChild("Homes")
+	if not spawn or not spawn:IsA("BasePart") or not homes then
+		return nil
+	end
+
+	-- The map's Home models and the gameplay Plot models use different slot numbers.
+	local matchingLot
+	for _, home in homes:GetChildren() do
+		local lot = home:FindFirstChild("HomeLot")
+		if lot and lot:IsA("BasePart") and isInsideXZ(lot.CFrame:PointToObjectSpace(spawn.Position), lot.Size * 0.5) then
+			if matchingLot then
+				return nil
+			end
+			matchingLot = lot
+		end
+	end
+	return matchingLot
+end
+
+function PlotFishMotion.GetEntry(boundary: BasePart, root: BasePart, plot: Instance?): Vector3?
 	local position = boundary.CFrame:PointToObjectSpace(root.Position)
 	local half = boundary.Size * 0.5
-	if
-		math.abs(position.X) > half.X
-		or math.abs(position.Z) > half.Z
-		or position.Y < -2
-		or position.Y > half.Y + 10
-	then
+	if position.Y < -2 or position.Y > half.Y + 10 then
 		return nil
+	end
+	if not isInsideXZ(position, half) then
+		local lot = plot and findHomeLot(plot)
+		if not lot or not isInsideXZ(lot.CFrame:PointToObjectSpace(root.Position), lot.Size * 0.5) then
+			return nil
+		end
 	end
 	local forward = boundary.CFrame:VectorToObjectSpace(root.CFrame.LookVector)
 	local horizontal = Vector3.new(forward.X, 0, forward.Z)

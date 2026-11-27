@@ -13,7 +13,7 @@ local function near(a, b)
 	assert(math.abs(a - b) < 0.0001, tostring(a) .. " ~= " .. tostring(b))
 end
 
-local function create(baitHeight)
+local function create(baitHeight, fishingDepth)
 	local surfaceY = assert(Water.GetWaterSurfaceY(), "Water surface is missing")
 	local target = Vector3.new(1838, surfaceY, 1010)
 	local folder = Instance.new("Folder")
@@ -29,6 +29,7 @@ local function create(baitHeight)
 		folder = folder,
 		bait = bait,
 		baitVisualScale = Vector3.one,
+		fishingDepth = fishingDepth or 0,
 		forward = Vector3.zAxis,
 		launch = target - Vector3.zAxis * 55,
 		spin = 0,
@@ -76,17 +77,19 @@ local function create(baitHeight)
 			if name == vfx.Struggle then
 				near(fishScale, self.bite.scale)
 				local pose = self.bite.pendingPose
-				local frame, baitPosition = self.bite:_pose(pose.phase, pose.elapsed, target, now, pose.request)
-				local centered = target:Lerp(baitPosition, vfx.StrugglePositionScale)
+				local frame, baitPosition = self.bite:_pose(pose.phase, pose.elapsed, pose.target, now, pose.request)
+				local centered = pose.target:Lerp(baitPosition, vfx.StrugglePositionScale)
 				near(position.X, centered.X)
 				near(position.Z, centered.Z)
 				local flat = Vector3.new(1, 0, 1)
 				assert(
-					((position - target) * flat).Magnitude <= ((baitPosition - target) * flat).Magnitude * 0.6 + 0.001,
+					((position - pose.target) * flat).Magnitude
+						<= ((baitPosition - pose.target) * flat).Magnitude * 0.6 + 0.001,
 					"Struggle VFX spread beyond the central 60% of the orbit"
 				)
-				near(position.Y, target.Y)
-				local forward = (frame.LookVector * Vector3.new(1, 0, 1)).Unit
+				near(position.Y, target.Y - self.fishingDepth)
+				local heading = frame.LookVector * flat
+				local forward = if heading.Magnitude > 0.00001 then heading.Unit else -self.bite.spawnDirection
 				assert(effect.model:GetPivot().LookVector:Dot(forward) > 0.9999, "Struggle VFX heading drifted")
 			end
 			table.insert(self.events, { name = name, at = now, effect = effect })
@@ -126,6 +129,34 @@ local function count(owner, name)
 		end
 	end
 	return result
+end
+
+local function checkDeepStruggle()
+	local depth = config.Landing.FishingDepth
+	assert(depth > 0, "Deep struggle requires a positive fishing depth")
+	local owner, surface = create(nil, depth)
+	local timeline = begin(owner, 0)
+	owner.bite:SetDeepCatch("Rise", nil, 4)
+	local hookAt = timeline.biteAt + 0.55
+	assert(owner.bite:Update(timeline.biteAt, true) == "Bite", "Deep bite did not wait for input")
+	owner.bite:Update(hookAt, true)
+	assert(count(owner, vfx.Struggle) == 0, "Deep bite splashed before input")
+	assert(owner.bite:TryHook(hookAt, nil, true), "Deep bite did not enter struggle after input")
+	owner.bite:Update(hookAt, true)
+	assert(count(owner, vfx.Struggle) == 1, "Deep struggle duplicated its first burst")
+	owner.bite:Update(hookAt + vfx.StruggleInterval, true)
+	assert(count(owner, vfx.Struggle) == 2, "Deep struggle missed its next burst")
+
+	local liftAt = hookAt + 2 * vfx.StruggleInterval
+	owner.bite:ConfirmHook(liftAt, {})
+	assert(owner.bite:Update(liftAt, true) == "Lifting", "Deep catch did not start lifting")
+	local exitAt = liftAt + owner.bite.liftPlan.exitAt + 0.001
+	owner.bite:Update(exitAt, true)
+	owner.bite:Update(exitAt, true)
+	assert(count(owner, vfx.Struggle) == 2, "Deep struggle kept emitting after lift")
+	assert(count(owner, vfx.Exit) == 1, "Deep catch exit did not play once")
+	near(owner.events[#owner.events].effect.model:GetPivot().Position.Y, surface.Y)
+	owner:Destroy()
 end
 
 local function checkStruggleSize()
@@ -206,6 +237,7 @@ local function checkIdleWaterVFX()
 end
 
 local ok, result = xpcall(function()
+	checkDeepStruggle()
 	checkStruggleSize()
 	local idleEnabled = vfx.IdleEnabled
 	local idleOK, idleError = pcall(checkIdleWaterVFX)
@@ -241,10 +273,12 @@ local ok, result = xpcall(function()
 			(bite:_basePose("Approaching", timeline.approachTime, target)),
 			holding,
 			(bite:_repositionPose(1, math.huge, target)),
-			(bite:_struggleFrame(timeline.struggleTime, target)),
 		}) do
 			assert(math.abs(pose.Position.Y - restingY) < 0.001, "Swim depth must be relative to the Top surface")
 		end
+		local struggle = bite:_struggleFrame(timeline.struggleTime, target)
+		local mouth = struggle:PointToWorldSpace(bite.mouthOffset * bite.scale)
+		near(mouth.Y, target.Y)
 		owner._startBiteRound = function() end
 		owner:_land(10)
 		near(owner.events[1].effect.model:GetPivot().Position.Y, surface.Y)
@@ -384,15 +418,17 @@ local ok, result = xpcall(function()
 			end
 			local liftAt = hookAt + config.Bite.StruggleTime + 0.001
 			owner.bite:Update(liftAt, true)
+			local exitAt = timeline.startedAt + owner.bite.liftPlan.exitAt + 0.001
+			owner.bite:Update(exitAt, true)
 			assert(count(owner, vfx.Struggle) == expected and owner.legacySplashes == 0, "Lift retained legacy splash")
 			assert(count(owner, vfx.Exit) == 1, "Exit or presentation timing changed")
 			local exit = owner.events[#owner.events].effect
 			near(exit.model:GetPivot().Position.Y, owner:_waterTarget().Y)
 			owner.bite:Present()
 			owner.bite:Present()
-			owner.bite:Update(liftAt + 0.15)
+			owner.bite:Update(exitAt + 0.15)
 			assert(count(owner, vfx.Exit) == 1, "Exit replayed")
-			owner:_updateWaterEffects(liftAt + vfx.Lifetime + 0.01)
+			owner:_updateWaterEffects(exitAt + vfx.Lifetime + 0.01)
 			assert(#owner.waterVFX == 0, "Finished struggle VFX leaked")
 			owner:Destroy()
 			cadenceCases += 1
@@ -462,6 +498,7 @@ local ok, result = xpcall(function()
 	missing:Destroy()
 	return {
 		passed = true,
+		deepStruggle = true,
 		cadenceCases = cadenceCases,
 		delay = true,
 		duration = true,

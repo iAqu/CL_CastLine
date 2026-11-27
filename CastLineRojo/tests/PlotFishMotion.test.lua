@@ -71,6 +71,12 @@ local stats = assert(load(read(statsPath), statsPath, "t", setmetatable({
 	Vector2 = vector2,
 }, { __index = getfenv() })))()
 local templates = {}
+local workspaceChildren = {}
+local workspace = {
+	FindFirstChild = function(_, name)
+		return workspaceChildren[name]
+	end,
+}
 
 local motionPath = "src/ReplicatedStorage/Modules/PlotFishMotion.lua"
 local motion = assert(load(
@@ -78,8 +84,8 @@ local motion = assert(load(
 	motionPath,
 	"t",
 	setmetatable({
-		game = { GetService = function()
-			return httpService
+		game = { GetService = function(_, name)
+			return if name == "Workspace" then workspace else httpService
 		end },
 		require = function(module)
 			return module
@@ -103,6 +109,7 @@ local function boundaryPart(size, cframe)
 	return {
 		Size = size,
 		CFrame = cframe,
+		Position = cframe.Position,
 		IsA = function(_, className)
 			return className == "BasePart"
 		end,
@@ -138,6 +145,53 @@ assert(not motion.GetEntry(selected, entryRoot) and motion.GetEntry(legacy, entr
 
 local function expectVector(actual, expected, message)
 	assert((actual - expected).Magnitude < 1e-5, message)
+end
+
+do
+	-- The HomeLot is a narrow path that overlaps the entrance of the rotated Ground.
+	local function partAt(x, y, z, size)
+		return boundaryPart(size, frame(groundFrame:PointToWorldSpace(vector.new(x, y, z)), 0.37))
+	end
+	local function rootAt(x, y, z)
+		local cframe = frame(groundFrame:PointToWorldSpace(vector.new(x, y, z)), 0.37)
+		return { Position = cframe.Position, CFrame = cframe }
+	end
+	local function home(lot)
+		return {
+			FindFirstChild = function(_, name)
+				assert(name == "HomeLot")
+				return lot
+			end,
+		}
+	end
+	local ownLot = home(partAt(-0.34, -0.4, -44.6, vector.new(14.22, 1.78, 40.2)))
+	local otherLot = home(partAt(96, -0.4, -44.6, vector.new(14.22, 1.78, 40.2)))
+	local homes = { otherLot, ownLot }
+	workspaceChildren.RoundPondPrototype = {
+		FindFirstChild = function(_, name)
+			assert(name == "Homes")
+			return { GetChildren = function() return homes end }
+		end,
+	}
+	children.AreaSpawnPoint = partAt(-0.34, 3.72, -49.41, vector.new(2, 1, 2))
+
+	assert(motion.GetEntry(ground, rootAt(-0.34, 3.72, -27), plot), "The inside sample at the entrance must pass")
+	local walkwayEntry = assert(motion.GetEntry(ground, rootAt(-0.34, 3.72, -29), plot),
+		"The server sample across the entrance must also pass")
+	expectVector(walkwayEntry, vector.new(-0.34, 0, -26.5), "The walkway entry must land in the swim area")
+	assert(motion.GetEntry(ground, rootAt(-0.34, 3.72, -49.41), plot), "Accept placement at the home spawn")
+	assert(not motion.GetEntry(ground, rootAt(8, 3.72, -34), plot), "Reject the public area alongside the path")
+	assert(not motion.GetEntry(ground, rootAt(-0.34, 3.72, -74), plot), "Reject the fishing dock beyond the path")
+	assert(not motion.GetEntry(ground, rootAt(96, 3.72, -44.6), plot), "Reject other homes")
+	assert(not motion.GetEntry(ground, rootAt(-0.34, 30, -49.41), plot), "Keep the existing height limits")
+
+	table.insert(homes, home(partAt(2, -0.4, -49, vector.new(10, 1, 10))))
+	assert(not motion.GetEntry(ground, rootAt(-0.34, 3.72, -49.41), plot), "Ambiguous HomeLots must fall back to Ground")
+	assert(motion.GetEntry(ground, rootAt(-0.34, 3.72, -27), plot), "Ground placement still works when lots overlap")
+	homes = { otherLot }
+	assert(not motion.GetEntry(ground, rootAt(-0.34, 3.72, -49.41), plot), "An unmatched spawn must fall back to Ground")
+	children.AreaSpawnPoint = nil
+	workspaceChildren.RoundPondPrototype = nil
 end
 
 local function expectHorizontal(actual, expected, message)

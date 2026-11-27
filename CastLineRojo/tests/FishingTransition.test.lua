@@ -255,6 +255,7 @@ local function fixture(deferBegin: boolean?, startOutside: boolean?, deferCast: 
 		}
 	end
 	local fishingService = {
+		CatchEscaped = signal(),
 		AnalyticsPresentation = { Fire = function() end },
 		JoinEvent = function(_, slotId)
 			return {

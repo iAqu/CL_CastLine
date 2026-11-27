@@ -28,10 +28,14 @@ local ok, result = xpcall(function()
 		_presentBait = function() end,
 		_waterFeedback = function() end,
 		_playWaterVFX = function() end,
-		_sound = function(_, name)
-			assert(name == "FishBite", "Unexpected cue")
-			sounds += 1
-		end,
+		_impulse = function() end,
+		fishAudio = {
+			SetPhase = function(_, phase)
+				if phase == "Bite" then
+					sounds += 1
+				end
+			end,
+		},
 	}
 	local function close(a, b, label)
 		assert((a - b).Magnitude < epsilon, label)
@@ -46,9 +50,10 @@ local ok, result = xpcall(function()
 		return active:_pose(phase, elapsed, target, poseClock + elapsed)
 	end
 	local function mouth(frame)
-		return frame:PointToWorldSpace(active.mouthOffset)
+		return frame:PointToWorldSpace(active.mouthOffset * active.scale)
 	end
 	local cases, samples = 0, 0
+	local template = storage.Models.Fish.ElderFish
 	local corner = math.atan2(bait.Size.X, bait.Size.Z)
 	for _, yaw in ipairs({ 0, math.pi / 2, math.pi / 4, corner, corner - 1e-7, corner + 1e-7 }) do
 		for sector = 1, 3 do
@@ -71,7 +76,7 @@ local ok, result = xpcall(function()
 							return if high then maximum else low
 						end,
 					}
-					active = Bite.new(owner, 0, 0, random, visualRandom)
+					active = Bite.new(owner, 0, 0, random, visualRandom, template)
 					local function onLine(point)
 						assert(
 							math.abs(((point - target) * flat):Cross(active.spawnDirection).Y) < epsilon,
@@ -92,8 +97,8 @@ local ok, result = xpcall(function()
 						local restTime = if index > 1 then active.repositions[index - 1].path.duration else 0
 						local rest = pose("Holding", restTime)
 						sameFrame(rest, pose("Nibbling", 0), "Hold/attack")
-						for _, canonical in ipairs({ 0.12, 0.15, 0.18 }) do
-							local elapsed = canonical / timing.nibbleSpeed
+						for _, fraction in ipairs({ 0, 0.5, 1 }) do
+							local elapsed = timing.attackTime + (timing.returnAt - timing.attackTime) * fraction
 							local frame, baitPosition, _, rotation = pose("Nibbling", elapsed)
 							local displayed = active:_pose("Nibbling", elapsed, target, poseClock + elapsed, nil, view.Position)
 							local edge = baitPosition + active:_contactOffset(
@@ -195,22 +200,15 @@ local ok, result = xpcall(function()
 					end
 					local finish = pose("Struggling", settings.StruggleTime)
 					sameFrame(finish, pose("Lifting", 0), "Struggle/lift")
-					local initial = pose("Struggling", 0)
-					local initialRadius = ((initial.Position - target) * flat).Magnitude
-					local previousRadius, previousRadial
+					local previousRadial
 					for sample = 0, 180 do
 						local time = sample / 60
-						-- 缩圈与切线检查基础路径；绕嘴部的姿态补偿会轻微移动鱼身中心。
 						local frame = active:_basePose("Struggling", time, target)
-						local delta = (frame.Position - target) * flat
-						local radial = delta.Magnitude
-						if time <= settings.Struggle.BlendTime then
-							assert(radial >= (previousRadius or initialRadius) - epsilon, "Orbit did not expand initially")
-						else
-							assert(radial <= previousRadius + epsilon, "Orbit grew after initial expansion")
-						end
-						if math.abs(time - settings.Struggle.BlendTime) < 1e-7 then
-							assert(math.abs(radial / initialRadius - 1.2) < epsilon, "Initial expansion missed 1.2x radius")
+						local contact = mouth(frame)
+						local delta = (contact - target) * flat
+						if time >= settings.Struggle.BlendTime then
+							assert(math.abs(delta.Magnitude - settings.Struggle.Radius) < epsilon, "Wrong contact radius")
+							assert(math.abs(contact.Y - target.Y) < epsilon, "Contact left the horizontal circle")
 						end
 						if previousRadial then
 							assert(previousRadial:Cross(delta.Unit).Y * active.motion.mirror < 1e-5, "Orbit reversed")
@@ -219,15 +217,11 @@ local ok, result = xpcall(function()
 							local earlier = active:_basePose("Struggling", time - 0.0001, target)
 							local later = active:_basePose("Struggling", time + 0.0001, target)
 							-- 弹性表现另有上下浮动，绕圈朝向跟随水平切线。
-							local velocity = ((later.Position - earlier.Position) * flat).Unit
+							local velocity = ((mouth(later) - mouth(earlier)) * flat).Unit
 							assert((frame.LookVector * flat).Unit:Dot(velocity) > 0.999, "Orbit body missed tangent")
 						end
-						previousRadius, previousRadial = radial, delta.Unit
+						previousRadial = if delta.Magnitude > epsilon then delta.Unit else nil
 					end
-					assert(
-						math.abs(previousRadius / initialRadius - active.motion.orbit.endRadius) < epsilon,
-						"Final radius wrong"
-					)
 					for _, boundary in ipairs({ 0, settings.Struggle.BlendTime, settings.StruggleTime }) do
 						sameFrame(
 							pose("Struggling", math.max(0, boundary - 1e-6)),

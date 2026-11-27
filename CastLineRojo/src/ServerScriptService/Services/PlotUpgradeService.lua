@@ -4,6 +4,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Knit = require(ReplicatedStorage.Packages.Knit)
 local PlotUpgradeData = require(ReplicatedStorage.Modules.PlotUpgradeData)
 local PlotAppearance = require(ReplicatedStorage.Modules.PlotAppearance)
+local PlotFishMotion = require(ReplicatedStorage.Modules.PlotFishMotion)
 local TransitionConfig = require(ReplicatedStorage.Modules.PlotUpgradeTransitionConfig)
 local PlayerDataService = require(script.Parent.PlayerDataService)
 local Analytics = require(script.Parent.OnboardingAnalyticsService)
@@ -30,7 +31,7 @@ function PlotUpgradeService:ResetPlot(plot: Instance)
 	PlotAppearance.Apply(plot, PlotUpgradeData.Get(0))
 end
 
-local function validatePurchase(player: Player, expectedLevel: unknown, previous)
+local function validatePurchase(player: Player, expectedLevel: unknown, fromPond: boolean, previous)
 	if player.Parent ~= Players then
 		return nil, "Your plot is unavailable."
 	end
@@ -59,19 +60,22 @@ local function validatePurchase(player: Player, expectedLevel: unknown, previous
 	if not config then
 		return nil, "Your plot is already at maximum level."
 	end
-	local sign = plot:FindFirstChild("Sign")
-	local board = sign and sign:FindFirstChild("UIPart")
 	local character = player.Character
 	local root = character and character:FindFirstChild("HumanoidRootPart")
 	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-	if
-		not root
-		or not board
-		or not humanoid
-		or humanoid.Health <= 0
-		or (root.Position - board.Position).Magnitude > 22
-	then
-		return nil, "Walk up to your upgrade sign."
+	if fromPond then
+		local boundary = PlotFishMotion.GetBoundary(plot)
+		if not root or not humanoid or humanoid.Health <= 0 or not boundary
+			or not PlotFishMotion.GetEntry(boundary, root, plot)
+		then
+			return nil, "Stand inside your own plot to upgrade it."
+		end
+	else
+		local sign = plot:FindFirstChild("Sign")
+		local board = sign and sign:FindFirstChild("UIPart")
+		if not root or not board or not humanoid or humanoid.Health <= 0 or (root.Position - board.Position).Magnitude > 22 then
+			return nil, "Walk up to your upgrade sign."
+		end
 	end
 	if typeof(data.Wins) ~= "number" or data.Wins ~= data.Wins or data.Wins < config.Price then
 		return nil, "Not enough money."
@@ -131,11 +135,12 @@ function PlotUpgradeService:_commitUpgrade(player, context)
 	return { ok = true, level = config.Level, capacity = config.Capacity }
 end
 
-function PlotUpgradeService:RequestUpgrade(player: Player, expectedLevel: unknown)
+function PlotUpgradeService:RequestUpgrade(player: Player, expectedLevel: unknown, fromPond: unknown)
 	if purchasing[player] then
 		return failure("An upgrade is already in progress.")
 	end
-	local context, message = validatePurchase(player, expectedLevel)
+	local atPond = fromPond == true
+	local context, message = validatePurchase(player, expectedLevel, atPond)
 	if not context then
 		return failure(message)
 	end
@@ -144,7 +149,7 @@ function PlotUpgradeService:RequestUpgrade(player: Player, expectedLevel: unknow
 	self:_broadcast("Begin", context, id)
 	local ok, response = pcall(function()
 		task.wait(TransitionConfig.CoverDelay)
-		local current, reason = validatePurchase(player, expectedLevel, context)
+		local current, reason = validatePurchase(player, expectedLevel, atPond, context)
 		if not current or purchasing[player] ~= id then
 			return failure(reason or "Your plot changed. Please try again.")
 		end
@@ -161,8 +166,8 @@ function PlotUpgradeService:RequestUpgrade(player: Player, expectedLevel: unknow
 	return response
 end
 
-function PlotUpgradeService.Client:RequestUpgrade(player: Player, expectedLevel: unknown)
-	return self.Server:RequestUpgrade(player, expectedLevel)
+function PlotUpgradeService.Client:RequestUpgrade(player: Player, expectedLevel: unknown, fromPond: boolean?)
+	return self.Server:RequestUpgrade(player, expectedLevel, fromPond)
 end
 
 function PlotUpgradeService:KnitStart()

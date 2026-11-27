@@ -19,7 +19,7 @@
 
 - 参考项目的 Rojo 代码和 Studio 工程始终只读。源码只看 `Ref_Game_Code`，`Ref_Game_Rbxl` 仅用于在 Studio 打开参考工程。美术、资源、实例树和布局优先通过 Roblox Studio MCP 查看已打开的工程。美术与资源尽量复用或平移。
 - 工程未打开时，在参考项目目录定位 `.rbxl` 或 `.rbxlx`（通常在 `Ref_Game_Rbxl`），禁止在 Studio 内搜索工程。每次告知用户工程名和完整路径并获确认后，用命令行按完整路径打开。打开后刷新连接列表，核实目标，再按共享锁流程查看。
-- 简称为 Grow a Garden 2（GAG2）、Be a Fish Bait（FishBait）、Throw Food For Animals（ThrowFood）、Goal Kick Simulator（GoalKick）、Kick a Lucky Block（KickLuckyBlock）、Fish It（FishIt）、Fish From Moon（FishFromMoon）、Triathlon Star Simulator（Triathlon）、Steal An Egg（StealEgg）、Greedy Growers（GreedyGrower）。
+- 简称为 Grow a Garden 2（GAG2）、Be a Fish Bait（FishBait）、Throw Food For Animals（ThrowFood）、Goal Kick Simulator（GoalKick）、Kick a Lucky Block（KickLuckyBlock）、Fish It（FishIt）、Fish From Moon（FishFromMoon）、Triathlon Star Simulator（Triathlon）、Steal An Egg（StealEgg）、Greedy Growers（GreedyGrower）、Cast For Fish（CastForFish）、Harpoon a Fish（HarpoonFish）、Fish For Sea Animals（FishForSeaAnimals）。
 
 ## Studio / Rojo
 

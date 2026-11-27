@@ -243,7 +243,7 @@ function Controller:KnitStart()
 				end
 				if holdingFish and boundary then
 					if not Gate.IsUiBlockingWorld() then
-						if PlotFishMotion.GetEntry(boundary, root) then
+						if PlotFishMotion.GetEntry(boundary, root, plot) then
 							message = if UserInputService.PreferredInput == Enum.PreferredInput.Gamepad
 								then "PRESS R2 TO PLACE"
 								else "TAP TO PLACE"

@@ -12,6 +12,7 @@ local MutationDataUtil = require(ReplicatedStorage.Modules.MutationDataUtil)
 local PlotFishIncome = require(ReplicatedStorage.Modules.PlotFishIncome)
 local PlotFishMotion = require(ReplicatedStorage.Modules.PlotFishMotion)
 local PlotPlacementUtil = require(ReplicatedStorage.Modules.PlotPlacementUtil)
+local PlotUpgradeData = require(ReplicatedStorage.Modules.PlotUpgradeData)
 local PlayerDataService = require(ServerScriptService.Services.PlayerDataService)
 local Analytics = require(ServerScriptService.Services.OnboardingAnalyticsService)
 
@@ -223,59 +224,119 @@ function PlotFishService:_restore(player: Player)
 	end
 end
 
-function PlotFishService:RequestPlace(player: Player, uid: unknown)
+local function getPlacementContext(player: Player, uid: unknown)
 	if typeof(uid) ~= "string" or uid == "" then
-		return reject("Invalid fish.")
+		return nil, "Invalid fish."
 	end
 	local plot = getOwnedPlot(player)
 	local boundary = plot and PlotFishMotion.GetBoundary(plot)
 	local root = getRoot(player)
-	local entry = boundary and root and PlotFishMotion.GetEntry(boundary, root)
+	local entry = boundary and root and PlotFishMotion.GetEntry(boundary, root, plot)
 	if not plot or not boundary or not entry then
-		return reject("Stand inside your own plot to place a fish.")
+		return nil, "Stand inside your own plot to place a fish."
 	end
 	local heldTool = getHeldItemTool(player, uid)
 	if not heldTool then
-		return reject("Hold a fish to place it.")
+		return nil, "Hold a fish to place it."
 	end
 	local profile = PlayerDataService:GetProfile(player)
 	if not profile then
-		return reject("Fish data is unavailable.")
+		return nil, "Fish data is unavailable."
 	end
-	local placements = profile.Data.PlotPlacements
-	if PlotPlacementUtil.IsPlaced(placements, uid) then
-		return reject("This fish is already in your plot.")
+	local data = profile.Data
+	if PlotPlacementUtil.IsPlaced(data.PlotPlacements, uid) then
+		return nil, "This fish is already in your plot."
 	end
-	local emptySlot
-	for slot = 1, PlotPlacementUtil.GetCapacity(profile.Data) do
-		if not PlotPlacementUtil.GetItemUid(placements, slot) then
-			emptySlot = slot
-			break
+	local item, record = readItemRecord(data.Items[uid])
+	if not item or not record or not PlotFishMotion.GetGeometry(item, record.Weight, boundary) then
+		return nil, "Fish data is unavailable."
+	end
+	return {
+		data = data,
+		plot = plot,
+		boundary = boundary,
+		entry = entry,
+		heldTool = heldTool,
+		item = item,
+		record = record,
+	}
+end
+
+local function findEmptySlot(data, capacity)
+	for slot = 1, capacity do
+		if not PlotPlacementUtil.GetItemUid(data.PlotPlacements, slot) then
+			return slot
 		end
 	end
-	if not emptySlot then
-		return reject(string.format("Your plot is full (%d/%d).", PlotPlacementUtil.GetCapacity(profile.Data), PlotPlacementUtil.GetCapacity(profile.Data)))
-	end
-	local item, data = readItemRecord(profile.Data.Items[uid])
-	local geometry = item and data and PlotFishMotion.GetGeometry(item, data.Weight, boundary)
-	if not geometry then
-		return reject("Fish data is unavailable.")
-	end
+	return nil
+end
 
+local function getSwapOffer(context, capacity)
+	local data = context.data
+	local bestBaseCps = PlotFishIncome.GetBestOwnedBaseCps(data)
+	local weakest
+	local weakestIncome = math.huge
+	for slot = 1, capacity do
+		local uid = PlotPlacementUtil.GetItemUid(data.PlotPlacements, slot)
+		local item, record = readItemRecord(data.Items[uid])
+		if not item or not record then
+			continue
+		end
+		local income = getIncome(item, record, bestBaseCps)
+		if income < weakestIncome then
+			weakestIncome = income
+			weakest = {
+				slot = slot,
+				uid = uid,
+				itemId = item.ItemID,
+				weight = record.Weight,
+				mutationId = record.MutationId,
+			}
+		end
+	end
+	if not weakest then
+		return nil
+	end
+	local incomingIncome = getIncome(context.item, context.record, bestBaseCps)
+	weakest.rate = (incomingIncome - weakestIncome) * PlotFishIncome.GetMultiplier(data)
+	if weakest.rate <= 0 then
+		return nil
+	end
+	return weakest
+end
+
+function PlotFishService:RequestPlace(player: Player, uid: unknown)
+	local context, message = getPlacementContext(player, uid)
+	if not context then
+		return reject(message)
+	end
+	local data = context.data
+	local capacity = PlotPlacementUtil.GetCapacity(data)
+	local emptySlot = findEmptySlot(data, capacity)
+	if not emptySlot then
+		local response = reject(string.format("Your plot is full (%d/%d).", capacity, capacity))
+		response.full = {
+			capacity = capacity,
+			level = PlotUpgradeData.NormalizeLevel(data.PlotUpgradeLevel),
+			swap = getSwapOffer(context, capacity),
+		}
+		return response
+	end
 	local now = Workspace:GetServerTimeNow()
-	local state = settle(player, profile.Data, now)
+	local state = settle(player, data, now)
 	if not state then
 		return reject("Cash data is unavailable.")
 	end
-	local position = PlotFishMotion.GetSurfacePoint(boundary, entry)
+	local position = PlotFishMotion.GetSurfacePoint(context.boundary, context.entry)
 	local previousRate = state.rate
-	PlotPlacementUtil.SetItemUid(placements, emptySlot, uid)
-	if Onboarding.Advance(player, profile.Data, "PlaceFish", "Train") then
+	PlotPlacementUtil.SetItemUid(data.PlotPlacements, emptySlot, uid)
+	if Onboarding.Advance(player, data, "PlaceFish", "Train") then
 		Analytics:Step(player, "FishPlaced")
 	end
-	createFish(uid, item, data, emptySlot, boundary, entry, now).Parent = getFishFolder(plot, player)
-	heldTool:Destroy()
-	rosterChanged(player, profile.Data, state)
+	createFish(uid, context.item, context.record, emptySlot, context.boundary, context.entry, now).Parent =
+		getFishFolder(context.plot, player)
+	context.heldTool:Destroy()
+	rosterChanged(player, data, state)
 	return { ok = true, position = position, rate = state.rate - previousRate }
 end
 
@@ -317,7 +378,7 @@ end
 
 -- Prepare all return tools before touching placements or consuming carried tools.
 -- ItemToolUtil.Create, the settlement and the commit run without yielding.
-local function commitMenuRoster(player: Player, context, desired)
+local function commitMenuRoster(player: Player, context, desired, entry: Vector3?)
 	local data = context.data
 	local placements = data.PlotPlacements
 	local outgoing, incoming = {}, {}
@@ -379,7 +440,8 @@ local function commitMenuRoster(player: Player, context, desired)
 	end
 	for slot, fish in pairs(incoming) do
 		PlotPlacementUtil.SetItemUid(placements, slot, fish.uid)
-		createFish(fish.uid, fish.item, fish.record, slot, context.boundary, defaultEntry(slot), now).Parent = folder
+		createFish(fish.uid, fish.item, fish.record, slot, context.boundary, entry or defaultEntry(slot), now).Parent =
+			folder
 		fish.tool:Destroy()
 	end
 	for _, tool in pairs(returnTools) do
@@ -392,6 +454,39 @@ local function commitMenuRoster(player: Player, context, desired)
 	end
 	rosterChanged(player, data, state)
 	return { ok = true }
+end
+
+function PlotFishService:RequestSwap(player: Player, uid: unknown, expectedUid: unknown, expectedRate: unknown)
+	if typeof(expectedUid) ~= "string" or expectedUid == "" or typeof(expectedRate) ~= "number" then
+		return reject("Invalid fish replacement.")
+	end
+	local placement, message = getPlacementContext(player, uid)
+	if not placement then
+		return reject(message)
+	end
+	local data = placement.data
+	local capacity = PlotPlacementUtil.GetCapacity(data)
+	if findEmptySlot(data, capacity) then
+		return reject("Your plot has room now. Place your fish again.")
+	end
+	local offer = getSwapOffer(placement, capacity)
+	if not offer or offer.uid ~= expectedUid or offer.rate ~= expectedRate then
+		return reject("Your fish lineup changed. Place your fish again to see the new offer.")
+	end
+	local context = getMenuContext(player)
+	if not context or context.tools[uid] ~= placement.heldTool then
+		return reject("Your fish pond or backpack is unavailable.")
+	end
+	local desired = {}
+	for slot = 1, capacity do
+		desired[slot] = if slot == offer.slot then uid else PlotPlacementUtil.GetItemUid(data.PlotPlacements, slot)
+	end
+	local position = PlotFishMotion.GetSurfacePoint(context.boundary, placement.entry)
+	local response = commitMenuRoster(player, context, desired, placement.entry)
+	if response.ok then
+		response.position = position
+	end
+	return response
 end
 
 function PlotFishService:RequestUnequip(player: Player, uid: unknown)
@@ -503,6 +598,10 @@ end
 
 function PlotFishService.Client:RequestPlace(player: Player, uid: string)
 	return self.Server:RequestPlace(player, uid)
+end
+
+function PlotFishService.Client:RequestSwap(player: Player, uid: string, expectedUid: string, expectedRate: number)
+	return self.Server:RequestSwap(player, uid, expectedUid, expectedRate)
 end
 
 function PlotFishService.Client:GetOfflineReward(player: Player)

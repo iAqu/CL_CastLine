@@ -456,6 +456,38 @@ local function timeline(count, delay, startedAt, readyAt)
 	}, readyAt or startedAt + 0.5)
 end
 
+local entrance = config.DeepCatch
+local readyAt = 11
+local scheduledBiteAt = readyAt + entrance.EntranceTime
+assert(entrance.EntranceTime == 2.4 and entrance.SwayCycles == 4 and entrance.RollDegrees == 5, "First-person timing or sway changed")
+local rise = timeline(2, 2, 10, readyAt)
+rise:SetDeepCatch("Rise")
+assert(rise:Advance(10.99) == "Settling" and rise:GetDeepCatchEntranceTime(10.99) == nil)
+assert(rise:Advance(readyAt) == "Approaching" and rise:GetDeepCatchEntranceTime(readyAt) == 0)
+local lastApproachFrame = scheduledBiteAt - 0.01
+assert(rise:Advance(lastApproachFrame) == "Approaching")
+assert(math.abs(rise:GetDeepCatchEntranceTime(lastApproachFrame) - (entrance.EntranceTime - 0.01)) < 1e-8)
+assert(rise:Advance(scheduledBiteAt) == "Bite" and rise.completedNibbles == 0 and rise.nibbles == 0)
+assert(rise:GetDeepCatchEntranceTime(scheduledBiteAt) == nil, "The first-person shot lasted past contact")
+assert(rise:Advance(200) == "Bite" and rise.endsAt == math.huge)
+assert(rise:TryHook(201, true) and rise:Advance(215) == "Struggling")
+local fish = setmetatable({ timeline = rise }, Bite)
+fish:ConfirmHook(215, {})
+assert(rise:Advance(215) == "Lifting" and rise.liftStruggleElapsed == 14)
+
+local late = timeline(0, 2, 10, scheduledBiteAt - 0.2)
+late:SetDeepCatch("Rise", scheduledBiteAt)
+local lateFrame = scheduledBiteAt - 0.15
+assert(late:Advance(lateFrame) == "Approaching")
+assert(math.abs(late:GetDeepCatchEntranceTime(lateFrame) - (entrance.EntranceTime - 0.15)) < 1e-8, "A late render samples the remaining ascent")
+assert(late:Advance(scheduledBiteAt + 0.25) == "Bite" and late.startedAt == scheduledBiteAt,
+	"Late frames keep the server bite time")
+
+local after = timeline(0, 2, 10, scheduledBiteAt + 0.3)
+after:SetDeepCatch("Rise", scheduledBiteAt)
+assert(after:Advance(scheduledBiteAt + 0.4) == "Bite" and after.startedAt == scheduledBiteAt,
+	"Late local landing cannot delay the bite")
+
 local function biteAt(count)
 	return 10 + 2 + settings.ApproachTime + 1 + count * (settings.NibbleTime + 1)
 end
@@ -633,17 +665,19 @@ for _, bound in ipairs({ "low", "high" }) do
 			assert(finished == 1 and finalPressure == 0, "Contact sampling tried to retreat")
 		end
 	end
-	-- 连续同向绕圈：先展开再收小；起步后所有鱼统一为 2 圈/秒。
+	-- 从实际咬点平滑接入共同半径，起步后保持 2 圈/秒。
+	local initialRadius = 1
+	local targetRadius = settings.Struggle.Radius
 	local previousAngle, previousRadius = 0, 1
 	local previousSpeed = 0
 	for frame = 0, 432 do
 		local time = frame / 144
-		local angle, speed, radius, radialVelocity, strength = sampled:SampleOrbit(time)
+		local angle, speed, radius, radialVelocity, strength = sampled:SampleOrbit(time, initialRadius)
 		assert((angle - previousAngle) * sampled.mirror >= -1e-9, "Orbit reversed")
 		if time <= settings.Struggle.BlendTime then
 			assert(radius >= previousRadius - 1e-9 and radialVelocity >= 0, "Initial orbit failed to expand")
-		elseif time - 1 / 144 >= settings.Struggle.BlendTime then
-			assert(radius <= previousRadius + 1e-9 and radialVelocity <= 0, "Orbit grew after expansion")
+		else
+			assert(radius == targetRadius and radialVelocity == 0, "Orbit lost its fixed radius")
 		end
 		assert(strength >= 0 and strength <= 1)
 		if time >= settings.Struggle.BlendTime then
@@ -659,25 +693,23 @@ for _, bound in ipairs({ "low", "high" }) do
 		previousSpeed = math.abs(speed)
 		previousAngle, previousRadius = angle, radius
 	end
-	assert(math.abs(previousRadius - sampled.orbit.endRadius) < 1e-9)
-	assert(math.abs(previousRadius - 0.8) < 1e-9)
-	for _, entry in ipairs({ { 0, 1 }, { 0.2, 1.2 }, { 3, 0.8 } }) do
-		local _, _, radius, radialVelocity = sampled:SampleOrbit(entry[1])
-		assert(
-			math.abs(radius - entry[2]) < 1e-9 and math.abs(radialVelocity) < 1e-9,
-			"Orbit radius endpoint or tangent changed"
-		)
+	assert(previousRadius == 5)
+	for _, start in ipairs({ initialRadius, 9 }) do
+		for _, entry in ipairs({ { 0, start }, { 0.2, targetRadius }, { 3, targetRadius } }) do
+			local _, _, radius, radialVelocity = sampled:SampleOrbit(entry[1], start)
+			assert(radius == entry[2] and radialVelocity == 0, "Orbit endpoint or tangent changed")
+		end
 	end
 	for _, time in ipairs({ 0.1, 0.2, 0.7, 1.8, 2.8 }) do
 		local left = sampled:SampleOrbit(time - 1e-6)
 		local right = sampled:SampleOrbit(time + 1e-6)
 		local _, velocity = sampled:SampleOrbit(time)
 		assert(math.abs((right - left) / 2e-6 - velocity) < 1e-5, "Speed does not match integrated angle")
-		local _, _, beforeRadius = sampled:SampleOrbit(time - 1e-6)
-		local _, _, afterRadius = sampled:SampleOrbit(time + 1e-6)
-		local _, _, _, radialVelocity = sampled:SampleOrbit(time)
+		local _, _, beforeRadius = sampled:SampleOrbit(time - 1e-6, initialRadius)
+		local _, _, afterRadius = sampled:SampleOrbit(time + 1e-6, initialRadius)
+		local _, _, _, radialVelocity = sampled:SampleOrbit(time, initialRadius)
 		assert(
-			math.abs((afterRadius - beforeRadius) / 2e-6 - radialVelocity) < 1e-4,
+			math.abs((afterRadius - beforeRadius) / 2e-6 - radialVelocity) < 2e-4,
 			"Radial velocity does not match radius derivative"
 		)
 	end

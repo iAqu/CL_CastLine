@@ -10,6 +10,8 @@ local originalShake = config.Camera.Struggle.Shake
 local originalFollow = config.Camera.FollowFishEnabled
 local folder = Instance.new("Folder")
 folder.Name, folder.Parent = "FishingCameraSmoothnessProbe", workspace
+local worldGeometry = Instance.new("Folder")
+worldGeometry.Name, worldGeometry.Parent = "FishingCameraWorldGeometry", workspace
 local active
 
 local function screenFraction(view, point)
@@ -133,14 +135,15 @@ local ok, result = xpcall(function()
 		_impulse = function() end,
 		_setPhase = function() end,
 	}, Cast)
-	active = Bite.new(owner, 10, 10, Random.new(1), Random.new(2))
+	local shakeFixture = storage.Models.Fish.GreenSeahorse
+	active = Bite.new(owner, 10, 10, Random.new(1), Random.new(2), shakeFixture)
 	owner.bite = active
 	active.timeline:_enter("Struggling", 10, 3)
 	local paths, residuals, lowY, highY = {}, {}, math.huge, -math.huge
 	for trial, shake in ipairs({ originalShake, 0 }) do
 		config.Camera.Struggle.Shake = shake
 		owner.cameraFrame, owner.cameraFov, owner.biteFocus, owner.cameraFocus = initial, 60, target, target
-		owner.waterViewPullback = nil
+		owner.struggleView = nil
 		local residual = 0
 		for frame = 0, 179 do
 			local elapsed = frame / 60
@@ -157,8 +160,9 @@ local ok, result = xpcall(function()
 			if elapsed >= config.Bite.Struggle.BlendTime then
 				lowY, highY = math.min(lowY, base.Position.Y), math.max(highY, base.Position.Y)
 			end
-			local shakenFrame = camera.CFrame * CFrame.new(0, 0, -(owner.waterViewPullback or 0))
-			residual += owner.cameraFrame:ToObjectSpace(shakenFrame).Position.Magnitude ^ 2
+			local offset = camera.CFrame.Position - owner.cameraFrame.Position
+			local forward = owner.cameraFrame.LookVector
+			residual += (offset - forward * offset:Dot(forward)).Magnitude ^ 2
 		end
 		residuals[trial] = math.sqrt(residual / 180)
 	end
@@ -168,7 +172,7 @@ local ok, result = xpcall(function()
 	active = nil
 	config.Camera.Struggle.Shake = originalShake
 
-	local framingSamples, contacts = 0, 0
+	local framingSamples, contacts, fixedSamples = 0, 0, 0
 	for _, name in { "ElderFish", "MechaWhale" } do
 		local template = assert(storage.Models.Fish:FindFirstChild(name), "Missing camera test fish " .. name)
 		local scale = if name == "MechaWhale" then 160 / Stats.GetModelBounds(template).longest else 1
@@ -181,35 +185,42 @@ local ok, result = xpcall(function()
 				owner.cameraFrame, owner.cameraFov, owner.cameraFocus = fixed, 60, target
 				owner.biteFocus, owner.shotFrom = target, fixed
 				owner.baitViewAim, owner.baitViewFov, owner.baitViewNarrowAt = nil, nil, nil
-				owner.waterViewPullback = nil
+				owner.struggleView = nil
 				owner.showcaseFrom, owner.showcaseFocus = nil, nil
 				active = Bite.new(owner, 100, 100, Random.new(7), Random.new(13), template, fishConfig, nil, false, 1)
 				owner.bite = active
 				local timeline = active.timeline
 				local now, seen, alignedNibbles = timeline.appearAt, {}, {}
-				local eye
+				local eye, rendered, sawSettledStruggle
 				while now < 160 do
 					local phase = active:Update(now, true)
 					if phase == "Lifting" then
-						local incoming = owner.cameraFrame * CFrame.new(0, 0, owner.waterViewPullback or 0)
 						owner:_updateCamera(now, dt, testCamera)
-						assert((owner.showcaseFrom + target):FuzzyEq(incoming, 0.001), "Lift lost the incoming water view")
+						assert((owner.showcaseFrom + target):FuzzyEq(rendered, 0.001), "Lift lost the rendered water view")
 						break
 					end
 					if phase == "Struggling" and not seen.Struggling then
 						local incoming, fov = owner.cameraFrame, owner.cameraFov
-						owner:_updateCamera(now, 0, testCamera)
+						owner:_updateCamera(timeline.startedAt, 0, testCamera)
 						assert(owner.cameraFrame:FuzzyEq(incoming, 0.001), "Hook moved before blending began")
 						assert(math.abs(owner.cameraFov - fov) < 0.001, "Hook snapped the FOV")
 					end
 					owner:_updateCamera(now, dt, testCamera)
+					rendered = testCamera.CFrame
 					active:Present(testCamera.CFrame.Position)
 					local mouth = active.fish.PrimaryPart.MouthAttachment.WorldPosition
 					local label = string.format("%s %dx%d %d fps %s at %.3fs", name, viewport.X, viewport.Y, fps, phase, now)
 					local elapsed = now - timeline.startedAt
 					if phase == "Struggling" then
-						assert(screenFraction(testCamera, mouth) < 1, "Struggling mouth clipped: " .. label)
-						assert(screenFraction(testCamera, bait.Position) < 1, "Struggling bait clipped: " .. label)
+						if elapsed >= config.Camera.Struggle.EntryBlendTime then
+							sawSettledStruggle = true
+							local base = owner.struggleView.frame
+							local _, turn = base.Rotation:ToObjectSpace(owner.cameraFrame.Rotation):ToAxisAngle()
+							assert((owner.cameraFrame.Position - base.Position).Magnitude < 0.001, "Struggle eye moved: " .. label)
+							assert(turn <= math.rad(config.Camera.Struggle.FollowDegrees + 0.01), "Struggle turned too far: " .. label)
+							assert(testCamera.FieldOfView == config.Camera.BaitView.Fov, "Struggle changed FOV: " .. label)
+							fixedSamples += 1
+						end
 					else
 						eye = eye or testCamera.CFrame.Position
 						assert((testCamera.CFrame.Position - eye).Magnitude < 0.001, "Water view moved: " .. label)
@@ -236,11 +247,106 @@ local ok, result = xpcall(function()
 					seen[phase], framingSamples = true, framingSamples + 1
 					now += dt
 				end
-				assert(alignedNibbles[1] and alignedNibbles[2] and seen.Struggling and owner.showcaseFrom,
+				assert(alignedNibbles[1] and alignedNibbles[2] and sawSettledStruggle and owner.showcaseFrom,
 					"Regression fixture missed a phase for " .. name)
 				active:Destroy()
 				active = nil
 			end
+		end
+	end
+
+	local wall = Instance.new("Part")
+	wall.Name, wall.Anchored, wall.Size = "StruggleWall", true, Vector3.new(80, 80, 0.5)
+	local wallSamples = 0
+	for _, case in { { 2, 50 }, { 45, 50 }, { 2, 9 }, { 45, 9 } } do
+		local radius, wallDistance = case[1], case[2]
+		wall.Position = target - Vector3.zAxis * wallDistance
+		wall.Parent = worldGeometry
+		for _, viewport in { Vector2.new(1600, 900), Vector2.new(900, 1600) } do
+			local testCamera = { ViewportSize = viewport }
+			local probe = setmetatable({
+				folder = folder,
+				root = { CFrame = CFrame.identity },
+				bait = { Position = target, Size = Vector3.one },
+				forward = Vector3.zAxis,
+				cameraFrame = fixed,
+				cameraFov = 60,
+				shotMode = "Landing",
+				shotStarted = 0,
+				shotDuration = 0,
+				shotFrom = fixed,
+				fovFrom = 60,
+				impulses = {},
+				bite = {
+					timeline = { phase = "Struggling", startedAt = 20 },
+					lastPosition = target,
+					halfLength = radius,
+					presentationRadius = radius,
+					scale = 1,
+				},
+				_waterTarget = function() return target end,
+				_sampleImpulses = function() return 10, -10, 1, 1, 1, 8 end,
+			}, Cast)
+			local largestTurn = 0
+			local contactLeftFrame = false
+			for index = 1, 60 do
+				local angle = index * math.pi / 30
+				local contact = target + Vector3.new(math.sin(angle) * 40, -1, math.cos(angle) * 40)
+				probe.bite.lastMouthPosition = contact
+				probe.bite.lastBaitPosition = contact + Vector3.xAxis * 0.5
+				probe:_updateCamera(20 + index / 60, 1 / 60, testCamera)
+				local renderedPosition = testCamera.CFrame.Position
+				assert((probe.cameraFrame.Position - target).Magnitude <= 20.001, "Base struggle camera exceeded 20 studs")
+				assert((renderedPosition - target).Magnitude <= 24.001, "Final struggle camera exceeded 24 studs")
+				local _, rotation = probe.cameraFrame.Rotation:ToObjectSpace(testCamera.CFrame.Rotation):ToAxisAngle()
+				assert((renderedPosition - probe.cameraFrame.Position).Magnitude <= 0.251, "Combined shake translated too far")
+				assert(rotation <= math.rad(1.51), "Combined shake rotated too far")
+				assert(testCamera.FieldOfView == 60, "Impulse changed fixed struggle FOV")
+				if index > config.Camera.Struggle.EntryBlendTime * 60 then
+					local base = probe.struggleView.frame
+					local _, turn = base.Rotation:ToObjectSpace(probe.cameraFrame.Rotation):ToAxisAngle()
+					assert((probe.cameraFrame.Position - base.Position).Magnitude < 0.001, "Fish motion moved the camera eye")
+					assert(turn <= math.rad(config.Camera.Struggle.FollowDegrees + 0.01), "Fish motion turned the camera too far")
+					largestTurn = math.max(largestTurn, turn)
+					contactLeftFrame = contactLeftFrame or screenFraction(testCamera, contact) > 1
+				end
+				if wallDistance == 9 then
+					assert(renderedPosition.Z > wall.Position.Z + wall.Size.Z * 0.5 + 0.25, "Final camera crossed the wall")
+				end
+				wallSamples += 1
+			end
+			assert(contactLeftFrame, "Test contact did not challenge the fixed view")
+			assert(largestTurn > math.rad(0.5), "Camera never followed the moving mouth")
+			local incoming = testCamera.CFrame
+			probe.bite.timeline.phase = "Reeling"
+			probe.bite.reelMotion = { position = Vector3.new(2, -4, 0), reboundAllowance = 63 }
+			probe._sampleImpulses = nil
+			probe:_shot("Reel", config.Reel.CameraTime, 21)
+			probe:_updateCamera(21, 1 / 60, testCamera)
+			assert(testCamera.CFrame:FuzzyEq(incoming, 0.001), "Empty reel lost the rendered water view")
+		end
+	end
+
+	local reel = setmetatable({
+		baitBaseSize = Vector3.one,
+		forward = Vector3.zAxis,
+		bite = { reelMotion = { reboundAllowance = 63 } },
+	}, Cast)
+	for _, viewport in { Vector2.new(1600, 900), Vector2.new(900, 1600) } do
+		local expectedDistance
+		for _, offset in {
+			Vector3.new(-2, -300, 1),
+			Vector3.new(-2, -0.5, 1),
+			Vector3.new(1, 30, 0),
+			Vector3.new(0, config.Bite.ShowcaseHeight, 0),
+		} do
+			reel.bite.reelMotion.position = offset
+			local shot, focus = reel:_reelCamera(target, viewport)
+			local distance = (shot.Position - focus).Magnitude
+			expectedDistance = expectedDistance or distance
+			assert((focus - target - offset).Magnitude < 0.001, "Empty reel missed the current bait position")
+			assert(distance >= 5.999 and distance < 12, "Unit bait lost the closeup")
+			assert(math.abs(distance - expectedDistance) < 0.001, "Reel travel changed camera distance")
 		end
 	end
 	return {
@@ -248,6 +354,8 @@ local ok, result = xpcall(function()
 		transitionSamples = transitionSamples,
 		framingSamples = framingSamples,
 		contacts = contacts,
+		fixedSamples = fixedSamples,
+		wallSamples = wallSamples,
 		samples = 360,
 		verticalSpan = highY - lowY,
 		shakeOnRms = residuals[1],
@@ -262,5 +370,6 @@ if active then
 	active:Destroy()
 end
 folder:Destroy()
+worldGeometry:Destroy()
 assert(ok, result)
 return result

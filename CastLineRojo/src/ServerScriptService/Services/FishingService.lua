@@ -34,7 +34,10 @@ local RodsData = require(data:WaitForChild("RodsData"))
 local mutationRanges = FishingRoll.BuildMutationRanges(require(data:WaitForChild("MutationsData")))
 local FishingService = Knit.CreateService({
 	Name = "FishingService",
-	Client = { AnalyticsPresentation = Knit.CreateSignal() },
+	Client = {
+		AnalyticsPresentation = Knit.CreateSignal(),
+		CatchEscaped = Knit.CreateSignal(),
+	},
 })
 
 local sessions = {}
@@ -186,7 +189,7 @@ local function scheduleCatchPresentation(player, state, pending, pressedAt, isNe
 		return
 	end
 	local now = Workspace:GetServerTimeNow()
-	local liftAt = math.max(now, pressedAt + state.struggleTime)
+	local liftAt = if state.deepCatch then now else math.max(now, pressedAt + state.struggleTime)
 	local bite = state.presentation.bite
 	if bite and bite.round == state.round then
 		bite.hookedAt, bite.liftAt = pressedAt, liftAt
@@ -533,6 +536,57 @@ function FishingService.Client:Cast(player: Player, token)
 	}
 end
 
+local function deepCatchDeadline(progress, progressAt)
+	local settings = Config.DeepCatch
+	return progressAt + settings.DecayDelay + progress / settings.DecayPerSecond
+end
+
+local function deepCatchProgress(catch, biteAt)
+	return {
+		progress = catch.progress,
+		lastTapAt = catch.lastTapAt or biteAt,
+		sequence = catch.sequence,
+		hookedAt = catch.hookedAt,
+	}
+end
+
+local function escapeDeepCatch(player, state, catch)
+	state.phase, state.pending = "Escaped", nil
+	state.expiresAt = catch.deadline + START_TIMEOUT
+	local result = failure(Config.Bite.Text.Escaped, "CatchEscaped")
+	state.hookResult = result
+
+	local bite = state.presentation.bite
+	if bite and bite.round == state.round then
+		bite.escapedAt = catch.deadline
+		replicatePresentation(state)
+	end
+	FishingService.Client.CatchEscaped:Fire(player, state.token, state.round)
+
+	-- The player normally closes the session when the empty reel starts.
+	task.delay(START_TIMEOUT, function()
+		if sessions[player] == state then
+			sessions[player] = nil
+			clearPresentation(player, state)
+		end
+	end)
+	return result
+end
+
+local function scheduleDeepCatchEscape(player, state, catch, delaySeconds)
+	task.delay(delaySeconds, function()
+		if getSession(player, state.token) ~= state or state.deepCatch ~= catch or state.phase ~= "Waiting" then
+			return
+		end
+		local remaining = catch.deadline - Workspace:GetServerTimeNow()
+		if remaining > 0 then
+			scheduleDeepCatchEscape(player, state, catch, remaining)
+		else
+			escapeDeepCatch(player, state, catch)
+		end
+	end)
+end
+
 function FishingService.Client:NextRound(player: Player, token, previousRound)
 	local state = getSession(player, token)
 	local now = Workspace:GetServerTimeNow()
@@ -640,6 +694,7 @@ function FishingService.Client:NextRound(player: Player, token, previousRound)
 	end
 	local seed, motionSeed = random:NextInteger(1, 2 ^ 30), random:NextInteger(1, 2 ^ 30)
 	local readyAt = if state.round == 0 then startedAt + Config.GetLandingSettleTime() else startedAt
+	local entrance = Config.GetDeepCatchEntrance(catchKind, lesson ~= nil)
 	local biteAt, biteEndsAt, struggleTime, displayScale = BiteSequence.GetBiteWindow(
 		template,
 		state.baitSize,
@@ -651,8 +706,15 @@ function FishingService.Client:NextRound(player: Player, token, previousRound)
 		fish,
 		catchKind,
 		lesson ~= nil,
-		pending.Weight
+		pending.Weight,
+		entrance
 	)
+	local initialProgress = Config.DeepCatch.InitialProgress
+	state.deepCatch = if entrance then {
+		progress = initialProgress,
+		sequence = 0,
+		deadline = deepCatchDeadline(initialProgress, biteAt),
+	} else nil
 	state.pending = pending
 	state.round += 1
 	state.hookResult = nil
@@ -666,6 +728,7 @@ function FishingService.Client:NextRound(player: Player, token, previousRound)
 		fishId = fish.FishID,
 		scale = displayScale,
 		tutorial = lesson ~= nil,
+		entrance = entrance,
 		startedAt = startedAt,
 		readyAt = readyAt,
 		biteAt = biteAt,
@@ -675,6 +738,10 @@ function FishingService.Client:NextRound(player: Player, token, previousRound)
 		motionSeed = motionSeed,
 	} else nil
 	replicatePresentation(state)
+	if state.deepCatch then
+		scheduleDeepCatchEscape(player, state, state.deepCatch,
+			math.max(0, state.deepCatch.deadline - Workspace:GetServerTimeNow()))
+	end
 	if lesson and Analytics:IsNewPlayer(player) then
 		Analytics:Step(player, lesson .. "Landed")
 		local round = state.round
@@ -694,9 +761,10 @@ function FishingService.Client:NextRound(player: Player, token, previousRound)
 		maxCatchWeight = pending.MaxCatchWeight,
 		startedAt = startedAt,
 		readyAt = readyAt,
+		entrance = entrance,
 		biteAt = biteAt,
-		biteEndsAt = biteEndsAt,
-		retryAt = if lesson then math.huge else state.retryAt,
+		biteEndsAt = if entrance then nil else biteEndsAt,
+		retryAt = if lesson or entrance then nil else state.retryAt,
 		mutationId = if lesson then pending.MutationId else nil,
 		seed = seed,
 		motionSeed = motionSeed,
@@ -820,6 +888,7 @@ function FishingService.Client:Hook(player: Player, token, round, clickTime)
 		or state.phase ~= "Waiting"
 		or state.round == 0
 		or state.round ~= round
+		or state.deepCatch
 	then
 		return failure("Missed the bite")
 	end
@@ -838,15 +907,70 @@ function FishingService.Client:Hook(player: Player, token, round, clickTime)
 	return result
 end
 
+function FishingService.Client:TapCatch(player: Player, token, round, sequence)
+	local state = getSession(player, token)
+	if not state or state.round ~= round or not state.deepCatch then
+		return failure("Fishing round unavailable")
+	end
+	if state.hookResult then
+		return { catchResult = state.hookResult, hookedAt = state.deepCatch.hookedAt }
+	end
+	if state.phase == "Claiming" then
+		return { pending = true, hookedAt = state.deepCatch.hookedAt }
+	end
+	local now = Workspace:GetServerTimeNow()
+	if state.phase ~= "Waiting" or not state.pending then
+		return failure("Fishing round unavailable")
+	end
+	local catch = state.deepCatch
+	if now >= catch.deadline then
+		return { catchResult = escapeDeepCatch(player, state, catch) }
+	end
+	local progressAt = catch.lastTapAt or state.biteAt
+	if now < state.biteAt or type(sequence) ~= "number" or sequence % 1 ~= 0 or sequence <= catch.sequence then
+		return deepCatchProgress(catch, state.biteAt)
+	end
+	catch.sequence = sequence
+	local settings = Config.DeepCatch
+	if catch.lastTapAt and now - catch.lastTapAt < settings.MinTapInterval - 0.000001 then
+		return deepCatchProgress(catch, state.biteAt)
+	end
+	if not catch.hookedAt then
+		catch.hookedAt = now
+		state.presentation.bite.hookedAt = now
+		replicatePresentation(state)
+	end
+	catch.lastTapAt = now
+	catch.progress = math.min(1, Config.GetCatchProgress(catch.progress, progressAt, now) + settings.TapGain)
+	if catch.progress < 1 then
+		catch.deadline = deepCatchDeadline(catch.progress, now)
+		return deepCatchProgress(catch, state.biteAt)
+	end
+
+	-- Switch state before the grant can yield. All competing taps share this one result.
+	state.phase = "Claiming"
+	local result = claimHook(player, state, state.pending, catch.hookedAt, now)
+	if not result.ok then
+		state.phase = "CatchFailed"
+		clearPresentation(player, state)
+	end
+	state.hookResult = result
+	return { catchResult = result, hookedAt = catch.hookedAt }
+end
+
 function FishingService.Client:GetHookResult(player, token, round)
 	local state = getSession(player, token)
 	if not state or state.round == 0 or state.round ~= round then
 		return { status = "Unknown" }
 	end
+	local catch = state.deepCatch
 	if state.hookResult then
-		return { status = if state.hookResult.ok then "Succeeded" else "Rejected", result = state.hookResult }
+		return { status = if state.hookResult.ok then "Succeeded" else "Rejected", result = state.hookResult,
+			hookedAt = catch and catch.hookedAt }
 	end
-	return { status = if state.phase == "Claiming" then "Pending" else "Unknown" }
+	local reply = if catch then deepCatchProgress(catch, state.biteAt) else {}
+	reply.status = if state.phase == "Claiming" then "Pending" else "Unknown"
+	return reply
 end
 
 function FishingService.Client:Cancel(player: Player, token, finished, emptyReelRound)
@@ -855,7 +979,7 @@ function FishingService.Client:Cancel(player: Player, token, finished, emptyReel
 		sessions[player] = nil
 		if
 			finished ~= true
-			and state.phase == "Waiting"
+			and (state.phase == "Waiting" or state.phase == "Escaped")
 			and state.round > 0
 			and state.round == emptyReelRound
 			and getLiveCharacter(player) == state.character

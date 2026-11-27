@@ -51,6 +51,7 @@ local ok, result = xpcall(function()
 		bait = bait,
 		baitAppearance = { [bait] = 0.25 },
 		baitHighlight = baitHighlight,
+		bitingBaitFill = baitHighlight.FillColor,
 		impulses = {},
 		impulseCount = 0,
 		_impulse = function(self, ...)
@@ -442,8 +443,8 @@ local ok, result = xpcall(function()
 			)
 			assert(math.abs(camera.FieldOfView - settings.ShowcaseFov) < 0.001, "Empty reel sway changed FOV")
 			assert(
-				(camera.Focus.Position - target - Vector3.yAxis * settings.ShowcaseHeight).Magnitude < 0.001,
-				"Empty reel camera followed the bounce"
+				(camera.Focus.Position - bait.Position).Magnitude < 0.001,
+				"Empty reel camera missed the current bait"
 			)
 		end
 		table.insert(reelFrames, { frame = bait.CFrame, size = bait.Size })
@@ -506,7 +507,7 @@ local ok, result = xpcall(function()
 			"Reeled showcase sway tilted the base camera or grew too strong"
 		)
 		assert(
-			(camera.Focus.Position - target - Vector3.yAxis * settings.ShowcaseHeight).Magnitude < 0.001,
+			(camera.Focus.Position - bait.Position).Magnitude < 0.001,
 			"Reeled showcase sway moved its focus"
 		)
 	end
@@ -523,11 +524,18 @@ local ok, result = xpcall(function()
 		"Empty reel did not follow the water level"
 	)
 	target -= Vector3.yAxis * 2
+	local settledReelOffset = owner.bite.reelMotion.position
 	for _, size in ipairs({ Vector2.new(390, 844), Vector2.new(844, 390), Vector2.new(1877, 1240) }) do
-		local view, focus = owner:_reelCamera(target, size)
 		local tanY = math.tan(math.rad(settings.ShowcaseFov * 0.5))
 		for _, sample in ipairs(reelFrames) do
 			local pose = sample.frame
+			owner.bite.reelMotion.position = pose.Position - target
+			local view, focus = owner:_reelCamera(target, size)
+			assert(math.abs(view.Position.Y - focus.Y) < 0.001, "Portrait empty reel camera tilted")
+			assert(
+				(view.Position - focus):Dot(owner.forward) < 0 and view.LookVector:Dot(owner.forward) > 0.9999,
+				"Portrait empty reel camera did not retain the cast direction"
+			)
 			for _, x in ipairs({ -1, 1 }) do
 				for _, y in ipairs({ -1, 1 }) do
 					for _, z in ipairs({ -1, 1 }) do
@@ -543,12 +551,8 @@ local ok, result = xpcall(function()
 				end
 			end
 		end
-		assert(math.abs(view.Position.Y - focus.Y) < 0.001, "Portrait empty reel camera tilted")
-		assert(
-			(view.Position - focus):Dot(owner.forward) < 0 and view.LookVector:Dot(owner.forward) > 0.9999,
-			"Portrait empty reel camera did not retain the cast direction"
-		)
 	end
+	owner.bite.reelMotion.position = settledReelOffset
 	local savedForward = owner.forward
 	for _, forward in ipairs({ Vector3.xAxis, -Vector3.zAxis }) do
 		owner.forward = forward
@@ -671,9 +675,7 @@ local ok, result = xpcall(function()
 	)
 	assert(owner.impulseCount == liftImpulsesBefore + 2, "Exit and landing must each trigger once")
 	owner:_updateCamera(caughtAt + settings.ShowcaseHold, 1 / 60)
-	assert(math.abs(owner.cameraFrame.LookVector.Y) < 0.0001, "Base showcase camera did not return to level")
-	assert(camera.CFrame.LookVector.Y < 0.02, "Showcase camera sway is too strong")
-	assert(owner.cameraFrame:ToObjectSpace(camera.CFrame).Position.Magnitude > 0.0001, "Showcase camera has no sway")
+	assert(camera.CFrame:FuzzyEq(owner.cameraFrame, 0.0001), "Showcase added sway after settling")
 	assert(
 		owner:CanReturn(caughtAt + settings.ShowcaseHold) and not owner.bite:CanRetry(caughtAt + 100),
 		"Caught fish cannot return or unexpectedly retried"
@@ -713,7 +715,7 @@ local ok, result = xpcall(function()
 		"Suspended mouth did not follow water"
 	)
 
-	-- 三轮展示挣动：固定嘴部和构图中心，含镜头晃动的横竖屏构图均留有余量。
+	-- 三轮展示挣动：保持嘴部和机位稳定，注视点跟随本帧鱼身中心。
 	owner.bite.animation.state = FishAnimation.NewState(caughtAt, {
 		NextNumber = function(_, low, high)
 			return (low + high) * 0.5
@@ -724,7 +726,8 @@ local ok, result = xpcall(function()
 	})
 	update(caughtAt + 1)
 	local restingFrame = body.CFrame
-	local baseRestingFrame = owner.bite:_basePose("Caught", 1, target)
+	owner:_updateCamera(caughtAt + 1, 1 / 60)
+	local caughtEye = camera.CFrame.Position
 	local suspendedMouth = restingFrame:PointToWorldSpace(owner.bite.mouthOffset)
 	local restingLine = line.Attachment1.WorldPosition
 	local maxLineDrift = 0
@@ -746,18 +749,17 @@ local ok, result = xpcall(function()
 			assertFishShowcaseLine()
 			maxLineDrift = math.max(maxLineDrift, (line.Attachment1.WorldPosition - restingLine).Magnitude)
 			assert(
-				(owner.cameraFrame.Position - owner:_showcaseCamera(target, camera.ViewportSize).Position).Magnitude
-					< 0.001,
+				(camera.CFrame.Position - caughtEye).Magnitude < 0.001,
 				"Showcase camera chased fish"
 			)
-			assert((camera.Focus.Position - baseRestingFrame.Position).Magnitude < 0.001, "Showcase focus chased fish")
-			local cameraSway = owner.cameraFrame:ToObjectSpace(camera.CFrame)
+			local center = body.CFrame:PointToWorldSpace(owner.bite.showcaseCenterOffset * owner.bite.scale)
+			local localCenter = camera.CFrame:PointToObjectSpace(center)
 			assert(
-				cameraSway.Position.Magnitude < 0.1 and camera.FieldOfView == settings.ShowcaseFov,
-				"Showcase added an impact"
+				math.abs(localCenter.X) < 0.001 and math.abs(localCenter.Y) < 0.001 and localCenter.Z < 0,
+				"Showcase lost the posed fish center during a burst"
 			)
 			for _, size in ipairs({ Vector2.new(390, 844), Vector2.new(844, 390), Vector2.new(1877, 1240) }) do
-				local view = owner:_showcaseCamera(target, size) * cameraSway
+				local view = camera.CFrame
 				local tanY = math.tan(math.rad(settings.ShowcaseFov * 0.5))
 				for x = -1, 1, 2 do
 					for y = -1, 1, 2 do
@@ -833,7 +835,7 @@ local ok, result = xpcall(function()
 	)
 	return {
 		passed = true,
-		checks = "three spawn sectors, Neon shadow and original material restoration, 30/60 fps body and outline easing, escape fade endpoints, keyframe animation, actual size/fade/rise, bait outline/red fill, side contact, timeout retry, spr reel with continuous retargeting and physical settling, persistent empty reel line and one-shot cartoon smoke, struggle shake, synchronized exit and landing impulses, sky spin/fall/bounce, camera tracking, three idle bursts, fixed mouth/focus/line, centered bait anchor, fish anchor one world stud below scaled mouth, landscape/portrait animation framing, single-mesh and multipart surfaced black outline, hidden outline and cleanup",
+		checks = "three spawn sectors, Neon shadow and original material restoration, 30/60 fps body and outline easing, escape fade endpoints, keyframe animation, actual size/fade/rise, bait outline/red fill, side contact, timeout retry, spr reel with continuous retargeting and physical settling, persistent empty reel line and one-shot cartoon smoke, struggle shake, synchronized exit and landing impulses, sky spin/fall/bounce, camera tracking, three idle bursts, fixed showcase eye and mouth/line with live fish-center aim, centered bait anchor, fish anchor one world stud below scaled mouth, landscape/portrait animation framing, single-mesh and multipart surfaced black outline, hidden outline and cleanup",
 	}
 end, debug.traceback)
 

@@ -118,11 +118,12 @@ function FishingObserverVisual:ClearFishShadow()
 end
 
 function FishingObserverVisual:_updateFishShadow(round, fishConfig, now, target, spin)
-	if not fishConfig or now < round.readyAt or now >= (round.liftAt or round.retryAt or math.huge) then
+	if not round or not fishConfig or now < round.readyAt or now >= (round.liftAt or round.retryAt or math.huge)
+		or (round.escapedAt and now >= round.escapedAt + Config.Bite.EscapeTime) then
 		self:ClearFishShadow()
 		return nil
 	end
-	if self.shadow and self.shadow.observedRound ~= round then
+	if self.shadow and self.shadow.observedRound.round ~= round.round then
 		self:ClearFishShadow()
 	end
 	if not self.shadow then
@@ -141,6 +142,8 @@ function FishingObserverVisual:_updateFishShadow(round, fishConfig, now, target,
 			warnedWaterVFX = self.warnedWaterVFX,
 		}
 		self.shadow = BiteSequence.newObserver(self.shadowOwner, round, template, fishConfig)
+	else
+		self.shadow.observedRound = round
 	end
 	return self.shadow:UpdateObserver(now, target)
 end

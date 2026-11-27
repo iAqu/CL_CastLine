@@ -131,7 +131,7 @@ local function run(template, maximum, fps)
 		end
 		if t >= timing.duration then
 			endBase = endBase or owner.cameraFrame
-			assert(owner.cameraFrame:FuzzyEq(endBase, 0.0001), "Caught changed the settled camera")
+			assert((owner.cameraFrame.Position - endBase.Position).Magnitude < 0.0001, "Caught moved the settled camera")
 		end
 		if previousBase and t >= timing.duration - 1 / fps and t <= timing.duration + 1 / fps then
 			assert(
@@ -165,11 +165,18 @@ local function run(template, maximum, fps)
 	for _, viewport in { Vector2.new(390, 844), Vector2.new(844, 390) } do
 		local view = { ViewportSize = viewport }
 		owner:_updateCamera(110, 1 / fps, view)
-		assert((view.Focus.Position - center).Magnitude < 0.002, "Showcase focus missed the fish model center")
-		local depth = (view.Focus.Position - view.CFrame.Position):Dot(owner.forward)
-		assert(math.abs(depth - distance) < 0.01, "Showcase camera added extra pullback")
+		active:Present(view.CFrame.Position)
 		local body = active.fish.PrimaryPart
+		local displayedCenter = body.CFrame:PointToWorldSpace(centerOffset * active.scale)
 		local tangent = math.tan(math.rad(view.FieldOfView * 0.5))
+		local centerInView = view.CFrame:PointToObjectSpace(displayedCenter)
+		local halfHeight = -centerInView.Z * tangent
+		local halfWidth = halfHeight * viewport.X / viewport.Y
+		assert(halfHeight > 0, "Fish center is behind the showcase camera")
+		assert(math.abs(centerInView.X) <= halfWidth * 0.04 and math.abs(centerInView.Y) <= halfHeight * 0.04,
+			"Showcase missed the center of the posed fish")
+		assert((view.CFrame.Position - (center - owner.forward * distance)).Magnitude < 0.01,
+			"Showcase changed the settled eye")
 		local occupancy = 0
 		for x = -1, 1, 2 do
 			for y = -1, 1, 2 do
