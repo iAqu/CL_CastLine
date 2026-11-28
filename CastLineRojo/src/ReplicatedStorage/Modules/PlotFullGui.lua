@@ -6,7 +6,6 @@ local GuiAnimation = require(script.Parent.GuiAnimation)
 local MutationDataUtil = require(script.Parent.MutationDataUtil)
 local NumberUtil = require(script.Parent.NumberUtil)
 local PlotUpgradeData = require(script.Parent.PlotUpgradeData)
-local WeightFormat = require(script.Parent.WeightFormat)
 
 local PlotFullGui = {}
 local NARROW_PANEL_WIDTH = 300
@@ -67,7 +66,11 @@ function PlotFullGui.Open(full, onSwap, onUpgrade)
 	local function fitBodyText()
 		textLimit.MaxTextSize = math.max(textLimit.MinTextSize, math.floor(frame.AbsoluteSize.Y * 0.12))
 	end
-	local lines = { `{full.capacity}/{full.capacity} fish` }
+	local capacityText = `{full.capacity}/{full.capacity} fish`
+	if nextUpgrade then
+		capacityText ..= ` → {nextUpgrade.Capacity} slots`
+	end
+	local lines = { capacityText }
 	if swap then
 		local outgoing = FishInventoryData[swap.itemId]
 		local mutation = MutationDataUtil.GetConfig(swap.mutationId)
@@ -75,15 +78,10 @@ function PlotFullGui.Open(full, onSwap, onUpgrade)
 		if mutation then
 			outgoingName = mutation.DisplayName .. " " .. outgoingName
 		end
-		local weight = WeightFormat.FormatKg(swap.weight):gsub(" ", utf8.char(0xA0))
-		local fish = escapeRichText(outgoingName .. " (" .. weight .. ")")
-		table.insert(lines, `Return {fish} to backpack`)
-		table.insert(lines, '<font color="#75FF26">' .. escapeRichText(formatRate(swap.rate)) .. "</font>")
-	end
-	if nextUpgrade then
-		local price = NumberUtil.FormatItemPriceCompact(nextUpgrade.Price)
-		table.insert(lines, `Expand to {nextUpgrade.Capacity} · ${price}`)
-	elseif not swap then
+		local fish = escapeRichText(outgoingName)
+		local gain = escapeRichText(formatRate(swap.rate))
+		table.insert(lines, `Swap out {fish} · <font color="#75FF26">{gain}</font>`)
+	elseif not nextUpgrade then
 		table.insert(lines, "Unequip a fish in My Fish.")
 	end
 	text.Text = table.concat(lines, "<br />")
@@ -98,7 +96,8 @@ function PlotFullGui.Open(full, onSwap, onUpgrade)
 		upgradeButton = swapButton:Clone()
 		upgradeButton.Name = "UpgradeButton"
 		upgradeButton.Visible = true
-		upgradeButton.TextLabel.Text = "Expand"
+		local price = NumberUtil.FormatItemPriceCompact(nextUpgrade.Price)
+		upgradeButton.TextLabel.Text = "Expand" .. utf8.char(0xA0) .. "$" .. price
 		upgradeButton.UIGradient.Color = frame.Top.UIGradient.Color
 		upgradeButton.Parent = frame
 	end

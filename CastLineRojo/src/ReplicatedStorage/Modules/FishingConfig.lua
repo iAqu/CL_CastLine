@@ -111,6 +111,8 @@ local Config = {
 			Shake = 0.7,
 			Frequency = 24,
 			BaseDistance = 20,
+			DeepPullback = 3,
+			MaxDistance = 24,
 			EntryBlendTime = 0.2,
 			FollowDegrees = 3,
 			FollowHalfLife = 0.12,
@@ -248,6 +250,7 @@ local Config = {
 		InitialProgress = 0.5,
 		TapGain = 0.125,
 		MinTapInterval = 0.075,
+		InitialDecayDelay = 1,
 		DecayDelay = 0.45,
 		DecayPerSecond = 0.5,
 	},
@@ -574,9 +577,14 @@ function Config.GetDeepCatchEntrance(catchKind: string, tutorial: boolean): stri
 	return "Rise"
 end
 
-function Config.GetCatchProgress(value: number, lastTapAt: number, now: number): number
+function Config.GetCatchDecayStart(progressAt: number, hasAcceptedTap: boolean): number
 	local settings = Config.DeepCatch
-	return math.max(0, value - math.max(0, now - lastTapAt - settings.DecayDelay) * settings.DecayPerSecond)
+	return progressAt + (if hasAcceptedTap then settings.DecayDelay else settings.InitialDecayDelay)
+end
+
+function Config.GetCatchProgress(value: number, progressAt: number, now: number, hasAcceptedTap: boolean): number
+	local decayAt = Config.GetCatchDecayStart(progressAt, hasAcceptedTap)
+	return math.max(0, value - math.max(0, now - decayAt) * Config.DeepCatch.DecayPerSecond)
 end
 
 function Config.GetHookTime(receivedAt: number, pressedAt: unknown, biteAt: number, biteEndsAt: number, rtt: number): number?

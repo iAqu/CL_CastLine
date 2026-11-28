@@ -536,9 +536,8 @@ function FishingService.Client:Cast(player: Player, token)
 	}
 end
 
-local function deepCatchDeadline(progress, progressAt)
-	local settings = Config.DeepCatch
-	return progressAt + settings.DecayDelay + progress / settings.DecayPerSecond
+local function deepCatchDeadline(progress, progressAt, hasAcceptedTap)
+	return Config.GetCatchDecayStart(progressAt, hasAcceptedTap) + progress / Config.DeepCatch.DecayPerSecond
 end
 
 local function deepCatchProgress(catch, biteAt)
@@ -713,7 +712,7 @@ function FishingService.Client:NextRound(player: Player, token, previousRound)
 	state.deepCatch = if entrance then {
 		progress = initialProgress,
 		sequence = 0,
-		deadline = deepCatchDeadline(initialProgress, biteAt),
+		deadline = deepCatchDeadline(initialProgress, biteAt, false),
 	} else nil
 	state.pending = pending
 	state.round += 1
@@ -926,13 +925,14 @@ function FishingService.Client:TapCatch(player: Player, token, round, sequence)
 	if now >= catch.deadline then
 		return { catchResult = escapeDeepCatch(player, state, catch) }
 	end
-	local progressAt = catch.lastTapAt or state.biteAt
+	local lastTapAt = catch.lastTapAt
+	local progressAt = lastTapAt or state.biteAt
 	if now < state.biteAt or type(sequence) ~= "number" or sequence % 1 ~= 0 or sequence <= catch.sequence then
 		return deepCatchProgress(catch, state.biteAt)
 	end
 	catch.sequence = sequence
 	local settings = Config.DeepCatch
-	if catch.lastTapAt and now - catch.lastTapAt < settings.MinTapInterval - 0.000001 then
+	if lastTapAt and now - lastTapAt < settings.MinTapInterval - 0.000001 then
 		return deepCatchProgress(catch, state.biteAt)
 	end
 	if not catch.hookedAt then
@@ -941,9 +941,9 @@ function FishingService.Client:TapCatch(player: Player, token, round, sequence)
 		replicatePresentation(state)
 	end
 	catch.lastTapAt = now
-	catch.progress = math.min(1, Config.GetCatchProgress(catch.progress, progressAt, now) + settings.TapGain)
+	catch.progress = math.min(1, Config.GetCatchProgress(catch.progress, progressAt, now, lastTapAt ~= nil) + settings.TapGain)
 	if catch.progress < 1 then
-		catch.deadline = deepCatchDeadline(catch.progress, now)
+		catch.deadline = deepCatchDeadline(catch.progress, now, true)
 		return deepCatchProgress(catch, state.biteAt)
 	end
 

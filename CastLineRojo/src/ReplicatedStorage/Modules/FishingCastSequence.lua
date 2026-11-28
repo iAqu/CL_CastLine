@@ -23,6 +23,8 @@ local HOOK_CONFIRM_TIMEOUT = 8
 local HOOK_LOOKUP_DELAY = 1.25
 local HOOK_LOOKUP_INTERVAL = 0.35
 local HOOK_LOOKUP_TIMEOUT = 1.5
+local WIND_STREAK_DISTANCE = 8
+local WIND_STREAK_EDGE_BIAS = 1.25
 
 local FishingCastSequence = {}
 FishingCastSequence.__index = FishingCastSequence
@@ -39,6 +41,14 @@ end
 
 local function limitMagnitude(offset, maximum)
 	return if offset.Magnitude > maximum then offset.Unit * maximum else offset
+end
+
+local function diveProgress(view, now)
+	if now >= view.diveEndAt then
+		return 1
+	end
+	local time = math.clamp((now - view.diveStartAt) / (view.diveEndAt - view.diveStartAt), 0, 1)
+	return view.diveStartProgress + (1 - view.diveStartProgress) * time
 end
 
 local function canTapCatch(bite)
@@ -639,7 +649,9 @@ end
 function FishingCastSequence:_diveOffset(now)
 	local depth = self.fishingDepth or 0
 	if depth > 0 and self.landedAt then
-		depth *= smoothstep((now - self.landedAt) / Config.Landing.DiveTime)
+		local view = self.landingView
+		local progress = if view then diveProgress(view, now) else (now - self.landedAt) / Config.Landing.DiveTime
+		depth *= smoothstep(progress)
 	end
 	return -depth
 end
@@ -1152,7 +1164,14 @@ function FishingCastSequence:_requestBiteRound()
 		local serverAnchor = if round.entrance then Workspace:GetServerTimeNow() else round.sentAt
 		self.localRoundStart = receivedAt + (round.startedAt - serverAnchor)
 		local localReadyAt = self.localRoundStart + (round.readyAt - round.startedAt)
-		self.readyAt = math.max(self.readyAt, localReadyAt)
+		if self.landingView and round.entrance then
+			local localBiteAt = self.localRoundStart + (round.biteAt - round.startedAt)
+			self.readyAt = localBiteAt - Config.DeepCatch.EntranceTime
+			self:_alignLandingDive(receivedAt, self.readyAt)
+		else
+			self.landingView = nil
+			self.readyAt = math.max(self.readyAt, localReadyAt)
+		end
 		self:_startBiteRound(self.localRoundStart, self.readyAt, round)
 	end):catch(function(err)
 		if not self.destroyed then
@@ -1160,6 +1179,25 @@ function FishingCastSequence:_requestBiteRound()
 			self.options.onFailure("Could not start the next fishing round")
 		end
 	end)
+end
+
+function FishingCastSequence:_lockLandingView(now)
+	self.landingView = {
+		rotation = self.shotFrom.Rotation,
+		distance = math.max(1, (self.shotFrom.Position - self.shotFocusFrom).Magnitude),
+		fov = self.fovFrom,
+		diveStartAt = now,
+		diveEndAt = now + Config.Landing.DiveTime,
+		diveStartProgress = 0,
+	}
+end
+
+function FishingCastSequence:_alignLandingDive(now, approachAt)
+	local view = self.landingView
+	-- Rebase the remaining descent at the current depth when the server clock arrives.
+	view.diveStartProgress = diveProgress(view, now)
+	view.diveStartAt = now
+	view.diveEndAt = math.max(now, approachAt)
 end
 
 function FishingCastSequence:_land(now)
@@ -1180,6 +1218,9 @@ function FishingCastSequence:_land(now)
 	if (self.fishingDepth or 0) > 0 then
 		self.shotFocusFrom = self.shotFocusFrom or self.bait.Position
 		self.diveCameraOffset = self.shotFrom.Position - self.shotFocusFrom
+		if self.options.tapCatch and not self.options.tutorial then
+			self:_lockLandingView(now)
+		end
 	end
 	local strength = math.clamp(self.distance / 400, 0, 1)
 	self:_impulse(Config.Camera.Landing, now, strength)
@@ -1585,9 +1626,9 @@ function FishingCastSequence:_deepCatchCamera(target, time, viewport)
 	return self:_protectShowcase(frame, target, baitRadius, viewport, fov, 1), fov, target
 end
 
-function FishingCastSequence:_updateDeepCatchSpeedLines(cameraFrame)
+function FishingCastSequence:_updateDeepCatchSpeedLines(camera)
 	local effect = self.deepCatchSpeedLines
-	if not cameraFrame then
+	if not camera then
 		if effect then
 			effect:Destroy()
 			self.deepCatchSpeedLines = nil
@@ -1595,34 +1636,33 @@ function FishingCastSequence:_updateDeepCatchSpeedLines(cameraFrame)
 		return
 	end
 
-	local effectFrame = cameraFrame * CFrame.new(0, 0, -5) * CFrame.Angles(math.pi * 0.5, 0, 0)
-	if effect then
-		effect.CFrame = effectFrame
-		return
-	end
-	if self.deepCatchSpeedLinesMissing then
-		return
-	end
-	local particle = ReplicatedStorage:FindFirstChild("Particle")
-	local boost = particle and particle:FindFirstChild("SpeedBoost")
-	local template = boost and boost:FindFirstChild("WindStreaks")
-	if not (template and template:IsA("BasePart")) then
-		self.deepCatchSpeedLinesMissing = true
-		warn("FishingCastSequence: Particle.SpeedBoost.WindStreaks is missing")
-		return
-	end
-	effect = template:Clone()
-	effect.Name = "DeepCatchSpeedLines"
-	effect.Anchored, effect.CanCollide, effect.CanTouch, effect.CanQuery = true, false, false, false
-	effect.CFrame = effectFrame
-	for _, descendant in effect:GetDescendants() do
-		if descendant:IsA("ParticleEmitter") then
-			descendant.Rate *= 0.6
-			descendant.Enabled = true
+	if not effect then
+		if self.deepCatchSpeedLinesMissing then
+			return
 		end
+		local particle = ReplicatedStorage:FindFirstChild("Particle")
+		local boost = particle and particle:FindFirstChild("SpeedBoost")
+		local template = boost and boost:FindFirstChild("WindStreaks")
+		if not (template and template:IsA("BasePart")) then
+			self.deepCatchSpeedLinesMissing = true
+			warn("FishingCastSequence: Particle.SpeedBoost.WindStreaks is missing")
+			return
+		end
+		effect = template:Clone()
+		effect.Name = "DeepCatchSpeedLines"
+		effect.Anchored, effect.CanCollide, effect.CanTouch, effect.CanQuery = true, false, false, false
+		effect.Massless = true
+		self.deepCatchSpeedLines = effect
 	end
-	self.deepCatchSpeedLines = effect
-	effect.Parent = self.folder
+	-- Match TL's screen plane using the final POV camera and the template's depth.
+	local viewport = camera.ViewportSize
+	local height = 2 * WIND_STREAK_DISTANCE * math.tan(math.rad(camera.FieldOfView * 0.5)) * WIND_STREAK_EDGE_BIAS
+	local width = height * math.max(viewport.X, 1) / math.max(viewport.Y, 1)
+	effect.Size = Vector3.new(width, height, effect.Size.Z)
+	effect.CFrame = camera.CFrame * CFrame.new(0, 0, -WIND_STREAK_DISTANCE)
+	if not effect.Parent then
+		effect.Parent = self.folder
+	end
 end
 
 function FishingCastSequence:_chaseCamera(dt)
@@ -1708,21 +1748,29 @@ end
 function FishingCastSequence:_struggleCamera(now, dt, viewport)
 	local bite, settings = self.bite, Config.Camera.Struggle
 	local startedAt = bite.timeline.startedAt
+	local landing = bite.timeline.deepCatch and self.landingView
 	local view = self.struggleView
 	if not view or view.bite ~= bite or (not bite.timeline.deepCatch and view.startedAt ~= startedAt) then
 		local anchor = self:_waterTarget() - Vector3.yAxis * (self.fishingDepth or 0)
 		local baitView = Config.Camera.BaitView
 		local fov = baitView.Fov
-		local offset = -self.forward * baitView.Distance + Vector3.yAxis * baitView.Height
-		if Config.Camera.FollowFishEnabled then
-			local aspect = math.max(viewport.X, 1) / math.max(viewport.Y, 1)
-			local halfAngle = math.atan(math.tan(math.rad(fov * 0.5)) * math.min(aspect, 1))
-			local radius = math.max(bite.halfLength, bite.presentationRadius) * bite.scale + 2
-			local distance = math.max(16, radius / math.sin(halfAngle))
-			offset = (-self.forward * 0.8 + Vector3.yAxis * 0.65) * distance
+		local fixed
+		if landing then
+			local distance = math.min(landing.distance + settings.DeepPullback, settings.MaxDistance - settings.MaxShakeOffset)
+			fixed = CFrame.new(anchor - landing.rotation.LookVector * distance) * landing.rotation
+			fov = landing.fov
+		else
+			local offset = -self.forward * baitView.Distance + Vector3.yAxis * baitView.Height
+			if Config.Camera.FollowFishEnabled then
+				local aspect = math.max(viewport.X, 1) / math.max(viewport.Y, 1)
+				local halfAngle = math.atan(math.tan(math.rad(fov * 0.5)) * math.min(aspect, 1))
+				local radius = math.max(bite.halfLength, bite.presentationRadius) * bite.scale + 2
+				local distance = math.max(16, radius / math.sin(halfAngle))
+				offset = (-self.forward * 0.8 + Vector3.yAxis * 0.65) * distance
+			end
+			local eye = anchor + limitMagnitude(offset, settings.BaseDistance)
+			fixed = CFrame.lookAt(eye, anchor)
 		end
-		local eye = anchor + limitMagnitude(offset, settings.BaseDistance)
-		local fixed = CFrame.lookAt(eye, anchor)
 		local clearance = settings.WallClearance + settings.MaxShakeOffset
 		view = {
 			bite = bite,
@@ -1746,9 +1794,14 @@ function FishingCastSequence:_struggleCamera(now, dt, viewport)
 		local toward = bite.lastMouthPosition - shot.Position
 		local axis = look:Cross(toward)
 		local rotation = CFrame.identity
-		if axis.Magnitude > 1e-6 then
+		local maxTurn = math.rad(settings.FollowDegrees)
+		if landing then
+			local horizontalDot = look.X * toward.X + look.Z * toward.Z
+			local yaw = math.clamp(math.atan2(axis.Y, horizontalDot), -maxTurn, maxTurn)
+			rotation = CFrame.Angles(0, yaw, 0)
+		elseif axis.Magnitude > 1e-6 then
 			local angle = math.atan2(axis.Magnitude, look:Dot(toward))
-			rotation = CFrame.fromAxisAngle(axis.Unit, math.min(angle, math.rad(settings.FollowDegrees)))
+			rotation = CFrame.fromAxisAngle(axis.Unit, math.min(angle, maxTurn))
 		end
 		view.follow = (view.follow or CFrame.identity):Lerp(rotation, 1 - 0.5 ^ (dt / settings.FollowHalfLife))
 		shot = CFrame.new(shot.Position) * view.follow * shot.Rotation
@@ -1782,6 +1835,7 @@ function FishingCastSequence:_updateCamera(now, dt, camera)
 	local struggling = timeline and timeline.phase == "Struggling"
 	local holdingCatch = timeline and timeline.deepCatch and timeline.phase == "Bite"
 	local keepEscapeView = timeline and timeline.deepCatch and timeline.phase == "Escaped" and self.renderedStruggleFrame
+	local lockedDive = self.shotMode == "Landing" and (not timeline or timeline.phase == "Settling") and self.landingView
 	local struggle = Config.Camera.Struggle
 	local entranceTime = if timeline and timeline.entrance then timeline:GetDeepCatchEntranceTime(now) else nil
 	if self.shotMode == "Special" then
@@ -1844,6 +1898,11 @@ function FishingCastSequence:_updateCamera(now, dt, camera)
 		shot, fov, focus, struggleAnchor = self:_struggleCamera(now, dt, viewport)
 	elseif keepEscapeView then
 		shot, fov, focus = self.renderedStruggleFrame, self.renderedStruggleFov, self.renderedStruggleFocus
+	elseif lockedDive then
+		waterView = true
+		focus = self:_landingPosition(now, self:_waterTarget())
+		shot = CFrame.new(focus - lockedDive.rotation.LookVector * lockedDive.distance) * lockedDive.rotation
+		fov = lockedDive.fov
 	elseif Config.Camera.FollowFishEnabled
 		and (not self.bite or not self.bite.isEgg)
 	then
@@ -1880,7 +1939,7 @@ function FishingCastSequence:_updateCamera(now, dt, camera)
 	end
 	local alpha = if self.shotDuration <= 0 then 1 else math.clamp(elapsed / self.shotDuration, 0, 1)
 	alpha = TweenService:GetValue(alpha, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut)
-	local authoredShot = entranceTime ~= nil or struggleAnchor ~= nil or keepEscapeView
+	local authoredShot = entranceTime ~= nil or struggleAnchor ~= nil or keepEscapeView or lockedDive
 	local diving = not authoredShot and waterView and self.shotMode == "Landing" and self.diveCameraOffset ~= nil
 		and elapsed <= Config.Landing.DiveTime
 	if authoredShot then
@@ -1950,8 +2009,8 @@ function FishingCastSequence:_updateCamera(now, dt, camera)
 	end
 	local presentation = shot * motion
 	local renderedFov = fov + fovOffset
-	if entranceTime ~= nil or keepEscapeView then
-		-- 上游有独立摆动，逃脱时保持最后一帧机位接入空收。
+	if entranceTime ~= nil or keepEscapeView or lockedDive then
+		-- 下潜锁定光轴，上游有独立摆动，逃脱保留最后一帧机位。
 		presentation, renderedFov = shot, fov
 	elseif fixedWaterView then
 		-- 落水运镜结束时一起收掉冲击和摇摆，锁定提竿前的机位。
@@ -1983,7 +2042,7 @@ function FishingCastSequence:_updateCamera(now, dt, camera)
 	camera.CameraType = Enum.CameraType.Scriptable
 	camera.CFrame, camera.FieldOfView = presentation, renderedFov
 	camera.Focus = CFrame.new(focus)
-	self:_updateDeepCatchSpeedLines(if entranceTime ~= nil then presentation else nil)
+	self:_updateDeepCatchSpeedLines(if entranceTime ~= nil then camera else nil)
 end
 
 function FishingCastSequence:_updatePresentation(now, dt)
@@ -2106,7 +2165,8 @@ function FishingCastSequence:Update(now: number, dt: number)
 		local visible = canTapCatch(self.bite)
 		local progress = self.catchProgress or 0
 		if visible and progress < 1 and self.catchProgressAt then
-			progress = Config.GetCatchProgress(progress, self.catchProgressAt, Workspace:GetServerTimeNow())
+			local hasAcceptedTap = self.bite.timeline.phase == "Struggling"
+			progress = Config.GetCatchProgress(progress, self.catchProgressAt, Workspace:GetServerTimeNow(), hasAcceptedTap)
 			if progress == 0 and not self.hookPending then
 				self.catchLookupNeeded = true
 			end
